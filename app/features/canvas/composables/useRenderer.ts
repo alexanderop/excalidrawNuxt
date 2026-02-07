@@ -1,6 +1,6 @@
 import { ref, watch, toRaw, onScopeDispose } from 'vue'
 import type { Ref, ShallowRef } from 'vue'
-import { useDevicePixelRatio } from '@vueuse/core'
+import { useDevicePixelRatio, useDocumentVisibility } from '@vueuse/core'
 
 interface CanvasLayer {
   ctx: ShallowRef<CanvasRenderingContext2D | null>
@@ -29,6 +29,53 @@ interface UseRendererReturn {
   markAllDirty: () => void
 }
 
+function bootstrapCanvas(
+  ctx: CanvasRenderingContext2D,
+  canvas: HTMLCanvasElement,
+  dpr: number,
+  w: number,
+  h: number,
+  bgColor?: string,
+): void {
+  const targetWidth = w * dpr
+  const targetHeight = h * dpr
+  if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
+    canvas.width = targetWidth
+    canvas.height = targetHeight
+    canvas.style.width = `${w}px`
+    canvas.style.height = `${h}px`
+  }
+
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
+  ctx.scale(dpr, dpr)
+
+  if (bgColor) {
+    ctx.fillStyle = bgColor
+    ctx.fillRect(0, 0, w, h)
+    return
+  }
+
+  ctx.clearRect(0, 0, w, h)
+}
+
+function renderDirtyCanvas(
+  dirty: Ref<boolean>,
+  layer: CanvasLayer,
+  currentDpr: number,
+  w: number,
+  h: number,
+  bgColor?: string,
+  onRender?: (ctx: CanvasRenderingContext2D) => void,
+): void {
+  if (!dirty.value) return
+  const ctx = toRaw(layer.ctx.value)
+  const canvas = toRaw(layer.canvas.value)
+  if (!ctx || !canvas) return
+  bootstrapCanvas(ctx, canvas, currentDpr, w, h, bgColor)
+  onRender?.(ctx)
+  dirty.value = false
+}
+
 export function useRenderer(options: UseRendererOptions): UseRendererReturn {
   const {
     staticLayer, newElementLayer, interactiveLayer,
@@ -41,11 +88,13 @@ export function useRenderer(options: UseRendererOptions): UseRendererReturn {
   const interactiveDirty = ref(false)
 
   const { pixelRatio: dpr } = useDevicePixelRatio()
+  const visibility = useDocumentVisibility()
 
   let rafId: number | null = null
 
   function scheduleRender(): void {
     if (rafId !== null) return
+    if (visibility.value === 'hidden') return
     rafId = requestAnimationFrame(() => {
       rafId = null
       const w = width.value
@@ -79,23 +128,10 @@ export function useRenderer(options: UseRendererOptions): UseRendererReturn {
 
   watch([width, height, scrollX, scrollY, zoom], markAllDirty)
 
-  function renderDirtyCanvas(
-    dirty: Ref<boolean>,
-    layer: CanvasLayer,
-    currentDpr: number,
-    w: number,
-    h: number,
-    bgColor?: string,
-    afterBootstrap?: (ctx: CanvasRenderingContext2D) => void,
-  ): void {
-    if (!dirty.value) return
-    const ctx = toRaw(layer.ctx.value)
-    const canvas = toRaw(layer.canvas.value)
-    if (!ctx || !canvas) return
-    bootstrapCanvas(ctx, canvas, currentDpr, w, h, bgColor)
-    afterBootstrap?.(ctx)
-    dirty.value = false
-  }
+  // Resume rendering when tab becomes visible again
+  watch(visibility, (v) => {
+    if (v === 'visible') markAllDirty()
+  })
 
   onScopeDispose(() => {
     if (rafId !== null) cancelAnimationFrame(rafId)
@@ -108,33 +144,4 @@ export function useRenderer(options: UseRendererOptions): UseRendererReturn {
     markInteractiveDirty,
     markAllDirty,
   }
-}
-
-function bootstrapCanvas(
-  ctx: CanvasRenderingContext2D,
-  canvas: HTMLCanvasElement,
-  dpr: number,
-  w: number,
-  h: number,
-  bgColor?: string,
-): void {
-  const targetWidth = w * dpr
-  const targetHeight = h * dpr
-  if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
-    canvas.width = targetWidth
-    canvas.height = targetHeight
-    canvas.style.width = `${w}px`
-    canvas.style.height = `${h}px`
-  }
-
-  ctx.setTransform(1, 0, 0, 1, 0, 0)
-  ctx.scale(dpr, dpr)
-
-  if (bgColor) {
-    ctx.fillStyle = bgColor
-    ctx.fillRect(0, 0, w, h)
-    return
-  }
-
-  ctx.clearRect(0, 0, w, h)
 }

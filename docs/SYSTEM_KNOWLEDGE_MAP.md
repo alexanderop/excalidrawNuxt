@@ -13,6 +13,10 @@
 | Feature Architecture | [diagrams/feature-architecture.md](diagrams/feature-architecture.md) | Feature directory layout + import rules |
 | Testing Architecture | [diagrams/testing-architecture.md](diagrams/testing-architecture.md) | Vitest dual-project setup + testing pyramid |
 | File Map | [diagrams/file-map.md](diagrams/file-map.md) | Complete file tree of every module |
+| Selection State Machine | [diagrams/selection-state-machine.md](diagrams/selection-state-machine.md) | useSelectionInteraction states, transitions, modifiers, cursors |
+| Coordinate System | [diagrams/coordinate-system.md](diagrams/coordinate-system.md) | Screen ↔ scene transforms, viewport, zoom-anchored scrolling |
+| Initialization Sequence | [diagrams/initialization-sequence.md](diagrams/initialization-sequence.md) | Composable boot order, deferred dirty-flag binding pattern |
+| Event Flow | [diagrams/event-flow.md](diagrams/event-flow.md) | Listener targets, pointer capture, panning priority, event pipeline |
 
 ## Reference
 

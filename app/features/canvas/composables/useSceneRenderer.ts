@@ -2,6 +2,8 @@ import { watch } from 'vue'
 import type { Ref, ShallowRef, ComputedRef } from 'vue'
 import type { RoughCanvas } from 'roughjs/bin/canvas'
 import { useRenderer } from './useRenderer'
+import { useAnimationController } from './useAnimationController'
+import type { UseAnimationControllerReturn } from './useAnimationController'
 import { renderGrid } from '~/features/rendering/renderGrid'
 import { renderScene } from '~/features/rendering/renderScene'
 import { renderElement } from '~/features/rendering/renderElement'
@@ -50,6 +52,7 @@ interface UseSceneRendererReturn {
   markStaticDirty: () => void
   markNewElementDirty: () => void
   markInteractiveDirty: () => void
+  animations: UseAnimationControllerReturn
 }
 
 function buildLinearEditorState(
@@ -157,9 +160,9 @@ export function useSceneRenderer(options: UseSceneRendererOptions): UseSceneRend
     },
   })
 
-  watch(selectedIds, () => {
-    markInteractiveDirty()
-  })
+  const animations = useAnimationController({ markInteractiveDirty })
 
-  return { markStaticDirty, markNewElementDirty, markInteractiveDirty }
+  watch(selectedIds, markInteractiveDirty)
+
+  return { markStaticDirty, markNewElementDirty, markInteractiveDirty, animations }
 }

@@ -12,7 +12,7 @@ import { useDrawingInteraction } from '~/features/tools/useDrawingInteraction'
 import { useSelection, useSelectionInteraction } from '~/features/selection'
 import { useMultiPointCreation } from '~/features/linear-editor/useMultiPointCreation'
 import { useLinearEditor } from '~/features/linear-editor/useLinearEditor'
-import type { ExcalidrawArrowElement, ExcalidrawElement } from '~/features/elements/types'
+import type { ExcalidrawElement } from '~/features/elements/types'
 import DrawingToolbar from '~/features/tools/components/DrawingToolbar.vue'
 
 defineExpose({})
@@ -133,13 +133,11 @@ const { selectionBox, cursorStyle } = useSelectionInteraction({
   isSelected,
   setTool,
   editingLinearElement,
-  onDoubleClickArrow(el: ExcalidrawArrowElement) {
-    enterLinearEditor(el)
-  },
+  onDoubleClickArrow: enterLinearEditor,
 })
 
-// Scene renderer (render callbacks + dirty watcher)
-const { markStaticDirty, markNewElementDirty, markInteractiveDirty } = useSceneRenderer({
+// Scene renderer (render callbacks + dirty watcher + animation controller)
+const { markStaticDirty, markNewElementDirty, markInteractiveDirty, animations } = useSceneRenderer({
   layers: { staticCtx, newElementCtx, interactiveCtx, staticRc, newElementRc },
   canvasRefs: { staticCanvasRef, newElementCanvasRef, interactiveCanvasRef },
   viewport: { scrollX, scrollY, zoom, width, height },
@@ -158,6 +156,9 @@ const { markStaticDirty, markNewElementDirty, markInteractiveDirty } = useSceneR
 
 // Bind real renderer callbacks to deferred dirty flags
 dirty.bind({ markStaticDirty, markInteractiveDirty, markNewElementDirty })
+
+// Expose animation controller for interaction composables (available before any user events fire)
+Object.assign(shared, { animations })
 
 const combinedCursorClass = computed(() => {
   // Panning cursor takes priority over selection cursor

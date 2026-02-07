@@ -1,0 +1,104 @@
+# Selection State Machine
+
+State machine for `useSelectionInteraction` — governs how pointer and keyboard events transition between idle, dragging, resizing, and box-selecting states.
+
+**Source:** `app/features/selection/composables/useSelectionInteraction.ts`
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Idle
+
+    state "Idle" as Idle
+    state "Dragging" as Dragging
+    state "Resizing" as Resizing
+    state "BoxSelecting" as BoxSelecting
+
+    Idle --> Resizing : pointerdown on transform handle\n(single selected element)
+    Idle --> Dragging : pointerdown on element\n(hit test passes)
+    Idle --> BoxSelecting : pointerdown on empty space\n(no handle or element hit)
+    Idle --> Idle : pointermove\n(updates cursor only)
+
+    Dragging --> Idle : pointerup\n(unbinds dragged arrows, markSceneDirty)
+    Dragging --> Dragging : pointermove\n(continueDrag, update bound arrows)
+
+    Resizing --> Idle : pointerup\n(markSceneDirty)
+    Resizing --> Resizing : pointermove\n(resizeElement, update bound arrows)
+
+    BoxSelecting --> Idle : pointerup\n(clear selectionBox, markInteractiveDirty)
+    BoxSelecting --> BoxSelecting : pointermove\n(update selectionBox, select enclosed elements)
+```
+
+## Guard Conditions
+
+All transitions from **Idle** require these guards to pass:
+
+| Guard | Condition |
+|---|---|
+| Tool check | `activeTool === 'selection'` |
+| Not panning | `spaceHeld === false && isPanning === false` |
+| Not editing | `editingLinearElement` is null |
+| Left button | `e.button === 0` |
+
+## Transition Priority (pointerdown)
+
+The composable tries transitions in this strict order:
+
+1. **tryStartResize** -- checks if pointer is over a transform handle of the single selected element
+2. **tryStartDrag** -- checks if pointer hits any element (`getElementAtPosition`)
+3. **startBoxSelecting** -- fallback when nothing is hit
+
+## Modifier Key Behavior
+
+| Modifier | Context | Effect |
+|---|---|---|
+| **Shift** | pointerdown on element | `toggleSelection(id)` instead of `select(id)` |
+| **Shift** | pointerdown on empty space | Preserves existing selection (no `clearSelection`) |
+| **Shift** | pointermove while resizing | Passed to `resizeElement` for aspect-ratio lock |
+| **Shift** | Arrow key nudge | 10px step instead of 1px |
+| **Ctrl/Cmd + A** | keydown | Select all elements |
+
+## Cursor Styles
+
+Updated on every `pointermove` while in **Idle** state (`updateCursor`):
+
+| Hover Target | Cursor |
+|---|---|
+| Transform handle `n` or `s` | `ns-resize` |
+| Transform handle `e` or `w` | `ew-resize` |
+| Transform handle `nw` or `se` | `nwse-resize` |
+| Transform handle `ne` or `sw` | `nesw-resize` |
+| Transform handle `rotation` | `grab` |
+| Selected element body | `move` |
+| Empty space | `default` |
+
+## Transform Handle Types
+
+Defined in `app/features/selection/transformHandles.ts`:
+
+- **Corner handles** (`nw`, `ne`, `sw`, `se`) -- always present (except arrows)
+- **Side handles** (`n`, `s`) -- only when element width > 5x handle size
+- **Side handles** (`e`, `w`) -- only when element height > 5x handle size
+- **Rotation handle** -- positioned above element, excluded from resize (`tryStartResize` filters it out)
+- Arrows have **no** transform handles
+
+## Keyboard Shortcuts (Idle)
+
+| Key | Action |
+|---|---|
+| `Delete` / `Backspace` | Delete selected elements (unbinds arrows first) |
+| `Escape` | Clear selection, reset tool to `selection` |
+| `Ctrl/Cmd + A` | Select all elements |
+| Arrow keys | Nudge selected elements 1px |
+| Shift + Arrow keys | Nudge selected elements 10px |
+
+## Double-Click
+
+| Target | Action |
+|---|---|
+| Arrow element | Enters linear editing mode (`onDoubleClickArrow`) |
+
+## Pointer Capture
+
+All active states (`dragging`, `resizing`, `boxSelecting`) capture the pointer via `setPointerCapture` on pointerdown and release it via `releasePointerCapture` on pointerup. This ensures events continue even if the pointer leaves the canvas.
