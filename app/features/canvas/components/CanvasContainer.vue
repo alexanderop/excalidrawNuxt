@@ -223,9 +223,6 @@ const combinedCursorClass = computed(() => {
       data-testid="interactive-canvas"
       class="absolute inset-0 z-[2]"
     />
-    <DrawingToolbar
-      :active-tool="activeTool"
-      :on-set-tool="setTool"
-    />
+    <DrawingToolbar :model-value="activeTool" @update:model-value="setTool" />
   </div>
 </template>

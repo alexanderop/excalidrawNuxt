@@ -2,10 +2,7 @@
 import type { ToolType } from '../types'
 import { TOOL_ICONS } from './toolIcons'
 
-const { activeTool, onSetTool } = defineProps<{
-  activeTool: ToolType
-  onSetTool: (tool: ToolType) => void
-}>()
+const activeTool = defineModel<ToolType>({ required: true })
 
 defineExpose({})
 
@@ -31,7 +28,7 @@ const tools: Array<{ type: ToolType; label: string; shortcutNumber: number | nul
         :class="activeTool === tool.type
           ? 'bg-accent/20 text-accent'
           : 'text-foreground/70 hover:bg-muted/20 hover:text-foreground'"
-        @click="onSetTool(tool.type)"
+        @click="activeTool = tool.type"
       >
         <svg
           aria-hidden="true"
