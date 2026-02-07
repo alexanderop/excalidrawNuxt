@@ -469,7 +469,7 @@ function DetailPanel({ nodeId, node, onClose }) {
   const codeHtml = HIGHLIGHTED[nodeId];
 
   return (
-    <div className="fixed top-4 right-4 bottom-4 w-[420px] z-30 bg-wt-surface border border-wt-border rounded-xl shadow-2xl flex flex-col overflow-hidden">
+    <div className="fixed top-4 right-4 bottom-4 w-[560px] z-30 bg-wt-surface border border-wt-border rounded-xl shadow-2xl flex flex-col overflow-hidden">
       <button onClick={onClose}
         className="absolute top-3 right-3 z-10 w-7 h-7 rounded-md border border-wt-border bg-wt-raised text-wt-muted flex items-center justify-center text-lg hover:bg-wt-red hover:border-wt-red hover:text-white transition-colors">
         &times;
