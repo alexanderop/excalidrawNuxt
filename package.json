@@ -7,11 +7,40 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare && simple-git-hooks",
+    "lint:oxlint": "oxlint . --fix --ignore-path .gitignore",
+    "lint:eslint": "eslint . --fix --cache",
+    "lint": "run-s lint:*",
+    "typecheck": "nuxi typecheck"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "bun run lint-staged && bun run typecheck"
+  },
+  "lint-staged": {
+    "*.{ts,vue}": [
+      "oxlint --fix",
+      "eslint --fix --cache"
+    ]
   },
   "dependencies": {
     "nuxt": "^4.3.0",
     "vue": "^3.5.27",
     "vue-router": "^4.6.4"
+  },
+  "devDependencies": {
+    "@vitest/eslint-plugin": "^1.6.6",
+    "@vue/eslint-config-prettier": "^10.2.0",
+    "@vue/eslint-config-typescript": "^14.6.0",
+    "eslint": "^10.0.0",
+    "eslint-plugin-import-x": "^4.16.1",
+    "eslint-plugin-oxlint": "^1.43.0",
+    "eslint-plugin-unicorn": "^62.0.0",
+    "eslint-plugin-vue": "^10.7.0",
+    "lint-staged": "^16.2.7",
+    "npm-run-all2": "^8.0.4",
+    "oxlint": "^1.43.0",
+    "prettier": "^3.8.1",
+    "simple-git-hooks": "^2.13.1",
+    "typescript": "^5.9.3"
   }
 }
