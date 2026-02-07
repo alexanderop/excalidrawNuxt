@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import type { ToolType } from '../types'
+import { useToolStore } from '../useTool'
 import { TOOL_ICONS } from './toolIcons'
+import type { ToolType } from '../types'
 
-const activeTool = defineModel<ToolType>({ required: true })
+const { activeTool, setTool } = useToolStore()
 
 defineExpose({})
 
@@ -28,7 +29,7 @@ const tools: Array<{ type: ToolType; label: string; shortcutNumber: number | nul
         :class="activeTool === tool.type
           ? 'bg-accent/20 text-accent'
           : 'text-foreground/70 hover:bg-muted/20 hover:text-foreground'"
-        @click="activeTool = tool.type"
+        @click="setTool(tool.type)"
       >
         <svg
           aria-hidden="true"

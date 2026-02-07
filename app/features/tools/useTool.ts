@@ -1,17 +1,6 @@
 import { shallowRef } from 'vue'
-import type { ShallowRef } from 'vue'
-import { useEventListener, useActiveElement } from '@vueuse/core'
+import { createGlobalState, createEventHook, useActiveElement, useEventListener } from '@vueuse/core'
 import type { ToolType } from './types'
-
-interface UseToolOptions {
-  /** Called before tool changes — use to finalize in-progress operations */
-  onToolChange?: () => void
-}
-
-interface UseToolReturn {
-  activeTool: ShallowRef<ToolType>
-  setTool: (tool: ToolType) => void
-}
 
 const KEY_TO_TOOL: Record<string, ToolType> = {
   r: 'rectangle',
@@ -27,12 +16,13 @@ const KEY_TO_TOOL: Record<string, ToolType> = {
   '5': 'arrow',
 }
 
-export function useTool(options?: UseToolOptions): UseToolReturn {
+export const useToolStore = createGlobalState(() => {
   const activeTool = shallowRef<ToolType>('selection')
+  const { on: onBeforeToolChange, trigger: triggerBeforeChange } = createEventHook<void>()
   const activeElement = useActiveElement()
 
   function setTool(tool: ToolType): void {
-    options?.onToolChange?.()
+    triggerBeforeChange()
     activeTool.value = tool
   }
 
@@ -52,5 +42,9 @@ export function useTool(options?: UseToolOptions): UseToolReturn {
     })
   }
 
-  return { activeTool, setTool }
-}
+  function $reset(): void {
+    activeTool.value = 'selection'
+  }
+
+  return { activeTool, setTool, onBeforeToolChange, $reset }
+})

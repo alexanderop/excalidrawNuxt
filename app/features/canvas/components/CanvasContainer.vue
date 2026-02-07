@@ -6,7 +6,7 @@ import { useCanvasLayers } from '../composables/useCanvasLayers'
 import { useSceneRenderer } from '../composables/useSceneRenderer'
 import { usePanning } from '../composables/usePanning'
 import { useElements } from '~/features/elements/useElements'
-import { useTool } from '~/features/tools/useTool'
+import { useToolStore } from '~/features/tools/useTool'
 import { useDrawingInteraction } from '~/features/tools/useDrawingInteraction'
 import { useSelection, useSelectionInteraction } from '~/features/selection'
 import { useMultiPointCreation } from '~/features/linear-editor/useMultiPointCreation'
@@ -30,16 +30,7 @@ const { scrollX, scrollY, zoom, zoomBy, panBy, toScene } = useViewport()
 // Domain state
 const { elements, addElement } = useElements()
 
-// Finalization callbacks — set after composables are created
-let doFinalizeMultiPoint: (() => void) | null = null
-let doExitLinearEditor: (() => void) | null = null
-
-const { activeTool, setTool } = useTool({
-  onToolChange() {
-    doFinalizeMultiPoint?.()
-    doExitLinearEditor?.()
-  },
-})
+const { activeTool, setTool, onBeforeToolChange } = useToolStore()
 
 const {
   selectedIds,
@@ -101,17 +92,11 @@ const {
   suggestedBindings,
 })
 
-// Wire finalization callbacks for tool switching
-doFinalizeMultiPoint = () => {
-  if (multiElement.value) {
-    finalizeMultiPoint()
-  }
-}
-doExitLinearEditor = () => {
-  if (editingLinearElement.value) {
-    exitLinearEditor()
-  }
-}
+// Finalize in-progress operations when user switches tools
+onBeforeToolChange(() => {
+  if (multiElement.value) finalizeMultiPoint()
+  if (editingLinearElement.value) exitLinearEditor()
+})
 
 // Scene renderer (render callbacks + dirty watcher)
 const { markStaticDirty, markNewElementDirty, markInteractiveDirty } = useSceneRenderer({
@@ -223,6 +208,6 @@ const combinedCursorClass = computed(() => {
       data-testid="interactive-canvas"
       class="absolute inset-0 z-[2]"
     />
-    <DrawingToolbar :model-value="activeTool" @update:model-value="setTool" />
+    <DrawingToolbar />
   </div>
 </template>

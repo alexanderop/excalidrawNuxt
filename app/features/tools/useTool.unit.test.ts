@@ -1,25 +1,44 @@
 import { withSetup } from '~/__test-utils__/withSetup'
-import { useTool } from './useTool'
+import { useToolStore } from './useTool'
 
-describe('useTool', () => {
+describe('useToolStore', () => {
+  afterEach(() => {
+    const store = useToolStore()
+    store.$reset()
+  })
+
   it('defaults activeTool to selection', () => {
-    using tool = withSetup(() => useTool())
-    expect(tool.activeTool.value).toBe('selection')
+    using store = withSetup(() => useToolStore())
+    expect(store.activeTool.value).toBe('selection')
   })
 
   it('sets activeTool via setTool', () => {
-    using tool = withSetup(() => useTool())
-    tool.setTool('rectangle')
-    expect(tool.activeTool.value).toBe('rectangle')
+    using store = withSetup(() => useToolStore())
+    store.setTool('rectangle')
+    expect(store.activeTool.value).toBe('rectangle')
   })
 
   it('sets activeTool to each tool type', () => {
-    using tool = withSetup(() => useTool())
+    using store = withSetup(() => useToolStore())
     const tools = ['selection', 'hand', 'rectangle', 'ellipse', 'diamond'] as const
 
     for (const t of tools) {
-      tool.setTool(t)
-      expect(tool.activeTool.value).toBe(t)
+      store.setTool(t)
+      expect(store.activeTool.value).toBe(t)
     }
+  })
+
+  it('fires onBeforeToolChange before setting the tool', () => {
+    using store = withSetup(() => useToolStore())
+    const captured: string[] = []
+
+    store.onBeforeToolChange(() => {
+      captured.push(store.activeTool.value)
+    })
+
+    store.setTool('rectangle')
+
+    expect(captured).toEqual(['selection'])
+    expect(store.activeTool.value).toBe('rectangle')
   })
 })
