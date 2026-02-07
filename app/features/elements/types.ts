@@ -1,4 +1,8 @@
-export type ExcalidrawElementType = 'rectangle' | 'ellipse' | 'diamond'
+import type { Point } from '~/shared/math'
+
+export type ArrowheadType = 'arrow' | 'triangle' | 'none'
+
+export type ExcalidrawElementType = 'rectangle' | 'ellipse' | 'diamond' | 'arrow'
 
 export interface ExcalidrawElementBase {
   readonly id: string
@@ -31,7 +35,16 @@ export interface ExcalidrawDiamondElement extends ExcalidrawElementBase {
   readonly type: 'diamond'
 }
 
+export interface ExcalidrawArrowElement extends ExcalidrawElementBase {
+  readonly type: 'arrow'
+  /** Relative points — first is always [0,0], rest are offsets from element.x/y */
+  points: readonly Point[]
+  startArrowhead: ArrowheadType | null
+  endArrowhead: ArrowheadType
+}
+
 export type ExcalidrawElement =
   | ExcalidrawRectangleElement
   | ExcalidrawEllipseElement
   | ExcalidrawDiamondElement
+  | ExcalidrawArrowElement

@@ -4,8 +4,9 @@ import { useEventListener } from '@vueuse/core'
 import type { ExcalidrawElement } from '~/features/elements/types'
 import { createElement } from '~/features/elements/createElement'
 import { mutateElement } from '~/features/elements/mutateElement'
+import { createPoint, snapAngle } from '~/shared/math'
 import type { ToolType } from './types'
-import { isDrawingTool } from './types'
+import { isDrawingTool, isLinearTool } from './types'
 
 interface UseDrawingInteractionOptions {
   canvasRef: Readonly<Ref<HTMLCanvasElement | null>>
@@ -58,6 +59,30 @@ export function useDrawingInteraction(options: UseDrawingInteractionOptions): Us
     if (!newElement.value) return
 
     const scene = toScene(e.offsetX, e.offsetY)
+
+    if (isLinearTool(activeTool.value)) {
+      let dx = scene.x - originX
+      let dy = scene.y - originY
+
+      if (e.shiftKey) {
+        const snapped = snapAngle(dx, dy)
+        dx = snapped.x
+        dy = snapped.y
+      }
+
+      const points = [createPoint(0, 0), createPoint(dx, dy)]
+
+      mutateElement(newElement.value, {
+        points,
+        x: originX,
+        y: originY,
+        width: Math.abs(dx),
+        height: Math.abs(dy),
+      })
+      markNewElementDirty()
+      return
+    }
+
     let rawW = scene.x - originX
     let rawH = scene.y - originY
 
@@ -73,6 +98,7 @@ export function useDrawingInteraction(options: UseDrawingInteractionOptions): Us
     const height = Math.abs(rawH)
 
     mutateElement(newElement.value, { x, y, width, height })
+
     markNewElementDirty()
   })
 

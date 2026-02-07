@@ -24,10 +24,11 @@ graph TD
     RN --> RN1[renderGrid - dot grid with zoom fade]
     RN --> RN2[shapeGenerator - roughjs Drawables + cache]
     RN --> RN3[renderElement / renderScene]
+    RN --> RN5[arrowhead.ts - Canvas 2D arrowhead rendering]
 
     C --> TL[Tools Feature]
     TL --> TL1[useTool - active tool + keyboard shortcuts]
-    TL --> TL2[useDrawingInteraction - pointer → shape]
+    TL --> TL2[useDrawingInteraction - pointer → shape/arrow]
     TL --> TL3[DrawingToolbar.vue - tool selection UI]
 
     C --> SL[Selection Feature]
@@ -284,6 +285,7 @@ graph LR
             RE[renderElement.ts]
             RS[renderScene.ts]
             RI[renderInteractive.ts]
+            AH[arrowhead.ts]
         end
         subgraph "features/selection/"
             SLC[constants.ts]
@@ -343,4 +345,22 @@ graph LR
 | IDs | nanoid | Element ID generation |
 | Math | shared/math.ts | Point/vector utilities |
 
-> **Note:** This map reflects the current state after Phase 3 (Selection & Manipulation). Update when new features/directories are added.
+> **Note:** This map reflects the current state after Arrow Tool Phase 1 (straight arrows with arrowheads). Update when new features/directories are added.
+
+## Element Types
+
+| Type | Model | Notes |
+|------|-------|-------|
+| `rectangle` | Box (x, y, width, height) | Standard shape |
+| `ellipse` | Box (x, y, width, height) | Standard shape |
+| `diamond` | Box (x, y, width, height) | Standard shape |
+| `arrow` | Points-based (x, y, points[]) | `points` are relative to `x,y`. First point always `[0,0]`. `width`/`height` derived from points AABB. No rotation handles (Phase 1). |
+
+### Arrow-Specific Architecture
+
+- **Tool types**: `LinearToolType = 'arrow'` vs `ShapeToolType = 'rectangle' | 'ellipse' | 'diamond'`. Guards: `isLinearTool()`, `isShapeTool()`.
+- **Drawing**: `useDrawingInteraction` branches on `isLinearTool()` — arrows update `points[]`, shapes update `width/height`.
+- **Rendering**: roughjs `linearPath()` for shaft, Canvas 2D for arrowheads (`arrowhead.ts`). Arrowhead styles: `'arrow'` (V-shape) and `'triangle'` (filled).
+- **Hit testing**: Point-to-line-segment distance (reuses `distanceToSegment`).
+- **Selection**: AABB bounding box, no transform handles (Phase 1). Endpoint handles planned for Phase 2.
+- **Shift-drag**: Snaps to 15-degree increments via `snapAngle()` in `shared/math.ts`.

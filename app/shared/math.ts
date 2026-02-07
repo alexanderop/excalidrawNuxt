@@ -58,3 +58,10 @@ export function rotatePoint(point: Point, center: Point, angle: number): Point {
     y: center.y + dx * sin + dy * cos,
   }
 }
+
+export function snapAngle(dx: number, dy: number): Point {
+  const angle = Math.atan2(dy, dx)
+  const snapped = Math.round(angle / (Math.PI / 12)) * (Math.PI / 12)
+  const length = Math.hypot(dx, dy)
+  return { x: Math.cos(snapped) * length, y: Math.sin(snapped) * length }
+}

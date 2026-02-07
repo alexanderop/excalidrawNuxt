@@ -1,5 +1,5 @@
-import type { ExcalidrawElement } from '~/features/elements/types'
-import { rotatePoint } from '~/shared/math'
+import type { ExcalidrawElement, ExcalidrawArrowElement } from '~/features/elements/types'
+import { clamp, rotatePoint } from '~/shared/math'
 import type { Point } from '~/shared/math'
 import { getElementBounds } from './bounds'
 
@@ -28,6 +28,7 @@ export function hitTest(
   }
 
   // Phase 2: precise shape test
+  if (element.type === 'arrow') return hitTestArrow(point, element, threshold)
   if (element.type === 'rectangle') return hitTestRectangle(point, element, threshold)
   if (element.type === 'ellipse') return hitTestEllipse(point, element, threshold)
   return hitTestDiamond(point, element, threshold)
@@ -119,7 +120,15 @@ function isPointNearPolygonOutline(point: Point, vertices: Point[], threshold: n
   return false
 }
 
-function distanceToSegment(point: Point, a: Point, b: Point): number {
+function hitTestArrow(point: Point, el: ExcalidrawArrowElement, threshold: number): boolean {
+  const pts = el.points.map(p => ({ x: p.x + el.x, y: p.y + el.y }))
+  for (let i = 0; i < pts.length - 1; i++) {
+    if (distanceToSegment(point, pts[i]!, pts[i + 1]!) <= threshold) return true
+  }
+  return false
+}
+
+export function distanceToSegment(point: Point, a: Point, b: Point): number {
   const dx = b.x - a.x
   const dy = b.y - a.y
   const lengthSq = dx * dx + dy * dy
@@ -128,10 +137,7 @@ function distanceToSegment(point: Point, a: Point, b: Point): number {
     return Math.hypot(point.x - a.x, point.y - a.y)
   }
 
-  let t = ((point.x - a.x) * dx + (point.y - a.y) * dy) / lengthSq
-  if (t < 0) t = 0
-  if (t > 1) t = 1
-
+  const t = clamp(((point.x - a.x) * dx + (point.y - a.y) * dy) / lengthSq, 0, 1)
   const closestX = a.x + t * dx
   const closestY = a.y + t * dy
   return Math.hypot(point.x - closestX, point.y - closestY)

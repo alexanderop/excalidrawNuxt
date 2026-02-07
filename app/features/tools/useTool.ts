@@ -18,6 +18,8 @@ const KEY_TO_TOOL: Record<string, ToolType> = {
   '2': 'rectangle',
   '3': 'diamond',
   '4': 'ellipse',
+  a: 'arrow',
+  '5': 'arrow',
 }
 
 export function useTool(): UseToolReturn {

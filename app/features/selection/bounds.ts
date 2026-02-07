@@ -5,6 +5,12 @@ import type { Point } from '~/shared/math'
 export type Bounds = [x1: number, y1: number, x2: number, y2: number]
 
 export function getElementBounds(element: ExcalidrawElement): Bounds {
+  if (element.type === 'arrow') {
+    const xs = element.points.map(p => p.x + element.x)
+    const ys = element.points.map(p => p.y + element.y)
+    return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)]
+  }
+
   const { x, y, width, height, angle } = element
 
   if (angle === 0) {

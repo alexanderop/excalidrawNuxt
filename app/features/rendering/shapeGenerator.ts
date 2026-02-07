@@ -35,6 +35,12 @@ function generateDrawable(element: ExcalidrawElement): Drawable {
   const { width, height } = element
   const options = elementToRoughOptions(element)
 
+  if (element.type === 'arrow') {
+    const { points } = element
+    const pts = points.map(p => [p.x, p.y] satisfies [number, number])
+    return generator.linearPath(pts, options)
+  }
+
   if (element.type === 'rectangle') {
     return generator.rectangle(0, 0, width, height, options)
   }

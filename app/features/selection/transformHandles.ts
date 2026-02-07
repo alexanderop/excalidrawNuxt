@@ -11,7 +11,7 @@ export type TransformHandleType = TransformHandleDirection | 'rotation'
 export type TransformHandle = [x: number, y: number, width: number, height: number]
 export type TransformHandles = Partial<Record<TransformHandleType, TransformHandle>>
 
-const ALL_HANDLE_TYPES: TransformHandleType[] = [
+const ALL_HANDLE_TYPES: readonly TransformHandleType[] = [
   'nw', 'ne', 'sw', 'se', 'n', 's', 'e', 'w', 'rotation',
 ]
 
@@ -19,6 +19,8 @@ export function getTransformHandles(
   element: ExcalidrawElement,
   zoom: number,
 ): TransformHandles {
+  if (element.type === 'arrow') return {}
+
   const size = HANDLE_SIZE / zoom
   const margin = HANDLE_MARGIN / zoom
   const halfSize = size / 2
@@ -81,6 +83,8 @@ export function getTransformHandleAtPosition(
   element: ExcalidrawElement,
   zoom: number,
 ): TransformHandleType | null {
+  if (element.type === 'arrow') return null
+
   const handles = getTransformHandles(element, zoom)
 
   for (const type of ALL_HANDLE_TYPES) {

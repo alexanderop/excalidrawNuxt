@@ -1,4 +1,4 @@
-import type { ExcalidrawElement } from '~/features/elements/types'
+import type { ExcalidrawElement, ExcalidrawArrowElement } from '~/features/elements/types'
 import type { Box } from '~/shared/math'
 import {
   SELECTION_COLOR,
@@ -10,18 +10,45 @@ import {
 import { getTransformHandles } from '~/features/selection/transformHandles'
 import type { TransformHandles } from '~/features/selection/transformHandles'
 
+function applySelectionStroke(ctx: CanvasRenderingContext2D, zoom: number): void {
+  ctx.strokeStyle = SELECTION_COLOR
+  ctx.lineWidth = SELECTION_LINE_WIDTH / zoom
+  ctx.setLineDash([8 / zoom, 4 / zoom])
+}
+
+function renderArrowSelectionBorder(
+  ctx: CanvasRenderingContext2D,
+  element: ExcalidrawArrowElement,
+  zoom: number,
+): void {
+  const padding = SELECTION_PADDING / zoom
+  const xs = element.points.map(p => p.x + element.x)
+  const ys = element.points.map(p => p.y + element.y)
+  const minX = Math.min(...xs) - padding
+  const minY = Math.min(...ys) - padding
+  const maxX = Math.max(...xs) + padding
+  const maxY = Math.max(...ys) + padding
+
+  ctx.save()
+  applySelectionStroke(ctx, zoom)
+  ctx.strokeRect(minX, minY, maxX - minX, maxY - minY)
+  ctx.restore()
+}
+
 export function renderSelectionBorder(
   ctx: CanvasRenderingContext2D,
   element: ExcalidrawElement,
   zoom: number,
 ): void {
+  if (element.type === 'arrow') {
+    renderArrowSelectionBorder(ctx, element, zoom)
+    return
+  }
+
   const padding = SELECTION_PADDING / zoom
-  const lineWidth = SELECTION_LINE_WIDTH / zoom
 
   ctx.save()
-  ctx.strokeStyle = SELECTION_COLOR
-  ctx.lineWidth = lineWidth
-  ctx.setLineDash([8 / zoom, 4 / zoom])
+  applySelectionStroke(ctx, zoom)
 
   const cx = element.x + element.width / 2
   const cy = element.y + element.height / 2
@@ -37,6 +64,23 @@ export function renderSelectionBorder(
   )
 
   ctx.restore()
+}
+
+function traceHandlePath(
+  ctx: CanvasRenderingContext2D,
+  type: string,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  cornerRadius: number,
+): void {
+  ctx.beginPath()
+  if (type === 'rotation') {
+    ctx.arc(x + w / 2, y + h / 2, w / 2, 0, Math.PI * 2)
+    return
+  }
+  ctx.roundRect(x, y, w, h, cornerRadius)
 }
 
 export function renderTransformHandles(
@@ -56,14 +100,7 @@ export function renderTransformHandles(
   for (const [type, handle] of Object.entries(handles)) {
     if (!handle) continue
     const [x, y, w, h] = handle
-    ctx.beginPath()
-    const isRotation = type === 'rotation'
-    if (isRotation) {
-      ctx.arc(x + w / 2, y + h / 2, w / 2, 0, Math.PI * 2)
-    }
-    if (!isRotation) {
-      ctx.roundRect(x, y, w, h, cornerRadius)
-    }
+    traceHandlePath(ctx, type, x, y, w, h, cornerRadius)
     ctx.fill()
     ctx.stroke()
   }
