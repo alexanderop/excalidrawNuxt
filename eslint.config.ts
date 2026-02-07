@@ -26,7 +26,7 @@ export default defineConfigWithVueTs(
     files: ['app/**/*.vue'],
     rules: {
       // Naming conventions
-      'vue/multi-word-component-names': ['error', { ignores: ['App', 'Layout'] }],
+      'vue/multi-word-component-names': ['error', { ignores: ['App', 'Layout', 'index'] }],
       'vue/component-name-in-template-casing': ['error', 'PascalCase', {
         registeredComponentsOnly: false,
       }],

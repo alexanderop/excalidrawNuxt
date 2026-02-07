@@ -14,7 +14,19 @@ bun preview       # Preview production build
 
 - Nuxt 4 (Vue 3.5+)
 - Excalidraw (via @excalidraw/excalidraw)
+- Tailwind CSS v4 (via `@tailwindcss/vite`, not the Nuxt module)
 - TypeScript
+
+## Colors
+
+Defined in `app/assets/css/main.css` via `@theme`. Use these as Tailwind utilities:
+
+- `base` — `rgb(33,39,55)` dark navy background
+- `foreground` — `rgb(234,237,243)` light gray text
+- `accent` — `rgb(255,107,237)` hot pink highlights
+- `surface` — `rgb(52,63,96)` cards/panels
+- `muted` — `rgb(138,51,123)` subdued purple
+- `edge` — `rgb(171,75,153)` borders/dividers
 
 ## Structure
 
@@ -32,6 +44,10 @@ bun preview       # Preview production build
 - Architecture changed? Update `docs/SYSTEM_KNOWLEDGE_MAP.md`.
 - New domain added? Create a new `docs/<domain>-gotchas.md` and link it below.
 - Use Mermaid diagrams to describe complex flows, architecture, and relationships compactly.
+
+## Skills
+
+- **VueUse Skill** (`/vueuse-functions`): Contains all information about VueUse composables. Use this skill to find and apply suitable VueUse functions.
 
 ## Further Reading
 
