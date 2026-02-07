@@ -103,6 +103,57 @@ graph LR
 | Render loop | useRafFn + dirty flags | Only re-render when state changes |
 | HiDPI | devicePixelRatio scaling in bootstrapCanvas | Crisp rendering on Retina displays |
 | Coordinate system | screenToScene / sceneToScreen pure functions | Clean separation of screen vs scene space |
+| Auto-imports | Disabled (`imports: { autoImport: false }`) | Explicit imports improve IDE support, make files self-documenting, fix Vitest node-mode compat |
+| Testing | Vitest (node + browser projects) | 60% unit / 30% integration / 10% visual — canvas apps need more unit tests |
+
+## Testing Architecture
+
+```mermaid
+graph TD
+    subgraph "vitest.config.ts"
+        UP[Unit Project — node mode]
+        BP[Browser Project — Playwright/Chromium]
+    end
+
+    UP --> UT["*.unit.test.ts (co-located)"]
+    BP --> BT["*.browser.test.ts (co-located)"]
+
+    subgraph "app/__test-utils__/"
+        WS[withSetup.ts — effectScope wrapper]
+        CT[createTestApp.ts — browser render wrapper]
+        subgraph "factories/"
+            VF[viewport.ts]
+            PF[point.ts]
+        end
+    end
+
+    UT --> WS
+    UT --> VF
+    UT --> PF
+    BT --> CT
+```
+
+### Testing Pyramid (Canvas App)
+
+| Layer | Target % | What | How |
+|-------|---------|------|-----|
+| Unit (node) | 60% | Pure functions, composables | `*.unit.test.ts`, fast, no DOM |
+| Integration (browser) | 30% | Event wiring, DOM classes, component mounting | `*.browser.test.ts`, real Chromium |
+| Visual | 10% | Canvas pixel output | Future: screenshot comparison |
+
+### Naming Conventions
+
+- `app/shared/math.unit.test.ts` — co-located unit test
+- `app/features/canvas/components/CanvasContainer.browser.test.ts` — co-located browser test
+- `app/__test-utils__/` — shared helpers and factories
+
+### Key Decisions
+
+- **No `@nuxt/test-utils`** — overkill for SPA with no SSR
+- **No jsdom/happy-dom** — unit tests run in node (pure functions), browser tests use real Chromium
+- **`withSetup` uses `effectScope`** not `createApp` — works in node mode without `document`
+- **Test files excluded from `nuxi typecheck`** via `typescript.tsConfig.exclude` in nuxt config
+- **Vitest globals enabled** — `describe`, `it`, `expect` available without imports
 
 ## File Map
 
@@ -111,6 +162,7 @@ graph LR
     subgraph Root
         NC[nuxt.config.ts]
         PK[package.json]
+        VC[vitest.config.ts]
     end
 
     subgraph "app/"
@@ -136,6 +188,14 @@ graph LR
         subgraph "utils/"
             TC[tryCatch.ts]
         end
+        subgraph "__test-utils__/"
+            WS[withSetup.ts]
+            CTA[createTestApp.ts]
+            subgraph "factories/"
+                VPF[viewport.ts]
+                PTF[point.ts]
+            end
+        end
     end
 
     subgraph "docs/ — Agent Memory"
@@ -149,7 +209,7 @@ graph LR
 
 | Layer | Technology | Purpose |
 |-------|-----------|---------|
-| Framework | Nuxt 4 (SPA) | Shell, routing, auto-imports |
+| Framework | Nuxt 4 (SPA) | Shell, routing (auto-imports disabled) |
 | UI | Vue 3.5+ | Composition API, shallowRef |
 | Styling | Tailwind CSS 4 | UI layout (not canvas) |
 | Canvas shapes | roughjs | Hand-drawn rendering (Phase 2+) |
@@ -158,4 +218,4 @@ graph LR
 | IDs | nanoid | Element ID generation |
 | Math | shared/math.ts | Point/vector utilities |
 
-> **Note:** This map reflects the current state after Phase 1. Update when new features/directories are added.
+> **Note:** This map reflects the current state after Phase 1 + testing setup. Update when new features/directories are added.

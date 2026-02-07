@@ -56,3 +56,8 @@ Defined in `app/assets/css/main.css` via `@theme`. Use these as Tailwind utiliti
 - `docs/SYSTEM_KNOWLEDGE_MAP.md` - Architecture overview, data flow diagrams
 - `docs/excalidraw-gotchas.md` - Excalidraw integration pitfalls and patterns
 - `docs/nuxt-gotchas.md` - Nuxt 4 specific pitfalls and migration notes
+- `docs/advanced-patterns.md` - Vue 3 built-in components (Transition, Teleport, Suspense, KeepAlive) and advanced directives
+- `docs/core-new-apis.md` - Vue 3 reactivity system, lifecycle hooks, and composable patterns
+- `docs/script-setup-macros.md` - Vue 3 script setup syntax and compiler macros (defineProps, defineEmits, defineModel, etc.)
+- `docs/vitest-mocking.md` - Mock functions, modules, timers, and dates with vi utilities
+- `docs/vi-utilities.md` - vi helper for mocking, timers, utilities (vi.fn, vi.spyOn, vi.mock, fake timers, etc.)

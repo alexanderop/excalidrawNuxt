@@ -1,3 +1,4 @@
+import { ref, computed } from 'vue'
 import type { Ref } from 'vue'
 import { useEventListener } from '@vueuse/core'
 

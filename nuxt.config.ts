@@ -6,6 +6,14 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   ssr: false,
 
+  imports: { autoImport: false },
+
+  typescript: {
+    tsConfig: {
+      exclude: ['../app/**/*.test.ts', '../app/__test-utils__/**/*'],
+    },
+  },
+
   css: ['~/assets/css/main.css'],
 
   vite: {

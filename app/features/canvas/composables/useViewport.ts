@@ -1,8 +1,9 @@
-import type { Ref } from 'vue'
-import type { Point } from '~/shared/math'
+import { ref, computed } from 'vue'
+import type { ComputedRef, Ref } from 'vue'
 import { clamp } from '~/shared/math'
-import type { Viewport } from '../coords'
+import type { Point } from '~/shared/math'
 import { screenToScene, sceneToScreen } from '../coords'
+import type { Viewport } from '../coords'
 
 const MIN_ZOOM = 0.1
 const MAX_ZOOM = 30

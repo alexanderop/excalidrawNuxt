@@ -11,7 +11,12 @@
     "lint:oxlint": "oxlint . --fix --ignore-path .gitignore",
     "lint:eslint": "eslint . --fix --cache",
     "lint": "run-s lint:*",
-    "typecheck": "nuxi typecheck"
+    "typecheck": "nuxi typecheck",
+    "test": "vitest",
+    "test:unit": "vitest --project unit",
+    "test:browser": "vitest --project browser",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "simple-git-hooks": {
     "pre-commit": "bun run lint-staged && bun run typecheck"
@@ -34,6 +39,8 @@
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
+    "@vitest/browser": "^3.1.4",
+    "@vitest/coverage-v8": "^3.1.4",
     "@vitest/eslint-plugin": "^1.6.6",
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.6.0",
@@ -45,8 +52,11 @@
     "lint-staged": "^16.2.7",
     "npm-run-all2": "^8.0.4",
     "oxlint": "^1.43.0",
+    "playwright": "^1.52.0",
     "prettier": "^3.8.1",
     "simple-git-hooks": "^2.13.1",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^3.1.4",
+    "vitest-browser-vue": "^0.1.0"
   }
 }

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { shallowRef, markRaw, onMounted, useTemplateRef } from 'vue'
 import type { Ref, ShallowRef } from 'vue'
 import { useElementSize } from '@vueuse/core'
 import { useViewport } from '../composables/useViewport'

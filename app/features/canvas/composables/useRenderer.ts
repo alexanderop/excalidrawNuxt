@@ -1,3 +1,4 @@
+import { ref, onMounted, watch, toRaw } from 'vue'
 import type { Ref, ShallowRef } from 'vue'
 import { useRafFn } from '@vueuse/core'
 import { TWO_PI } from '~/shared/math'
@@ -61,13 +62,14 @@ export function useRenderer(options: UseRendererOptions): UseRendererReturn {
     currentDpr: number,
     w: number,
     h: number,
+    bgColor?: string,
     afterBootstrap?: (ctx: CanvasRenderingContext2D) => void,
   ): void {
     if (!dirty.value) return
     const ctx = toRaw(layer.ctx.value)
     const canvas = toRaw(layer.canvas.value)
     if (!ctx || !canvas) return
-    bootstrapCanvas(ctx, canvas, currentDpr, w, h, afterBootstrap ? '#ffffff' : undefined)
+    bootstrapCanvas(ctx, canvas, currentDpr, w, h, bgColor)
     afterBootstrap?.(ctx)
     dirty.value = false
   }
@@ -79,7 +81,7 @@ export function useRenderer(options: UseRendererOptions): UseRendererReturn {
 
     const currentDpr = dpr.value
 
-    renderDirtyCanvas(staticDirty, staticLayer, currentDpr, w, h, (ctx) => {
+    renderDirtyCanvas(staticDirty, staticLayer, currentDpr, w, h, '#ffffff', (ctx) => {
       renderGrid(ctx, scrollX.value, scrollY.value, zoom.value, w, h)
     })
     renderDirtyCanvas(newElementDirty, newElementLayer, currentDpr, w, h)
