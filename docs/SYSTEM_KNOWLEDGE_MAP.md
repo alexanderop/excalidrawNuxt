@@ -1,200 +1,18 @@
 # System Knowledge Map
 
-## Architecture Overview
+> Lightweight index — each diagram lives in its own file under `docs/diagrams/`. Load only what you need.
 
-```mermaid
-graph TD
-    A[Nuxt 4 SPA Shell] --> B[Vue 3 Pages]
-    B --> C[CanvasContainer.vue]
-    C --> D[Triple Canvas Stack]
-    D --> E1[Static Canvas - grid + elements]
-    D --> E2[NewElement Canvas - in-progress shape]
-    D --> E3[Interactive Canvas - selection UI + events]
+## Diagrams
 
-    C --> F[Canvas Composables]
-    F --> F1[useViewport - pan/zoom/coords]
-    F --> F2[useRenderer - RAF loop + dirty flags + callbacks]
-
-    C --> EL[Elements Feature]
-    EL --> EL1[useElements - reactive element array]
-    EL --> EL2[createElement - factory with defaults]
-    EL --> EL3[mutateElement - in-place mutation + version bump]
-
-    C --> RN[Rendering Feature]
-    RN --> RN1[renderGrid - dot grid with zoom fade]
-    RN --> RN2[shapeGenerator - roughjs Drawables + cache]
-    RN --> RN3[renderElement / renderScene]
-    RN --> RN5[arrowhead.ts - Canvas 2D arrowhead rendering]
-
-    C --> TL[Tools Feature]
-    TL --> TL1[useTool - active tool + keyboard shortcuts]
-    TL --> TL2[useDrawingInteraction - pointer → shape/arrow]
-    TL --> TL3[DrawingToolbar.vue - tool selection UI]
-
-    C --> LE[Linear Editor Feature]
-    LE --> LE1[useMultiPointCreation - click-to-place mode]
-    LE --> LE2[useLinearEditor - double-click to edit points]
-    LE --> LE3[pointHandles.ts - pure point manipulation]
-    LE --> LE4[renderLinearEditor.ts - handles + rubber-band]
-
-    C --> SL[Selection Feature]
-    SL --> SL1[useSelection - selectedIds + computed bounds]
-    SL --> SL2[useSelectionInteraction - state machine]
-    SL --> SL3[hitTest - point-in-shape collision]
-    SL --> SL4[transformHandles - handle positions + detection]
-    SL --> SL5[dragElements - origin-based move]
-    SL --> SL6[resizeElement - per-handle resize]
-    SL --> SL7[bounds - AABB calculations]
-
-    C --> BN[Binding Feature]
-    BN --> BN1[proximity.ts - shape edge distance + fixedPoint]
-    BN --> BN2[bindUnbind.ts - bind/unbind arrow endpoints]
-    BN --> BN3[updateBoundPoints.ts - recalc on move/resize]
-    BN --> BN4[renderBindingHighlight.ts - blue highlight]
-
-    RN --> RN4[renderInteractive - selection borders + handles + marquee]
-
-    A --> G[shared/]
-    G --> G1[math.ts - Point, distance, clamp, lerp]
-    G --> G2[random.ts - nanoid, randomInteger]
-
-    style C fill:#f9a825,color:#000
-    style D fill:#ef6c00,color:#fff
-    style F fill:#1565c0,color:#fff
-    style EL fill:#2e7d32,color:#fff
-    style RN fill:#6a1b9a,color:#fff
-    style TL fill:#c62828,color:#fff
-```
-
-## Canvas Architecture
-
-```mermaid
-flowchart LR
-    subgraph "Triple Canvas Stack"
-        SC[Static Canvas z:1]
-        NC[NewElement Canvas z:1]
-        IC[Interactive Canvas z:2]
-    end
-
-    subgraph "Canvas Composables"
-        VP[useViewport]
-        RD[useRenderer]
-        PN[usePanning]
-    end
-
-    subgraph "Features"
-        EL[useElements]
-        TL[useTool]
-        DI[useDrawingInteraction]
-    end
-
-    VP -->|scrollX, scrollY, zoom| RD
-    RD -->|onRenderStatic callback| SC
-    RD -->|onRenderNewElement callback| NC
-    RD -->|onRenderInteractive callback| IC
-    IC -->|wheel events| VP
-    IC -->|pointer events| PN
-    IC -->|pointer events| DI
-    IC -->|pointer events| SI
-    SI[useSelectionInteraction] -->|select/drag/resize| SEL[useSelection]
-    SEL -->|selectedElements| IC
-    RD -->|onRenderInteractive| IC
-    TL -->|activeTool| SI
-    TL -->|activeTool| PN
-    TL -->|activeTool| DI
-    DI -->|newElement| NC
-    DI -->|onElementCreated| EL
-    EL -->|elements| SC
-```
-
-## Render Pipeline
-
-```mermaid
-sequenceDiagram
-    participant State as Viewport/Size Change
-    participant Dirty as Dirty Flags
-    participant RAF as useRafFn Loop
-    participant Canvas as Canvas 2D + RoughCanvas
-
-    State->>Dirty: markAllDirty()
-    RAF->>Dirty: check flags each frame
-    Dirty->>RAF: staticDirty=true
-    RAF->>Canvas: bootstrapCanvas(ctx, dpr, w, h, bgColor)
-    RAF->>Canvas: onRenderStatic → renderGrid + renderScene
-    RAF->>Dirty: staticDirty=false
-    Note over RAF,Canvas: newElement dirty → onRenderNewElement → renderElement
-```
-
-## Shape Drawing Flow (Phase 2)
-
-```mermaid
-sequenceDiagram
-    participant User as User Input
-    participant DI as useDrawingInteraction
-    participant EL as createElement/mutateElement
-    participant SG as shapeGenerator
-    participant RC as RoughCanvas
-
-    User->>DI: pointerdown (with drawing tool active)
-    DI->>EL: createElement(type, sceneX, sceneY)
-    DI->>DI: set newElement, capture pointer
-
-    User->>DI: pointermove (drag)
-    DI->>EL: mutateElement(el, {x, y, width, height})
-    DI->>DI: markNewElementDirty()
-    Note over DI: shift-constraint + negative normalization
-
-    User->>DI: pointerup
-    DI->>DI: onElementCreated(el) → addElement
-    DI->>DI: reset tool to selection
-    DI->>DI: markStaticDirty()
-    Note over SG,RC: RAF renders via generateShape → rc.draw
-```
-
-## Feature-Based Architecture
-
-```mermaid
-graph LR
-    subgraph "app/"
-        Pages[pages/index.vue]
-        subgraph "features/"
-            Canvas[canvas/]
-            Elements[elements/]
-            Rendering[rendering/]
-            Tools[tools/]
-            LinearEditor[linear-editor/]
-            Binding[binding/]
-        end
-        subgraph "shared/"
-            Math[math.ts]
-            Random[random.ts]
-        end
-    end
-
-    Pages --> Canvas
-    Canvas --> Elements
-    Canvas --> Rendering
-    Canvas --> Tools
-    Tools --> Elements
-    Rendering --> Elements
-    LinearEditor --> Elements
-    Binding --> Elements
-    Tools --> Binding
-    LinearEditor --> Binding
-    Canvas --> Binding
-    Canvas --> LinearEditor
-    Canvas --> Math
-    Canvas --> Random
-    Elements --> Random
-```
-
-### Import Rules
-
-1. **Pages** can import from **features** (pages are top-level orchestrators)
-2. **Features** can import from **shared** (zero-dependency utilities)
-3. **Features** can import from **other features** (canvas orchestrates elements, rendering, tools)
-4. **shared/** imports from nothing — it is dependency-free
-5. **components/** and **composables/** (top-level) cannot import from **features/**
+| Diagram | File | What it shows |
+|---------|------|---------------|
+| Architecture Overview | [diagrams/architecture-overview.md](diagrams/architecture-overview.md) | Full dependency graph: Nuxt shell → pages → features → composables |
+| Canvas Architecture | [diagrams/canvas-architecture.md](diagrams/canvas-architecture.md) | Triple canvas stack data flow + composable wiring |
+| Render Pipeline | [diagrams/render-pipeline.md](diagrams/render-pipeline.md) | Dirty-flag driven RAF loop sequence |
+| Shape Drawing Flow | [diagrams/shape-drawing-flow.md](diagrams/shape-drawing-flow.md) | Pointer event sequence for creating shapes/arrows |
+| Feature Architecture | [diagrams/feature-architecture.md](diagrams/feature-architecture.md) | Feature directory layout + import rules |
+| Testing Architecture | [diagrams/testing-architecture.md](diagrams/testing-architecture.md) | Vitest dual-project setup + testing pyramid |
+| File Map | [diagrams/file-map.md](diagrams/file-map.md) | Complete file tree of every module |
 
 ## Key Architectural Decisions
 
@@ -206,6 +24,7 @@ graph LR
 | Reactivity | shallowRef + markRaw for DOM/Canvas/RoughCanvas APIs | Never proxy CanvasRenderingContext2D or RoughCanvas |
 | SSR | Disabled (ssr: false) | Canvas API is browser-only |
 | Render loop | useRafFn + dirty flags + configurable callbacks | Only re-render when state changes; renderer stays generic |
+| Deferred dirty flags | createDirtyFlags — stable no-op refs, bind() after renderer init | Breaks circular init dependency without mutable object hack |
 | HiDPI | devicePixelRatio scaling in bootstrapCanvas | Crisp rendering on Retina displays |
 | Coordinate system | screenToScene / sceneToScreen pure functions | Clean separation of screen vs scene space |
 | Auto-imports | Disabled (`imports: { autoImport: false }`) | Explicit imports improve IDE support, make files self-documenting, fix Vitest node-mode compat |
@@ -215,160 +34,6 @@ graph LR
 | Shape cache | Map keyed by id, invalidated by versionNonce | Avoid regenerating roughjs Drawables every frame |
 | roughjs integration | RoughGenerator (headless, testable) + RoughCanvas (render) | Generator works in Node tests; RoughCanvas created per canvas in onMounted |
 | Tool shortcuts | useMagicKeys + useActiveElement typing guard | Simple keyboard shortcuts, safe when typing in inputs |
-
-## Testing Architecture
-
-```mermaid
-graph TD
-    subgraph "vitest.config.ts"
-        UP[Unit Project — node mode]
-        BP[Browser Project — Playwright/Chromium]
-    end
-
-    UP --> UT["*.unit.test.ts (co-located)"]
-    BP --> BT["*.browser.test.ts (co-located)"]
-
-    subgraph "app/__test-utils__/"
-        WS[withSetup.ts — effectScope wrapper]
-        subgraph "factories/"
-            VF[viewport.ts]
-            PF[point.ts]
-            EF[element.ts]
-        end
-    end
-
-    UT --> WS
-    UT --> VF
-    UT --> PF
-    UT --> EF
-```
-
-### Testing Pyramid (Canvas App)
-
-| Layer | Target % | What | How |
-|-------|---------|------|-----|
-| Unit (node) | 60% | Pure functions, composables | `*.unit.test.ts`, fast, no DOM |
-| Integration (browser) | 30% | Event wiring, DOM classes, component mounting | `*.browser.test.ts`, real Chromium |
-| Visual | 10% | Canvas pixel output | Future: screenshot comparison |
-
-### Naming Conventions
-
-- `app/shared/math.unit.test.ts` — co-located unit test
-- `app/features/canvas/components/CanvasContainer.browser.test.ts` — co-located browser test
-- `app/__test-utils__/` — shared helpers and factories
-
-### Key Decisions
-
-- **No `@nuxt/test-utils`** — overkill for SPA with no SSR
-- **No jsdom/happy-dom** — unit tests run in node (pure functions), browser tests use real Chromium
-- **`withSetup` returns `T & Disposable`** — use with `using` keyword for automatic `effectScope` cleanup (see `docs/testing-conventions.md`)
-- **Test files excluded from `nuxi typecheck`** via `typescript.tsConfig.exclude` in nuxt config
-- **Vitest globals enabled** — `describe`, `it`, `expect` available without imports
-
-## File Map
-
-```mermaid
-graph LR
-    subgraph Root
-        NC[nuxt.config.ts]
-        PK[package.json]
-        VC[vitest.config.ts]
-    end
-
-    subgraph "app/"
-        AV[app.vue]
-        subgraph "pages/"
-            PI[index.vue]
-        end
-        subgraph "features/canvas/"
-            CO[coords.ts]
-            CIX[index.ts]
-            subgraph "canvas/composables/"
-                UV[useViewport.ts]
-                UR[useRenderer.ts]
-                UP[usePanning.ts]
-            end
-            subgraph "canvas/components/"
-                CC[CanvasContainer.vue]
-            end
-        end
-        subgraph "features/elements/"
-            ET[types.ts]
-            EC[constants.ts]
-            ECR[createElement.ts]
-            EM[mutateElement.ts]
-            UE[useElements.ts]
-        end
-        subgraph "features/rendering/"
-            RG[renderGrid.ts]
-            SG[shapeGenerator.ts]
-            RE[renderElement.ts]
-            RS[renderScene.ts]
-            RI[renderInteractive.ts]
-            AH[arrowhead.ts]
-        end
-        subgraph "features/selection/"
-            SLC[constants.ts]
-            SLB[bounds.ts]
-            SLH[hitTest.ts]
-            SLTH[transformHandles.ts]
-            SLD[dragElements.ts]
-            SLR[resizeElement.ts]
-            subgraph "selection/composables/"
-                SLS[useSelection.ts]
-                SLSI[useSelectionInteraction.ts]
-            end
-        end
-        subgraph "features/linear-editor/"
-            LEC[constants.ts]
-            LET[types.ts]
-            LEPH[pointHandles.ts]
-            LEMPC[useMultiPointCreation.ts]
-            LELE[useLinearEditor.ts]
-            LERLE[renderLinearEditor.ts]
-            LEIX[index.ts]
-        end
-        subgraph "features/binding/"
-            BT[types.ts]
-            BC[constants.ts]
-            BP[proximity.ts]
-            BBU[bindUnbind.ts]
-            BUBP[updateBoundPoints.ts]
-            BRH[renderBindingHighlight.ts]
-            BIX[index.ts]
-        end
-        subgraph "features/tools/"
-            TT[types.ts]
-            UT2[useTool.ts]
-            UDI[useDrawingInteraction.ts]
-            subgraph "tools/components/"
-                DT[DrawingToolbar.vue]
-                TI[toolIcons.ts]
-            end
-        end
-        subgraph "shared/"
-            MT[math.ts]
-            RN[random.ts]
-        end
-        subgraph "utils/"
-            TC[tryCatch.ts]
-        end
-        subgraph "__test-utils__/"
-            WS[withSetup.ts]
-            subgraph "factories/"
-                VPF[viewport.ts]
-                PTF[point.ts]
-                ELF[element.ts]
-            end
-        end
-    end
-
-    subgraph "docs/ — Agent Memory"
-        SK[SYSTEM_KNOWLEDGE_MAP.md]
-        EG[excalidraw-gotchas.md]
-        NG[nuxt-gotchas.md]
-    end
-```
 
 ## Technology Stack
 
@@ -382,8 +47,6 @@ graph LR
 | Composables | VueUse | Events, RAF, element size, magic keys |
 | IDs | nanoid | Element ID generation |
 | Math | shared/math.ts | Point/vector utilities |
-
-> **Note:** This map reflects the current state after arrow binding (arrows attach to shapes and follow on move/resize). Update when new features/directories are added.
 
 ## Element Types
 
@@ -443,3 +106,5 @@ Arrows attach to shapes via `FixedPointBinding` (elementId + 0-1 ratio on bbox).
 - `useLinearEditor` — suggested bindings when dragging endpoints, bind/unbind on pointerup
 - `renderInteractiveScene` — renders suggestedBindings array before selection overlays
 - `useSceneRenderer` — passes suggestedBindings through to render callback
+
+> **Note:** This map reflects the current state after arrow binding. Update when new features/directories are added.

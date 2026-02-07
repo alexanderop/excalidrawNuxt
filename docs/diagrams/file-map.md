@@ -1,0 +1,107 @@
+# File Map
+
+Complete file tree with every module in the project.
+
+```mermaid
+graph LR
+    subgraph Root
+        NC[nuxt.config.ts]
+        PK[package.json]
+        VC[vitest.config.ts]
+    end
+
+    subgraph "app/"
+        AV[app.vue]
+        subgraph "pages/"
+            PI[index.vue]
+        end
+        subgraph "features/canvas/"
+            CO[coords.ts]
+            CIX[index.ts]
+            subgraph "canvas/composables/"
+                UV[useViewport.ts]
+                UR[useRenderer.ts]
+                UP[usePanning.ts]
+                DF[createDirtyFlags.ts]
+            end
+            subgraph "canvas/components/"
+                CC[CanvasContainer.vue]
+            end
+        end
+        subgraph "features/elements/"
+            ET[types.ts]
+            EC[constants.ts]
+            ECR[createElement.ts]
+            EM[mutateElement.ts]
+            UE[useElements.ts]
+        end
+        subgraph "features/rendering/"
+            RG[renderGrid.ts]
+            SG[shapeGenerator.ts]
+            RE[renderElement.ts]
+            RS[renderScene.ts]
+            RI[renderInteractive.ts]
+            AH[arrowhead.ts]
+        end
+        subgraph "features/selection/"
+            SLC[constants.ts]
+            SLB[bounds.ts]
+            SLH[hitTest.ts]
+            SLTH[transformHandles.ts]
+            SLD[dragElements.ts]
+            SLR[resizeElement.ts]
+            subgraph "selection/composables/"
+                SLS[useSelection.ts]
+                SLSI[useSelectionInteraction.ts]
+            end
+        end
+        subgraph "features/linear-editor/"
+            LEC[constants.ts]
+            LET[types.ts]
+            LEPH[pointHandles.ts]
+            LEMPC[useMultiPointCreation.ts]
+            LELE[useLinearEditor.ts]
+            LERLE[renderLinearEditor.ts]
+            LEIX[index.ts]
+        end
+        subgraph "features/binding/"
+            BT[types.ts]
+            BC[constants.ts]
+            BP[proximity.ts]
+            BBU[bindUnbind.ts]
+            BUBP[updateBoundPoints.ts]
+            BRH[renderBindingHighlight.ts]
+            BIX[index.ts]
+        end
+        subgraph "features/tools/"
+            TT[types.ts]
+            UT2[useTool.ts]
+            UDI[useDrawingInteraction.ts]
+            subgraph "tools/components/"
+                DT[DrawingToolbar.vue]
+                TI[toolIcons.ts]
+            end
+        end
+        subgraph "shared/"
+            MT[math.ts]
+            RN[random.ts]
+        end
+        subgraph "utils/"
+            TC[tryCatch.ts]
+        end
+        subgraph "__test-utils__/"
+            WS[withSetup.ts]
+            subgraph "factories/"
+                VPF[viewport.ts]
+                PTF[point.ts]
+                ELF[element.ts]
+            end
+        end
+    end
+
+    subgraph "docs/ — Agent Memory"
+        SK[SYSTEM_KNOWLEDGE_MAP.md]
+        EG[excalidraw-gotchas.md]
+        NG[nuxt-gotchas.md]
+    end
+```

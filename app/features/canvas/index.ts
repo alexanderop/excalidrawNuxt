@@ -1,4 +1,5 @@
 export { useCanvasLayers } from './composables/useCanvasLayers'
+export { createDirtyFlags } from './composables/createDirtyFlags'
 export { usePanning } from './composables/usePanning'
 export { useRenderer } from './composables/useRenderer'
 export { useSceneRenderer } from './composables/useSceneRenderer'
