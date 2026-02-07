@@ -66,19 +66,10 @@ export function useDrawingInteraction(options: UseDrawingInteractionOptions): Us
       rawH = side * Math.sign(rawH || 1)
     }
 
-    let x = originX
-    let width = rawW
-    if (rawW < 0) {
-      x = originX + rawW
-      width = -rawW
-    }
-
-    let y = originY
-    let height = rawH
-    if (rawH < 0) {
-      y = originY + rawH
-      height = -rawH
-    }
+    const x = Math.min(originX, originX + rawW)
+    const y = Math.min(originY, originY + rawH)
+    const width = Math.abs(rawW)
+    const height = Math.abs(rawH)
 
     mutateElement(newElement.value, { x, y, width, height })
     markNewElementDirty()

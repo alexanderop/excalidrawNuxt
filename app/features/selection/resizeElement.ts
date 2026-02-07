@@ -1,14 +1,14 @@
 import type { ExcalidrawElement } from '~/features/elements/types'
 import { mutateElement } from '~/features/elements/mutateElement'
 import { rotatePoint } from '~/shared/math'
-import type { Point } from '~/shared/math'
+import type { Box, Point } from '~/shared/math'
 import { MIN_ELEMENT_SIZE } from './constants'
 import type { TransformHandleDirection } from './transformHandles'
 
 export interface ResizeState {
   handleType: TransformHandleDirection
   /** Original element bounds at resize start */
-  originalBounds: { x: number; y: number; width: number; height: number }
+  originalBounds: Box
   /** Scene-space pointer position at resize start */
   origin: Point
 }
@@ -46,11 +46,11 @@ export function resizeElement(
 }
 
 function applyHandleDelta(
-  ob: { x: number; y: number; width: number; height: number },
+  ob: Box,
   handleType: TransformHandleDirection,
   dx: number,
   dy: number,
-): { x: number; y: number; width: number; height: number } {
+): Box {
   let x = ob.x
   let y = ob.y
   let width = ob.width

@@ -1,10 +1,23 @@
 import { shallowRef, computed } from 'vue'
-import type { ShallowRef } from 'vue'
+import type { ComputedRef, ShallowRef } from 'vue'
 import type { ExcalidrawElement } from '~/features/elements/types'
 import { getCommonBounds } from '../bounds'
 import type { Bounds } from '../bounds'
 
-export function useSelection(elements: ShallowRef<readonly ExcalidrawElement[]>) {
+interface UseSelectionReturn {
+  selectedIds: ShallowRef<ReadonlySet<string>>
+  selectedElements: ComputedRef<ExcalidrawElement[]>
+  selectionBounds: ComputedRef<Bounds | null>
+  select: (id: string) => void
+  addToSelection: (id: string) => void
+  removeFromSelection: (id: string) => void
+  toggleSelection: (id: string) => void
+  clearSelection: () => void
+  selectAll: () => void
+  isSelected: (id: string) => boolean
+}
+
+export function useSelection(elements: ShallowRef<readonly ExcalidrawElement[]>): UseSelectionReturn {
   const selectedIds = shallowRef<ReadonlySet<string>>(new Set())
 
   const selectedElements = computed(() =>
@@ -33,10 +46,11 @@ export function useSelection(elements: ShallowRef<readonly ExcalidrawElement[]>)
   }
 
   function toggleSelection(id: string): void {
-    const next = new Set(selectedIds.value)
-    const action = next.has(id) ? 'delete' : 'add'
-    next[action](id)
-    selectedIds.value = next
+    if (selectedIds.value.has(id)) {
+      removeFromSelection(id)
+      return
+    }
+    addToSelection(id)
   }
 
   function clearSelection(): void {

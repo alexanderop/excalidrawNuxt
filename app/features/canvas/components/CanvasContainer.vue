@@ -131,11 +131,13 @@ const { selectionBox, cursorStyle } = useSelectionInteraction({
 })
 
 const combinedCursorClass = computed(() => {
+  // Panning cursor takes priority over selection cursor
   if (cursorClass.value !== 'cursor-default') return cursorClass.value
-  if (activeTool.value !== 'selection') return cursorClass.value
-  if (cursorStyle.value === 'move') return 'cursor-move'
-  if (cursorStyle.value !== 'default') return `cursor-${cursorStyle.value}`
-  return cursorClass.value
+  // Selection interaction cursor only applies in selection tool mode
+  if (activeTool.value === 'selection' && cursorStyle.value !== 'default') {
+    return `cursor-${cursorStyle.value}`
+  }
+  return 'cursor-default'
 })
 
 // Track selection changes to mark interactive canvas dirty

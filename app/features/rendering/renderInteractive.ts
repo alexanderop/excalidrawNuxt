@@ -1,4 +1,5 @@
 import type { ExcalidrawElement } from '~/features/elements/types'
+import type { Box } from '~/shared/math'
 import {
   SELECTION_COLOR,
   SELECTION_LINE_WIDTH,
@@ -56,11 +57,11 @@ export function renderTransformHandles(
     if (!handle) continue
     const [x, y, w, h] = handle
     ctx.beginPath()
-    if (type === 'rotation') {
+    const isRotation = type === 'rotation'
+    if (isRotation) {
       ctx.arc(x + w / 2, y + h / 2, w / 2, 0, Math.PI * 2)
     }
-
-    if (type !== 'rotation') {
+    if (!isRotation) {
       ctx.roundRect(x, y, w, h, cornerRadius)
     }
     ctx.fill()
@@ -72,7 +73,7 @@ export function renderTransformHandles(
 
 export function renderSelectionBox(
   ctx: CanvasRenderingContext2D,
-  box: { x: number; y: number; width: number; height: number },
+  box: Box,
   zoom: number,
 ): void {
   ctx.save()
@@ -90,7 +91,7 @@ export function renderInteractiveScene(
   ctx: CanvasRenderingContext2D,
   selectedElements: readonly ExcalidrawElement[],
   zoom: number,
-  selectionBox: { x: number; y: number; width: number; height: number } | null,
+  selectionBox: Box | null,
 ): void {
   for (const el of selectedElements) {
     renderSelectionBorder(ctx, el, zoom)

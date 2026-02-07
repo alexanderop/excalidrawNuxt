@@ -3,7 +3,7 @@ import type { Ref, ShallowRef } from 'vue'
 import { useEventListener } from '@vueuse/core'
 import type { ExcalidrawElement } from '~/features/elements/types'
 import { mutateElement } from '~/features/elements/mutateElement'
-import type { Point } from '~/shared/math'
+import type { Box, Point } from '~/shared/math'
 import type { ToolType } from '~/features/tools/types'
 import { hitTest, getElementAtPosition } from '../hitTest'
 import { getTransformHandleAtPosition } from '../transformHandles'
@@ -20,6 +20,11 @@ type InteractionState =
   | { type: 'dragging'; dragState: DragState }
   | { type: 'resizing'; resizeState: ResizeState }
   | { type: 'boxSelecting'; startPoint: Point }
+
+interface UseSelectionInteractionReturn {
+  selectionBox: ShallowRef<Box | null>
+  cursorStyle: ShallowRef<string>
+}
 
 interface UseSelectionInteractionOptions {
   canvasRef: Readonly<Ref<HTMLCanvasElement | null>>
@@ -41,7 +46,7 @@ interface UseSelectionInteractionOptions {
   setTool: (tool: ToolType) => void
 }
 
-export function useSelectionInteraction(options: UseSelectionInteractionOptions) {
+export function useSelectionInteraction(options: UseSelectionInteractionOptions): UseSelectionInteractionReturn {
   const {
     canvasRef,
     activeTool,
@@ -63,7 +68,7 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
 
   let interaction: InteractionState = { type: 'idle' }
 
-  const selectionBox = shallowRef<{ x: number; y: number; width: number; height: number } | null>(null)
+  const selectionBox = shallowRef<Box | null>(null)
   const cursorStyle = shallowRef('default')
 
   function tryStartResize(scenePoint: Point, e: PointerEvent): boolean {
@@ -198,12 +203,10 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
       }
     }
 
-    // Check any element hover
-    const hitElement = getElementAtPosition(scenePoint, elements.value, zoom.value)
-    cursorStyle.value = hitElement ? 'default' : 'default'
+    cursorStyle.value = 'default'
   }
 
-  function selectElementsInBox(box: { x: number; y: number; width: number; height: number }): void {
+  function selectElementsInBox(box: Box): void {
     const boxBounds: Bounds = [box.x, box.y, box.x + box.width, box.y + box.height]
     const ids: string[] = []
 
@@ -292,7 +295,7 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
   }
 }
 
-function normalizeBox(start: Point, end: Point): { x: number; y: number; width: number; height: number } {
+function normalizeBox(start: Point, end: Point): Box {
   return {
     x: Math.min(start.x, end.x),
     y: Math.min(start.y, end.y),
