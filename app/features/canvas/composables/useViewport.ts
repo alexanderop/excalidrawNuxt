@@ -1,12 +1,25 @@
+import type { Ref } from 'vue'
 import type { Point } from '~/shared/math'
 import { clamp } from '~/shared/math'
-import { screenToScene, sceneToScreen } from '../coords'
 import type { Viewport } from '../coords'
+import { screenToScene, sceneToScreen } from '../coords'
 
 const MIN_ZOOM = 0.1
 const MAX_ZOOM = 30
 
-export function useViewport() {
+interface UseViewportReturn {
+  scrollX: Ref<number>
+  scrollY: Ref<number>
+  zoom: Ref<number>
+  viewport: ComputedRef<Viewport>
+  toScene: (screenX: number, screenY: number) => Point
+  toScreen: (sceneX: number, sceneY: number) => Point
+  zoomTo: (newZoom: number, center?: Point) => void
+  zoomBy: (delta: number, center?: Point) => void
+  panBy: (dx: number, dy: number) => void
+}
+
+export function useViewport(): UseViewportReturn {
   const scrollX = ref(0)
   const scrollY = ref(0)
   const zoom = ref(1)
@@ -25,7 +38,7 @@ export function useViewport() {
     return sceneToScreen(sceneX, sceneY, viewport.value)
   }
 
-  function zoomTo(newZoom: number, center?: Point) {
+  function zoomTo(newZoom: number, center?: Point): void {
     const clampedZoom = clamp(newZoom, MIN_ZOOM, MAX_ZOOM)
 
     if (center) {
@@ -37,11 +50,11 @@ export function useViewport() {
     zoom.value = clampedZoom
   }
 
-  function zoomBy(delta: number, center?: Point) {
+  function zoomBy(delta: number, center?: Point): void {
     zoomTo(zoom.value * (1 + delta), center)
   }
 
-  function panBy(dx: number, dy: number) {
+  function panBy(dx: number, dy: number): void {
     scrollX.value += dx / zoom.value
     scrollY.value += dy / zoom.value
   }

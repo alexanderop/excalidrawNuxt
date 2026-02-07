@@ -3,6 +3,8 @@ export interface Point {
   y: number
 }
 
+export const TWO_PI = Math.PI * 2
+
 export function createPoint(x: number, y: number): Point {
   return { x, y }
 }

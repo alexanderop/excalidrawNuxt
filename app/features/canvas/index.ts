@@ -1,4 +1,5 @@
-export { useViewport } from './composables/useViewport'
+export { usePanning } from './composables/usePanning'
 export { useRenderer } from './composables/useRenderer'
+export { useViewport } from './composables/useViewport'
 export { screenToScene, sceneToScreen } from './coords'
 export type { Viewport } from './coords'
