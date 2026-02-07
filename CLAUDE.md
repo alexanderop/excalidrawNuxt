@@ -40,6 +40,10 @@ The original Excalidraw source code lives in `excalidraw/` (git-ignored, not par
 - `nuxt.config.ts` - Nuxt configuration
 - `docs/` - Agent memory (gotchas, patterns, architecture)
 
+## Canvas Testing
+
+Browser tests (`*.browser.test.ts`) test canvas interactions via Vitest browser mode + Playwright. **Never use `page.mouse`** for canvas events — iframe coordinate mismatches cause silent failures. Use the `canvasDrag` custom command which dispatches `PointerEvent`s directly inside the iframe via `frame.evaluate`. See `app/__test-utils__/commands/canvasDrag.ts`.
+
 ## Docs = Memory
 
 **Do NOT use Claude Code's built-in memory (`~/.claude/projects/.../memory/`).** The `docs/` folder IS the agent memory. It is version-controlled, shared across sessions, and agents maintain it themselves.

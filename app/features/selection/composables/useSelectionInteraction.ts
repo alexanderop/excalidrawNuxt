@@ -1,10 +1,15 @@
 import { shallowRef } from 'vue'
 import type { Ref, ShallowRef } from 'vue'
 import { useEventListener } from '@vueuse/core'
-import type { ExcalidrawElement } from '~/features/elements/types'
+import type { ExcalidrawElement, ExcalidrawArrowElement } from '~/features/elements/types'
 import { mutateElement } from '~/features/elements/mutateElement'
 import type { Box, Point } from '~/shared/math'
 import type { ToolType } from '~/features/tools/types'
+import {
+  updateBoundArrowEndpoints,
+  unbindArrow,
+  unbindAllArrowsFromShape,
+} from '~/features/binding'
 import { hitTest, getElementAtPosition } from '../hitTest'
 import { getTransformHandleAtPosition } from '../transformHandles'
 import type { TransformHandleType, TransformHandleDirection } from '../transformHandles'
@@ -45,6 +50,10 @@ interface UseSelectionInteractionOptions {
   markInteractiveDirty: () => void
   setTool: (tool: ToolType) => void
   selectionBox?: ShallowRef<Box | null>
+  /** When set, selection interaction defers to the linear editor */
+  editingLinearElement?: ShallowRef<ExcalidrawArrowElement | null>
+  /** Called when user double-clicks an arrow element */
+  onDoubleClickArrow?: (element: ExcalidrawArrowElement) => void
 }
 
 export function useSelectionInteraction(options: UseSelectionInteractionOptions): UseSelectionInteractionReturn {
@@ -58,6 +67,7 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
     elements,
     selectedElements,
     select,
+    addToSelection,
     toggleSelection,
     clearSelection,
     selectAll,
@@ -65,6 +75,8 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
     markStaticDirty,
     markInteractiveDirty,
     setTool,
+    editingLinearElement,
+    onDoubleClickArrow,
   } = options
 
   let interaction: InteractionState = { type: 'idle' }
@@ -112,9 +124,13 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
     return true
   }
 
+  function isSelectionBlocked(): boolean {
+    return activeTool.value !== 'selection' || !!editingLinearElement?.value
+  }
+
   function handlePointerDown(e: PointerEvent): void {
     if (spaceHeld.value || isPanning.value) return
-    if (activeTool.value !== 'selection') return
+    if (isSelectionBlocked()) return
     if (e.button !== 0) return
 
     const scenePoint = toScene(e.offsetX, e.offsetY)
@@ -134,6 +150,19 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
     markInteractiveDirty()
   }
 
+  function updateBoundArrowsForSelected(): void {
+    for (const el of selectedElements()) {
+      if (el.type !== 'arrow' && el.boundElements.length > 0) {
+        updateBoundArrowEndpoints(el, elements.value)
+      }
+    }
+  }
+
+  function markSceneDirty(): void {
+    markStaticDirty()
+    markInteractiveDirty()
+  }
+
   function handlePointerMove(e: PointerEvent): void {
     const scenePoint = toScene(e.offsetX, e.offsetY)
 
@@ -144,8 +173,8 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
 
     if (interaction.type === 'dragging') {
       continueDrag(scenePoint, interaction.dragState, selectedElements())
-      markStaticDirty()
-      markInteractiveDirty()
+      updateBoundArrowsForSelected()
+      markSceneDirty()
       return
     }
 
@@ -153,33 +182,43 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
       const selected = selectedElements()
       if (selected.length !== 1) return
       resizeElement(scenePoint, interaction.resizeState, selected[0]!, e.shiftKey)
-      markStaticDirty()
-      markInteractiveDirty()
+      updateBoundArrowsForSelected()
+      markSceneDirty()
       return
     }
 
-    if (interaction.type === 'boxSelecting') {
-      const box = normalizeBox(interaction.startPoint, scenePoint)
-      selectionBox.value = box
-      selectElementsInBox(box)
-      markInteractiveDirty()
-    }
+    // interaction.type === 'boxSelecting'
+    const box = normalizeBox(interaction.startPoint, scenePoint)
+    selectionBox.value = box
+    selectElementsInBox(box)
+    markInteractiveDirty()
   }
 
   function handlePointerUp(e: PointerEvent): void {
     canvasRef.value?.releasePointerCapture(e.pointerId)
+    const prevInteraction = interaction
+    interaction = { type: 'idle' }
 
-    if (interaction.type === 'boxSelecting') {
+    if (prevInteraction.type === 'boxSelecting') {
       selectionBox.value = null
       markInteractiveDirty()
+      return
     }
 
-    if (interaction.type === 'dragging' || interaction.type === 'resizing') {
-      markStaticDirty()
-      markInteractiveDirty()
+    if (prevInteraction.type === 'dragging') {
+      // Unbind arrows that were dragged as a whole (detaches from shapes)
+      for (const el of selectedElements()) {
+        if (el.type === 'arrow' && (el.startBinding || el.endBinding)) {
+          unbindArrow(el, elements.value)
+        }
+      }
+      markSceneDirty()
+      return
     }
 
-    interaction = { type: 'idle' }
+    if (prevInteraction.type === 'resizing') {
+      markSceneDirty()
+    }
   }
 
   function updateCursor(scenePoint: Point): void {
@@ -222,22 +261,38 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
 
     clearSelection()
     for (const id of ids) {
-      options.addToSelection(id)
+      addToSelection(id)
     }
   }
 
+  function unbindBeforeDelete(selected: readonly ExcalidrawElement[]): void {
+    for (const el of selected) {
+      if (el.type === 'arrow') {
+        unbindArrow(el, elements.value)
+        continue
+      }
+      if (el.boundElements.length > 0) {
+        unbindAllArrowsFromShape(el, elements.value)
+      }
+    }
+  }
+
+  function handleDelete(selected: readonly ExcalidrawElement[]): void {
+    unbindBeforeDelete(selected)
+    for (const el of selected) {
+      mutateElement(el, { isDeleted: true })
+    }
+    clearSelection()
+    markSceneDirty()
+  }
+
   function handleKeyDown(e: KeyboardEvent): void {
-    if (activeTool.value !== 'selection') return
+    if (isSelectionBlocked()) return
 
     const selected = selectedElements()
 
     if (e.key === 'Delete' || e.key === 'Backspace') {
-      for (const el of selected) {
-        mutateElement(el, { isDeleted: true })
-      }
-      clearSelection()
-      markStaticDirty()
-      markInteractiveDirty()
+      handleDelete(selected)
       return
     }
 
@@ -278,13 +333,24 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
         y: el.y + delta.y,
       })
     }
-    markStaticDirty()
-    markInteractiveDirty()
+    updateBoundArrowsForSelected()
+    markSceneDirty()
   }
 
   useEventListener(canvasRef, 'pointerdown', handlePointerDown)
   useEventListener(canvasRef, 'pointermove', handlePointerMove)
   useEventListener(canvasRef, 'pointerup', handlePointerUp)
+
+  useEventListener(canvasRef, 'dblclick', (e: MouseEvent) => {
+    if (activeTool.value !== 'selection') return
+    if (!onDoubleClickArrow) return
+
+    const scenePoint = toScene(e.offsetX, e.offsetY)
+    const hitElement = getElementAtPosition(scenePoint, elements.value, zoom.value)
+    if (!hitElement || hitElement.type !== 'arrow') return
+
+    onDoubleClickArrow(hitElement)
+  })
 
   if (typeof document !== 'undefined') {
     useEventListener(document, 'keydown', handleKeyDown)

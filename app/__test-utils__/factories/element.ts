@@ -23,6 +23,7 @@ const BASE_PROPS = {
   seed: 12_345,
   versionNonce: 67_890,
   isDeleted: false,
+  boundElements: [],
 }
 
 export function createTestElement(overrides?: Partial<ExcalidrawRectangleElement> & { type?: 'rectangle' }): ExcalidrawRectangleElement
@@ -40,12 +41,14 @@ export function createTestElement(
 export function createTestArrowElement(
   overrides: Partial<Omit<ExcalidrawArrowElement, 'type'>> = {},
 ): ExcalidrawArrowElement {
-  return {
+  const defaults: ExcalidrawArrowElement = {
     ...BASE_PROPS,
     type: 'arrow',
     points: [createPoint(0, 0), createPoint(100, 50)],
     startArrowhead: null,
     endArrowhead: 'arrow',
-    ...overrides,
+    startBinding: null,
+    endBinding: null,
   }
+  return Object.assign(defaults, overrides)
 }

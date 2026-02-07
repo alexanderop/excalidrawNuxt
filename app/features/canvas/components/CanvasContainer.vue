@@ -9,7 +9,9 @@ import { useElements } from '~/features/elements/useElements'
 import { useTool } from '~/features/tools/useTool'
 import { useDrawingInteraction } from '~/features/tools/useDrawingInteraction'
 import { useSelection, useSelectionInteraction } from '~/features/selection'
-import type { ExcalidrawElement } from '~/features/elements/types'
+import { useMultiPointCreation } from '~/features/linear-editor/useMultiPointCreation'
+import { useLinearEditor } from '~/features/linear-editor/useLinearEditor'
+import type { ExcalidrawArrowElement, ExcalidrawElement } from '~/features/elements/types'
 import type { Box } from '~/shared/math'
 import DrawingToolbar from '~/features/tools/components/DrawingToolbar.vue'
 
@@ -27,7 +29,18 @@ const { scrollX, scrollY, zoom, zoomBy, panBy, toScene } = useViewport()
 
 // Domain state
 const { elements, addElement } = useElements()
-const { activeTool, setTool } = useTool()
+
+// Finalization callbacks — set after composables are created
+let doFinalizeMultiPoint: (() => void) | null = null
+let doExitLinearEditor: (() => void) | null = null
+
+const { activeTool, setTool } = useTool({
+  onToolChange() {
+    doFinalizeMultiPoint?.()
+    doExitLinearEditor?.()
+  },
+})
+
 const {
   selectedIds,
   selectedElements,
@@ -42,6 +55,7 @@ const {
 // Pre-create shared refs to break circular dependency
 const newElement = shallowRef<ExcalidrawElement | null>(null)
 const selectionBox = shallowRef<Box | null>(null)
+const suggestedBindings = shallowRef<readonly ExcalidrawElement[]>([])
 
 // Canvas layers (contexts + RoughCanvas init)
 const { staticCtx, newElementCtx, interactiveCtx, staticRc, newElementRc } = useCanvasLayers({
@@ -49,6 +63,55 @@ const { staticCtx, newElementCtx, interactiveCtx, staticRc, newElementRc } = use
   newElementCanvasRef,
   interactiveCanvasRef,
 })
+
+// Deferred dirty callbacks — populated after scene renderer init
+const dirtyCallbacks = { markStaticDirty: () => {}, markInteractiveDirty: () => {} }
+
+const {
+  multiElement,
+  lastCursorPoint,
+  finalizeMultiPoint,
+} = useMultiPointCreation({
+  canvasRef: interactiveCanvasRef,
+  toScene,
+  markStaticDirty: () => dirtyCallbacks.markStaticDirty(),
+  markInteractiveDirty: () => dirtyCallbacks.markInteractiveDirty(),
+  onFinalize() {
+    activeTool.value = 'selection'
+  },
+  elements,
+  zoom,
+  suggestedBindings,
+})
+
+const {
+  editingElement: editingLinearElement,
+  selectedPointIndices: editingPointIndices,
+  hoveredMidpointIndex: editingHoveredMidpoint,
+  enterEditor: enterLinearEditor,
+  exitEditor: exitLinearEditor,
+} = useLinearEditor({
+  canvasRef: interactiveCanvasRef,
+  zoom,
+  toScene,
+  markStaticDirty: () => dirtyCallbacks.markStaticDirty(),
+  markInteractiveDirty: () => dirtyCallbacks.markInteractiveDirty(),
+  select,
+  elements,
+  suggestedBindings,
+})
+
+// Wire finalization callbacks for tool switching
+doFinalizeMultiPoint = () => {
+  if (multiElement.value) {
+    finalizeMultiPoint()
+  }
+}
+doExitLinearEditor = () => {
+  if (editingLinearElement.value) {
+    exitLinearEditor()
+  }
+}
 
 // Scene renderer (render callbacks + dirty watcher)
 const { markStaticDirty, markNewElementDirty, markInteractiveDirty } = useSceneRenderer({
@@ -60,7 +123,17 @@ const { markStaticDirty, markNewElementDirty, markInteractiveDirty } = useSceneR
   selectedIds,
   newElement,
   selectionBox,
+  editingLinearElement,
+  editingPointIndices,
+  editingHoveredMidpoint,
+  multiElement,
+  lastCursorPoint,
+  suggestedBindings,
 })
+
+// Resolve the deferred callbacks
+dirtyCallbacks.markStaticDirty = markStaticDirty
+dirtyCallbacks.markInteractiveDirty = markInteractiveDirty
 
 // Input interactions
 const { cursorClass, spaceHeld, isPanning } = usePanning({
@@ -77,6 +150,10 @@ useDrawingInteraction({
   isPanning,
   toScene,
   newElement,
+  multiElement,
+  elements,
+  zoom,
+  suggestedBindings,
   onElementCreated(el) {
     addElement(el)
     select(el.id)
@@ -84,6 +161,7 @@ useDrawingInteraction({
   },
   markNewElementDirty,
   markStaticDirty,
+  markInteractiveDirty,
 })
 
 const { cursorStyle } = useSelectionInteraction({
@@ -105,11 +183,19 @@ const { cursorStyle } = useSelectionInteraction({
   markStaticDirty,
   markInteractiveDirty,
   setTool,
+  editingLinearElement,
+  onDoubleClickArrow(el: ExcalidrawArrowElement) {
+    enterLinearEditor(el)
+  },
 })
 
 const combinedCursorClass = computed(() => {
   // Panning cursor takes priority over selection cursor
   if (cursorClass.value !== 'cursor-default') return cursorClass.value
+  // Multi-point mode → crosshair
+  if (multiElement.value) return 'cursor-crosshair'
+  // Linear editor mode → pointer for handles
+  if (editingLinearElement.value) return 'cursor-pointer'
   // Selection interaction cursor only applies in selection tool mode
   if (activeTool.value === 'selection' && cursorStyle.value !== 'default') {
     return `cursor-${cursorStyle.value}`
@@ -134,6 +220,7 @@ const combinedCursorClass = computed(() => {
     />
     <canvas
       ref="interactiveCanvas"
+      data-testid="interactive-canvas"
       class="absolute inset-0 z-[2]"
     />
     <DrawingToolbar

@@ -32,6 +32,7 @@ export function createElement(
     seed: randomInteger(),
     versionNonce: randomVersionNonce(),
     isDeleted: false,
+    boundElements: [],
     ...overrides,
   }
 
@@ -42,6 +43,8 @@ export function createElement(
       points: [createPoint(0, 0)],
       startArrowhead: null,
       endArrowhead: 'arrow',
+      startBinding: null,
+      endBinding: null,
     } satisfies ExcalidrawArrowElement
   }
 

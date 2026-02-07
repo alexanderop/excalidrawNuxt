@@ -2,7 +2,7 @@ import { randomVersionNonce } from '~/shared/random'
 import type { ExcalidrawElement, ExcalidrawArrowElement, ExcalidrawElementBase } from './types'
 
 type MutableFields = Partial<Omit<ExcalidrawElementBase, 'id' | 'type'>>
-  & Partial<Pick<ExcalidrawArrowElement, 'points' | 'startArrowhead' | 'endArrowhead'>>
+  & Partial<Pick<ExcalidrawArrowElement, 'points' | 'startArrowhead' | 'endArrowhead' | 'startBinding' | 'endBinding'>>
 
 export function mutateElement<T extends ExcalidrawElement>(
   element: T,

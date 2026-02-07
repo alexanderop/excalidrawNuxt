@@ -1,5 +1,6 @@
 import { shallowRef } from 'vue'
 import { withSetup } from '~/__test-utils__/withSetup'
+import type { ExcalidrawElement } from '~/features/elements/types'
 import { useDrawingInteraction } from './useDrawingInteraction'
 import type { ToolType } from './types'
 
@@ -34,6 +35,7 @@ function createSetup() {
   const onElementCreated = vi.fn()
   const markNewElementDirty = vi.fn()
   const markStaticDirty = vi.fn()
+  const markInteractiveDirty = vi.fn()
 
   return {
     canvasRef,
@@ -44,6 +46,10 @@ function createSetup() {
     onElementCreated,
     markNewElementDirty,
     markStaticDirty,
+    markInteractiveDirty,
+    elements: shallowRef<readonly ExcalidrawElement[]>([]),
+    zoom: shallowRef(1),
+    suggestedBindings: shallowRef<readonly ExcalidrawElement[]>([]),
   }
 }
 

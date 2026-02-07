@@ -6,8 +6,9 @@ import { renderGrid } from '~/features/rendering/renderGrid'
 import { renderScene } from '~/features/rendering/renderScene'
 import { renderElement } from '~/features/rendering/renderElement'
 import { renderInteractiveScene } from '~/features/rendering/renderInteractive'
-import type { ExcalidrawElement } from '~/features/elements/types'
-import type { Box } from '~/shared/math'
+import type { LinearEditorRenderState, MultiPointRenderState } from '~/features/rendering/renderInteractive'
+import type { ExcalidrawElement, ExcalidrawArrowElement } from '~/features/elements/types'
+import type { Box, Point } from '~/shared/math'
 
 interface UseSceneRendererOptions {
   layers: {
@@ -34,6 +35,15 @@ interface UseSceneRendererOptions {
   selectedIds: ShallowRef<ReadonlySet<string>>
   newElement: ShallowRef<ExcalidrawElement | null>
   selectionBox: ShallowRef<Box | null>
+  // Linear editor state
+  editingLinearElement?: ShallowRef<ExcalidrawArrowElement | null>
+  editingPointIndices?: ShallowRef<ReadonlySet<number>>
+  editingHoveredMidpoint?: ShallowRef<number | null>
+  // Multi-point creation state
+  multiElement?: ShallowRef<ExcalidrawArrowElement | null>
+  lastCursorPoint?: ShallowRef<Point | null>
+  // Binding highlights
+  suggestedBindings?: ShallowRef<readonly ExcalidrawElement[]>
 }
 
 interface UseSceneRendererReturn {
@@ -42,8 +52,49 @@ interface UseSceneRendererReturn {
   markInteractiveDirty: () => void
 }
 
+function buildLinearEditorState(
+  editingElement: ShallowRef<ExcalidrawArrowElement | null> | undefined,
+  pointIndices: ShallowRef<ReadonlySet<number>> | undefined,
+  hoveredMidpoint: ShallowRef<number | null> | undefined,
+): LinearEditorRenderState | null {
+  const el = editingElement?.value
+  if (!el) return null
+
+  return {
+    element: el,
+    selectedPointIndices: pointIndices?.value ?? new Set(),
+    hoveredMidpointIndex: hoveredMidpoint?.value ?? null,
+  }
+}
+
+function buildMultiPointState(
+  multiElement: ShallowRef<ExcalidrawArrowElement | null> | undefined,
+  lastCursorPoint: ShallowRef<Point | null> | undefined,
+): MultiPointRenderState | null {
+  const el = multiElement?.value
+  const cursor = lastCursorPoint?.value
+  if (!el || !cursor) return null
+
+  return { element: el, cursorPoint: cursor }
+}
+
 export function useSceneRenderer(options: UseSceneRendererOptions): UseSceneRendererReturn {
-  const { layers, canvasRefs, viewport, elements, selectedElements, selectedIds, newElement, selectionBox } = options
+  const {
+    layers,
+    canvasRefs,
+    viewport,
+    elements,
+    selectedElements,
+    selectedIds,
+    newElement,
+    selectionBox,
+    editingLinearElement,
+    editingPointIndices,
+    editingHoveredMidpoint,
+    multiElement,
+    lastCursorPoint,
+    suggestedBindings,
+  } = options
   const { scrollX, scrollY, zoom, width, height } = viewport
 
   const { markStaticDirty, markNewElementDirty, markInteractiveDirty } = useRenderer({
@@ -76,11 +127,15 @@ export function useSceneRenderer(options: UseSceneRendererOptions): UseSceneRend
       ctx.save()
       ctx.scale(zoom.value, zoom.value)
       ctx.translate(scrollX.value, scrollY.value)
+
       renderInteractiveScene(
         ctx,
         selectedElements.value,
         zoom.value,
         selectionBox.value,
+        buildLinearEditorState(editingLinearElement, editingPointIndices, editingHoveredMidpoint),
+        buildMultiPointState(multiElement, lastCursorPoint),
+        suggestedBindings?.value ?? null,
       )
       ctx.restore()
     },

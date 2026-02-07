@@ -53,6 +53,7 @@ function createDrawingSetup(tool: ToolType = 'arrow') {
   const onElementCreated = vi.fn()
   const markNewElementDirty = vi.fn()
   const markStaticDirty = vi.fn()
+  const markInteractiveDirty = vi.fn()
 
   return {
     canvasRef,
@@ -63,6 +64,10 @@ function createDrawingSetup(tool: ToolType = 'arrow') {
     onElementCreated,
     markNewElementDirty,
     markStaticDirty,
+    markInteractiveDirty,
+    elements: shallowRef<readonly ExcalidrawElement[]>([]),
+    zoom: shallowRef(1),
+    suggestedBindings: shallowRef<readonly ExcalidrawElement[]>([]),
   }
 }
 
@@ -188,8 +193,8 @@ describe('arrow tool integration', () => {
       using _ctx = withSetup(() => useDrawingInteraction(opts))
 
       firePointer('pointerdown', 100, 100)
-      firePointer('pointermove', 105, 100)
-      firePointer('pointerup', 105, 100)
+      firePointer('pointermove', 125, 100)
+      firePointer('pointerup', 125, 100)
 
       expect(opts.onElementCreated).toHaveBeenCalledTimes(1)
     })
@@ -200,8 +205,8 @@ describe('arrow tool integration', () => {
       using _ctx = withSetup(() => useDrawingInteraction(opts))
 
       firePointer('pointerdown', 100, 100)
-      firePointer('pointermove', 100, 105)
-      firePointer('pointerup', 100, 105)
+      firePointer('pointermove', 100, 125)
+      firePointer('pointerup', 100, 125)
 
       expect(opts.onElementCreated).toHaveBeenCalledTimes(1)
     })
@@ -270,6 +275,7 @@ describe('arrow tool integration', () => {
       const el = createElement('arrow', 50, 75)
 
       expect(el.type).toBe('arrow')
+      // eslint-disable-next-line vitest/no-conditional-in-test -- type narrowing for TypeScript
       if (el.type !== 'arrow') throw new Error('Expected arrow')
       expect(el.points).toEqual([{ x: 0, y: 0 }])
       expect(el.x).toBe(50)
@@ -279,6 +285,7 @@ describe('arrow tool integration', () => {
     it('defaults endArrowhead to "arrow" and startArrowhead to null', () => {
       const el = createElement('arrow', 0, 0)
 
+      // eslint-disable-next-line vitest/no-conditional-in-test -- type narrowing for TypeScript
       if (el.type !== 'arrow') throw new Error('Expected arrow')
       expect(el.endArrowhead).toBe('arrow')
       expect(el.startArrowhead).toBeNull()
@@ -461,7 +468,7 @@ describe('arrow tool integration', () => {
         x: 0, y: 0, width: 50, height: 50,
         angle: 0, strokeColor: '#000', backgroundColor: 'transparent',
         fillStyle: 'hachure', strokeWidth: 2, roughness: 1, opacity: 100,
-        seed: 1, versionNonce: 1, isDeleted: false,
+        seed: 1, versionNonce: 1, isDeleted: false, boundElements: [],
       }
 
       expect(getCommonBounds([rect, arrow])).toEqual([0, 0, 300, 250])
@@ -555,7 +562,7 @@ describe('arrow tool integration', () => {
         x: 0, y: 0, width: 100, height: 100,
         angle: 0, strokeColor: '#000', backgroundColor: 'transparent',
         fillStyle: 'hachure', strokeWidth: 2, roughness: 1, opacity: 100,
-        seed: 1, versionNonce: 1, isDeleted: false,
+        seed: 1, versionNonce: 1, isDeleted: false, boundElements: [],
       }
       const arrow = createTestArrowElement({
         id: 'arrow-1',

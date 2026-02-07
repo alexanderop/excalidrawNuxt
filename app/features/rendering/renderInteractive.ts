@@ -1,5 +1,5 @@
 import type { ExcalidrawElement, ExcalidrawArrowElement } from '~/features/elements/types'
-import type { Box } from '~/shared/math'
+import type { Box, Point } from '~/shared/math'
 import {
   SELECTION_COLOR,
   SELECTION_LINE_WIDTH,
@@ -9,6 +9,23 @@ import {
 } from '~/features/selection/constants'
 import { getTransformHandles } from '~/features/selection/transformHandles'
 import type { TransformHandles } from '~/features/selection/transformHandles'
+import {
+  renderRubberBand,
+  renderPointHandles,
+  renderMidpointIndicator,
+} from '~/features/linear-editor/renderLinearEditor'
+import { renderSuggestedBinding } from '~/features/binding'
+
+export interface LinearEditorRenderState {
+  element: ExcalidrawArrowElement
+  selectedPointIndices: ReadonlySet<number>
+  hoveredMidpointIndex: number | null
+}
+
+export interface MultiPointRenderState {
+  element: ExcalidrawArrowElement
+  cursorPoint: Point
+}
 
 function applySelectionStroke(ctx: CanvasRenderingContext2D, zoom: number): void {
   ctx.strokeStyle = SELECTION_COLOR
@@ -129,8 +146,20 @@ export function renderInteractiveScene(
   selectedElements: readonly ExcalidrawElement[],
   zoom: number,
   selectionBox: Box | null,
+  linearEditorState?: LinearEditorRenderState | null,
+  multiPointState?: MultiPointRenderState | null,
+  suggestedBindings?: readonly ExcalidrawElement[] | null,
 ): void {
+  // Render binding highlight before selection overlays
+  if (suggestedBindings) {
+    for (const el of suggestedBindings) {
+      renderSuggestedBinding(ctx, el, zoom)
+    }
+  }
+
   for (const el of selectedElements) {
+    // Skip selection border for element being edited in linear editor
+    if (linearEditorState && el.id === linearEditorState.element.id) continue
     renderSelectionBorder(ctx, el, zoom)
     const handles = getTransformHandles(el, zoom)
     renderTransformHandles(ctx, handles, zoom)
@@ -138,5 +167,19 @@ export function renderInteractiveScene(
 
   if (selectionBox) {
     renderSelectionBox(ctx, selectionBox, zoom)
+  }
+
+  // Render linear editor overlays
+  if (linearEditorState) {
+    renderSelectionBorder(ctx, linearEditorState.element, zoom)
+    renderPointHandles(ctx, linearEditorState.element, linearEditorState.selectedPointIndices, zoom)
+    if (linearEditorState.hoveredMidpointIndex !== null) {
+      renderMidpointIndicator(ctx, linearEditorState.element, linearEditorState.hoveredMidpointIndex, zoom)
+    }
+  }
+
+  // Render multi-point creation overlays
+  if (multiPointState) {
+    renderRubberBand(ctx, multiPointState.element, multiPointState.cursorPoint, zoom)
   }
 }

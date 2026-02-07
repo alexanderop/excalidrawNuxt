@@ -12,7 +12,7 @@
     "lint:eslint": "eslint . --fix --cache",
     "lint": "run-s lint:*",
     "typecheck": "nuxi typecheck",
-    "test": "vitest run",
+    "test": "vitest run --bail=1",
     "test:unit": "vitest --project unit",
     "test:browser": "vitest --project browser",
     "test:run": "vitest run",

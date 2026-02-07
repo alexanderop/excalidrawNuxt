@@ -1,14 +1,26 @@
 # HTML Patterns for Walkthrough Generation
 
-Complete reference for generating interactive walkthrough HTML files using React + Tailwind CDN.
+Complete reference for generating interactive walkthrough HTML files using React (UMD) + Shiki (ESM) + Tailwind CDN + Mermaid.
+
+## Architecture: `<script type="module">` (No Babel)
+
+The generated HTML uses **native ES modules** (`<script type="module">`), not Babel transpilation. This means:
+- **Template literals work** — use backticks freely for multi-line strings, string interpolation, etc.
+- **Shiki imported via ESM** — `import { createHighlighter } from 'shiki'`
+- **React/ReactDOM loaded as UMD globals** — accessed via `window.React`, `window.ReactDOM`
+- **No JSX** — use `React.createElement()` for all component rendering
+- **Top-level `await`** — supported in modules, used for Shiki initialization
 
 ## Design Principles
 
-1. **Full-size diagram** — Mermaid renders at natural size, never squished
-2. **Pan + zoom** — Scroll wheel zooms toward cursor, drag to pan, auto-fit on load
-3. **Pure black background** — High contrast, black/white/purple only
-4. **Floating detail overlay** — Right side with close button (×), rich HTML content
-5. **React + Tailwind CDN** — Declarative components, utility-first styling
+1. **Always dark mode** — Pure black background, white text, purple accents. Never generate light-mode walkthroughs. Set `<html>` with `color-scheme: dark` and `<body>` with `bg-wt-bg` (`#000000`).
+2. **Quick mental model** — Readable in under 2 minutes, not a code reference
+3. **TL;DR first** — Summary card above the diagram gives the gist before any exploration
+4. **Full-size diagram** — Mermaid renders at natural size, never squished
+5. **Pan + zoom** — Scroll wheel zooms toward cursor, drag to pan, auto-fit on load
+6. **Floating detail overlay** — Right side with close button (×), short description + optional code
+7. **Shiki syntax highlighting** — VS Code-quality code rendering via `vitesse-dark` theme (for the rare nodes with code)
+8. **React + Tailwind CDN** — Declarative components, utility-first styling
 
 ## Color Palette (Black / White / Purple)
 
@@ -41,9 +53,10 @@ Complete reference for generating interactive walkthrough HTML files using React
 <script src="https://cdn.tailwindcss.com"></script>
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
 ```
+
+**Note**: Babel is NOT included. Shiki is loaded via ESM `import` inside `<script type="module">`.
 
 ## Tailwind Config
 
@@ -90,25 +103,111 @@ Complete reference for generating interactive walkthrough HTML files using React
   filter: brightness(1.3); transition: filter .15s;
 }
 
-/* Rich content in detail panel body */
-.dt-body h3 { font-size:.95rem; font-weight:700; color:#ffffff; margin:20px 0 8px; }
-.dt-body h3:first-child { margin-top:0; }
+/* Detail panel body text */
 .dt-body p { color:#a0a0a0; font-size:.88rem; line-height:1.65; margin-bottom:10px; }
-.dt-body ul { color:#a0a0a0; font-size:.88rem; line-height:1.65; margin:0 0 12px; padding-left:18px; }
-.dt-body li { margin-bottom:4px; }
-.dt-body li code, .dt-body p code {
+.dt-body p code {
   background:rgba(168,85,247,.12); padding:1px 6px; border-radius:4px;
   font-family:'SF Mono','Fira Code',monospace; font-size:.82rem; color:#c084fc;
 }
-.dt-body pre {
-  background:#000000; border:1px solid #2a2a2a; border-radius:8px;
-  padding:14px 16px; overflow-x:auto; margin:8px 0 14px;
+
+/* Shiki code blocks — override theme background to match walkthrough */
+.dt-body .shiki {
+  background: #000000 !important;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  margin: 8px 0 14px;
 }
-.dt-body pre code {
-  font-family:'SF Mono','Fira Code',monospace; font-size:.78rem; line-height:1.55;
-  color:#e0e0e0; background:none; padding:0; border-radius:0;
+.dt-body .shiki code {
+  font-family: 'SF Mono','Fira Code',monospace;
+  font-size: .78rem;
+  line-height: 1.55;
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  color: inherit;  /* Let Shiki's inline styles handle colors */
+}
+
+/* Fallback for when Shiki hasn't loaded yet */
+.dt-body pre.code-fallback {
+  background: #000000;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  margin: 8px 0 14px;
+}
+.dt-body pre.code-fallback code {
+  font-family: 'SF Mono','Fira Code',monospace;
+  font-size: .78rem;
+  line-height: 1.55;
+  color: #e0e0e0;
+  background: none;
+  padding: 0;
+  border-radius: 0;
 }
 ```
+
+## Shiki Initialization
+
+Shiki is loaded via ESM and initialized before the React app mounts. Code snippets (when present) are pre-highlighted at startup.
+
+```js
+import { createHighlighter } from 'https://cdn.jsdelivr.net/npm/shiki@3.22.0/+esm'
+
+// Collect unique languages from NODES (only nodes with code)
+const langs = [...new Set(
+  Object.values(NODES)
+    .map(n => n.lang)
+    .filter(Boolean)
+)];
+if (langs.length === 0) langs.push('typescript');
+
+// Create highlighter with required languages
+let highlighter = null;
+try {
+  highlighter = await createHighlighter({
+    themes: ['vitesse-dark'],
+    langs: langs,
+  });
+} catch (e) {
+  console.warn('Shiki failed to load, falling back to plain code blocks:', e);
+}
+
+// Pre-highlight code snippets (only nodes that have them)
+const HIGHLIGHTED = {};
+for (const [id, node] of Object.entries(NODES)) {
+  if (node.code && highlighter) {
+    try {
+      HIGHLIGHTED[id] = highlighter.codeToHtml(node.code, {
+        lang: node.lang || 'typescript',
+        theme: 'vitesse-dark',
+      });
+    } catch (e) {
+      console.warn(`Failed to highlight ${id}:`, e);
+    }
+  }
+}
+```
+
+**Key points:**
+- `await createHighlighter()` at module top-level — supported in `<script type="module">`
+- Languages are auto-collected from NODES data — no need to hardcode the list
+- Graceful fallback: if Shiki fails, `HIGHLIGHTED[id]` will be undefined and the DetailPanel renders plain `<pre><code>` instead
+- Most nodes won't have code — Shiki only loads languages actually needed
+
+### Common Shiki Languages
+
+| Language ID | Use for |
+|-------------|---------|
+| `typescript` | `.ts` files (default) |
+| `vue` | `.vue` files (full SFC) |
+| `vue-html` | Vue template blocks |
+| `json` | Config files, package.json |
+| `css` | Stylesheets |
+| `javascript` | `.js` files |
+| `bash` | Shell scripts, commands |
 
 ## Mermaid Initialization
 
@@ -154,13 +253,13 @@ mermaid.initialize({
     lineColor: '#a0a0a0',
     background: '#000000',
     // ER-specific
-    entityBkg: '#0a0a0a',           // entity box fill
-    entityBorder: '#7c3aed',        // purple border on entities
+    entityBkg: '#0a0a0a',
+    entityBorder: '#7c3aed',
     entityTextColor: '#ffffff',
     attributeBackgroundColorEven: '#0a0a0a',
     attributeBackgroundColorOdd: '#141414',
-    labelColor: '#a0a0a0',          // relationship labels
-    relationColor: '#a855f7',       // relationship lines (purple)
+    labelColor: '#a0a0a0',
+    relationColor: '#a855f7',
   },
   er: { useMaxWidth: false, layoutDirection: 'TB' },
   securityLevel: 'loose',
@@ -177,6 +276,7 @@ mermaid.initialize({
 ```
 App
 ├── Header (fixed, gradient fade)
+├── Summary (TL;DR card below header, above diagram)
 ├── DiagramViewport (full screen, pan/zoom via usePanZoom hook)
 │   └── MermaidDiagram (renders SVG into ref)
 ├── ZoomControls (fixed bottom-left)
@@ -184,10 +284,13 @@ App
 ├── DetailPanel (fixed right, conditional render)
 │   ├── Close button (×)
 │   ├── Title
-│   ├── Body (dangerouslySetInnerHTML with rich HTML)
+│   ├── Description (plain text paragraph)
+│   ├── CodeBlock (optional — Shiki-highlighted or plain fallback)
 │   └── Related Files
 └── KeyboardHint (fixed bottom-right)
 ```
+
+All components use `React.createElement()` since there is no JSX transpiler. The examples below show JSX for readability — the generated HTML must use `React.createElement()`.
 
 ### usePanZoom Hook
 
@@ -335,15 +438,35 @@ function MermaidERDiagram({ onEntityClick }) {
 - Entity names in the diagram become the keys in the `NODES` object
 - Click targets are `g` elements containing `.entityLabel`
 
-### DetailPanel Component
+### Summary Component (TL;DR card)
+
+Renders a brief summary card below the header and above the diagram. The new dev reads this first.
 
 ```jsx
-function DetailPanel({ node, onClose }) {
+function Summary() {
+  return (
+    <div className="fixed top-16 left-6 z-10 max-w-lg px-4 py-3 bg-wt-surface/80 backdrop-blur border border-wt-border rounded-lg shadow-lg pointer-events-none">
+      <p className="text-sm text-wt-muted leading-relaxed">{SUMMARY}</p>
+    </div>
+  );
+}
+```
+
+### DetailPanel Component
+
+The detail panel renders a plain-text description, an optional syntax-highlighted code block (from the `HIGHLIGHTED` map), then the file list.
+
+```jsx
+// JSX shown for readability — generated code uses React.createElement()
+function DetailPanel({ nodeId, node, onClose }) {
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
+
+  // Shiki-highlighted code (pre-computed) or fallback — only if node has code
+  const codeHtml = HIGHLIGHTED[nodeId];
 
   return (
     <div className="fixed top-4 right-4 bottom-4 w-[420px] z-30 bg-wt-surface border border-wt-border rounded-xl shadow-2xl flex flex-col overflow-hidden">
@@ -352,12 +475,25 @@ function DetailPanel({ node, onClose }) {
         &times;
       </button>
       <div className="flex-1 overflow-y-auto p-5">
-        <h2 className="text-lg font-bold text-wt-fg mb-4 pr-9">{node.title}</h2>
-        <div className="dt-body" dangerouslySetInnerHTML={{ __html: node.content }} />
+        <h2 className="text-lg font-bold text-wt-fg mb-3 pr-9">{node.title}</h2>
+        <div className="dt-body">
+          <p>{node.description}</p>
+        </div>
+
+        {/* Optional syntax-highlighted code block */}
+        {node.code && (
+          <div className="dt-body">
+            {codeHtml
+              ? <div dangerouslySetInnerHTML={{ __html: codeHtml }} />
+              : <pre className="code-fallback"><code>{node.code}</code></pre>
+            }
+          </div>
+        )}
+
         {node.files?.length > 0 && (
-          <div className="mt-5 pt-4 border-t border-wt-border">
+          <div className="mt-4 pt-3 border-t border-wt-border">
             <div className="text-[0.7rem] uppercase tracking-wider text-wt-muted font-semibold mb-1.5">
-              Related Files
+              Files
             </div>
             <code className="text-sm text-wt-file font-mono leading-relaxed">
               {node.files.map((f, i) => <span key={i}>{f}<br/></span>)}
@@ -370,9 +506,16 @@ function DetailPanel({ node, onClose }) {
 }
 ```
 
+**Key differences from previous version**:
+- `node.description` is rendered as a plain `<p>` text — no `dangerouslySetInnerHTML`
+- No `<h3>Overview</h3><h3>Details</h3>` structure — just the description
+- Code block is optional and most nodes won't have one
+- File section header says "Files" instead of "Related Files" (shorter)
+
 ### App Component (top-level wiring)
 
 ```jsx
+// JSX shown for readability — generated code uses React.createElement()
 function App() {
   const [activeId, _setActiveId] = useState(null);
   const pz = usePanZoom();
@@ -397,9 +540,11 @@ function App() {
   return (
     <>
       <header className="fixed top-0 inset-x-0 z-10 px-6 py-3.5 bg-gradient-to-b from-wt-bg to-transparent pointer-events-none">
-        <h1 className="text-base font-semibold text-wt-fg">{{TITLE}}</h1>
-        <p className="text-sm text-wt-muted mt-0.5">{{SUBTITLE}}</p>
+        <h1 className="text-base font-semibold text-wt-fg">{"TITLE_HERE"}</h1>
+        <p className="text-sm text-wt-muted mt-0.5">{"SUBTITLE_HERE"}</p>
       </header>
+
+      <Summary />
 
       <div ref={pz.viewportRef} className="w-full h-screen overflow-hidden cursor-grab active:cursor-grabbing">
         <div ref={pz.canvasRef} className="origin-top-left will-change-transform inline-block p-[80px_60px_60px]">
@@ -417,7 +562,8 @@ function App() {
         ))}
       </div>
 
-      {activeId && NODES[activeId] && <DetailPanel node={NODES[activeId]} onClose={closeDetail} />}
+      {/* Pass both nodeId and node to DetailPanel */}
+      {activeId && NODES[activeId] && <DetailPanel nodeId={activeId} node={NODES[activeId]} onClose={closeDetail} />}
 
       <div className="fixed bottom-5 right-5 z-20 text-xs text-wt-muted opacity-50">
         <kbd>Scroll</kbd> zoom · <kbd>Drag</kbd> pan · Click nodes
@@ -431,33 +577,42 @@ ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 
 ## Node Detail Data Format
 
-Rich HTML content per node. Use `<h3>`, `<p>`, `<pre><code>`, `<ul><li>`, and inline `<code>`:
+Plain-text description, optional raw source code, file paths. Most nodes have no code.
 
 ```js
 const NODES = {
   nodeId: {
-    title: "Human-readable title",
-    content: `
-      <h3>Overview</h3>
-      <p>Description of what this does.</p>
-      <h3>Key Pattern</h3>
-      <pre><code>// Real code from the file
-const result = doSomething()</code></pre>
-      <h3>Details</h3>
-      <ul>
-        <li><code>param</code> — description</li>
-      </ul>
-    `,
-    files: ["app/path/to/file.ts:12-45"]
+    title: "Drawing Interaction",
+    description: "Converts pointer events into shape data. This is the bridge between raw mouse input and the element model.",
+    files: ["app/features/tools/useDrawingInteraction.ts"],
+    // Optional — only if it's the single most illuminating snippet (max 5 lines)
+    // code: `const element = createElement(tool, startPoint, currentPoint)`,
+    // lang: "typescript",
   },
 };
 ```
 
 **Guidelines:**
-- Start with `<h3>Overview</h3>` + description paragraph
-- HTML-escape `<` as `&lt;`, `>` as `&gt;` inside `<pre><code>` blocks
-- Keep code snippets to 5-15 lines
-- `files` is an array of `"path:lines"` strings
+- `description` is 1-2 plain-text sentences. Answers "what is this?" and "why does it exist?"
+- `code` is **optional** — most nodes should NOT have code. Only include when it's the key insight.
+- `code` uses template literals for multi-line. Max 5 lines. No HTML escaping needed (Shiki handles it).
+- `lang` defaults to `"typescript"` if omitted — set explicitly for `vue`, `json`, `css`, etc. Only needed when `code` is present.
+- `files` is an array of `"path"` or `"path:lines"` strings
+- No `content` field with HTML — use `description` with plain text instead
+
+## TL;DR Summary Data
+
+A 2-3 sentence overview rendered as a card above the diagram. Define it as a constant:
+
+```js
+const SUMMARY = "The drawing tool converts pointer events into visual elements on the canvas. When you select a tool and drag, a composable tracks the gesture and creates element data, which the rendering pipeline turns into canvas pixels. The tool state machine coordinates which interactions are active.";
+```
+
+**Guidelines:**
+- 2-3 sentences max
+- Answer: "What does this system do, at the highest level?"
+- Plain text, no formatting
+- A new developer should understand the gist after reading just this
 
 ## Mermaid classDef (Purple Shades)
 
@@ -470,12 +625,73 @@ classDef event fill:#d8b4fe,stroke:#e9d5ff,color:#000
 classDef data fill:#9333ea,stroke:#a855f7,color:#fff
 ```
 
+## Complete Script Block Structure
+
+The `<script type="module">` block should follow this order:
+
+```js
+// 1. Import Shiki
+import { createHighlighter } from 'https://cdn.jsdelivr.net/npm/shiki@3.22.0/+esm'
+
+// 2. Destructure React globals
+const { useState, useEffect, useRef, useCallback } = React;
+
+// 3. Define SUMMARY string (TL;DR for the walkthrough)
+const SUMMARY = "2-3 sentence overview of what this system does.";
+
+// 4. Define DIAGRAM string (Mermaid syntax)
+const DIAGRAM = `graph TD
+  ...
+`;
+
+// 5. Define NODES data (title + description + files, optional code + lang)
+const NODES = { ... };
+
+// 6. Define LEGEND
+const LEGEND = [ ... ];
+
+// 7. Initialize Shiki and pre-highlight code (only for nodes that have it)
+const langs = [...new Set(Object.values(NODES).map(n => n.lang).filter(Boolean))];
+if (langs.length === 0) langs.push('typescript');
+
+let highlighter = null;
+try {
+  highlighter = await createHighlighter({ themes: ['vitesse-dark'], langs });
+} catch (e) {
+  console.warn('Shiki failed to load:', e);
+}
+
+const HIGHLIGHTED = {};
+for (const [id, node] of Object.entries(NODES)) {
+  if (node.code && highlighter) {
+    try {
+      HIGHLIGHTED[id] = highlighter.codeToHtml(node.code, {
+        lang: node.lang || 'typescript',
+        theme: 'vitesse-dark',
+      });
+    } catch (e) { console.warn(`Highlight failed for ${id}:`, e); }
+  }
+}
+
+// 8. Define React components (usePanZoom, MermaidDiagram, Summary, DetailPanel, ZoomControls, App)
+// ... using React.createElement() — NOT JSX
+
+// 9. Mount the app
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+```
+
 ## Tips
 
-1. **Auto-fit on load**: `setTimeout(pz.fitToScreen, 600)` waits for Mermaid to finish rendering
-2. **Node clicks vs pan**: Check `e.target.closest('.node')` in pointerdown to let clicks through
-3. **Performance**: Use `useRef` for pan/zoom state, update DOM directly — no React re-renders during drag
-4. **Mermaid click bridge**: Set `window.nodeClickHandler` before `mermaid.render()` so click bindings work
-7. **bindFunctions is mandatory**: After `innerHTML = svg`, call `bindFunctions?.(ref.current)` — without this, click handlers are lost
-5. **Keep diagrams readable**: 8-20 nodes max. Use subgraphs to group related nodes
-6. **Node ID consistency**: Mermaid node ID, `click` binding ID, and `NODES` key must match exactly
+1. **Template literals are safe** — `<script type="module">` is native, no Babel transpilation. Use backticks freely for multi-line strings and interpolation.
+2. **Auto-fit on load**: `setTimeout(pz.fitToScreen, 600)` waits for Mermaid to finish rendering
+3. **Node clicks vs pan**: Check `e.target.closest('.node')` in pointerdown to let clicks through
+4. **Performance**: Use `useRef` for pan/zoom state, update DOM directly — no React re-renders during drag
+5. **Mermaid click bridge**: Set `window.nodeClickHandler` before `mermaid.render()` so click bindings work
+6. **bindFunctions is mandatory**: After `innerHTML = svg`, call `bindFunctions?.(ref.current)` — without this, click handlers are lost
+7. **Keep diagrams small**: 5-12 nodes max. Use subgraphs to group into 2-4 conceptual areas
+8. **Node ID consistency**: Mermaid node ID, `click` binding ID, and `NODES` key must match exactly
+9. **Shiki graceful degradation**: Always wrap `createHighlighter()` in try/catch. If it fails, `HIGHLIGHTED[id]` will be undefined and the fallback `<pre class="code-fallback">` renders plain text.
+10. **Language auto-detection**: Collect langs from NODES data dynamically — don't hardcode the Shiki language list.
+11. **DetailPanel needs nodeId**: Pass both `nodeId` (string) and `node` (data object) so the panel can look up `HIGHLIGHTED[nodeId]` for the pre-rendered code HTML.
+12. **Summary is always visible**: The `Summary` component is always shown — it's the first thing a new developer reads.
+13. **Plain text descriptions**: Use `description` (plain string) not `content` (HTML). Render as `<p>` not `dangerouslySetInnerHTML`.

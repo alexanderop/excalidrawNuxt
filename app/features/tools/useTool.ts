@@ -3,6 +3,11 @@ import type { ShallowRef } from 'vue'
 import { useEventListener, useActiveElement } from '@vueuse/core'
 import type { ToolType } from './types'
 
+interface UseToolOptions {
+  /** Called before tool changes — use to finalize in-progress operations */
+  onToolChange?: () => void
+}
+
 interface UseToolReturn {
   activeTool: ShallowRef<ToolType>
   setTool: (tool: ToolType) => void
@@ -22,11 +27,12 @@ const KEY_TO_TOOL: Record<string, ToolType> = {
   '5': 'arrow',
 }
 
-export function useTool(): UseToolReturn {
+export function useTool(options?: UseToolOptions): UseToolReturn {
   const activeTool = shallowRef<ToolType>('selection')
   const activeElement = useActiveElement()
 
   function setTool(tool: ToolType): void {
+    options?.onToolChange?.()
     activeTool.value = tool
   }
 

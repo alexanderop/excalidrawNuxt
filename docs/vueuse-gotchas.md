@@ -57,3 +57,49 @@ export default defineConfig({
 ```
 
 Without this, you'll get: `"Install @vitejs/plugin-vue to handle .vue files"`
+
+## Canvas Drag/Draw Tests in Vitest Browser Mode
+
+Using `page.mouse` (Playwright's top-level mouse API) to simulate drags on canvas elements **fails silently** in Vitest browser mode. The test iframe introduces coordinate mismatches:
+
+1. `frame.locator().boundingBox()` returns page-level coordinates
+2. But the iframe may have different scaling than the page viewport
+3. Mouse events dispatched at page coordinates miss the canvas inside the iframe
+
+**Symptom:** Pointer events never reach the canvas, `pointerdown` handlers don't fire, tool state doesn't update.
+
+**Solution:** Dispatch `PointerEvent`s directly within the iframe using `frame.evaluate`:
+
+```ts
+// ✅ Works: dispatch events inside the iframe
+const canvasDrag: BrowserCommand<[...]> = async (ctx, selector, startX, startY, endX, endY, options) => {
+  const frame = await ctx.frame()
+
+  await frame.evaluate(({ sel, sx, sy, ex, ey }) => {
+    const el = document.querySelector(sel)!
+    const rect = el.getBoundingClientRect()
+
+    function fire(type: string, x: number, y: number): void {
+      el.dispatchEvent(new PointerEvent(type, {
+        clientX: rect.left + x,
+        clientY: rect.top + y,
+        button: 0,
+        buttons: type === 'pointerup' ? 0 : 1,
+        bubbles: true,
+        pointerId: 1,
+        pointerType: 'mouse',
+      }))
+    }
+
+    fire('pointerdown', sx, sy)
+    fire('pointermove', ex, ey)
+    fire('pointerup', ex, ey)
+  }, { sel: selector, sx: startX, sy: startY, ex: endX, ey: endY })
+}
+
+// ❌ Fails: page.mouse coordinates don't map correctly into iframe
+await ctx.page.mouse.move(pageX, pageY)
+await ctx.page.mouse.down()
+```
+
+See `app/__test-utils__/commands/canvasDrag.ts` for the full implementation.

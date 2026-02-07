@@ -2,6 +2,7 @@ import { defineConfig } from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 import { fileURLToPath } from 'node:url'
+import { canvasDrag } from './app/__test-utils__/commands/canvasDrag'
 
 export default defineConfig({
   plugins: [vue(), tailwindcss()],
@@ -12,6 +13,7 @@ export default defineConfig({
       enabled: true,
       provider: 'playwright',
       instances: [{ browser: 'chromium' }],
+      commands: { canvasDrag },
     },
     globals: true,
     setupFiles: ['app/__test-utils__/setup-browser.ts'],

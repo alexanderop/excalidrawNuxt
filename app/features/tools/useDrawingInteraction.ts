@@ -1,10 +1,16 @@
 import { shallowRef } from 'vue'
 import type { Ref, ShallowRef } from 'vue'
 import { useEventListener } from '@vueuse/core'
-import type { ExcalidrawElement } from '~/features/elements/types'
+import type { ExcalidrawElement, ExcalidrawArrowElement } from '~/features/elements/types'
 import { createElement } from '~/features/elements/createElement'
 import { mutateElement } from '~/features/elements/mutateElement'
 import { createPoint, snapAngle } from '~/shared/math'
+import {
+  getHoveredElementForBinding,
+  bindArrowToElement,
+  updateArrowEndpoint,
+  MINIMUM_ARROW_SIZE,
+} from '~/features/binding'
 import type { ToolType } from './types'
 import { isDrawingTool, isLinearTool } from './types'
 
@@ -17,7 +23,13 @@ interface UseDrawingInteractionOptions {
   onElementCreated: (element: ExcalidrawElement) => void
   markNewElementDirty: () => void
   markStaticDirty: () => void
+  markInteractiveDirty: () => void
   newElement?: ShallowRef<ExcalidrawElement | null>
+  /** If set, skip pointerdown when multi-point mode is active */
+  multiElement?: ShallowRef<ExcalidrawArrowElement | null>
+  elements: ShallowRef<readonly ExcalidrawElement[]>
+  zoom: Ref<number>
+  suggestedBindings: ShallowRef<readonly ExcalidrawElement[]>
 }
 
 interface UseDrawingInteractionReturn {
@@ -34,6 +46,11 @@ export function useDrawingInteraction(options: UseDrawingInteractionOptions): Us
     onElementCreated,
     markNewElementDirty,
     markStaticDirty,
+    markInteractiveDirty,
+    multiElement,
+    elements,
+    zoom,
+    suggestedBindings,
   } = options
 
   const newElement = options.newElement ?? shallowRef<ExcalidrawElement | null>(null)
@@ -42,6 +59,7 @@ export function useDrawingInteraction(options: UseDrawingInteractionOptions): Us
 
   useEventListener(canvasRef, 'pointerdown', (e: PointerEvent) => {
     if (spaceHeld.value || isPanning.value) return
+    if (multiElement?.value) return
     const tool = activeTool.value
     if (!isDrawingTool(tool)) return
     if (e.button !== 0) return
@@ -79,6 +97,24 @@ export function useDrawingInteraction(options: UseDrawingInteractionOptions): Us
         width: Math.abs(dx),
         height: Math.abs(dy),
       })
+
+      // Update suggested bindings for arrow endpoints
+      if (newElement.value.type === 'arrow') {
+        const excludeIds = new Set([newElement.value.id])
+        const endPoint = { x: originX + dx, y: originY + dy }
+        const startPoint = { x: originX, y: originY }
+        const candidates: ExcalidrawElement[] = []
+
+        const startCandidate = getHoveredElementForBinding(startPoint, elements.value, zoom.value, excludeIds)
+        if (startCandidate) candidates.push(startCandidate.element)
+
+        const endCandidate = getHoveredElementForBinding(endPoint, elements.value, zoom.value, excludeIds)
+        if (endCandidate) candidates.push(endCandidate.element)
+
+        suggestedBindings.value = candidates
+        markInteractiveDirty()
+      }
+
       markNewElementDirty()
       return
     }
@@ -102,14 +138,46 @@ export function useDrawingInteraction(options: UseDrawingInteractionOptions): Us
     markNewElementDirty()
   })
 
+  function tryBindArrowEndpoints(arrowEl: ExcalidrawArrowElement): void {
+    const excludeIds = new Set([arrowEl.id])
+
+    const startScenePoint = { x: arrowEl.x, y: arrowEl.y }
+    const startCandidate = getHoveredElementForBinding(startScenePoint, elements.value, zoom.value, excludeIds)
+    if (startCandidate) {
+      bindArrowToElement(arrowEl, 'start', startCandidate.element, startCandidate.fixedPoint)
+      updateArrowEndpoint(arrowEl, 'start', startCandidate.element)
+    }
+
+    const lastPt = arrowEl.points.at(-1)!
+    const endScenePoint = { x: arrowEl.x + lastPt.x, y: arrowEl.y + lastPt.y }
+    const endCandidate = getHoveredElementForBinding(endScenePoint, elements.value, zoom.value, excludeIds)
+    if (endCandidate) {
+      bindArrowToElement(arrowEl, 'end', endCandidate.element, endCandidate.fixedPoint)
+      updateArrowEndpoint(arrowEl, 'end', endCandidate.element)
+    }
+
+    suggestedBindings.value = []
+  }
+
+  function isElementValid(el: ExcalidrawElement): boolean {
+    if (el.type === 'arrow') {
+      return Math.hypot(el.width, el.height) >= MINIMUM_ARROW_SIZE
+    }
+    return el.width > 1 || el.height > 1
+  }
+
   useEventListener(canvasRef, 'pointerup', (e: PointerEvent) => {
     const el = newElement.value
     if (!el) return
 
     canvasRef.value?.releasePointerCapture(e.pointerId)
 
-    if (el.width > 1 || el.height > 1) {
+    if (isElementValid(el)) {
       onElementCreated(el)
+      // Bind arrow endpoints to nearby shapes
+      if (el.type === 'arrow') {
+        tryBindArrowEndpoints(el)
+      }
     }
 
     activeTool.value = 'selection'

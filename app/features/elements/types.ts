@@ -4,6 +4,16 @@ export type ArrowheadType = 'arrow' | 'triangle' | 'none'
 
 export type ExcalidrawElementType = 'rectangle' | 'ellipse' | 'diamond' | 'arrow'
 
+export interface FixedPointBinding {
+  readonly elementId: string
+  readonly fixedPoint: readonly [number, number]
+}
+
+export interface BoundElement {
+  readonly id: string
+  readonly type: 'arrow'
+}
+
 export interface ExcalidrawElementBase {
   readonly id: string
   readonly type: ExcalidrawElementType
@@ -21,6 +31,7 @@ export interface ExcalidrawElementBase {
   seed: number
   versionNonce: number
   isDeleted: boolean
+  boundElements: readonly BoundElement[]
 }
 
 export interface ExcalidrawRectangleElement extends ExcalidrawElementBase {
@@ -41,6 +52,8 @@ export interface ExcalidrawArrowElement extends ExcalidrawElementBase {
   points: readonly Point[]
   startArrowhead: ArrowheadType | null
   endArrowhead: ArrowheadType
+  startBinding: FixedPointBinding | null
+  endBinding: FixedPointBinding | null
 }
 
 export type ExcalidrawElement =
