@@ -32,13 +32,15 @@ export function renderGrid(
 
   ctx.fillStyle = GRID_COLOR
 
+  const dotRadius = GRID_DOT_RADIUS / zoom
+  ctx.beginPath()
   for (let x = startX; x <= endX; x += GRID_SPACING) {
     for (let y = startY; y <= endY; y += GRID_SPACING) {
-      ctx.beginPath()
-      ctx.arc(x, y, GRID_DOT_RADIUS / zoom, 0, TWO_PI)
-      ctx.fill()
+      ctx.moveTo(x + dotRadius, y)
+      ctx.arc(x, y, dotRadius, 0, TWO_PI)
     }
   }
+  ctx.fill()
 
   ctx.restore()
 }

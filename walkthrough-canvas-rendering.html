@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en" style="color-scheme:dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Canvas Rendering — What Happens When You Create an Element</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          wt: {
+            bg: '#000000', surface: '#0a0a0a', raised: '#141414',
+            border: '#2a2a2a', fg: '#ffffff', muted: '#a0a0a0',
+            accent: '#a855f7', file: '#c084fc', red: '#ef4444',
+          },
+          node: {
+            component: '#a855f7', composable: '#7c3aed', utility: '#6d28d9',
+            external: '#525252', event: '#d8b4fe', data: '#9333ea',
+          },
+        },
+      },
+    },
+  };
+</script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  body { margin:0; background:#000; color:#fff; font-family:system-ui,-apple-system,sans-serif; overflow:hidden; }
+  .mermaid-wrap svg { max-width: none !important; height: auto !important; }
+  .mermaid-wrap .node { cursor: pointer; }
+  .mermaid-wrap .node:hover rect,
+  .mermaid-wrap .node:hover polygon,
+  .mermaid-wrap .node:hover circle,
+  .mermaid-wrap .node:hover .label-container {
+    filter: brightness(1.3); transition: filter .15s;
+  }
+  .dt-body p { color:#a0a0a0; font-size:.88rem; line-height:1.65; margin-bottom:10px; }
+  .dt-body p code {
+    background:rgba(168,85,247,.12); padding:1px 6px; border-radius:4px;
+    font-family:'SF Mono','Fira Code',monospace; font-size:.82rem; color:#c084fc;
+  }
+  .dt-body .shiki {
+    background: #000000 !important;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    margin: 8px 0 14px;
+  }
+  .dt-body .shiki code {
+    font-family: 'SF Mono','Fira Code',monospace;
+    font-size: .78rem;
+    line-height: 1.55;
+    background: none;
+    padding: 0;
+    border-radius: 0;
+    color: inherit;
+  }
+  .dt-body pre.code-fallback {
+    background: #000000;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    margin: 8px 0 14px;
+  }
+  .dt-body pre.code-fallback code {
+    font-family: 'SF Mono','Fira Code',monospace;
+    font-size: .78rem;
+    line-height: 1.55;
+    color: #e0e0e0;
+    background: none;
+    padding: 0;
+    border-radius: 0;
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="module">
+import { createHighlighter } from 'https://cdn.jsdelivr.net/npm/shiki@3.22.0/+esm'
+
+const { useState, useEffect, useRef, useCallback } = React;
+const h = React.createElement;
+
+const SUMMARY = "When you select a drawing tool and drag on the canvas, a pointer-event composable creates an element object and mutates its dimensions in real-time. The element previews on a dedicated canvas layer, and on mouse-up it commits to the global element array — which triggers the rendering pipeline to redraw the static canvas via RoughJS for that hand-drawn look.";
+
+const DIAGRAM = `graph TD
+  subgraph user_input["User Input"]
+    toolSelection["Tool Selection"]
+    pointerEvents["Pointer Events"]
+  end
+
+  subgraph element_lifecycle["Element Lifecycle"]
+    drawingInteraction["Drawing Interaction"]
+    createElement["Create Element"]
+    mutateElement["Mutate Element"]
+    elementStore["Element Store"]
+  end
+
+  subgraph rendering_pipeline["Rendering Pipeline"]
+    sceneRenderer["Scene Renderer"]
+    shapeGenerator["Shape Generator"]
+    elementRenderer["Element Renderer"]
+  end
+
+  subgraph canvas_output["Canvas Output"]
+    canvasLayers["Three Canvas Layers"]
+    viewport["Viewport & Coordinates"]
+  end
+
+  toolSelection -->|"sets active tool"| drawingInteraction
+  pointerEvents -->|"pointerdown"| drawingInteraction
+  drawingInteraction -->|"calls on start"| createElement
+  drawingInteraction -->|"calls on drag"| mutateElement
+  drawingInteraction -->|"commits on release"| elementStore
+  elementStore -->|"feeds elements"| sceneRenderer
+  sceneRenderer -->|"for each element"| elementRenderer
+  elementRenderer -->|"generates path"| shapeGenerator
+  sceneRenderer -->|"draws to"| canvasLayers
+  viewport -->|"transforms coords"| sceneRenderer
+  viewport -->|"screen → scene"| drawingInteraction
+  drawingInteraction -.->|"previews on"| canvasLayers
+
+  classDef component fill:#a855f7,stroke:#c084fc,color:#fff
+  classDef composable fill:#7c3aed,stroke:#a78bfa,color:#fff
+  classDef utility fill:#6d28d9,stroke:#8b5cf6,color:#fff
+  classDef external fill:#525252,stroke:#737373,color:#fff
+  classDef event fill:#d8b4fe,stroke:#e9d5ff,color:#000
+  classDef data fill:#9333ea,stroke:#a855f7,color:#fff
+
+  class toolSelection composable
+  class pointerEvents event
+  class drawingInteraction composable
+  class createElement utility
+  class mutateElement utility
+  class elementStore data
+  class sceneRenderer composable
+  class shapeGenerator utility
+  class elementRenderer utility
+  class canvasLayers component
+  class viewport composable
+
+  click toolSelection nodeClickHandler "View details"
+  click pointerEvents nodeClickHandler "View details"
+  click drawingInteraction nodeClickHandler "View details"
+  click createElement nodeClickHandler "View details"
+  click mutateElement nodeClickHandler "View details"
+  click elementStore nodeClickHandler "View details"
+  click sceneRenderer nodeClickHandler "View details"
+  click shapeGenerator nodeClickHandler "View details"
+  click elementRenderer nodeClickHandler "View details"
+  click canvasLayers nodeClickHandler "View details"
+  click viewport nodeClickHandler "View details"
+`;
+
+const NODES = {
+  toolSelection: {
+    title: "Tool Selection",
+    description: "Manages which drawing tool is active (rectangle, ellipse, diamond, arrow, selection, hand). Switches tools via toolbar clicks or keyboard shortcuts (R, O, D, A, V, H, 1-5). The active tool determines how pointer events are interpreted.",
+    files: ["app/features/tools/useTool.ts", "app/features/tools/components/DrawingToolbar.vue"],
+  },
+  pointerEvents: {
+    title: "Pointer Events",
+    description: "Raw browser pointer events (pointerdown, pointermove, pointerup) on the interactive canvas element. These are the entry point for all drawing — the canvas captures the pointer on mousedown so dragging outside the canvas still works.",
+    files: ["app/features/canvas/components/CanvasContainer.vue"],
+  },
+  drawingInteraction: {
+    title: "Drawing Interaction",
+    description: "The central orchestrator for creating shapes. On pointerdown it creates a new element at the cursor position, on pointermove it mutates the element's dimensions as you drag, and on pointerup it validates the size and commits the element. Supports Shift-constrained drawing (squares, 45-degree angles).",
+    files: ["app/features/tools/useDrawingInteraction.ts"],
+    code: `useEventListener(canvasRef, 'pointerdown', (e) => {
+  if (!isDrawingTool(activeTool.value)) return
+  newElement.value = createElement(tool, originX, originY)
+  canvasRef.value?.setPointerCapture(e.pointerId)
+})`,
+    lang: "typescript",
+  },
+  createElement: {
+    title: "Create Element",
+    description: "Factory function that produces a new element with a unique ID, sensible defaults (stroke color, opacity, roughness), and type-specific initialization. Arrows get a points array and arrowheads; shapes start with zero width/height, ready to be sized by dragging.",
+    files: ["app/features/elements/createElement.ts"],
+    code: `const base = { id: generateId(), x, y, width: 0, height: 0,
+  seed: randomInteger(), versionNonce: randomVersionNonce() }
+if (type === 'arrow')
+  return { ...base, type: 'arrow', points: [createPoint(0, 0)], endArrowhead: 'arrow' }
+return { ...base, type }`,
+    lang: "typescript",
+  },
+  mutateElement: {
+    title: "Mutate Element",
+    description: "Updates element properties in-place (position, size, points) and bumps the versionNonce — a change-tracking number the renderer uses to know when to regenerate cached shapes. This avoids recreating objects on every mouse move.",
+    files: ["app/features/elements/mutateElement.ts"],
+    code: `function mutateElement<T extends ExcalidrawElement>(element: T, updates: MutableFields): T {
+  Object.assign(element, updates, { versionNonce: randomVersionNonce() })
+  return element
+}`,
+    lang: "typescript",
+  },
+  elementStore: {
+    title: "Element Store",
+    description: "Holds the canonical array of all elements as a ShallowRef. Adding an element replaces the array reference (triggering Vue reactivity), while individual elements are mutated in-place for performance. The store is the single source of truth that the renderer reads from.",
+    files: ["app/features/elements/useElements.ts"],
+  },
+  sceneRenderer: {
+    title: "Scene Renderer",
+    description: "Coordinates when and what to render across three canvas layers. Uses a requestAnimationFrame loop with dirty flags — static, newElement, and interactive layers only repaint when marked dirty. Watches viewport changes (scroll, zoom) and selection changes to trigger the right repaints.",
+    files: ["app/features/canvas/composables/useSceneRenderer.ts", "app/features/canvas/composables/useRenderer.ts"],
+    code: `useRafFn(() => {
+  renderDirtyCanvas(staticDirty, staticLayer, dpr, w, h, '#fff', onRenderStatic)
+  renderDirtyCanvas(newElementDirty, newElementLayer, dpr, w, h, undefined, onRenderNewElement)
+  renderDirtyCanvas(interactiveDirty, interactiveLayer, dpr, w, h, undefined, onRenderInteractive)
+})`,
+    lang: "typescript",
+  },
+  shapeGenerator: {
+    title: "Shape Generator",
+    description: "Converts element data into RoughJS Drawable objects (the hand-drawn looking paths). Caches generated shapes by element ID and versionNonce, so unchanged elements skip the expensive path generation on every frame.",
+    files: ["app/features/rendering/shapeGenerator.ts"],
+  },
+  elementRenderer: {
+    title: "Element Renderer",
+    description: "Renders a single element: translates to its position, applies opacity, draws the RoughJS shape, and adds arrowheads for arrow elements. Called once per element during the static canvas render pass.",
+    files: ["app/features/rendering/renderElement.ts", "app/features/rendering/arrowhead.ts"],
+  },
+  canvasLayers: {
+    title: "Three Canvas Layers",
+    description: "Three stacked HTML canvas elements: (1) Static layer — grid + all committed elements, (2) New Element layer — the shape being drawn right now, (3) Interactive layer — selection borders, resize handles, editing overlays. Each layer repaints independently for performance.",
+    files: ["app/features/canvas/composables/useCanvasLayers.ts", "app/features/canvas/components/CanvasContainer.vue"],
+  },
+  viewport: {
+    title: "Viewport & Coordinates",
+    description: "Manages zoom (0.1x–30x), scroll position, and the critical coordinate transforms between screen space (mouse position) and scene space (drawing coordinates). Every mouse event passes through screenToScene before the drawing system sees it.",
+    files: ["app/features/canvas/composables/useViewport.ts", "app/features/canvas/coords.ts"],
+    code: `function screenToScene(screenX, screenY, viewport) {
+  return {
+    x: screenX / viewport.zoom - viewport.scrollX,
+    y: screenY / viewport.zoom - viewport.scrollY,
+  }
+}`,
+    lang: "typescript",
+  },
+};
+
+const LEGEND = [
+  { label: "Component", color: "bg-node-component" },
+  { label: "Composable", color: "bg-node-composable" },
+  { label: "Utility", color: "bg-node-utility" },
+  { label: "Event", color: "bg-node-event" },
+  { label: "Data Store", color: "bg-node-data" },
+];
+
+// Initialize Shiki
+const langs = [...new Set(Object.values(NODES).map(n => n.lang).filter(Boolean))];
+if (langs.length === 0) langs.push('typescript');
+
+let highlighter = null;
+try {
+  highlighter = await createHighlighter({ themes: ['vitesse-dark'], langs });
+} catch (e) {
+  console.warn('Shiki failed to load:', e);
+}
+
+const HIGHLIGHTED = {};
+for (const [id, node] of Object.entries(NODES)) {
+  if (node.code && highlighter) {
+    try {
+      HIGHLIGHTED[id] = highlighter.codeToHtml(node.code, {
+        lang: node.lang || 'typescript',
+        theme: 'vitesse-dark',
+      });
+    } catch (e) { console.warn(`Highlight failed for ${id}:`, e); }
+  }
+}
+
+// --- React Components ---
+
+function usePanZoom() {
+  const viewportRef = useRef(null);
+  const canvasRef = useRef(null);
+  const zoomDisplayRef = useRef(null);
+  const st = useRef({ zoom: 1, panX: 0, panY: 0 });
+  const drag = useRef({ on: false, lx: 0, ly: 0 });
+
+  const apply = useCallback(() => {
+    const { zoom, panX, panY } = st.current;
+    if (canvasRef.current)
+      canvasRef.current.style.transform = `translate(${panX}px,${panY}px) scale(${zoom})`;
+    if (zoomDisplayRef.current)
+      zoomDisplayRef.current.textContent = Math.round(zoom * 100) + '%';
+  }, []);
+
+  const fitToScreen = useCallback(() => {
+    const svg = canvasRef.current?.querySelector('svg');
+    const vp = viewportRef.current;
+    if (!svg || !vp) return;
+    const s = st.current;
+    const vw = vp.clientWidth, vh = vp.clientHeight;
+    const sw = svg.getBoundingClientRect().width / s.zoom;
+    const sh = svg.getBoundingClientRect().height / s.zoom;
+    const fit = Math.max(0.15, Math.min(2, Math.min((vw - 80) / sw, (vh - 80) / sh)));
+    s.zoom = fit;
+    s.panX = (vw - sw * fit) / 2;
+    s.panY = (vh - sh * fit) / 2;
+    apply();
+  }, [apply]);
+
+  useEffect(() => {
+    const vp = viewportRef.current;
+    if (!vp) return;
+
+    const onWheel = (e) => {
+      e.preventDefault();
+      const r = vp.getBoundingClientRect();
+      const mx = e.clientX - r.left, my = e.clientY - r.top;
+      const s = st.current;
+      const f = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+      const nz = Math.min(4, Math.max(0.15, s.zoom * f));
+      const sc = nz / s.zoom;
+      s.panX = mx - sc * (mx - s.panX);
+      s.panY = my - sc * (my - s.panY);
+      s.zoom = nz;
+      apply();
+    };
+
+    const onDown = (e) => {
+      if (e.target.closest('.node')) return;
+      drag.current = { on: true, lx: e.clientX, ly: e.clientY };
+      vp.setPointerCapture(e.pointerId);
+    };
+    const onMove = (e) => {
+      const d = drag.current;
+      if (!d.on) return;
+      st.current.panX += e.clientX - d.lx;
+      st.current.panY += e.clientY - d.ly;
+      d.lx = e.clientX; d.ly = e.clientY;
+      apply();
+    };
+    const onUp = () => { drag.current.on = false; };
+
+    vp.addEventListener('wheel', onWheel, { passive: false });
+    vp.addEventListener('pointerdown', onDown);
+    vp.addEventListener('pointermove', onMove);
+    vp.addEventListener('pointerup', onUp);
+    vp.addEventListener('pointercancel', onUp);
+    window.addEventListener('resize', fitToScreen);
+
+    return () => {
+      vp.removeEventListener('wheel', onWheel);
+      vp.removeEventListener('pointerdown', onDown);
+      vp.removeEventListener('pointermove', onMove);
+      vp.removeEventListener('pointerup', onUp);
+      vp.removeEventListener('pointercancel', onUp);
+      window.removeEventListener('resize', fitToScreen);
+    };
+  }, [apply, fitToScreen]);
+
+  const zoomIn = useCallback(() => { st.current.zoom = Math.min(4, st.current.zoom * 1.25); apply(); }, [apply]);
+  const zoomOut = useCallback(() => { st.current.zoom = Math.max(0.15, st.current.zoom / 1.25); apply(); }, [apply]);
+
+  return { viewportRef, canvasRef, zoomDisplayRef, zoomIn, zoomOut, fitToScreen };
+}
+
+function MermaidDiagram({ onNodeClick }) {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    window.nodeClickHandler = onNodeClick;
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'dark',
+      themeVariables: {
+        primaryColor: '#0a0a0a',
+        primaryTextColor: '#ffffff',
+        primaryBorderColor: '#2a2a2a',
+        lineColor: '#a0a0a0',
+        secondaryColor: '#000000',
+        tertiaryColor: '#000000',
+        background: '#000000',
+        mainBkg: '#0a0a0a',
+        nodeBorder: '#2a2a2a',
+        clusterBkg: 'rgba(10,10,10,0.8)',
+        clusterBorder: '#7c3aed',
+        titleColor: '#ffffff',
+        edgeLabelBackground: 'transparent',
+      },
+      flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis' },
+      securityLevel: 'loose',
+    });
+    mermaid.render('walkthrough-diagram', DIAGRAM).then(({ svg, bindFunctions }) => {
+      if (ref.current) {
+        ref.current.innerHTML = svg;
+        bindFunctions?.(ref.current);
+      }
+    });
+    return () => { delete window.nodeClickHandler; };
+  }, [onNodeClick]);
+
+  return h('div', { ref, className: 'mermaid-wrap' });
+}
+
+function Summary() {
+  return h('div', {
+    className: 'fixed top-16 left-6 z-10 max-w-lg px-4 py-3 bg-wt-surface/80 backdrop-blur border border-wt-border rounded-lg shadow-lg pointer-events-none'
+  },
+    h('p', { className: 'text-sm text-wt-muted leading-relaxed' }, SUMMARY)
+  );
+}
+
+function DetailPanel({ nodeId, node, onClose }) {
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  const codeHtml = HIGHLIGHTED[nodeId];
+
+  return h('div', {
+    className: 'fixed top-4 right-4 bottom-4 w-[420px] z-30 bg-wt-surface border border-wt-border rounded-xl shadow-2xl flex flex-col overflow-hidden'
+  },
+    h('button', {
+      onClick: onClose,
+      className: 'absolute top-3 right-3 z-10 w-7 h-7 rounded-md border border-wt-border bg-wt-raised text-wt-muted flex items-center justify-center text-lg hover:bg-wt-red hover:border-wt-red hover:text-white transition-colors'
+    }, '\u00d7'),
+    h('div', { className: 'flex-1 overflow-y-auto p-5' },
+      h('h2', { className: 'text-lg font-bold text-wt-fg mb-3 pr-9' }, node.title),
+      h('div', { className: 'dt-body' },
+        h('p', null, node.description)
+      ),
+      node.code ? h('div', { className: 'dt-body' },
+        codeHtml
+          ? h('div', { dangerouslySetInnerHTML: { __html: codeHtml } })
+          : h('pre', { className: 'code-fallback' }, h('code', null, node.code))
+      ) : null,
+      node.files && node.files.length > 0 ? h('div', { className: 'mt-4 pt-3 border-t border-wt-border' },
+        h('div', { className: 'text-[0.7rem] uppercase tracking-wider text-wt-muted font-semibold mb-1.5' }, 'Files'),
+        h('code', { className: 'text-sm text-wt-file font-mono leading-relaxed' },
+          node.files.map((f, i) => h('span', { key: i }, f, h('br')))
+        )
+      ) : null
+    )
+  );
+}
+
+function ZoomControls({ zoomDisplayRef, onZoomIn, onZoomOut, onFit }) {
+  return h('div', { className: 'fixed bottom-5 left-5 z-20 flex items-center gap-1 bg-wt-surface border border-wt-border rounded-lg shadow-xl' },
+    h('button', { onClick: onZoomOut, className: 'px-2.5 py-1.5 text-wt-muted hover:text-wt-fg text-sm transition-colors' }, '\u2212'),
+    h('span', { ref: zoomDisplayRef, className: 'text-xs text-wt-muted min-w-[3rem] text-center' }, '100%'),
+    h('button', { onClick: onZoomIn, className: 'px-2.5 py-1.5 text-wt-muted hover:text-wt-fg text-sm transition-colors' }, '+'),
+    h('button', { onClick: onFit, className: 'px-2.5 py-1.5 text-wt-muted hover:text-wt-fg text-xs border-l border-wt-border transition-colors' }, 'Fit')
+  );
+}
+
+function App() {
+  const [activeId, _setActiveId] = useState(null);
+  const pz = usePanZoom();
+
+  const setActiveNode = useCallback((nodeId) => {
+    _setActiveId(nodeId);
+    document.querySelectorAll('.mermaid-wrap .node').forEach(n => { n.style.opacity = nodeId ? '0.4' : '1'; });
+    if (nodeId) {
+      const el = document.querySelector(`.mermaid-wrap .node[id*="${nodeId}"]`);
+      if (el) el.style.opacity = '1';
+    }
+  }, []);
+
+  const closeDetail = useCallback(() => {
+    _setActiveId(null);
+    document.querySelectorAll('.mermaid-wrap .node').forEach(n => { n.style.opacity = '1'; });
+  }, []);
+
+  useEffect(() => { setTimeout(pz.fitToScreen, 600); }, [pz.fitToScreen]);
+
+  return h(React.Fragment, null,
+    h('header', { className: 'fixed top-0 inset-x-0 z-10 px-6 py-3.5 bg-gradient-to-b from-wt-bg to-transparent pointer-events-none' },
+      h('h1', { className: 'text-base font-semibold text-wt-fg' }, 'Canvas Rendering Pipeline'),
+      h('p', { className: 'text-sm text-wt-muted mt-0.5' }, 'What happens when you create an element — from pointer event to pixels')
+    ),
+    h(Summary),
+    h('div', { ref: pz.viewportRef, className: 'w-full h-screen overflow-hidden cursor-grab active:cursor-grabbing' },
+      h('div', { ref: pz.canvasRef, className: 'origin-top-left will-change-transform inline-block p-[80px_60px_60px]' },
+        h(MermaidDiagram, { onNodeClick: setActiveNode })
+      )
+    ),
+    h(ZoomControls, { zoomDisplayRef: pz.zoomDisplayRef, onZoomIn: pz.zoomIn, onZoomOut: pz.zoomOut, onFit: pz.fitToScreen }),
+    h('div', { className: 'fixed bottom-5 left-1/2 -translate-x-1/2 z-20 flex gap-4 px-4 py-2 bg-wt-surface border border-wt-border rounded-lg shadow-xl' },
+      LEGEND.map(l => h('span', { key: l.label, className: 'flex items-center gap-1.5 text-xs text-wt-muted' },
+        h('span', { className: `w-2 h-2 rounded-full ${l.color}` }), l.label
+      ))
+    ),
+    activeId && NODES[activeId] ? h(DetailPanel, { nodeId: activeId, node: NODES[activeId], onClose: closeDetail }) : null,
+    h('div', { className: 'fixed bottom-5 right-5 z-20 text-xs text-wt-muted opacity-50' },
+      h('kbd', null, 'Scroll'), ' zoom \u00b7 ', h('kbd', null, 'Drag'), ' pan \u00b7 Click nodes'
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(h(App));
+</script>
+</body>
+</html>

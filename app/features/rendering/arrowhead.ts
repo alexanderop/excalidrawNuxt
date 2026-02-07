@@ -9,14 +9,16 @@ export function renderArrowheads(
   if (points.length < 2) return
 
   if (endArrowhead && endArrowhead !== 'none') {
-    const tip = points.at(-1)!
-    const prev = points.at(-2)!
+    const tip = points.at(-1)
+    const prev = points.at(-2)
+    if (!tip || !prev) return
     drawArrowhead(ctx, prev, tip, endArrowhead, strokeWidth, strokeColor)
   }
 
   if (startArrowhead && startArrowhead !== 'none') {
-    const tip = points[0]!
-    const next = points[1]!
+    const tip = points[0]
+    const next = points[1]
+    if (!tip || !next) return
     drawArrowhead(ctx, next, tip, startArrowhead, strokeWidth, strokeColor)
   }
 }

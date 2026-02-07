@@ -33,6 +33,7 @@ export const useToolStore = createGlobalState(() => {
     return tag === 'INPUT' || tag === 'TEXTAREA'
   }
 
+  // Guard needed: createGlobalState runs in Node test environment where document is undefined
   if (typeof document !== 'undefined') {
     useEventListener(document, 'keydown', (e: KeyboardEvent) => {
       if (isTyping()) return

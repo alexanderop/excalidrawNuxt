@@ -39,6 +39,7 @@ const {
   addToSelection,
   toggleSelection,
   clearSelection,
+  replaceSelection,
   selectAll,
   isSelected,
 } = useSelection(elements)
@@ -68,7 +69,7 @@ const {
   markStaticDirty: () => dirtyCallbacks.markStaticDirty(),
   markInteractiveDirty: () => dirtyCallbacks.markInteractiveDirty(),
   onFinalize() {
-    activeTool.value = 'selection'
+    setTool('selection')
   },
   elements,
   zoom,
@@ -131,6 +132,7 @@ const { cursorClass, spaceHeld, isPanning } = usePanning({
 useDrawingInteraction({
   canvasRef: interactiveCanvasRef,
   activeTool,
+  setTool,
   spaceHeld,
   isPanning,
   toScene,
@@ -163,6 +165,7 @@ const { cursorStyle } = useSelectionInteraction({
   addToSelection,
   toggleSelection,
   clearSelection,
+  replaceSelection,
   selectAll,
   isSelected,
   markStaticDirty,

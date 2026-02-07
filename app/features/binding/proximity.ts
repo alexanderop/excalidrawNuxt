@@ -60,7 +60,12 @@ export function distanceToShapeEdge(point: Point, element: BindableElement): num
   if (element.type === 'ellipse') {
     return distanceToEllipseEdge(unrotated, element)
   }
-  return distanceToDiamondEdge(unrotated, element)
+  if (element.type === 'diamond') {
+    return distanceToDiamondEdge(unrotated, element)
+  }
+
+  const _exhaustive: never = element
+  throw new Error(`Unhandled element type: ${String(_exhaustive)}`)
 }
 
 function distanceToRectangleEdge(point: Point, el: BindableElement): number {
@@ -107,8 +112,9 @@ function distanceToDiamondEdge(point: Point, el: BindableElement): number {
   ]
   let minDist = Infinity
   for (let i = 0; i < 4; i++) {
-    const a = vertices[i]!
-    const b = vertices[(i + 1) % 4]!
+    const a = vertices[i]
+    const b = vertices[(i + 1) % 4]
+    if (!a || !b) continue
     const d = distanceToSegment(point, a, b)
     if (d < minDist) minDist = d
   }
@@ -197,7 +203,12 @@ function projectOntoShapeEdge(
   if (element.type === 'ellipse') {
     return projectOntoEllipseEdge(cx, cy, dirX, dirY, element)
   }
-  return projectOntoDiamondEdge(cx, cy, dirX, dirY, element)
+  if (element.type === 'diamond') {
+    return projectOntoDiamondEdge(cx, cy, dirX, dirY, element)
+  }
+
+  const _exhaustive: never = element
+  throw new Error(`Unhandled element type: ${String(_exhaustive)}`)
 }
 
 function projectOntoRectEdge(
@@ -268,8 +279,9 @@ function projectOntoDiamondEdge(
 
   let closestT = Infinity
   for (let i = 0; i < 4; i++) {
-    const a = vertices[i]!
-    const b = vertices[(i + 1) % 4]!
+    const a = vertices[i]
+    const b = vertices[(i + 1) % 4]
+    if (!a || !b) continue
     // Ray-segment intersection
     const t = raySegmentIntersection(dirX, dirY, a, b)
     if (t !== null && t > 0 && t < closestT) {

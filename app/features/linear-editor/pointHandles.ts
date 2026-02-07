@@ -20,7 +20,10 @@ export function getMidpointPositions(element: ExcalidrawArrowElement): Point[] {
   const scenePoints = getPointPositions(element)
   const midpoints: Point[] = []
   for (let i = 0; i < scenePoints.length - 1; i++) {
-    midpoints.push(midpoint(scenePoints[i]!, scenePoints[i + 1]!))
+    const a = scenePoints[i]
+    const b = scenePoints[i + 1]
+    if (!a || !b) continue
+    midpoints.push(midpoint(a, b))
   }
   return midpoints
 }
@@ -38,7 +41,7 @@ export function hitTestPointHandles(
   const threshold = POINT_HIT_THRESHOLD / zoom
 
   for (const [i, position] of positions.entries()) {
-    if (distance(scenePoint, position!) <= threshold) return i
+    if (distance(scenePoint, position) <= threshold) return i
   }
   return -1
 }
@@ -56,7 +59,7 @@ export function hitTestMidpoints(
   const threshold = MIDPOINT_HIT_THRESHOLD / zoom
 
   for (const [i, midpoint_] of midpoints.entries()) {
-    if (distance(scenePoint, midpoint_!) <= threshold) return i
+    if (distance(scenePoint, midpoint_) <= threshold) return i
   }
   return -1
 }
@@ -70,8 +73,9 @@ export function insertPointAtSegment(
   points: readonly Point[],
   segmentIndex: number,
 ): { points: readonly Point[]; insertedIndex: number } {
-  const a = points[segmentIndex]!
-  const b = points[segmentIndex + 1]!
+  const a = points[segmentIndex]
+  const b = points[segmentIndex + 1]
+  if (!a || !b) return { points, insertedIndex: segmentIndex }
   const mid = midpoint(a, b)
 
   const newPoints = [

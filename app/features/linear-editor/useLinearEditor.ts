@@ -19,6 +19,8 @@ import {
   computeDimensionsFromPoints,
 } from './pointHandles'
 
+const _excludeIds = new Set<string>()
+
 interface UseLinearEditorOptions {
   canvasRef: Readonly<Ref<HTMLCanvasElement | null>>
   zoom: Ref<number>
@@ -187,8 +189,9 @@ export function useLinearEditor(options: UseLinearEditorOptions): UseLinearEdito
         const indices = selectedPointIndices.value
         const isEndpoint = indices.has(0) || indices.has(el.points.length - 1)
         if (isEndpoint) {
-          const excludeIds = new Set([el.id])
-          const candidate = getHoveredElementForBinding(scene, elements.value, zoom.value, excludeIds)
+          _excludeIds.clear()
+          _excludeIds.add(el.id)
+          const candidate = getHoveredElementForBinding(scene, elements.value, zoom.value, _excludeIds)
           suggestedBindings.value = candidate ? [candidate.element] : []
         }
       }
@@ -214,12 +217,13 @@ export function useLinearEditor(options: UseLinearEditorOptions): UseLinearEdito
     // Commit bindings for dragged endpoints
     const indices = selectedPointIndices.value
     const scene = toScene(e.offsetX, e.offsetY)
-    const excludeIds = new Set([el.id])
+    _excludeIds.clear()
+    _excludeIds.add(el.id)
 
     if (indices.has(0)) {
       // Start endpoint dragged
       if (el.startBinding) unbindArrowEndpoint(el, 'start', elements.value)
-      const candidate = getHoveredElementForBinding(scene, elements.value, zoom.value, excludeIds)
+      const candidate = getHoveredElementForBinding(scene, elements.value, zoom.value, _excludeIds)
       if (candidate) {
         bindArrowToElement(el, 'start', candidate.element, candidate.fixedPoint)
         updateArrowEndpoint(el, 'start', candidate.element)
@@ -229,7 +233,7 @@ export function useLinearEditor(options: UseLinearEditorOptions): UseLinearEdito
     if (indices.has(el.points.length - 1)) {
       // End endpoint dragged
       if (el.endBinding) unbindArrowEndpoint(el, 'end', elements.value)
-      const candidate = getHoveredElementForBinding(scene, elements.value, zoom.value, excludeIds)
+      const candidate = getHoveredElementForBinding(scene, elements.value, zoom.value, _excludeIds)
       if (candidate) {
         bindArrowToElement(el, 'end', candidate.element, candidate.fixedPoint)
         updateArrowEndpoint(el, 'end', candidate.element)
@@ -242,38 +246,36 @@ export function useLinearEditor(options: UseLinearEditorOptions): UseLinearEdito
     markInteractiveDirty()
   })
 
-  if (typeof document !== 'undefined') {
-    useEventListener(document, 'keydown', (e: KeyboardEvent) => {
-      const el = editingElement.value
-      if (!el) return
+  useEventListener(document, 'keydown', (e: KeyboardEvent) => {
+    const el = editingElement.value
+    if (!el) return
 
-      if (e.key === 'Escape') {
-        e.preventDefault()
-        exitEditor()
-        return
-      }
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      exitEditor()
+      return
+    }
 
-      if (e.key === 'Delete' || e.key === 'Backspace') {
-        if (selectedPointIndices.value.size === 0) return
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+      if (selectedPointIndices.value.size === 0) return
 
-        const newPoints = removePoints(el.points, selectedPointIndices.value)
-        if (!newPoints) return
+      const newPoints = removePoints(el.points, selectedPointIndices.value)
+      if (!newPoints) return
 
-        e.preventDefault()
-        const dims = computeDimensionsFromPoints(newPoints)
-        mutateElement(el, {
-          points: newPoints,
-          width: dims.width,
-          height: dims.height,
-        })
+      e.preventDefault()
+      const dims = computeDimensionsFromPoints(newPoints)
+      mutateElement(el, {
+        points: newPoints,
+        width: dims.width,
+        height: dims.height,
+      })
 
-        triggerRef(editingElement)
-        selectedPointIndices.value = new Set()
-        markStaticDirty()
-        markInteractiveDirty()
-      }
-    })
-  }
+      triggerRef(editingElement)
+      selectedPointIndices.value = new Set()
+      markStaticDirty()
+      markInteractiveDirty()
+    }
+  })
 
   return {
     editingElement,

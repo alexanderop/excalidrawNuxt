@@ -6,9 +6,16 @@ export type Bounds = [x1: number, y1: number, x2: number, y2: number]
 
 export function getElementBounds(element: ExcalidrawElement): Bounds {
   if (element.type === 'arrow') {
-    const xs = element.points.map(p => p.x + element.x)
-    const ys = element.points.map(p => p.y + element.y)
-    return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)]
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+    for (const p of element.points) {
+      const px = p.x + element.x
+      const py = p.y + element.y
+      if (px < minX) minX = px
+      if (py < minY) minY = py
+      if (px > maxX) maxX = px
+      if (py > maxY) maxY = py
+    }
+    return [minX, minY, maxX, maxY]
   }
 
   const { x, y, width, height, angle } = element

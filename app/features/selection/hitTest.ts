@@ -31,7 +31,10 @@ export function hitTest(
   if (element.type === 'arrow') return hitTestArrow(point, element, threshold)
   if (element.type === 'rectangle') return hitTestRectangle(point, element, threshold)
   if (element.type === 'ellipse') return hitTestEllipse(point, element, threshold)
-  return hitTestDiamond(point, element, threshold)
+  if (element.type === 'diamond') return hitTestDiamond(point, element, threshold)
+
+  const _exhaustive: never = element
+  throw new Error(`Unhandled element type: ${String(_exhaustive)}`)
 }
 
 export function getElementAtPosition(
@@ -41,7 +44,8 @@ export function getElementAtPosition(
 ): ExcalidrawElement | null {
   // Iterate back-to-front (topmost = last in array)
   for (let i = elements.length - 1; i >= 0; i--) {
-    const el = elements[i]!
+    const el = elements[i]
+    if (!el) continue
     if (el.isDeleted) continue
     if (hitTest(scenePoint, el, zoom)) return el
   }
@@ -100,8 +104,9 @@ function isInsidePolygon(point: Point, vertices: Point[]): boolean {
   let inside = false
   const n = vertices.length
   for (let i = 0, j = n - 1; i < n; j = i++) {
-    const vi = vertices[i]!
-    const vj = vertices[j]!
+    const vi = vertices[i]
+    const vj = vertices[j]
+    if (!vi || !vj) continue
 
     const intersect = ((vi.y > point.y) !== (vj.y > point.y))
       && (point.x < (vj.x - vi.x) * (point.y - vi.y) / (vj.y - vi.y) + vi.x)
@@ -113,8 +118,9 @@ function isInsidePolygon(point: Point, vertices: Point[]): boolean {
 function isPointNearPolygonOutline(point: Point, vertices: Point[], threshold: number): boolean {
   const n = vertices.length
   for (let i = 0; i < n; i++) {
-    const a = vertices[i]!
-    const b = vertices[(i + 1) % n]!
+    const a = vertices[i]
+    const b = vertices[(i + 1) % n]
+    if (!a || !b) continue
     if (distanceToSegment(point, a, b) <= threshold) return true
   }
   return false
@@ -123,7 +129,10 @@ function isPointNearPolygonOutline(point: Point, vertices: Point[], threshold: n
 function hitTestArrow(point: Point, el: ExcalidrawArrowElement, threshold: number): boolean {
   const pts = el.points.map(p => ({ x: p.x + el.x, y: p.y + el.y }))
   for (let i = 0; i < pts.length - 1; i++) {
-    if (distanceToSegment(point, pts[i]!, pts[i + 1]!) <= threshold) return true
+    const a = pts[i]
+    const b = pts[i + 1]
+    if (!a || !b) continue
+    if (distanceToSegment(point, a, b) <= threshold) return true
   }
   return false
 }

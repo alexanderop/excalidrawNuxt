@@ -60,7 +60,10 @@ export function renderSuggestedBinding(
       ctx.stroke()
       break
     }
-    // No default
+    default: {
+      const _exhaustive: never = element
+      throw new Error(`Unhandled element type: ${String(_exhaustive)}`)
+    }
   }
 
   ctx.restore()

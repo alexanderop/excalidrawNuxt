@@ -2,23 +2,21 @@ import { withSetup } from '~/__test-utils__/withSetup'
 import { useToolStore } from './useTool'
 
 describe('useToolStore', () => {
-  afterEach(() => {
-    const store = useToolStore()
-    store.$reset()
-  })
-
   it('defaults activeTool to selection', () => {
+    useToolStore().$reset()
     using store = withSetup(() => useToolStore())
     expect(store.activeTool.value).toBe('selection')
   })
 
   it('sets activeTool via setTool', () => {
+    useToolStore().$reset()
     using store = withSetup(() => useToolStore())
     store.setTool('rectangle')
     expect(store.activeTool.value).toBe('rectangle')
   })
 
   it('sets activeTool to each tool type', () => {
+    useToolStore().$reset()
     using store = withSetup(() => useToolStore())
     const tools = ['selection', 'hand', 'rectangle', 'ellipse', 'diamond'] as const
 
@@ -29,6 +27,7 @@ describe('useToolStore', () => {
   })
 
   it('fires onBeforeToolChange before setting the tool', () => {
+    useToolStore().$reset()
     using store = withSetup(() => useToolStore())
     const captured: string[] = []
 

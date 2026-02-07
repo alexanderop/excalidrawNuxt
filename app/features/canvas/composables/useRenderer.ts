@@ -1,6 +1,6 @@
-import { ref, onMounted, watch, toRaw } from 'vue'
+import { ref, watch, toRaw, onScopeDispose } from 'vue'
 import type { Ref, ShallowRef } from 'vue'
-import { useRafFn } from '@vueuse/core'
+import { useDevicePixelRatio } from '@vueuse/core'
 
 interface CanvasLayer {
   ctx: ShallowRef<CanvasRenderingContext2D | null>
@@ -40,19 +40,41 @@ export function useRenderer(options: UseRendererOptions): UseRendererReturn {
   const newElementDirty = ref(false)
   const interactiveDirty = ref(false)
 
-  const dpr = ref(1)
+  const { pixelRatio: dpr } = useDevicePixelRatio()
 
-  onMounted(() => {
-    dpr.value = window.devicePixelRatio || 1
-  })
+  let rafId: number | null = null
 
-  function markStaticDirty(): void { staticDirty.value = true }
-  function markNewElementDirty(): void { newElementDirty.value = true }
-  function markInteractiveDirty(): void { interactiveDirty.value = true }
+  function scheduleRender(): void {
+    if (rafId !== null) return
+    rafId = requestAnimationFrame(() => {
+      rafId = null
+      const w = width.value
+      const h = height.value
+      if (w === 0 || h === 0) return
+      const currentDpr = dpr.value
+      renderDirtyCanvas(staticDirty, staticLayer, currentDpr, w, h, '#ffffff', onRenderStatic)
+      renderDirtyCanvas(newElementDirty, newElementLayer, currentDpr, w, h, undefined, onRenderNewElement)
+      renderDirtyCanvas(interactiveDirty, interactiveLayer, currentDpr, w, h, undefined, onRenderInteractive)
+    })
+  }
+
+  function markStaticDirty(): void {
+    staticDirty.value = true
+    scheduleRender()
+  }
+  function markNewElementDirty(): void {
+    newElementDirty.value = true
+    scheduleRender()
+  }
+  function markInteractiveDirty(): void {
+    interactiveDirty.value = true
+    scheduleRender()
+  }
   function markAllDirty(): void {
     staticDirty.value = true
     newElementDirty.value = true
     interactiveDirty.value = true
+    scheduleRender()
   }
 
   watch([width, height, scrollX, scrollY, zoom], markAllDirty)
@@ -75,16 +97,8 @@ export function useRenderer(options: UseRendererOptions): UseRendererReturn {
     dirty.value = false
   }
 
-  useRafFn(() => {
-    const w = width.value
-    const h = height.value
-    if (w === 0 || h === 0) return
-
-    const currentDpr = dpr.value
-
-    renderDirtyCanvas(staticDirty, staticLayer, currentDpr, w, h, '#ffffff', onRenderStatic)
-    renderDirtyCanvas(newElementDirty, newElementLayer, currentDpr, w, h, undefined, onRenderNewElement)
-    renderDirtyCanvas(interactiveDirty, interactiveLayer, currentDpr, w, h, undefined, onRenderInteractive)
+  onScopeDispose(() => {
+    if (rafId !== null) cancelAnimationFrame(rafId)
   })
 
   return {
@@ -104,10 +118,14 @@ function bootstrapCanvas(
   h: number,
   bgColor?: string,
 ): void {
-  canvas.width = w * dpr
-  canvas.height = h * dpr
-  canvas.style.width = `${w}px`
-  canvas.style.height = `${h}px`
+  const targetWidth = w * dpr
+  const targetHeight = h * dpr
+  if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
+    canvas.width = targetWidth
+    canvas.height = targetHeight
+    canvas.style.width = `${w}px`
+    canvas.style.height = `${h}px`
+  }
 
   ctx.setTransform(1, 0, 0, 1, 0, 0)
   ctx.scale(dpr, dpr)

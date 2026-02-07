@@ -39,12 +39,19 @@ function renderArrowSelectionBorder(
   zoom: number,
 ): void {
   const padding = SELECTION_PADDING / zoom
-  const xs = element.points.map(p => p.x + element.x)
-  const ys = element.points.map(p => p.y + element.y)
-  const minX = Math.min(...xs) - padding
-  const minY = Math.min(...ys) - padding
-  const maxX = Math.max(...xs) + padding
-  const maxY = Math.max(...ys) + padding
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+  for (const p of element.points) {
+    const px = p.x + element.x
+    const py = p.y + element.y
+    if (px < minX) minX = px
+    if (py < minY) minY = py
+    if (px > maxX) maxX = px
+    if (py > maxY) maxY = py
+  }
+  minX -= padding
+  minY -= padding
+  maxX += padding
+  maxY += padding
 
   ctx.save()
   applySelectionStroke(ctx, zoom)

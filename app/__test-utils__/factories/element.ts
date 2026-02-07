@@ -3,11 +3,12 @@ import type {
   ExcalidrawArrowElement,
   ExcalidrawDiamondElement,
   ExcalidrawElement,
+  ExcalidrawElementBase,
   ExcalidrawEllipseElement,
   ExcalidrawRectangleElement,
 } from '~/features/elements/types'
 
-const BASE_PROPS = {
+const BASE_PROPS: Omit<ExcalidrawElementBase, 'type'> = {
   id: 'test-id',
   x: 0,
   y: 0,

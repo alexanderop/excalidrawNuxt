@@ -1,4 +1,4 @@
-type Result<T> = [Error, null] | [null, T]
+export type Result<T> = [Error, null] | [null, T]
 
 export async function tryCatch<T>(promise: Promise<T>): Promise<Result<T>> {
   return promise

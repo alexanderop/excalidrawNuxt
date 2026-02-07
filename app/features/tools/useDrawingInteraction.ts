@@ -14,9 +14,12 @@ import {
 import type { ToolType } from './types'
 import { isDrawingTool, isLinearTool } from './types'
 
+const _excludeIds = new Set<string>()
+
 interface UseDrawingInteractionOptions {
   canvasRef: Readonly<Ref<HTMLCanvasElement | null>>
   activeTool: ShallowRef<ToolType>
+  setTool: (tool: ToolType) => void
   spaceHeld: Ref<boolean>
   isPanning: Ref<boolean>
   toScene: (screenX: number, screenY: number) => { x: number; y: number }
@@ -40,6 +43,7 @@ export function useDrawingInteraction(options: UseDrawingInteractionOptions): Us
   const {
     canvasRef,
     activeTool,
+    setTool,
     spaceHeld,
     isPanning,
     toScene,
@@ -100,15 +104,16 @@ export function useDrawingInteraction(options: UseDrawingInteractionOptions): Us
 
       // Update suggested bindings for arrow endpoints
       if (newElement.value.type === 'arrow') {
-        const excludeIds = new Set([newElement.value.id])
+        _excludeIds.clear()
+        _excludeIds.add(newElement.value.id)
         const endPoint = { x: originX + dx, y: originY + dy }
         const startPoint = { x: originX, y: originY }
         const candidates: ExcalidrawElement[] = []
 
-        const startCandidate = getHoveredElementForBinding(startPoint, elements.value, zoom.value, excludeIds)
+        const startCandidate = getHoveredElementForBinding(startPoint, elements.value, zoom.value, _excludeIds)
         if (startCandidate) candidates.push(startCandidate.element)
 
-        const endCandidate = getHoveredElementForBinding(endPoint, elements.value, zoom.value, excludeIds)
+        const endCandidate = getHoveredElementForBinding(endPoint, elements.value, zoom.value, _excludeIds)
         if (endCandidate) candidates.push(endCandidate.element)
 
         suggestedBindings.value = candidates
@@ -139,18 +144,20 @@ export function useDrawingInteraction(options: UseDrawingInteractionOptions): Us
   })
 
   function tryBindArrowEndpoints(arrowEl: ExcalidrawArrowElement): void {
-    const excludeIds = new Set([arrowEl.id])
+    _excludeIds.clear()
+    _excludeIds.add(arrowEl.id)
 
     const startScenePoint = { x: arrowEl.x, y: arrowEl.y }
-    const startCandidate = getHoveredElementForBinding(startScenePoint, elements.value, zoom.value, excludeIds)
+    const startCandidate = getHoveredElementForBinding(startScenePoint, elements.value, zoom.value, _excludeIds)
     if (startCandidate) {
       bindArrowToElement(arrowEl, 'start', startCandidate.element, startCandidate.fixedPoint)
       updateArrowEndpoint(arrowEl, 'start', startCandidate.element)
     }
 
-    const lastPt = arrowEl.points.at(-1)!
+    const lastPt = arrowEl.points.at(-1)
+    if (!lastPt) return
     const endScenePoint = { x: arrowEl.x + lastPt.x, y: arrowEl.y + lastPt.y }
-    const endCandidate = getHoveredElementForBinding(endScenePoint, elements.value, zoom.value, excludeIds)
+    const endCandidate = getHoveredElementForBinding(endScenePoint, elements.value, zoom.value, _excludeIds)
     if (endCandidate) {
       bindArrowToElement(arrowEl, 'end', endCandidate.element, endCandidate.fixedPoint)
       updateArrowEndpoint(arrowEl, 'end', endCandidate.element)
@@ -180,7 +187,7 @@ export function useDrawingInteraction(options: UseDrawingInteractionOptions): Us
       }
     }
 
-    activeTool.value = 'selection'
+    setTool('selection')
     newElement.value = null
     markNewElementDirty()
     markStaticDirty()

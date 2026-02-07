@@ -50,5 +50,8 @@ export function createElement(
 
   if (type === 'rectangle') return { ...base, type }
   if (type === 'ellipse') return { ...base, type }
-  return { ...base, type: 'diamond' }
+  if (type === 'diamond') return { ...base, type }
+
+  const _exhaustive: never = type
+  throw new Error(`Unhandled element type: ${String(_exhaustive)}`)
 }

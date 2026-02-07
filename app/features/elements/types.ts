@@ -2,6 +2,8 @@ import type { Point } from '~/shared/math'
 
 export type ArrowheadType = 'arrow' | 'triangle' | 'none'
 
+export type FillStyle = 'hachure' | 'solid' | 'cross-hatch' | 'zigzag' | 'dots' | 'dashed' | 'zigzag-line'
+
 export type ExcalidrawElementType = 'rectangle' | 'ellipse' | 'diamond' | 'arrow'
 
 export interface FixedPointBinding {
@@ -24,7 +26,7 @@ export interface ExcalidrawElementBase {
   angle: number
   strokeColor: string
   backgroundColor: string
-  fillStyle: string
+  fillStyle: FillStyle
   strokeWidth: number
   roughness: number
   opacity: number

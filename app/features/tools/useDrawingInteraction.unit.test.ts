@@ -40,6 +40,7 @@ function createSetup() {
   return {
     canvasRef,
     activeTool,
+    setTool: (tool: ToolType) => { activeTool.value = tool },
     spaceHeld: shallowRef(false),
     isPanning: shallowRef(false),
     toScene: (x: number, y: number) => ({ x, y }),
@@ -54,11 +55,8 @@ function createSetup() {
 }
 
 describe('useDrawingInteraction', () => {
-  beforeEach(() => {
-    eventHandlers.clear()
-  })
-
   it('clears new-element canvas after drawing completes (no ghost element)', () => {
+    eventHandlers.clear()
     const opts = createSetup()
 
     using _ctx = withSetup(() => useDrawingInteraction(opts))
@@ -76,6 +74,7 @@ describe('useDrawingInteraction', () => {
   })
 
   it('creates exactly one element after draw-then-release', () => {
+    eventHandlers.clear()
     const opts = createSetup()
 
     using ctx = withSetup(() => useDrawingInteraction(opts))
@@ -98,6 +97,7 @@ describe('useDrawingInteraction', () => {
   })
 
   it('switches to selection tool after drawing', () => {
+    eventHandlers.clear()
     const opts = createSetup()
 
     using _ctx = withSetup(() => useDrawingInteraction(opts))

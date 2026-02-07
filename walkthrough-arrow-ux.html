@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Arrow: A UX Anatomy of Excalidraw's Most Complex Primitive</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300;1,8..60,400&family=Source+Code+Pro:wght@400;500&display=swap');
+
+  :root {
+    --text: #1a1a1a;
+    --bg: #fefefe;
+    --margin-note: #666;
+    --accent: #c0392b;
+    --accent-soft: #e74c3c22;
+    --code-bg: #f5f2f0;
+    --border: #ddd;
+    --sidenote-width: 280px;
+    --body-width: 640px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Source Serif 4', Georgia, serif;
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.72;
+    font-size: 17px;
+    padding: 60px 20px 120px;
+    max-width: calc(var(--body-width) + var(--sidenote-width) + 80px);
+    margin: 0 auto;
+    counter-reset: sidenote-counter figure-counter;
+  }
+
+  /* === TUFTE-STYLE LAYOUT === */
+  article {
+    position: relative;
+    max-width: var(--body-width);
+  }
+
+  h1 {
+    font-size: 2.4em;
+    font-weight: 600;
+    line-height: 1.15;
+    margin-bottom: 0.3em;
+    letter-spacing: -0.02em;
+  }
+
+  .subtitle {
+    font-size: 1.15em;
+    color: var(--margin-note);
+    font-style: italic;
+    margin-bottom: 2em;
+    line-height: 1.5;
+  }
+
+  h2 {
+    font-size: 1.55em;
+    font-weight: 600;
+    margin-top: 2.5em;
+    margin-bottom: 0.5em;
+    padding-bottom: 0.15em;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: -0.01em;
+  }
+
+  h3 {
+    font-size: 1.15em;
+    font-weight: 600;
+    margin-top: 1.8em;
+    margin-bottom: 0.4em;
+  }
+
+  p { margin-bottom: 1.1em; }
+
+  /* === SIDENOTES (Tufte signature) === */
+  .sidenote {
+    float: right;
+    clear: right;
+    margin-right: calc(-1 * var(--sidenote-width) - 40px);
+    width: var(--sidenote-width);
+    font-size: 0.82em;
+    line-height: 1.5;
+    color: var(--margin-note);
+    counter-increment: sidenote-counter;
+    position: relative;
+    padding-left: 12px;
+    border-left: 2px solid var(--accent);
+  }
+
+  .sidenote::before {
+    content: counter(sidenote-counter);
+    font-size: 0.7em;
+    position: relative;
+    top: -0.5em;
+    color: var(--accent);
+    font-weight: 600;
+    margin-right: 4px;
+  }
+
+  .sidenote-ref {
+    counter-increment: sidenote-counter;
+  }
+  .sidenote-ref::after {
+    content: counter(sidenote-counter);
+    font-size: 0.65em;
+    position: relative;
+    top: -0.6em;
+    color: var(--accent);
+    font-weight: 600;
+    margin-left: 2px;
+  }
+
+  /* === CODE === */
+  code {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.88em;
+    background: var(--code-bg);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  pre {
+    background: var(--code-bg);
+    padding: 16px 20px;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 1.2em 0;
+    font-size: 0.84em;
+    line-height: 1.55;
+    border-left: 3px solid var(--accent);
+  }
+
+  pre code {
+    background: none;
+    padding: 0;
+  }
+
+  /* === DIAGRAMS === */
+  .diagram-container {
+    margin: 2em 0;
+    padding: 20px;
+    background: #fafafa;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    overflow-x: auto;
+  }
+
+  .diagram-container .mermaid {
+    display: flex;
+    justify-content: center;
+  }
+
+  .diagram-caption {
+    counter-increment: figure-counter;
+    font-size: 0.88em;
+    color: var(--margin-note);
+    margin-top: 10px;
+    font-style: italic;
+  }
+
+  .diagram-caption::before {
+    content: "Fig. " counter(figure-counter) ". ";
+    font-weight: 600;
+    font-style: normal;
+    color: var(--text);
+  }
+
+  /* === DATA TABLES === */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5em 0;
+    font-size: 0.92em;
+  }
+
+  th {
+    text-align: left;
+    font-weight: 600;
+    padding: 8px 12px;
+    border-bottom: 2px solid var(--text);
+    font-size: 0.85em;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  td {
+    padding: 6px 12px;
+    border-bottom: 1px solid #eee;
+    vertical-align: top;
+  }
+
+  tr:hover td { background: #f9f9f9; }
+
+  /* === SPECIAL BLOCKS === */
+  .observation {
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    padding: 14px 18px;
+    margin: 1.5em 0;
+    font-size: 0.95em;
+    border-radius: 0 6px 6px 0;
+  }
+
+  .observation strong {
+    color: var(--accent);
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.85em;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .key-insight {
+    background: #f0f7ff;
+    border-left: 3px solid #2980b9;
+    padding: 14px 18px;
+    margin: 1.5em 0;
+    font-size: 0.95em;
+    border-radius: 0 6px 6px 0;
+  }
+
+  .key-insight strong {
+    color: #2980b9;
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.85em;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  /* === RESPONSIVE === */
+  @media (max-width: 1100px) {
+    .sidenote {
+      float: none;
+      margin: 0.8em 0;
+      width: 100%;
+      padding: 8px 12px;
+      background: #fafafa;
+      border-radius: 4px;
+    }
+  }
+
+  /* === PRINT === */
+  @media print {
+    body { font-size: 11pt; }
+    .sidenote { float: none; width: 100%; margin: 0.5em 0; }
+    .diagram-container { break-inside: avoid; }
+  }
+
+  /* Epigraph */
+  .epigraph {
+    font-style: italic;
+    color: var(--margin-note);
+    border-left: 2px solid var(--border);
+    padding-left: 16px;
+    margin: 1.5em 0 2em;
+    font-size: 1.05em;
+  }
+
+  .epigraph cite {
+    display: block;
+    font-style: normal;
+    font-size: 0.85em;
+    margin-top: 4px;
+  }
+
+  /* TOC */
+  .toc {
+    background: #fafafa;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 20px 24px;
+    margin: 2em 0;
+  }
+  .toc h3 { margin-top: 0; }
+  .toc ol { padding-left: 1.2em; }
+  .toc li { margin-bottom: 4px; font-size: 0.95em; }
+  .toc a { color: var(--text); text-decoration: none; border-bottom: 1px dotted var(--border); }
+  .toc a:hover { color: var(--accent); border-color: var(--accent); }
+
+  .section-label {
+    font-size: 0.78em;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    font-weight: 600;
+    margin-bottom: 0.2em;
+    display: block;
+  }
+</style>
+</head>
+<body>
+
+<article>
+
+<h1>The Arrow</h1>
+<p class="subtitle">A forensic analysis of Excalidraw's most complex drawing primitive &mdash; its data model, interaction state machine, binding algebra, rendering pipeline, and the UX decisions that make it feel effortless.</p>
+
+<div class="epigraph">
+  "The purpose of visualization is insight, not pictures."
+  <cite>&mdash; Ben Shneiderman</cite>
+</div>
+
+<div class="toc">
+  <h3>Contents</h3>
+  <ol>
+    <li><a href="#data-model">The Data Model &mdash; Type Hierarchy &amp; Arrowhead Taxonomy</a></li>
+    <li><a href="#interaction">The Interaction State Machine &mdash; From Click to Arrow</a></li>
+    <li><a href="#binding">The Binding System &mdash; How Arrows Attach to Shapes</a></li>
+    <li><a href="#rendering">The Rendering Pipeline &mdash; From Points to Pixels</a></li>
+    <li><a href="#editing">Post-Creation Editing &mdash; The Linear Element Editor</a></li>
+    <li><a href="#elbow">Elbow Arrows &mdash; A* Pathfinding for Orthogonal Routes</a></li>
+    <li><a href="#ux-hints">UX Affordances &mdash; Hints, Cursors, and Visual Feedback</a></li>
+  </ol>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="data-model"><span class="section-label">Part I</span>The Data Model</h2>
+
+<p>An arrow in Excalidraw is not a simple line with a tip. It is a <em>bindable, multi-point, typed linear element</em> that participates in a relational graph of shapes. Understanding the type hierarchy is prerequisite to understanding everything else.</p>
+
+<div class="diagram-container">
+  <div class="mermaid">
+classDiagram
+    class ExcalidrawElementBase {
+        +string id
+        +number x, y
+        +number width, height
+        +string strokeColor
+        +string backgroundColor
+        +number strokeWidth
+        +number opacity
+        +Roundness roundness
+        +number angle
+    }
+
+    class ExcalidrawLinearElement {
+        +type: "line" | "arrow"
+        +LocalPoint[] points
+        +FixedPointBinding startBinding
+        +FixedPointBinding endBinding
+        +Arrowhead startArrowhead
+        +Arrowhead endArrowhead
+    }
+
+    class ExcalidrawArrowElement {
+        +type: "arrow"
+        +boolean elbowed
+    }
+
+    class ExcalidrawElbowArrowElement {
+        +elbowed: true
+        +FixedSegment[] fixedSegments
+        +boolean startIsSpecial
+        +boolean endIsSpecial
+    }
+
+    class ExcalidrawLineElement {
+        +type: "line"
+        +boolean polygon
+    }
+
+    ExcalidrawElementBase <|-- ExcalidrawLinearElement
+    ExcalidrawLinearElement <|-- ExcalidrawArrowElement
+    ExcalidrawLinearElement <|-- ExcalidrawLineElement
+    ExcalidrawArrowElement <|-- ExcalidrawElbowArrowElement
+  </div>
+  <div class="diagram-caption">The arrow type hierarchy. Only elements with <code>type: "arrow"</code> can bind to shapes.</div>
+</div>
+
+<h3>The Critical Distinction: Arrow vs. Line</h3>
+
+<p>Despite sharing <code>ExcalidrawLinearElement</code> as a base, arrows and lines are <em>fundamentally different</em> in one way: <strong>only arrows can bind to shapes</strong>.<span class="sidenote-ref"></span></p>
+
+<span class="sidenote">The function <code>isBindingElementType()</code> returns <code>true</code> only for <code>type === "arrow"</code>. This single check gates the entire binding system. Source: <code>typeChecks.ts</code></span>
+
+<table>
+  <thead>
+    <tr><th>Type Guard</th><th>Checks</th><th>Purpose</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>isLinearElement()</code></td><td><code>"arrow" | "line"</code></td><td>Any multi-point element</td></tr>
+    <tr><td><code>isArrowElement()</code></td><td><code>"arrow"</code></td><td>Has arrowheads, can bind</td></tr>
+    <tr><td><code>isElbowArrow()</code></td><td><code>arrow + elbowed</code></td><td>Orthogonal routing</td></tr>
+    <tr><td><code>isSimpleArrow()</code></td><td><code>arrow + !elbowed</code></td><td>Sharp or curved arrow</td></tr>
+    <tr><td><code>isSharpArrow()</code></td><td><code>simple + !roundness</code></td><td>Straight segments only</td></tr>
+    <tr><td><code>isCurvedArrow()</code></td><td><code>simple + roundness</code></td><td>Bezier-smoothed segments</td></tr>
+    <tr><td><code>isBindingElement()</code></td><td><code>"arrow"</code></td><td>Can attach to shapes</td></tr>
+  </tbody>
+</table>
+
+<h3>The Three Arrow Subtypes</h3>
+
+<p>Users experience three arrow variants, cycled via the toolbar or keyboard shortcut <code>A</code>:</p>
+
+<div class="diagram-container">
+  <div class="mermaid">
+graph LR
+    A["Sharp Arrow<br/><i>roundness: null</i><br/><i>elbowed: false</i>"] -->|"A key"| B["Round Arrow<br/><i>roundness: {type: 2}</i><br/><i>elbowed: false</i>"]
+    B -->|"A key"| C["Elbow Arrow<br/><i>roundness: null</i><br/><i>elbowed: true</i>"]
+    C -->|"A key"| A
+    style A fill:#fff3e0,stroke:#e65100
+    style B fill:#e3f2fd,stroke:#1565c0
+    style C fill:#e8f5e9,stroke:#2e7d32
+  </div>
+  <div class="diagram-caption">Arrow type cycling. The default is <strong>Round</strong> (<code>ARROW_TYPE.round</code>). Each type maps to a different combination of <code>roundness</code> and <code>elbowed</code>.</div>
+</div>
+
+<h3>The Arrowhead Taxonomy</h3>
+
+<p>Excalidraw offers 12 arrowhead styles &mdash; from the standard arrow tip to ERD crow's foot notation. Each end of an arrow independently selects its arrowhead:</p>
+
+<table>
+  <thead>
+    <tr><th>Arrowhead</th><th>Category</th><th>Visual</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>null</code></td><td>None</td><td>No decoration</td></tr>
+    <tr><td><code>"arrow"</code></td><td>Standard</td><td>Open chevron (default for end)</td></tr>
+    <tr><td><code>"bar"</code></td><td>Standard</td><td>Perpendicular line</td></tr>
+    <tr><td><code>"triangle"</code></td><td>Geometric</td><td>Filled triangle</td></tr>
+    <tr><td><code>"triangle_outline"</code></td><td>Geometric</td><td>Outlined triangle</td></tr>
+    <tr><td><code>"circle"</code></td><td>Geometric</td><td>Filled circle</td></tr>
+    <tr><td><code>"circle_outline"</code></td><td>Geometric</td><td>Outlined circle</td></tr>
+    <tr><td><code>"diamond"</code></td><td>Geometric</td><td>Filled diamond</td></tr>
+    <tr><td><code>"diamond_outline"</code></td><td>Geometric</td><td>Outlined diamond</td></tr>
+    <tr><td><code>"crowfoot_one"</code></td><td>ERD</td><td>Single line (one)</td></tr>
+    <tr><td><code>"crowfoot_many"</code></td><td>ERD</td><td>Crow's foot (many)</td></tr>
+    <tr><td><code>"crowfoot_one_or_many"</code></td><td>ERD</td><td>Combined (one or many)</td></tr>
+  </tbody>
+</table>
+
+<div class="observation">
+  <strong>Design Decision</strong>
+  The default arrow has <code>startArrowhead: null</code> and <code>endArrowhead: "arrow"</code>. This one-directional default matches the mental model of "pointing at something" and is the most common use case in whiteboarding.
+</div>
+
+<h3>Point Representation</h3>
+
+<p>All points in the <code>points[]</code> array are <code>LocalPoint</code> coordinates &mdash; offsets relative to the element's <code>(x, y)</code> origin.<span class="sidenote-ref"></span> The first point is always <code>[0, 0]</code>. Multi-point arrows support any number of intermediate points, each added by clicking during creation or editing.</p>
+
+<span class="sidenote">This local coordinate system means moving an arrow only requires updating <code>(x, y)</code> without recalculating every point. It also simplifies rotation: points remain unchanged, only the element's <code>angle</code> rotates.</span>
+
+<h3>Arrows as Text Containers</h3>
+
+<p>A subtle but powerful feature: arrows can contain bound text labels. The text is positioned at the midpoint of the arrow and constrained to 70% of the arrow's width (<code>ARROW_LABEL_WIDTH_FRACTION = 0.7</code>). This enables labeled relationships in diagrams.</p>
+
+<!-- ============================================================ -->
+<h2 id="interaction"><span class="section-label">Part II</span>The Interaction State Machine</h2>
+
+<p>Creating an arrow involves a carefully choreographed sequence of pointer events, state transitions, and visual feedback. The state machine in <code>App.tsx</code> handles this via <code>handleLinearElementOnPointerDown</code> (line 8497) and the continuous pointer move/up handlers.</p>
+
+<div class="diagram-container">
+  <div class="mermaid">
+stateDiagram-v2
+    [*] --> ToolSelected: User selects Arrow tool (A key or toolbar)
+
+    ToolSelected --> FirstPointerDown: pointerdown on canvas
+    note right of FirstPointerDown
+        1. Grid-snap the origin point
+        2. Create newArrowElement()
+        3. Set points = [[0,0], [0,0]]
+        4. Check for binding target at origin
+        5. Set bindMode = "orbit"
+        6. Create LinearElementEditor
+        7. Set newElement = arrow
+    end note
+
+    FirstPointerDown --> Dragging: pointermove (user drags)
+    note right of Dragging
+        1. Update last point position
+        2. Shift-key constrains to 15deg increments
+        3. Check binding target at cursor
+        4. Show suggestedBinding highlight
+        5. Update binding strategy continuously
+    end note
+
+    Dragging --> Released: pointerup
+    note right of Released
+        If element too small (< 20px):
+            delete element
+        If NOT elbow arrow:
+            enter multi-point mode
+        If elbow arrow:
+            finalize immediately
+    end note
+
+    Released --> MultiPointMode: user releases (non-elbow)
+    note right of MultiPointMode
+        Arrow stays as multiElement
+        Last point follows cursor (hover)
+        Each click commits a new point
+    end note
+
+    MultiPointMode --> MultiPointMode: click (add point)
+    MultiPointMode --> Finalized: double-click / click near last / Enter / Escape
+    MultiPointMode --> Finalized: click on binding target (arrow)
+
+    Released --> Finalized: elbow arrow (immediate)
+    Dragging --> Finalized: pointerup (tool not locked)
+
+    Finalized --> ToolSelected: tool.locked = true
+    Finalized --> SelectionMode: tool.locked = false
+
+    state Finalized {
+        [*] --> CleanUp
+        CleanUp: 1. Execute bindOrUnbindBindingElement
+        CleanUp: 2. Remove hover point (multiElement)
+        CleanUp: 3. Clear newElement, multiElement
+        CleanUp: 4. Set suggestedBinding = null
+        CleanUp: 5. If too small, mark isDeleted
+    }
+</div>
+  <div class="diagram-caption">The complete arrow creation state machine. Note the bifurcation: elbow arrows finalize on the first pointer-up, while simple arrows enter multi-point mode.</div>
+</div>
+
+<h3>The First Click: Element Instantiation</h3>
+
+<p>When <code>pointerdown</code> fires with the arrow tool active, the system:</p>
+
+<ol>
+  <li>Grid-snaps the origin via <code>getGridPoint()</code> (unless Ctrl is held)</li>
+  <li>Reads current style state: <code>currentItemStrokeColor</code>, <code>currentItemArrowType</code>, <code>currentItemStartArrowhead</code>, <code>currentItemEndArrowhead</code></li>
+  <li>Calls <code>newArrowElement()</code> with these values, producing an arrow with <code>points: [[0,0], [0,0]]</code></li>
+  <li>If binding is enabled (Ctrl not held), checks <code>getHoveredElementForBinding()</code> for a shape under the cursor</li>
+  <li>Inserts the element into the scene and creates a <code>LinearElementEditor</code></li>
+</ol>
+
+<div class="key-insight">
+  <strong>Key Insight: Ctrl Disables Binding</strong>
+  Holding <code>Ctrl/Cmd</code> during arrow creation sets <code>isBindingEnabled: false</code>. This allows users to start or end arrows inside shapes without auto-binding. The Alt key, conversely, switches binding mode from "orbit" to "inside" for precise attachment.
+</div>
+
+<h3>Continuous Dragging: The Bind Mode Dance</h3>
+
+<p>As the user drags, the system continuously evaluates binding candidates. The <code>bindMode</code> state flows through three values:<span class="sidenote-ref"></span></p>
+
+<span class="sidenote">The bind mode affects <em>where</em> the arrow endpoint lands on the bound shape. "Orbit" mode makes the arrow point to the nearest edge. "Inside" mode places the endpoint exactly where the cursor is. "Skip" bypasses binding entirely.</span>
+
+<table>
+  <thead>
+    <tr><th>Bind Mode</th><th>Trigger</th><th>Effect</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>"orbit"</code></td><td>Default during drag</td><td>Arrow terminates at shape edge, endpoint follows focus point</td></tr>
+    <tr><td><code>"inside"</code></td><td>Alt key held, or delayed bind</td><td>Arrow endpoint placed at exact cursor position inside shape</td></tr>
+    <tr><td><code>"skip"</code></td><td>Ctrl key held</td><td>No binding &mdash; arrow passes through shapes freely</td></tr>
+  </tbody>
+</table>
+
+<h3>Angle Snapping</h3>
+
+<p>Holding <code>Shift</code> constrains the arrow angle to 15-degree increments (<code>SHIFT_LOCKING_ANGLE = Math.PI / 12</code>). This produces clean horizontal, vertical, 45-degree, and 30/60-degree angles &mdash; the most common angles in technical diagrams.</p>
+
+<h3>Multi-Point Creation (Simple Arrows Only)</h3>
+
+<p>For non-elbow arrows, releasing the mouse enters multi-point mode. The arrow becomes a <code>multiElement</code> and the last point follows the cursor. Each subsequent click commits a new intermediate point. Finalization occurs via:</p>
+
+<ul>
+  <li><strong>Double-click</strong> or clicking near the last committed point (within <code>LINE_CONFIRM_THRESHOLD = 8px</code>)</li>
+  <li><strong>Enter</strong> or <strong>Escape</strong> keys</li>
+  <li><strong>Clicking on a binding target</strong> (for arrows, this auto-binds and finalizes)</li>
+</ul>
+
+<div class="observation">
+  <strong>Design Decision: Elbow Arrows Are Two-Point Only</strong>
+  Elbow arrows cannot have intermediate user-placed points. The routing algorithm generates all intermediate points automatically. When a user tries to click a third point on an elbow arrow, <code>actionFinalize</code> fires immediately. This makes sense: manually-placed points would fight the auto-routing algorithm.
+</div>
+
+<h3>Tool Lock Mode</h3>
+
+<p>When <code>activeTool.locked = true</code> (toggled by clicking the tool icon twice or pressing the lock button), finalization returns to the arrow tool instead of the selection tool. This enables rapid sequential arrow creation without re-selecting the tool.</p>
+
+<!-- ============================================================ -->
+<h2 id="binding"><span class="section-label">Part III</span>The Binding System</h2>
+
+<p>Binding is Excalidraw's most architecturally complex subsystem. It creates a <em>live relational link</em> between an arrow endpoint and a shape, so that moving the shape automatically updates the arrow. The implementation spans ~800 lines in <code>binding.ts</code> plus specialized helpers in <code>arrows/focus.ts</code>.</p>
+
+<div class="diagram-container">
+  <div class="mermaid">
+graph TD
+    A[Arrow Element] -->|startBinding| B[FixedPointBinding]
+    A -->|endBinding| C[FixedPointBinding]
+    B --> D[elementId: shape ID]
+    B --> E["fixedPoint: [0.5, 0.0]<br/><i>ratio on shape surface</i>"]
+    B --> F["mode: 'orbit' | 'inside' | 'skip'"]
+    C --> G[elementId: shape ID]
+    C --> H["fixedPoint: [0.8, 0.5]"]
+    C --> I["mode: 'orbit'"]
+
+    J[Bound Shape] -->|boundElements[]| K["{id: arrow.id, type: 'arrow'}"]
+
+    style A fill:#fff3e0,stroke:#e65100
+    style J fill:#e3f2fd,stroke:#1565c0
+    style B fill:#f5f5f5,stroke:#999
+    style C fill:#f5f5f5,stroke:#999
+  </div>
+  <div class="diagram-caption">The binding data structure. The relationship is bidirectional: the arrow stores <code>FixedPointBinding</code> references, and the bound shape stores back-references in its <code>boundElements</code> array.</div>
+</div>
+
+<h3>FixedPointBinding Anatomy</h3>
+
+<pre><code>type FixedPointBinding = {
+  elementId: string;          // ID of the bound shape
+  fixedPoint: [number, number]; // 0.0-1.0 ratio on shape's surface
+  mode: "inside" | "orbit" | "skip";
+};</code></pre>
+
+<p>The <code>fixedPoint</code> is the crucial innovation.<span class="sidenote-ref"></span> It represents a <em>normalized position</em> on the bound shape's surface, where <code>[0, 0]</code> is the top-left corner and <code>[1, 1]</code> is the bottom-right. This means when the shape resizes, the binding point scales proportionally.</p>
+
+<span class="sidenote">Earlier versions of Excalidraw used a "focus" system with a single number representing the angular offset. The fixed-point system replaced it for better precision, especially with non-rectangular shapes. The <code>calculateFixedPointForNonElbowArrowBinding()</code> function handles the conversion from absolute coordinates to normalized ratios.</span>
+
+<h3>Proximity Detection</h3>
+
+<p>The system detects binding candidates within a distance threshold:</p>
+
+<pre><code>BASE_BINDING_GAP = 5          // gap between arrowhead and shape edge
+BASE_BINDING_DISTANCE = 15    // max detection distance at zoom=1
+// Actual distance scales inversely with zoom (reduced at zoom > 1)
+maxBindingDistance = clamp(
+  BASE_BINDING_DISTANCE / (zoom * 1.5),
+  BASE_BINDING_DISTANCE,
+  BASE_BINDING_DISTANCE * 2
+);</code></pre>
+
+<p>The function <code>getHoveredElementForBinding()</code> uses <code>distanceToElement()</code> to find the nearest bindable shape within this radius. The binding gap ensures a visible space between the arrowhead and the shape edge, preventing visual overlap.</p>
+
+<h3>Orbit vs. Inside Binding Modes</h3>
+
+<div class="diagram-container">
+  <div class="mermaid">
+graph LR
+    subgraph "Orbit Mode (default)"
+        direction TB
+        O1["Arrow endpoint lands on<br/>shape edge, nearest to<br/>the focus point"]
+        O2["Focus point visible<br/>as draggable indicator<br/>inside the shape"]
+        O3["Moving the shape<br/>recalculates edge intersection"]
+    end
+
+    subgraph "Inside Mode (Alt key)"
+        direction TB
+        I1["Arrow endpoint placed<br/>exactly at the cursor<br/>position inside shape"]
+        I2["Used for arrows that<br/>start/end inside shapes"]
+        I3["Common for nested<br/>shapes and self-referencing"]
+    end
+
+    style O1 fill:#e3f2fd,stroke:#1565c0
+    style I1 fill:#fff3e0,stroke:#e65100
+  </div>
+  <div class="diagram-caption">The two primary binding modes. Orbit is the default and handles 90% of use cases. Inside mode is activated by holding Alt during arrow creation.</div>
+</div>
+
+<p>In <strong>orbit mode</strong>, the arrow's endpoint is projected onto the bound shape's edge, creating the illusion that the arrow terminates at the shape's border. The <code>fixedPoint</code> stores <em>where on the border</em> the arrow connects. When the shape moves, <code>updateBoundPoint()</code> recalculates the edge intersection.</p>
+
+<p>In <strong>inside mode</strong>, the arrow endpoint is placed exactly at the stored <code>fixedPoint</code> position, even if that position is in the shape's interior. This enables arrows that emerge from <em>within</em> shapes &mdash; useful for self-referencing arrows or nested containment diagrams.</p>
+
+<h3>The Focus Point UI</h3>
+
+<p>When a two-point arrow is selected and bound to a shape, Excalidraw shows a <em>focus point indicator</em> &mdash; a small draggable dot on the bound shape's surface.<span class="sidenote-ref"></span> Dragging this focus point changes where the arrow connects to the shape, allowing precise control of the binding position without moving the arrow itself.</p>
+
+<span class="sidenote">The focus point is only visible for simple (non-elbow) arrows with exactly 2 points. For elbow arrows, the connection point is always computed from the routing algorithm. Focus point hit detection uses <code>FOCUS_POINT_SIZE * 1.5 / zoom</code> as threshold, scaling inversely with zoom for consistent UX at all zoom levels. Source: <code>arrows/focus.ts:326</code></span>
+
+<h3>Bindable Elements</h3>
+
+<p>Not all elements can be binding targets. The bindable set is: <code>rectangle</code>, <code>diamond</code>, <code>ellipse</code>, <code>text</code> (uncontained), <code>image</code>, <code>iframe</code>, <code>embeddable</code>, <code>frame</code>, <code>magicframe</code>. Notably, <strong>arrows cannot bind to other arrows</strong> and <strong>lines cannot bind to anything</strong>.</p>
+
+<h3>The Binding Strategy Pattern</h3>
+
+<p>The binding system uses a strategy pattern to handle different interaction contexts:</p>
+
+<div class="diagram-container">
+  <div class="mermaid">
+graph TD
+    A["bindOrUnbindBindingElement()"] --> B{"Is elbow arrow?"}
+    B -->|Yes| C["bindingStrategyForElbowArrowEndpointDragging()"]
+    B -->|No| D{"Is new arrow?"}
+    D -->|Yes| E["bindingStrategyForNewSimpleArrowEndpointDragging()"]
+    D -->|No| F["bindingStrategyForSimpleArrowEndpointDragging_complex()"]
+
+    C --> G["BindingStrategy {mode, element, focusPoint}"]
+    E --> G
+    F --> G
+
+    G --> H{"mode?"}
+    H -->|"null"| I["unbindBindingElement()"]
+    H -->|"orbit/inside"| J["bindBindingElement()"]
+    H -->|"undefined"| K["Keep existing binding"]
+
+    style A fill:#e8eaf6,stroke:#3f51b5
+    style G fill:#f3e5f5,stroke:#9c27b0
+  </div>
+  <div class="diagram-caption">The binding strategy dispatch. Three specialized functions handle the different arrow states (elbow, new simple, existing simple), each returning a <code>BindingStrategy</code> for start and end.</div>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="rendering"><span class="section-label">Part IV</span>The Rendering Pipeline</h2>
+
+<p>Arrow rendering flows through two layers: the <em>static scene</em> (the arrow itself on canvas) and the <em>interactive scene</em> (selection handles, binding indicators, and hover states).</p>
+
+<h3>Shape Generation</h3>
+
+<p>The <code>shape.ts</code> module generates arrow paths from the <code>points[]</code> array. The process differs by arrow type:</p>
+
+<table>
+  <thead>
+    <tr><th>Arrow Type</th><th>Path Generation</th><th>Visual Result</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Sharp</td><td>Direct line segments between points</td><td>Straight angular paths</td></tr>
+    <tr><td>Round</td><td>Bezier curve fitting through points</td><td>Smooth flowing curves</td></tr>
+    <tr><td>Elbow</td><td>A* pathfinding, then axis-aligned segments</td><td>Right-angle only paths</td></tr>
+  </tbody>
+</table>
+
+<p>For hand-drawn style (<code>roughness > 0</code>), the paths are additionally processed through the <em>roughjs</em> library, which adds organic wobble to strokes. Architect style (<code>roughness = 0</code>) produces clean geometric paths.</p>
+
+<h3>Arrowhead Rendering</h3>
+
+<p>Arrowheads are rendered as separate shapes at the start and end of the arrow path. The arrowhead's angle is computed from the tangent of the arrow path at the endpoint &mdash; for curves, this means the arrowhead follows the curve's direction rather than pointing at the adjacent point.</p>
+
+<h3>Interactive Overlays</h3>
+
+<p>The interactive scene (<code>interactiveScene.ts</code>) renders on a separate canvas layer and handles:</p>
+
+<ul>
+  <li><strong>Endpoint handles</strong>: Small circles at each point when the arrow is selected</li>
+  <li><strong>Midpoint handles</strong>: Hover-revealed handles at segment midpoints for adding new points</li>
+  <li><strong>Binding indicators</strong>: Blue highlight on shapes when an arrow endpoint is nearby during creation</li>
+  <li><strong>Focus point indicators</strong>: Draggable dots on bound shapes showing the binding attachment position</li>
+  <li><strong>Suggested binding preview</strong>: Dashed outline on shapes that <em>would</em> bind if the user released the mouse</li>
+</ul>
+
+<div class="key-insight">
+  <strong>Key Insight: The Suggested Binding Preview</strong>
+  During arrow creation, <code>suggestedBinding</code> in app state tracks the element that would bind if the user released the mouse right now. This provides feed-forward information &mdash; the user sees the binding target <em>before</em> committing. The preview uses a blue highlight stroke on the target shape.
+</div>
+
+<!-- ============================================================ -->
+<h2 id="editing"><span class="section-label">Part V</span>Post-Creation Editing</h2>
+
+<p>Once an arrow is created, users can re-enter edit mode to modify its geometry. The <code>LinearElementEditor</code> class manages all post-creation interactions.</p>
+
+<div class="diagram-container">
+  <div class="mermaid">
+stateDiagram-v2
+    [*] --> Selected: Click on arrow
+
+    Selected --> Editing: Double-click or Ctrl+Enter
+    note right of Selected
+        Arrow shows endpoint handles
+        Bounding box visible
+        Can drag entire arrow
+        Can resize via handles
+        Focus point visible (if bound)
+    end note
+
+    Editing --> PointSelected: Click on a point
+    Editing --> PointAdded: Click on midpoint handle
+    Editing --> Selected: Escape
+
+    note right of Editing
+        All points visible as handles
+        Midpoint handles appear on hover
+        Can add/remove/move points
+        Focus point draggable
+    end note
+
+    PointSelected --> PointDragging: Drag selected point
+    PointSelected --> PointDeleted: Delete key
+    PointSelected --> Editing: Click elsewhere
+
+    PointDragging --> PointSelected: Release
+    note right of PointDragging
+        Binding recalculated continuously
+        Shift constrains angle
+        Grid snapping active
+    end note
+
+    PointAdded --> PointDragging: Immediate drag
+    PointDeleted --> Editing: Point removed
+
+    note right of PointDeleted
+        Cannot delete if only 2 points remain
+        Ctrl+D duplicates a point
+    end note
+  </div>
+  <div class="diagram-caption">The arrow editing state machine. Entry is via double-click. Points can be added at midpoints, deleted, and dragged with binding recalculation.</div>
+</div>
+
+<h3>Entering Edit Mode</h3>
+
+<p>The action <code>actionToggleLinearEditor</code> toggles <code>isEditing</code> on the <code>selectedLinearElement</code>. It has a predicate: editing is only available for non-elbow linear elements with a single element selected.<span class="sidenote-ref"></span></p>
+
+<span class="sidenote">Elbow arrows are excluded from the linear editor because their points are algorithmically generated. Users modify elbow arrows by moving endpoints and adjusting fixed segments, not by adding/removing intermediate points. The predicate is at <code>actionLinearEditor.tsx:51</code>.</span>
+
+<h3>Hints Shown During Editing</h3>
+
+<p>The <code>HintViewer</code> component shows contextual guidance:</p>
+
+<table>
+  <thead>
+    <tr><th>State</th><th>Hint</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Arrow tool active</td><td>"Use <kbd>A</kbd> to cycle arrow subtypes"</td></tr>
+    <tr><td>Multi-point mode</td><td>"Press <kbd>Escape</kbd> or <kbd>Enter</kbd> to finish"</td></tr>
+    <tr><td>Arrow selected (not editing)</td><td>"Hold <kbd>Ctrl</kbd> to disable binding, <kbd>Ctrl+Enter</kbd> to edit"</td></tr>
+    <tr><td>Editing, no point selected</td><td>"Hold <kbd>Shift</kbd> for angle snap, <kbd>Alt</kbd> for inside binding"</td></tr>
+    <tr><td>Editing, point selected</td><td>"<kbd>Delete</kbd> to remove point, <kbd>Ctrl+D</kbd> to duplicate"</td></tr>
+    <tr><td>Dragging arrow point</td><td>"<kbd>Ctrl</kbd> to disable binding, <kbd>Alt</kbd> to toggle inside/orbit"</td></tr>
+    <tr><td>Resizing 2-point arrow</td><td>"Hold <kbd>Shift</kbd> to lock angle"</td></tr>
+  </tbody>
+</table>
+
+<h3>Arrowhead Properties Panel</h3>
+
+<p>The properties panel (<code>actionProperties.tsx</code>) exposes arrowhead selection via two button groups &mdash; one for start and one for end. Each group presents all 12 arrowhead options as icon buttons. Changing an arrowhead on an existing arrow mutates the element and updates <code>currentItemStartArrowhead</code>/<code>currentItemEndArrowhead</code> in app state for future arrows.</p>
+
+<!-- ============================================================ -->
+<h2 id="elbow"><span class="section-label">Part VI</span>Elbow Arrows: A* Pathfinding</h2>
+
+<p>Elbow arrows are the most algorithmically complex arrow type. They produce orthogonal (right-angle only) paths that route around obstacles, similar to wiring diagrams or flowchart connectors.</p>
+
+<div class="diagram-container">
+  <div class="mermaid">
+graph TD
+    A["Input: start point + end point<br/>+ bound shapes + scene elements"] --> B["Compute dynamic AABBs<br/>(axis-aligned bounding boxes)<br/>for obstacle avoidance"]
+    B --> C["Determine heading at start/end<br/>(which edge of shape)"]
+    C --> D["Generate A* search grid<br/>from AABBs and padding"]
+    D --> E["Run A* pathfinding<br/>with BinaryHeap priority queue"]
+    E --> F["Simplify path:<br/>merge collinear segments"]
+    F --> G["Apply fixed segments<br/>(user-dragged overrides)"]
+    G --> H["Deduplicate points<br/>(DEDUP_THRESHOLD = 1px)"]
+    H --> I["Output: LocalPoint[] for arrow.points"]
+
+    style A fill:#e8f5e9,stroke:#2e7d32
+    style E fill:#fff3e0,stroke:#e65100
+    style I fill:#e3f2fd,stroke:#1565c0
+  </div>
+  <div class="diagram-caption">The elbow arrow routing pipeline. A* pathfinding on a dynamically generated grid produces obstacle-avoiding orthogonal paths.</div>
+</div>
+
+<h3>The Grid and A* Search</h3>
+
+<p>The routing algorithm constructs a <em>dynamic grid</em> from the bounding boxes of nearby elements, padded by <code>BASE_PADDING = 40px</code>. Grid nodes exist at the edges and intersections of these padded AABBs. The A* search uses a <code>BinaryHeap</code> for efficient node priority.</p>
+
+<pre><code>type Node = {
+  f: number;      // total cost (g + h)
+  g: number;      // cost from start
+  h: number;      // heuristic to goal
+  closed: boolean;
+  visited: boolean;
+  parent: Node | null;
+  pos: GlobalPoint;
+  addr: GridAddress; // [row, col]
+};</code></pre>
+
+<h3>Fixed Segments: User Overrides</h3>
+
+<p>Users can drag individual segments of an elbow arrow to override the auto-routing. These overrides are stored as <code>FixedSegment[]</code> on the element. The routing algorithm respects fixed segments as constraints while re-routing the unfixed portions. This gives users fine-grained control without losing auto-routing entirely.</p>
+
+<h3>Heading Determination</h3>
+
+<p>Each endpoint's <em>heading</em> (the direction the arrow exits/enters a shape) is computed from the relationship between the arrow point and the bound shape's center. Four headings are possible: <code>HEADING_UP</code>, <code>HEADING_DOWN</code>, <code>HEADING_LEFT</code>, <code>HEADING_RIGHT</code>. The heading determines the initial direction of the orthogonal path.</p>
+
+<div class="observation">
+  <strong>Design Decision: startIsSpecial / endIsSpecial</strong>
+  These boolean flags on <code>ExcalidrawElbowArrowElement</code> hide the first or last segment of the routed path. They are used when the arrow's start/end point is inside a shape, allowing the routing to extend beyond the shape boundary before the visible path begins. This prevents visual artifacts when arrows start from within shapes.
+</div>
+
+<!-- ============================================================ -->
+<h2 id="ux-hints"><span class="section-label">Part VII</span>UX Affordances</h2>
+
+<p>The arrow UX works because of dozens of small, often invisible decisions that reduce friction. These are the details that make the difference between a drawing tool and a <em>thinking tool</em>.</p>
+
+<h3>1. Feed-Forward Binding Preview</h3>
+<p>As the user drags an arrow endpoint near a shape, the shape highlights with a blue indicator <em>before</em> the binding is committed. This is the <code>suggestedBinding</code> in app state. The user never has to guess whether releasing will create a binding.</p>
+
+<h3>2. Zoom-Adaptive Hit Testing</h3>
+<p>All hit thresholds &mdash; binding distance, focus point size, midpoint handles &mdash; scale inversely with zoom. At low zoom levels (zoomed out), targets are easier to hit. At high zoom levels, precision increases. The formula <code>threshold / zoom.value</code> appears throughout the codebase.</p>
+
+<h3>3. Modifier Key Consistency</h3>
+
+<table>
+  <thead>
+    <tr><th>Modifier</th><th>During Arrow Creation</th><th>During Editing</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><kbd>Shift</kbd></td><td>Constrain angle to 15&deg; increments</td><td>Same (on point drag)</td></tr>
+    <tr><td><kbd>Ctrl/Cmd</kbd></td><td>Disable binding entirely</td><td>Disable binding for this drag</td></tr>
+    <tr><td><kbd>Alt</kbd></td><td>Switch to "inside" binding mode</td><td>Toggle orbit/inside on focus point drag</td></tr>
+  </tbody>
+</table>
+
+<h3>4. Arrow Z-Index Management</h3>
+<p>When an arrow binds to a shape, the function <code>moveArrowAboveBindable()</code> ensures the arrow is rendered <em>above</em> its binding target. This prevents the arrow from being visually occluded by the very shape it connects to.</p>
+
+<h3>5. Minimum Size Threshold</h3>
+<p>Arrows smaller than <code>MINIMUM_ARROW_SIZE = 20px</code> are considered accidental and deleted on finalization. This prevents click-without-drag from leaving invisible zero-length arrows on the canvas.</p>
+
+<h3>6. The Delayed Bind Mode Change</h3>
+<p>A feature-flagged behavior (<code>COMPLEX_BINDINGS</code>) delays the bind mode transition from "orbit" to "inside" by a short duration. This prevents accidental inside-binding when the user briefly pauses during a drag. The delay gives the user time to move the cursor past the shape boundary.</p>
+
+<h3>7. Double-Click Disambiguation</h3>
+<p>Double-clicking with the arrow tool creates a single click arrow, <em>not</em> a text editing action. This is noted in the source: "case: double-clicking with arrow/line tool selected would both create [an element] and trigger text editing." The system resolves this by prioritizing element creation.</p>
+
+<h3>8. Loop Detection for Lines</h3>
+<p>While lines can form closed polygons (detected via <code>isPathALoop()</code>), arrows cannot be looped. When a line forms a loop, the last point snaps to the first point, and the <code>polygon</code> property is set. Arrows skip this behavior &mdash; you can create a self-referencing arrow, but it's done via binding both ends to the same shape, not by closing the path.</p>
+
+<div class="key-insight">
+  <strong>The Essential Asymmetry</strong>
+  The deepest UX insight in Excalidraw's arrow system is the asymmetry between <em>creation</em> (progressive disclosure, minimal commitment) and <em>editing</em> (full control, explicit actions). During creation, the system assumes the most common intent and provides feed-forward guidance. During editing, it exposes the full complexity for users who need precision. This layered approach &mdash; simple by default, powerful on demand &mdash; is why Excalidraw's arrows feel natural despite their underlying complexity.
+</div>
+
+<!-- ============================================================ -->
+<h2 style="border-bottom: none; margin-top: 3em;"><span class="section-label">Appendix</span>Source File Reference</h2>
+
+<table>
+  <thead>
+    <tr><th>File</th><th>Responsibility</th><th>Lines</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>element/src/types.ts</code></td><td>Type hierarchy, arrowhead union, binding types</td><td>280-431</td></tr>
+    <tr><td><code>common/src/constants.ts</code></td><td><code>ARROW_TYPE</code>, <code>ROUNDNESS</code>, thresholds</td><td>384-490</td></tr>
+    <tr><td><code>element/src/newElement.ts</code></td><td><code>newArrowElement()</code> factory</td><td>487-525</td></tr>
+    <tr><td><code>element/src/typeChecks.ts</code></td><td>Type guard functions</td><td>various</td></tr>
+    <tr><td><code>element/src/binding.ts</code></td><td>Binding system (~800 lines)</td><td>1-800+</td></tr>
+    <tr><td><code>element/src/arrows/focus.ts</code></td><td>Focus point drag, hover, visibility</td><td>1-534</td></tr>
+    <tr><td><code>element/src/arrows/helpers.ts</code></td><td>Focus point drag handler dispatch</td><td>1-46</td></tr>
+    <tr><td><code>element/src/elbowArrow.ts</code></td><td>A* routing, grid generation</td><td>1-1000+</td></tr>
+    <tr><td><code>excalidraw/components/App.tsx</code></td><td><code>handleLinearElementOnPointerDown()</code></td><td>8497-8766</td></tr>
+    <tr><td><code>excalidraw/actions/actionFinalize.tsx</code></td><td>Arrow creation finalization</td><td>1-363</td></tr>
+    <tr><td><code>excalidraw/actions/actionLinearEditor.tsx</code></td><td>Toggle edit mode</td><td>1-218</td></tr>
+    <tr><td><code>excalidraw/actions/actionProperties.tsx</code></td><td>Arrowhead picker UI</td><td>1552-1700</td></tr>
+    <tr><td><code>excalidraw/components/HintViewer.tsx</code></td><td>Contextual UX hints</td><td>1-275</td></tr>
+  </tbody>
+</table>
+
+</article>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'neutral',
+    themeVariables: {
+      fontFamily: 'Source Serif 4, Georgia, serif',
+      fontSize: '14px',
+    },
+    flowchart: { curve: 'basis', padding: 15 },
+    stateDiagram: { padding: 10 },
+  });
+</script>
+
+</body>
+</html>

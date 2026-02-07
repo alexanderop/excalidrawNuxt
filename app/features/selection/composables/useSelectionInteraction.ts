@@ -44,6 +44,7 @@ interface UseSelectionInteractionOptions {
   addToSelection: (id: string) => void
   toggleSelection: (id: string) => void
   clearSelection: (this: void) => void
+  replaceSelection: (ids: Set<string>) => void
   selectAll: (this: void) => void
   isSelected: (id: string) => boolean
   markStaticDirty: () => void
@@ -67,9 +68,9 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
     elements,
     selectedElements,
     select,
-    addToSelection,
     toggleSelection,
     clearSelection,
+    replaceSelection,
     selectAll,
     isSelected,
     markStaticDirty,
@@ -88,7 +89,8 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
     const selected = selectedElements()
     if (selected.length !== 1) return false
 
-    const el = selected[0]!
+    const el = selected[0]
+    if (!el) return false
     const handleType = getTransformHandleAtPosition(scenePoint, el, zoom.value)
     if (!handleType || handleType === 'rotation') return false
 
@@ -181,7 +183,9 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
     if (interaction.type === 'resizing') {
       const selected = selectedElements()
       if (selected.length !== 1) return
-      resizeElement(scenePoint, interaction.resizeState, selected[0]!, e.shiftKey)
+      const el = selected[0]
+      if (!el) return
+      resizeElement(scenePoint, interaction.resizeState, el, e.shiftKey)
       updateBoundArrowsForSelected()
       markSceneDirty()
       return
@@ -248,21 +252,18 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
 
   function selectElementsInBox(box: Box): void {
     const boxBounds: Bounds = [box.x, box.y, box.x + box.width, box.y + box.height]
-    const ids: string[] = []
+    const ids = new Set<string>()
 
     for (const el of elements.value) {
       if (el.isDeleted) continue
       const [ex1, ey1, ex2, ey2] = getElementBounds(el)
       // Fully enclosed check
       if (ex1 >= boxBounds[0] && ey1 >= boxBounds[1] && ex2 <= boxBounds[2] && ey2 <= boxBounds[3]) {
-        ids.push(el.id)
+        ids.add(el.id)
       }
     }
 
-    clearSelection()
-    for (const id of ids) {
-      addToSelection(id)
-    }
+    replaceSelection(ids)
   }
 
   function unbindBeforeDelete(selected: readonly ExcalidrawElement[]): void {
@@ -314,23 +315,16 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
   }
 
   function handleArrowKey(e: KeyboardEvent, selected: readonly ExcalidrawElement[]): void {
-    const step = e.shiftKey ? 10 : 1
-    const arrowDeltas: Record<string, Point> = {
-      ArrowUp: { x: 0, y: -step },
-      ArrowDown: { x: 0, y: step },
-      ArrowLeft: { x: -step, y: 0 },
-      ArrowRight: { x: step, y: 0 },
-    }
-
-    const delta = arrowDeltas[e.key]
-    if (!delta) return
+    const dir = ARROW_DIRECTIONS[e.key]
+    if (!dir) return
     if (selected.length === 0) return
 
+    const step = e.shiftKey ? 10 : 1
     e.preventDefault()
     for (const el of selected) {
       mutateElement(el, {
-        x: el.x + delta.x,
-        y: el.y + delta.y,
+        x: el.x + dir.x * step,
+        y: el.y + dir.y * step,
       })
     }
     updateBoundArrowsForSelected()
@@ -352,14 +346,19 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
     onDoubleClickArrow(hitElement)
   })
 
-  if (typeof document !== 'undefined') {
-    useEventListener(document, 'keydown', handleKeyDown)
-  }
+  useEventListener(document, 'keydown', handleKeyDown)
 
   return {
     selectionBox,
     cursorStyle,
   }
+}
+
+const ARROW_DIRECTIONS: Record<string, { x: number; y: number }> = {
+  ArrowUp: { x: 0, y: -1 },
+  ArrowDown: { x: 0, y: 1 },
+  ArrowLeft: { x: -1, y: 0 },
+  ArrowRight: { x: 1, y: 0 },
 }
 
 function normalizeBox(start: Point, end: Point): Box {

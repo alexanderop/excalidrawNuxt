@@ -78,6 +78,22 @@ function buildMultiPointState(
   return { element: el, cursorPoint: cursor }
 }
 
+/**
+ * Orchestrates rendering across the three canvas layers: static, new-element, and interactive.
+ *
+ * Delegates the actual render-loop scheduling (rAF batching, dirty-flag diffing) to
+ * {@link useRenderer} and wires up domain-specific paint callbacks for each layer:
+ *
+ * - **Static layer** — grid + all committed scene elements (roughjs shapes).
+ * - **New-element layer** — the single element currently being drawn by the user.
+ * - **Interactive layer** — selection boxes, selected-element handles, linear-editor
+ *   control points, multi-point arrow cursor preview, and binding highlights.
+ *
+ * Returns three `mark*Dirty` functions that callers (tools, event handlers, etc.)
+ * invoke to schedule a repaint of the corresponding layer on the next animation frame.
+ *
+ * Also auto-marks the interactive layer dirty whenever `selectedIds` changes.
+ */
 export function useSceneRenderer(options: UseSceneRendererOptions): UseSceneRendererReturn {
   const {
     layers,
@@ -110,7 +126,7 @@ export function useSceneRenderer(options: UseSceneRendererOptions): UseSceneRend
       renderGrid(ctx, scrollX.value, scrollY.value, zoom.value, width.value, height.value)
       const rc = layers.staticRc.value
       if (rc) {
-        renderScene(ctx, rc, elements.value, scrollX.value, scrollY.value, zoom.value)
+        renderScene(ctx, rc, elements.value, scrollX.value, scrollY.value, zoom.value, width.value, height.value)
       }
     },
     onRenderNewElement(ctx) {

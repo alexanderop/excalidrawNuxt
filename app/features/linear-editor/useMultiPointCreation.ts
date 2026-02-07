@@ -12,6 +12,8 @@ import {
 } from '~/features/binding'
 import { computeDimensionsFromPoints } from './pointHandles'
 
+const _excludeIds = new Set<string>()
+
 interface UseMultiPointCreationOptions {
   canvasRef: Readonly<Ref<HTMLCanvasElement | null>>
   toScene: (screenX: number, screenY: number) => Point
@@ -47,7 +49,8 @@ export function useMultiPointCreation(options: UseMultiPointCreationOptions): Us
 
   function startMultiPoint(element: ExcalidrawArrowElement): void {
     multiElement.value = element
-    const lastPt = element.points.at(-1)!
+    const lastPt = element.points.at(-1)
+    if (!lastPt) return
     lastCursorPoint.value = {
       x: lastPt.x + element.x,
       y: lastPt.y + element.y,
@@ -59,13 +62,16 @@ export function useMultiPointCreation(options: UseMultiPointCreationOptions): Us
     const el = multiElement.value
     if (el) {
       // Bind end endpoint if near a shape
-      const lastPt = el.points.at(-1)!
-      const endScene = { x: el.x + lastPt.x, y: el.y + lastPt.y }
-      const excludeIds = new Set([el.id])
-      const candidate = getHoveredElementForBinding(endScene, elements.value, zoom.value, excludeIds)
-      if (candidate) {
-        bindArrowToElement(el, 'end', candidate.element, candidate.fixedPoint)
-        updateArrowEndpoint(el, 'end', candidate.element)
+      const lastPt = el.points.at(-1)
+      if (lastPt) {
+        const endScene = { x: el.x + lastPt.x, y: el.y + lastPt.y }
+        _excludeIds.clear()
+        _excludeIds.add(el.id)
+        const candidate = getHoveredElementForBinding(endScene, elements.value, zoom.value, _excludeIds)
+        if (candidate) {
+          bindArrowToElement(el, 'end', candidate.element, candidate.fixedPoint)
+          updateArrowEndpoint(el, 'end', candidate.element)
+        }
       }
       suggestedBindings.value = []
     }
@@ -82,7 +88,8 @@ export function useMultiPointCreation(options: UseMultiPointCreationOptions): Us
     if (e.button !== 0) return
 
     const scene = toScene(e.offsetX, e.offsetY)
-    const lastPt = el.points.at(-1)!
+    const lastPt = el.points.at(-1)
+    if (!lastPt) return
     const lastSceneX = lastPt.x + el.x
     const lastSceneY = lastPt.y + el.y
 
@@ -118,8 +125,9 @@ export function useMultiPointCreation(options: UseMultiPointCreationOptions): Us
     lastCursorPoint.value = scene
 
     // Update suggested bindings based on cursor proximity
-    const excludeIds = new Set([multiElement.value.id])
-    const candidate = getHoveredElementForBinding(scene, elements.value, zoom.value, excludeIds)
+    _excludeIds.clear()
+    _excludeIds.add(multiElement.value.id)
+    const candidate = getHoveredElementForBinding(scene, elements.value, zoom.value, _excludeIds)
     suggestedBindings.value = candidate ? [candidate.element] : []
 
     markInteractiveDirty()
@@ -130,16 +138,14 @@ export function useMultiPointCreation(options: UseMultiPointCreationOptions): Us
     finalizeMultiPoint()
   })
 
-  if (typeof document !== 'undefined') {
-    useEventListener(document, 'keydown', (e: KeyboardEvent) => {
-      if (!multiElement.value) return
+  useEventListener(document, 'keydown', (e: KeyboardEvent) => {
+    if (!multiElement.value) return
 
-      if (e.key === 'Escape' || e.key === 'Enter') {
-        e.preventDefault()
-        finalizeMultiPoint()
-      }
-    })
-  }
+    if (e.key === 'Escape' || e.key === 'Enter') {
+      e.preventDefault()
+      finalizeMultiPoint()
+    }
+  })
 
   return {
     multiElement,

@@ -58,6 +58,7 @@ function createDrawingSetup(tool: ToolType = 'arrow') {
   return {
     canvasRef,
     activeTool,
+    setTool: (t: ToolType) => { activeTool.value = t },
     spaceHeld: shallowRef(false),
     isPanning: shallowRef(false),
     toScene: (x: number, y: number) => ({ x, y }),

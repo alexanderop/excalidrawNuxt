@@ -13,6 +13,7 @@ interface UseSelectionReturn {
   removeFromSelection: (id: string) => void
   toggleSelection: (id: string) => void
   clearSelection: () => void
+  replaceSelection: (ids: Set<string>) => void
   selectAll: () => void
   isSelected: (id: string) => boolean
 }
@@ -58,6 +59,10 @@ export function useSelection(elements: ShallowRef<readonly ExcalidrawElement[]>)
     selectedIds.value = new Set()
   }
 
+  function replaceSelection(ids: Set<string>): void {
+    selectedIds.value = ids
+  }
+
   function selectAll(): void {
     const ids = new Set(
       elements.value
@@ -80,6 +85,7 @@ export function useSelection(elements: ShallowRef<readonly ExcalidrawElement[]>)
     removeFromSelection,
     toggleSelection,
     clearSelection,
+    replaceSelection,
     selectAll,
     isSelected,
   }

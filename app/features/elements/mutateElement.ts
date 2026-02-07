@@ -11,3 +11,17 @@ export function mutateElement<T extends ExcalidrawElement>(
   Object.assign(element, updates, { versionNonce: randomVersionNonce() })
   return element
 }
+
+/**
+ * Update element position without bumping versionNonce,
+ * so the shape cache isn't invalidated during drag.
+ */
+export function moveElement<T extends ExcalidrawElement>(
+  element: T,
+  x: number,
+  y: number,
+): T {
+  element.x = x
+  element.y = y
+  return element
+}

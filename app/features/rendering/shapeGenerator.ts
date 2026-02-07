@@ -49,16 +49,31 @@ function generateDrawable(element: ExcalidrawElement): Drawable {
     return generator.ellipse(width / 2, height / 2, width, height, options)
   }
 
-  // diamond
-  return generator.polygon(
-    [
-      [width / 2, 0],
-      [width, height / 2],
-      [width / 2, height],
-      [0, height / 2],
-    ],
-    options,
+  if (element.type === 'diamond') {
+    return generator.polygon(
+      [
+        [width / 2, 0],
+        [width, height / 2],
+        [width / 2, height],
+        [0, height / 2],
+      ],
+      options,
+    )
+  }
+
+  const _exhaustive: never = element
+  throw new Error(`Unhandled element type: ${String(_exhaustive)}`)
+}
+
+export function pruneShapeCache(elements: readonly ExcalidrawElement[]): void {
+  const activeIds = new Set(
+    elements.filter(el => !el.isDeleted).map(el => el.id),
   )
+  for (const key of shapeCache.keys()) {
+    if (!activeIds.has(key)) {
+      shapeCache.delete(key)
+    }
+  }
 }
 
 export function generateShape(element: ExcalidrawElement): Drawable {
