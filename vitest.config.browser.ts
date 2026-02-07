@@ -1,9 +1,10 @@
 import { defineConfig } from 'vitest/config'
+import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 import { fileURLToPath } from 'node:url'
 
 export default defineConfig({
-  plugins: [tailwindcss()],
+  plugins: [vue(), tailwindcss()],
   test: {
     name: 'browser',
     include: ['app/**/*.browser.test.ts'],
@@ -13,6 +14,7 @@ export default defineConfig({
       instances: [{ browser: 'chromium' }],
     },
     globals: true,
+    setupFiles: ['app/__test-utils__/setup-browser.ts'],
   },
   resolve: {
     alias: {

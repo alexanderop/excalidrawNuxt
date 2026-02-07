@@ -1,12 +1,6 @@
 import { ref, onMounted, watch, toRaw } from 'vue'
 import type { Ref, ShallowRef } from 'vue'
 import { useRafFn } from '@vueuse/core'
-import { TWO_PI } from '~/shared/math'
-
-const GRID_SPACING = 20
-const GRID_DOT_RADIUS = 1
-const GRID_COLOR = '#ddd'
-const GRID_FADE_ZOOM = 0.3
 
 interface CanvasLayer {
   ctx: ShallowRef<CanvasRenderingContext2D | null>
@@ -22,6 +16,9 @@ interface UseRendererOptions {
   scrollX: Ref<number>
   scrollY: Ref<number>
   zoom: Ref<number>
+  onRenderStatic?: (ctx: CanvasRenderingContext2D) => void
+  onRenderNewElement?: (ctx: CanvasRenderingContext2D) => void
+  onRenderInteractive?: (ctx: CanvasRenderingContext2D) => void
 }
 
 interface UseRendererReturn {
@@ -33,7 +30,11 @@ interface UseRendererReturn {
 }
 
 export function useRenderer(options: UseRendererOptions): UseRendererReturn {
-  const { staticLayer, newElementLayer, interactiveLayer, width, height, scrollX, scrollY, zoom } = options
+  const {
+    staticLayer, newElementLayer, interactiveLayer,
+    width, height, scrollX, scrollY, zoom,
+    onRenderStatic, onRenderNewElement, onRenderInteractive,
+  } = options
 
   const staticDirty = ref(true)
   const newElementDirty = ref(false)
@@ -81,11 +82,9 @@ export function useRenderer(options: UseRendererOptions): UseRendererReturn {
 
     const currentDpr = dpr.value
 
-    renderDirtyCanvas(staticDirty, staticLayer, currentDpr, w, h, '#ffffff', (ctx) => {
-      renderGrid(ctx, scrollX.value, scrollY.value, zoom.value, w, h)
-    })
-    renderDirtyCanvas(newElementDirty, newElementLayer, currentDpr, w, h)
-    renderDirtyCanvas(interactiveDirty, interactiveLayer, currentDpr, w, h)
+    renderDirtyCanvas(staticDirty, staticLayer, currentDpr, w, h, '#ffffff', onRenderStatic)
+    renderDirtyCanvas(newElementDirty, newElementLayer, currentDpr, w, h, undefined, onRenderNewElement)
+    renderDirtyCanvas(interactiveDirty, interactiveLayer, currentDpr, w, h, undefined, onRenderInteractive)
   })
 
   return {
@@ -120,42 +119,4 @@ function bootstrapCanvas(
   }
 
   ctx.clearRect(0, 0, w, h)
-}
-
-function renderGrid(
-  ctx: CanvasRenderingContext2D,
-  scrollX: number,
-  scrollY: number,
-  zoom: number,
-  w: number,
-  h: number,
-): void {
-  if (zoom < GRID_FADE_ZOOM) return
-
-  const opacity = zoom < 0.5
-    ? (zoom - GRID_FADE_ZOOM) / (0.5 - GRID_FADE_ZOOM)
-    : 1
-
-  ctx.save()
-  ctx.globalAlpha = opacity
-
-  ctx.scale(zoom, zoom)
-  ctx.translate(scrollX, scrollY)
-
-  const startX = Math.floor(-scrollX / GRID_SPACING) * GRID_SPACING
-  const startY = Math.floor(-scrollY / GRID_SPACING) * GRID_SPACING
-  const endX = startX + Math.ceil(w / (zoom * GRID_SPACING)) * GRID_SPACING + GRID_SPACING
-  const endY = startY + Math.ceil(h / (zoom * GRID_SPACING)) * GRID_SPACING + GRID_SPACING
-
-  ctx.fillStyle = GRID_COLOR
-
-  for (let x = startX; x <= endX; x += GRID_SPACING) {
-    for (let y = startY; y <= endY; y += GRID_SPACING) {
-      ctx.beginPath()
-      ctx.arc(x, y, GRID_DOT_RADIUS / zoom, 0, TWO_PI)
-      ctx.fill()
-    }
-  }
-
-  ctx.restore()
 }

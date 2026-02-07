@@ -28,9 +28,14 @@ Defined in `app/assets/css/main.css` via `@theme`. Use these as Tailwind utiliti
 - `muted` — `rgb(138,51,123)` subdued purple
 - `edge` — `rgb(171,75,153)` borders/dividers
 
+## Excalidraw Reference Source
+
+The original Excalidraw source code lives in `excalidraw/` (git-ignored, not part of our build). When planning or implementing any feature, **always browse the Excalidraw source first** to understand how they solved the same problem. Use it as inspiration, then adapt and improve the approach for our Nuxt/Vue architecture — idiomatic composables, Vue reactivity, `<script setup>`, and our project conventions. Don't copy React patterns verbatim; translate them into clean Vue equivalents.
+
 ## Structure
 
 - `app/` - Vue application (pages, components, composables)
+- `excalidraw/` - Excalidraw source (reference only, git-ignored)
 - `public/` - Static assets
 - `nuxt.config.ts` - Nuxt configuration
 - `docs/` - Agent memory (gotchas, patterns, architecture)
@@ -61,3 +66,5 @@ Defined in `app/assets/css/main.css` via `@theme`. Use these as Tailwind utiliti
 - `docs/script-setup-macros.md` - Vue 3 script setup syntax and compiler macros (defineProps, defineEmits, defineModel, etc.)
 - `docs/vitest-mocking.md` - Mock functions, modules, timers, and dates with vi utilities
 - `docs/vi-utilities.md` - vi helper for mocking, timers, utilities (vi.fn, vi.spyOn, vi.mock, fake timers, etc.)
+- `docs/vueuse-gotchas.md` - VueUse pitfalls (useMagicKeys types, document access in node tests, browser vitest config)
+- `docs/linting-setup.md` - Dual linter setup, banned patterns, component naming rules

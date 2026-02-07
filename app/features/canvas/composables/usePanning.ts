@@ -1,14 +1,23 @@
 import { ref, computed } from 'vue'
-import type { Ref } from 'vue'
+import type { ComputedRef, Ref, ShallowRef } from 'vue'
 import { useEventListener } from '@vueuse/core'
+import type { ToolType } from '~/features/tools/types'
+import { isDrawingTool } from '~/features/tools/types'
 
 interface UsePanningOptions {
   canvasRef: Readonly<Ref<HTMLCanvasElement | null>>
   panBy: (dx: number, dy: number) => void
   zoomBy: (delta: number, center: { x: number; y: number }) => void
+  activeTool: ShallowRef<ToolType>
 }
 
-export function usePanning({ canvasRef, panBy, zoomBy }: UsePanningOptions) {
+interface UsePanningReturn {
+  cursorClass: ComputedRef<string>
+  spaceHeld: Ref<boolean>
+  isPanning: Ref<boolean>
+}
+
+export function usePanning({ canvasRef, panBy, zoomBy, activeTool }: UsePanningOptions): UsePanningReturn {
   const spaceHeld = ref(false)
   const isPanning = ref(false)
   let lastPointerX = 0
@@ -16,7 +25,8 @@ export function usePanning({ canvasRef, panBy, zoomBy }: UsePanningOptions) {
 
   const cursorClass = computed<string>(() => {
     if (isPanning.value) return 'cursor-grabbing'
-    if (spaceHeld.value) return 'cursor-grab'
+    if (spaceHeld.value || activeTool.value === 'hand') return 'cursor-grab'
+    if (isDrawingTool(activeTool.value)) return 'cursor-crosshair'
     return 'cursor-default'
   })
 
@@ -35,8 +45,7 @@ export function usePanning({ canvasRef, panBy, zoomBy }: UsePanningOptions) {
   useEventListener(document, 'keydown', (e: KeyboardEvent) => {
     if (e.code !== 'Space') return
     if (spaceHeld.value) return
-    const tag = (e.target instanceof HTMLElement) ? e.target.tagName : ''
-    if (tag === 'INPUT' || tag === 'TEXTAREA') return
+    if (e.target instanceof HTMLElement && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return
     e.preventDefault()
     spaceHeld.value = true
   })
@@ -47,9 +56,9 @@ export function usePanning({ canvasRef, panBy, zoomBy }: UsePanningOptions) {
     isPanning.value = false
   })
 
-  // Pointer drag while space held: pan the canvas
+  // Pointer drag while space held or hand tool: pan the canvas
   useEventListener(canvasRef, 'pointerdown', (e: PointerEvent) => {
-    if (!spaceHeld.value) return
+    if (!spaceHeld.value && activeTool.value !== 'hand') return
     isPanning.value = true
     lastPointerX = e.clientX
     lastPointerY = e.clientY
@@ -71,5 +80,5 @@ export function usePanning({ canvasRef, panBy, zoomBy }: UsePanningOptions) {
     canvasRef.value?.releasePointerCapture(e.pointerId)
   })
 
-  return { cursorClass }
+  return { cursorClass, spaceHeld, isPanning }
 }

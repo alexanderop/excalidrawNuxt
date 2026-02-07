@@ -51,6 +51,13 @@ export default defineConfigWithVueTs(
 ### Unicorn Error Messages
 The `unicorn/error-message` rule requires all `new Error()` calls to include a message string. Empty `new Error()` will fail linting.
 
+### Multi-word Component Names (Filename-Based)
+The `vue/multi-word-component-names` rule checks the **filename**, not `defineOptions({ name })`. Single-word filenames like `Toolbar.vue` fail.
+
+**Fixes:**
+- Rename to multi-word: `DrawingToolbar.vue`, `MainToolbar.vue`
+- Or add to `ignores` array in `eslint.config.ts` (only for shared/generic components)
+
 ## Banned Patterns (enforced by lint)
 
 | Pattern | Alternative |

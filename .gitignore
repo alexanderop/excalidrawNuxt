@@ -26,3 +26,6 @@ logs
 
 # Test coverage
 coverage/
+
+# Excalidraw local project
+excalidraw/

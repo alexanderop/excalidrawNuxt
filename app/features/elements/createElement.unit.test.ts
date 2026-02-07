@@ -1,0 +1,75 @@
+import { createElement } from './createElement'
+import {
+  DEFAULT_BG_COLOR,
+  DEFAULT_FILL_STYLE,
+  DEFAULT_OPACITY,
+  DEFAULT_ROUGHNESS,
+  DEFAULT_STROKE_COLOR,
+  DEFAULT_STROKE_WIDTH,
+} from './constants'
+
+describe('createElement', () => {
+  it('creates an element with the correct type', () => {
+    const el = createElement('rectangle', 10, 20)
+    expect(el.type).toBe('rectangle')
+  })
+
+  it('creates an element with the correct position', () => {
+    const el = createElement('ellipse', 42, 99)
+    expect(el.x).toBe(42)
+    expect(el.y).toBe(99)
+  })
+
+  it('starts with width and height of 0', () => {
+    const el = createElement('diamond', 0, 0)
+    expect(el.width).toBe(0)
+    expect(el.height).toBe(0)
+  })
+
+  it('generates a unique id', () => {
+    const a = createElement('rectangle', 0, 0)
+    const b = createElement('rectangle', 0, 0)
+    expect(a.id).not.toBe(b.id)
+  })
+
+  it('generates a numeric seed', () => {
+    const el = createElement('rectangle', 0, 0)
+    expect(typeof el.seed).toBe('number')
+    expect(Number.isInteger(el.seed)).toBe(true)
+  })
+
+  it('generates a numeric versionNonce', () => {
+    const el = createElement('rectangle', 0, 0)
+    expect(typeof el.versionNonce).toBe('number')
+    expect(Number.isInteger(el.versionNonce)).toBe(true)
+  })
+
+  it('applies default stroke and fill properties', () => {
+    const el = createElement('rectangle', 0, 0)
+    expect(el.strokeColor).toBe(DEFAULT_STROKE_COLOR)
+    expect(el.backgroundColor).toBe(DEFAULT_BG_COLOR)
+    expect(el.fillStyle).toBe(DEFAULT_FILL_STYLE)
+    expect(el.strokeWidth).toBe(DEFAULT_STROKE_WIDTH)
+    expect(el.roughness).toBe(DEFAULT_ROUGHNESS)
+    expect(el.opacity).toBe(DEFAULT_OPACITY)
+  })
+
+  it('defaults angle to 0 and isDeleted to false', () => {
+    const el = createElement('rectangle', 0, 0)
+    expect(el.angle).toBe(0)
+    expect(el.isDeleted).toBe(false)
+  })
+
+  it('applies overrides', () => {
+    const el = createElement('rectangle', 0, 0, {
+      width: 200,
+      height: 150,
+      strokeColor: '#ff0000',
+      opacity: 50,
+    })
+    expect(el.width).toBe(200)
+    expect(el.height).toBe(150)
+    expect(el.strokeColor).toBe('#ff0000')
+    expect(el.opacity).toBe(50)
+  })
+})

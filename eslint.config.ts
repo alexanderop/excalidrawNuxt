@@ -11,7 +11,7 @@ import pluginVue from 'eslint-plugin-vue'
 
 export default defineConfigWithVueTs(
   {
-    ignores: ['**/dist/**', '**/coverage/**', '**/node_modules/**', '**/.nuxt/**', '**/.output/**'],
+    ignores: ['**/dist/**', '**/coverage/**', '**/node_modules/**', '**/.nuxt/**', '**/.output/**', 'excalidraw/**'],
   },
 
   pluginVue.configs['flat/essential'],
@@ -164,6 +164,17 @@ export default defineConfigWithVueTs(
         selector: 'CallExpression[callee.property.name=/^querySelector(All)?$/]',
         message: 'Prefer page.getByRole(), page.getByText(), or page.getByTestId() over querySelector.',
       }],
+    },
+  },
+
+  // =============================================
+  // Unit tests: flat tests (no beforeEach/afterEach)
+  // =============================================
+  {
+    name: 'app/vitest-unit-flat-tests',
+    files: ['app/**/*.unit.test.ts'],
+    rules: {
+      'vitest/no-hooks': ['warn', { allow: ['beforeAll', 'afterAll'] }],
     },
   },
 

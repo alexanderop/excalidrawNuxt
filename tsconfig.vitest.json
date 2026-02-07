@@ -5,7 +5,9 @@
     "composite": true
   },
   "include": [
-    "app/**/*.test.ts",
+    "app/**/*.ts",
+    "app/**/*.vue",
     "app/__test-utils__/**/*"
-  ]
+  ],
+  "exclude": []
 }
