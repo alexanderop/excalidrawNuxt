@@ -30,6 +30,17 @@ graph TD
     TL --> TL2[useDrawingInteraction - pointer → shape]
     TL --> TL3[DrawingToolbar.vue - tool selection UI]
 
+    C --> SL[Selection Feature]
+    SL --> SL1[useSelection - selectedIds + computed bounds]
+    SL --> SL2[useSelectionInteraction - state machine]
+    SL --> SL3[hitTest - point-in-shape collision]
+    SL --> SL4[transformHandles - handle positions + detection]
+    SL --> SL5[dragElements - origin-based move]
+    SL --> SL6[resizeElement - per-handle resize]
+    SL --> SL7[bounds - AABB calculations]
+
+    RN --> RN4[renderInteractive - selection borders + handles + marquee]
+
     A --> G[shared/]
     G --> G1[math.ts - Point, distance, clamp, lerp]
     G --> G2[random.ts - nanoid, randomInteger]
@@ -71,6 +82,11 @@ flowchart LR
     IC -->|wheel events| VP
     IC -->|pointer events| PN
     IC -->|pointer events| DI
+    IC -->|pointer events| SI
+    SI[useSelectionInteraction] -->|select/drag/resize| SEL[useSelection]
+    SEL -->|selectedElements| IC
+    RD -->|onRenderInteractive| IC
+    TL -->|activeTool| SI
     TL -->|activeTool| PN
     TL -->|activeTool| DI
     DI -->|newElement| NC
@@ -267,6 +283,19 @@ graph LR
             SG[shapeGenerator.ts]
             RE[renderElement.ts]
             RS[renderScene.ts]
+            RI[renderInteractive.ts]
+        end
+        subgraph "features/selection/"
+            SLC[constants.ts]
+            SLB[bounds.ts]
+            SLH[hitTest.ts]
+            SLTH[transformHandles.ts]
+            SLD[dragElements.ts]
+            SLR[resizeElement.ts]
+            subgraph "selection/composables/"
+                SLS[useSelection.ts]
+                SLSI[useSelectionInteraction.ts]
+            end
         end
         subgraph "features/tools/"
             TT[types.ts]
@@ -314,4 +343,4 @@ graph LR
 | IDs | nanoid | Element ID generation |
 | Math | shared/math.ts | Point/vector utilities |
 
-> **Note:** This map reflects the current state after Phase 2 (Shape Drawing). Update when new features/directories are added.
+> **Note:** This map reflects the current state after Phase 3 (Selection & Manipulation). Update when new features/directories are added.

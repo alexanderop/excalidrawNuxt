@@ -96,6 +96,7 @@ export function useDrawingInteraction(options: UseDrawingInteractionOptions): Us
 
     activeTool.value = 'selection'
     newElement.value = null
+    markNewElementDirty()
     markStaticDirty()
   })
 

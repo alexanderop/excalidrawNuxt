@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { shallowRef, markRaw, onMounted, useTemplateRef } from 'vue'
+import { shallowRef, markRaw, onMounted, useTemplateRef, computed, watch } from 'vue'
 import type { Ref, ShallowRef } from 'vue'
 import { useElementSize } from '@vueuse/core'
 import rough from 'roughjs'
@@ -10,9 +10,11 @@ import { usePanning } from '../composables/usePanning'
 import { useElements } from '~/features/elements/useElements'
 import { useTool } from '~/features/tools/useTool'
 import { useDrawingInteraction } from '~/features/tools/useDrawingInteraction'
+import { useSelection, useSelectionInteraction } from '~/features/selection'
 import { renderGrid } from '~/features/rendering/renderGrid'
 import { renderScene } from '~/features/rendering/renderScene'
 import { renderElement } from '~/features/rendering/renderElement'
+import { renderInteractiveScene } from '~/features/rendering/renderInteractive'
 import DrawingToolbar from '~/features/tools/components/DrawingToolbar.vue'
 
 defineExpose({})
@@ -28,6 +30,17 @@ const { scrollX, scrollY, zoom, zoomBy, panBy, toScene } = useViewport()
 const { elements, addElement } = useElements()
 const { activeTool, setTool } = useTool()
 
+const {
+  selectedIds,
+  selectedElements,
+  select,
+  addToSelection,
+  toggleSelection,
+  clearSelection,
+  selectAll,
+  isSelected,
+} = useSelection(elements)
+
 const staticCtx = shallowRef<CanvasRenderingContext2D | null>(null)
 const newElementCtx = shallowRef<CanvasRenderingContext2D | null>(null)
 const interactiveCtx = shallowRef<CanvasRenderingContext2D | null>(null)
@@ -35,7 +48,7 @@ const interactiveCtx = shallowRef<CanvasRenderingContext2D | null>(null)
 const staticRc = shallowRef<RoughCanvas | null>(null)
 const newElementRc = shallowRef<RoughCanvas | null>(null)
 
-const { markStaticDirty, markNewElementDirty } = useRenderer({
+const { markStaticDirty, markNewElementDirty, markInteractiveDirty } = useRenderer({
   staticLayer: { ctx: staticCtx, canvas: staticCanvasRef },
   newElementLayer: { ctx: newElementCtx, canvas: newElementCanvasRef },
   interactiveLayer: { ctx: interactiveCtx, canvas: interactiveCanvasRef },
@@ -61,6 +74,18 @@ const { markStaticDirty, markNewElementDirty } = useRenderer({
     renderElement(ctx, rc, el)
     ctx.restore()
   },
+  onRenderInteractive(ctx) {
+    ctx.save()
+    ctx.scale(zoom.value, zoom.value)
+    ctx.translate(scrollX.value, scrollY.value)
+    renderInteractiveScene(
+      ctx,
+      selectedElements.value,
+      zoom.value,
+      selectionBox.value,
+    )
+    ctx.restore()
+  },
 })
 
 const { cursorClass, spaceHeld, isPanning } = usePanning({
@@ -76,9 +101,46 @@ const { newElement } = useDrawingInteraction({
   spaceHeld,
   isPanning,
   toScene,
-  onElementCreated: addElement,
+  onElementCreated(el) {
+    addElement(el)
+    select(el.id)
+    markInteractiveDirty()
+  },
   markNewElementDirty,
   markStaticDirty,
+})
+
+const { selectionBox, cursorStyle } = useSelectionInteraction({
+  canvasRef: interactiveCanvasRef,
+  activeTool,
+  spaceHeld,
+  isPanning,
+  zoom,
+  toScene,
+  elements,
+  selectedElements: () => selectedElements.value,
+  select,
+  addToSelection,
+  toggleSelection,
+  clearSelection,
+  selectAll,
+  isSelected,
+  markStaticDirty,
+  markInteractiveDirty,
+  setTool,
+})
+
+const combinedCursorClass = computed(() => {
+  if (cursorClass.value !== 'cursor-default') return cursorClass.value
+  if (activeTool.value !== 'selection') return cursorClass.value
+  if (cursorStyle.value === 'move') return 'cursor-move'
+  if (cursorStyle.value !== 'default') return `cursor-${cursorStyle.value}`
+  return cursorClass.value
+})
+
+// Track selection changes to mark interactive canvas dirty
+watch(selectedIds, () => {
+  markInteractiveDirty()
 })
 
 function initCanvasContext(
@@ -114,7 +176,7 @@ onMounted(() => {
   <div
     ref="container"
     class="relative h-full w-full overflow-hidden"
-    :class="cursorClass"
+    :class="combinedCursorClass"
   >
     <canvas
       ref="staticCanvas"

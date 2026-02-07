@@ -118,3 +118,32 @@ const staticCtx = shallowRef(null)
 ```
 
 Use `*Ref` suffix for template refs, plain names for context/state refs.
+
+## Multi-Layer Canvas: Clear All Affected Layers on State Transitions
+
+When using layered canvases (static, new-element, interactive), state transitions must explicitly mark all affected layers dirty. Vue reactivity doesn't automatically trigger canvas re-renders.
+
+```mermaid
+flowchart LR
+    A["newElement.value = null"] -->|"❌ no markNewElementDirty()"| B[Ghost remains on canvas]
+    A -->|"✅ markNewElementDirty()"| C[Canvas clears properly]
+```
+
+**Bug pattern**: After drawing, set `newElement = null` and `markStaticDirty()`, but forgot `markNewElementDirty()`. Result: ghost element visible at original position while dragging the real element.
+
+**Rule**: Any state change that should visually clear a canvas layer must call that layer's dirty marker.
+
+## Hit Testing: Separate Interaction from Visual Fill
+
+Elements should be selectable by clicking anywhere inside their bounds, regardless of whether they have a visible fill color. Don't gate hit-test interior checks on `backgroundColor !== 'transparent'`.
+
+```mermaid
+flowchart TD
+    A[Click inside shape] --> B{backgroundColor?}
+    B -->|"❌ transparent → outline only"| C[Miss — frustrating UX]
+    B -->|"✅ always check interior"| D[Hit — expected UX]
+```
+
+**Bug pattern**: `hitTestRectangle()` only checked interior when `backgroundColor !== 'transparent'`. Since default is `'transparent'`, users could only select shapes by clicking their thin borders.
+
+**Rule**: Selection hit-testing should always include shape interior. Visual rendering and interaction bounds are separate concerns.
