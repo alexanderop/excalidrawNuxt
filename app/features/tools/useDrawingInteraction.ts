@@ -16,6 +16,7 @@ interface UseDrawingInteractionOptions {
   onElementCreated: (element: ExcalidrawElement) => void
   markNewElementDirty: () => void
   markStaticDirty: () => void
+  newElement?: ShallowRef<ExcalidrawElement | null>
 }
 
 interface UseDrawingInteractionReturn {
@@ -34,7 +35,7 @@ export function useDrawingInteraction(options: UseDrawingInteractionOptions): Us
     markStaticDirty,
   } = options
 
-  const newElement = shallowRef<ExcalidrawElement | null>(null)
+  const newElement = options.newElement ?? shallowRef<ExcalidrawElement | null>(null)
   let originX = 0
   let originY = 0
 

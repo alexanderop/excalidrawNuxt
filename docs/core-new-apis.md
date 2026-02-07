@@ -250,6 +250,36 @@ return { x, y }
 return reactive({ x, y })
 ```
 
+### Breaking Circular Dependencies
+
+When composable A needs to read data that composable B writes, but B requires functions from A:
+
+```ts
+// Problem: Renderer reads newElement, but drawing interaction
+// needs markDirty() from renderer — circular dependency
+
+// Solution: Pre-create shared refs in the parent, inject into both
+
+// In component:
+const newElement = shallowRef<Element | null>(null)
+
+const { markDirty } = useRenderer({ newElement }) // reads
+useDrawing({ newElement, markDirty })             // writes
+
+// In composable — accept optional ref for backward compatibility:
+interface UseDrawingOptions {
+  newElement?: ShallowRef<Element | null>
+  // ...
+}
+
+export function useDrawing(options: UseDrawingOptions) {
+  const newElement = options.newElement ?? shallowRef<Element | null>(null)
+  // ...
+}
+```
+
+The parent component becomes a **Controller Component** that owns shared state and orchestrates composables.
+
 <!--
 Source references:
 - https://vuejs.org/api/reactivity-core.html

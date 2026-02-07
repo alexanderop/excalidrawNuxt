@@ -44,6 +44,7 @@ interface UseSelectionInteractionOptions {
   markStaticDirty: () => void
   markInteractiveDirty: () => void
   setTool: (tool: ToolType) => void
+  selectionBox?: ShallowRef<Box | null>
 }
 
 export function useSelectionInteraction(options: UseSelectionInteractionOptions): UseSelectionInteractionReturn {
@@ -68,7 +69,7 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
 
   let interaction: InteractionState = { type: 'idle' }
 
-  const selectionBox = shallowRef<Box | null>(null)
+  const selectionBox = options.selectionBox ?? shallowRef<Box | null>(null)
   const cursorStyle = shallowRef('default')
 
   function tryStartResize(scenePoint: Point, e: PointerEvent): boolean {

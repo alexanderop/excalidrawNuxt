@@ -1,5 +1,7 @@
+export { useCanvasLayers } from './composables/useCanvasLayers'
 export { usePanning } from './composables/usePanning'
 export { useRenderer } from './composables/useRenderer'
+export { useSceneRenderer } from './composables/useSceneRenderer'
 export { useViewport } from './composables/useViewport'
 export { screenToScene, sceneToScreen } from './coords'
 export type { Viewport } from './coords'

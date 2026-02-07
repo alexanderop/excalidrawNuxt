@@ -1,35 +1,33 @@
 <script setup lang="ts">
-import { shallowRef, markRaw, onMounted, useTemplateRef, computed, watch } from 'vue'
-import type { Ref, ShallowRef } from 'vue'
+import { shallowRef, useTemplateRef, computed } from 'vue'
 import { useElementSize } from '@vueuse/core'
-import rough from 'roughjs'
-import type { RoughCanvas } from 'roughjs/bin/canvas'
 import { useViewport } from '../composables/useViewport'
-import { useRenderer } from '../composables/useRenderer'
+import { useCanvasLayers } from '../composables/useCanvasLayers'
+import { useSceneRenderer } from '../composables/useSceneRenderer'
 import { usePanning } from '../composables/usePanning'
 import { useElements } from '~/features/elements/useElements'
 import { useTool } from '~/features/tools/useTool'
 import { useDrawingInteraction } from '~/features/tools/useDrawingInteraction'
 import { useSelection, useSelectionInteraction } from '~/features/selection'
-import { renderGrid } from '~/features/rendering/renderGrid'
-import { renderScene } from '~/features/rendering/renderScene'
-import { renderElement } from '~/features/rendering/renderElement'
-import { renderInteractiveScene } from '~/features/rendering/renderInteractive'
+import type { ExcalidrawElement } from '~/features/elements/types'
+import type { Box } from '~/shared/math'
 import DrawingToolbar from '~/features/tools/components/DrawingToolbar.vue'
 
 defineExpose({})
 
+// Template refs
 const containerRef = useTemplateRef<HTMLDivElement>('container')
 const staticCanvasRef = useTemplateRef<HTMLCanvasElement>('staticCanvas')
 const newElementCanvasRef = useTemplateRef<HTMLCanvasElement>('newElementCanvas')
 const interactiveCanvasRef = useTemplateRef<HTMLCanvasElement>('interactiveCanvas')
 
+// Viewport & size
 const { width, height } = useElementSize(containerRef)
-
 const { scrollX, scrollY, zoom, zoomBy, panBy, toScene } = useViewport()
+
+// Domain state
 const { elements, addElement } = useElements()
 const { activeTool, setTool } = useTool()
-
 const {
   selectedIds,
   selectedElements,
@@ -41,53 +39,30 @@ const {
   isSelected,
 } = useSelection(elements)
 
-const staticCtx = shallowRef<CanvasRenderingContext2D | null>(null)
-const newElementCtx = shallowRef<CanvasRenderingContext2D | null>(null)
-const interactiveCtx = shallowRef<CanvasRenderingContext2D | null>(null)
+// Pre-create shared refs to break circular dependency
+const newElement = shallowRef<ExcalidrawElement | null>(null)
+const selectionBox = shallowRef<Box | null>(null)
 
-const staticRc = shallowRef<RoughCanvas | null>(null)
-const newElementRc = shallowRef<RoughCanvas | null>(null)
-
-const { markStaticDirty, markNewElementDirty, markInteractiveDirty } = useRenderer({
-  staticLayer: { ctx: staticCtx, canvas: staticCanvasRef },
-  newElementLayer: { ctx: newElementCtx, canvas: newElementCanvasRef },
-  interactiveLayer: { ctx: interactiveCtx, canvas: interactiveCanvasRef },
-  width,
-  height,
-  scrollX,
-  scrollY,
-  zoom,
-  onRenderStatic(ctx) {
-    renderGrid(ctx, scrollX.value, scrollY.value, zoom.value, width.value, height.value)
-    const rc = staticRc.value
-    if (rc) {
-      renderScene(ctx, rc, elements.value, scrollX.value, scrollY.value, zoom.value)
-    }
-  },
-  onRenderNewElement(ctx) {
-    const el = newElement.value
-    const rc = newElementRc.value
-    if (!el || !rc) return
-    ctx.save()
-    ctx.scale(zoom.value, zoom.value)
-    ctx.translate(scrollX.value, scrollY.value)
-    renderElement(ctx, rc, el)
-    ctx.restore()
-  },
-  onRenderInteractive(ctx) {
-    ctx.save()
-    ctx.scale(zoom.value, zoom.value)
-    ctx.translate(scrollX.value, scrollY.value)
-    renderInteractiveScene(
-      ctx,
-      selectedElements.value,
-      zoom.value,
-      selectionBox.value,
-    )
-    ctx.restore()
-  },
+// Canvas layers (contexts + RoughCanvas init)
+const { staticCtx, newElementCtx, interactiveCtx, staticRc, newElementRc } = useCanvasLayers({
+  staticCanvasRef,
+  newElementCanvasRef,
+  interactiveCanvasRef,
 })
 
+// Scene renderer (render callbacks + dirty watcher)
+const { markStaticDirty, markNewElementDirty, markInteractiveDirty } = useSceneRenderer({
+  layers: { staticCtx, newElementCtx, interactiveCtx, staticRc, newElementRc },
+  canvasRefs: { staticCanvasRef, newElementCanvasRef, interactiveCanvasRef },
+  viewport: { scrollX, scrollY, zoom, width, height },
+  elements,
+  selectedElements,
+  selectedIds,
+  newElement,
+  selectionBox,
+})
+
+// Input interactions
 const { cursorClass, spaceHeld, isPanning } = usePanning({
   canvasRef: interactiveCanvasRef,
   panBy,
@@ -95,12 +70,13 @@ const { cursorClass, spaceHeld, isPanning } = usePanning({
   activeTool,
 })
 
-const { newElement } = useDrawingInteraction({
+useDrawingInteraction({
   canvasRef: interactiveCanvasRef,
   activeTool,
   spaceHeld,
   isPanning,
   toScene,
+  newElement,
   onElementCreated(el) {
     addElement(el)
     select(el.id)
@@ -110,7 +86,7 @@ const { newElement } = useDrawingInteraction({
   markStaticDirty,
 })
 
-const { selectionBox, cursorStyle } = useSelectionInteraction({
+const { cursorStyle } = useSelectionInteraction({
   canvasRef: interactiveCanvasRef,
   activeTool,
   spaceHeld,
@@ -118,6 +94,7 @@ const { selectionBox, cursorStyle } = useSelectionInteraction({
   zoom,
   toScene,
   elements,
+  selectionBox,
   selectedElements: () => selectedElements.value,
   select,
   addToSelection,
@@ -138,39 +115,6 @@ const combinedCursorClass = computed(() => {
     return `cursor-${cursorStyle.value}`
   }
   return 'cursor-default'
-})
-
-// Track selection changes to mark interactive canvas dirty
-watch(selectedIds, () => {
-  markInteractiveDirty()
-})
-
-function initCanvasContext(
-  canvasRef: Readonly<Ref<HTMLCanvasElement | null>>,
-  ctxRef: ShallowRef<CanvasRenderingContext2D | null>,
-): void {
-  const canvas = canvasRef.value
-  if (!canvas) return
-  const ctx = canvas.getContext('2d')
-  if (ctx) ctxRef.value = markRaw(ctx)
-}
-
-function initRoughCanvas(
-  canvasRef: Readonly<Ref<HTMLCanvasElement | null>>,
-  rcRef: ShallowRef<RoughCanvas | null>,
-): void {
-  const canvas = canvasRef.value
-  if (!canvas) return
-  rcRef.value = markRaw(rough.canvas(canvas))
-}
-
-onMounted(() => {
-  initCanvasContext(staticCanvasRef, staticCtx)
-  initCanvasContext(newElementCanvasRef, newElementCtx)
-  initCanvasContext(interactiveCanvasRef, interactiveCtx)
-
-  initRoughCanvas(staticCanvasRef, staticRc)
-  initRoughCanvas(newElementCanvasRef, newElementRc)
 })
 </script>
 
