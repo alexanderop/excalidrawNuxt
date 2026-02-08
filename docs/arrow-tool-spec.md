@@ -20,7 +20,7 @@ Excalidraw's arrow system is ~5000 LOC across binding, elbow routing, focus poin
 
 ## Our Implementation Plan
 
-### Phase 1: Basic Straight Arrow (MVP)
+### Phase 1: Basic Straight Arrow (MVP) — DONE
 
 **Goal:** Click-drag to create a straight arrow with a single arrowhead at the end. Selectable, movable, deletable.
 
@@ -260,7 +260,7 @@ if (type === 'arrow') {
 
 ---
 
-### Phase 2: Endpoint Handles & Resize
+### Phase 2: Endpoint Handles & Resize — DONE
 
 **Goal:** Select an arrow and drag its start/end points independently.
 
@@ -281,7 +281,7 @@ graph LR
 
 ---
 
-### Phase 3: Multi-Point Arrows (Polyline)
+### Phase 3: Multi-Point Arrows (Polyline) — DONE
 
 **Goal:** Click multiple times to add intermediate waypoints before finishing.
 
@@ -301,7 +301,7 @@ graph LR
 
 ---
 
-### Phase 4: Curved Arrows
+### Phase 4: Curved Arrows — TODO
 
 **Goal:** Smooth Bezier curves instead of straight segments.
 
@@ -312,9 +312,9 @@ graph LR
 
 ---
 
-### Phase 5: Element Binding
+### Phase 5: Element Binding — DONE
 
-**Goal:** Arrows snap to shapes and stay connected when shapes move.
+**Goal:** Arrows snap to shapes and stay connected when shapes move. **Implemented** in `features/binding/`.
 
 ```mermaid
 graph TD
@@ -328,43 +328,42 @@ graph TD
     E -- "moves" --> UPDATE2[Update arrow end point]
 ```
 
-#### Binding Data Model
+#### Binding Data Model (as implemented)
 
 ```ts
-interface PointBinding {
-  elementId: string
-  /** Where on the shape perimeter [0–1, 0–1] */
-  focus: [number, number]
-  gap: number
+// elements/types.ts
+interface FixedPointBinding {
+  readonly elementId: string
+  readonly fixedPoint: readonly [number, number]  // 0-1 ratio on shape bbox
 }
 
 // On ExcalidrawArrowElement:
-startBinding: PointBinding | null
-endBinding: PointBinding | null
+startBinding: FixedPointBinding | null
+endBinding: FixedPointBinding | null
 
-// On all bindable elements (rect, ellipse, diamond):
-boundElements: readonly { id: string; type: 'arrow' }[]
+// On ExcalidrawElementBase (all elements):
+boundElements: readonly BoundElement[]  // { id: string; type: 'arrow' }
 ```
 
-#### Binding Flow
+#### Binding Flow (implemented)
 
-1. **During arrow drag** — detect if endpoint is within `BINDING_GAP` (5px) of a shape's perimeter.
-2. **Snap indicator** — highlight the target shape with a blue outline.
-3. **On arrow finish** — store `startBinding`/`endBinding` with the shape ID and focus ratio.
-4. **On shape move/resize** — find all arrows in `boundElements`, recalculate their bound endpoint position using the ratio.
+1. **During arrow drag** — `getHoveredElementForBinding()` detects shapes within `BASE_BINDING_DISTANCE` (15px).
+2. **Snap indicator** — `renderSuggestedBinding()` draws a themed highlight outline on the target shape.
+3. **On arrow finish** — `bindArrowToElement()` commits binding + back-references.
+4. **On shape move/resize** — `updateBoundArrowEndpoints()` recalculates all bound arrow positions.
 5. **On arrow endpoint drag** — re-check binding (snap to new shape or unbind).
-6. **On shape/arrow delete** — clean up cross-references.
+6. **On shape/arrow delete** — `unbindArrow()` / `unbindAllArrowsFromShape()` clean up cross-references.
 
-#### Perimeter Intersection
+#### Perimeter Intersection (implemented in `proximity.ts`)
 
-Need a `getBindingPoint(shape, focusRatio)` function that returns the scene-space point where the arrow should connect. Different per shape:
+`distanceToShapeEdge()` per shape type + `computeFixedPoint()` / `getPointFromFixedPoint()` for coordinate conversion:
 - **Rectangle** — project from center through ratio point to edge.
 - **Ellipse** — parametric ellipse equation.
 - **Diamond** — project to polygon edge.
 
 ---
 
-### Phase 6: Elbow Arrows (Stretch)
+### Phase 6: Elbow Arrows (Stretch) — TODO
 
 Orthogonal routing with rounded corners. Excalidraw uses A* pathfinding on a grid — this is significant complexity (~1500 LOC). Only build if there's demand.
 

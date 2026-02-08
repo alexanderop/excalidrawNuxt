@@ -1,4 +1,3 @@
-import { describe, it, expect } from 'vitest'
 import { createTestElement } from '~/__test-utils__/factories/element'
 import { hitTest, getElementAtPosition } from './hitTest'
 
@@ -131,5 +130,30 @@ describe('getElementAtPosition', () => {
       x: 0, y: 0, width: 50, height: 50, backgroundColor: '#f00',
     })
     expect(getElementAtPosition({ x: 200, y: 200 }, [el], 1)).toBeNull()
+  })
+})
+
+describe('hitTest edge cases', () => {
+  it('returns false for zero-size rectangle', () => {
+    const el = createTestElement({
+      x: 50, y: 50, width: 0, height: 0, backgroundColor: '#f00',
+    })
+    // Point at the element origin — zero-size means nothing to hit beyond threshold
+    expect(hitTest({ x: 100, y: 100 }, el, 1)).toBe(false)
+  })
+
+  it('returns false for zero-size ellipse', () => {
+    const el = createTestElement({
+      type: 'ellipse', x: 50, y: 50, width: 0, height: 0, backgroundColor: '#f00',
+    })
+    expect(hitTest({ x: 100, y: 100 }, el, 1)).toBe(false)
+  })
+
+  it('handles zero-size diamond', () => {
+    const el = createTestElement({
+      type: 'diamond', x: 50, y: 50, width: 0, height: 0, backgroundColor: '#f00',
+    })
+    // Zero-size diamond collapses to a point — should not hit a distant point
+    expect(hitTest({ x: 100, y: 100 }, el, 1)).toBe(false)
   })
 })

@@ -1,3 +1,4 @@
+import type { ExcalidrawElement, ExcalidrawArrowElement } from './types'
 import { createElement } from './createElement'
 import {
   DEFAULT_BG_COLOR,
@@ -7,6 +8,10 @@ import {
   DEFAULT_STROKE_COLOR,
   DEFAULT_STROKE_WIDTH,
 } from './constants'
+
+function assertIsArrow(el: ExcalidrawElement): asserts el is ExcalidrawArrowElement {
+  expect(el.type).toBe('arrow')
+}
 
 describe('createElement', () => {
   it('creates an element with the correct type', () => {
@@ -71,5 +76,57 @@ describe('createElement', () => {
     expect(el.height).toBe(150)
     expect(el.strokeColor).toBe('#ff0000')
     expect(el.opacity).toBe(50)
+  })
+
+  describe('type-specific properties', () => {
+    it('creates rectangle with correct type', () => {
+      const el = createElement('rectangle', 10, 20)
+      expect(el.type).toBe('rectangle')
+      expect(el.x).toBe(10)
+      expect(el.y).toBe(20)
+    })
+
+    it('creates ellipse with correct type', () => {
+      const el = createElement('ellipse', 30, 40)
+      expect(el.type).toBe('ellipse')
+      expect(el.x).toBe(30)
+      expect(el.y).toBe(40)
+    })
+
+    it('creates diamond with correct type', () => {
+      const el = createElement('diamond', 50, 60)
+      expect(el.type).toBe('diamond')
+      expect(el.x).toBe(50)
+      expect(el.y).toBe(60)
+    })
+
+    it('creates arrow with points and arrowheads', () => {
+      const el = createElement('arrow', 70, 80)
+      assertIsArrow(el)
+      expect(el.points).toHaveLength(1)
+      expect(el.points[0]).toEqual({ x: 0, y: 0 })
+      expect(el.startArrowhead).toBeNull()
+      expect(el.endArrowhead).toBe('arrow')
+      expect(el.startBinding).toBeNull()
+      expect(el.endBinding).toBeNull()
+    })
+
+    it('initializes boundElements as empty array for all types', () => {
+      const rect = createElement('rectangle', 0, 0)
+      const ellipse = createElement('ellipse', 0, 0)
+      const diamond = createElement('diamond', 0, 0)
+      const arrow = createElement('arrow', 0, 0)
+      expect(rect.boundElements).toEqual([])
+      expect(ellipse.boundElements).toEqual([])
+      expect(diamond.boundElements).toEqual([])
+      expect(arrow.boundElements).toEqual([])
+    })
+
+    it('initializes groupIds as empty array for all types', () => {
+      const rect = createElement('rectangle', 0, 0)
+      const arrow = createElement('arrow', 0, 0)
+      expect(rect.groupIds).toEqual([])
+      expect(arrow.groupIds).toEqual([])
+    })
   })
 })

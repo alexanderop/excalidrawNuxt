@@ -8,14 +8,22 @@ Excalidraw Nuxt is a collaborative drawing app built with Nuxt 4 and Excalidraw.
 bun dev           # Start dev server
 bun build         # Production build
 bun preview       # Preview production build
+bun lint          # Run oxlint then eslint (run-s lint:*)
+bun typecheck     # Type-check with nuxi
+bun test          # Run all tests (vitest run --bail=1)
+bun test:unit     # Unit tests only (vitest --project unit)
+bun test:browser  # Browser tests only (vitest --project browser)
 ```
 
 ## Stack
 
-- Nuxt 4 (Vue 3.5+)
+- Nuxt 4 (Vue 3.5+), SSR disabled, **auto-imports disabled** (`imports: { autoImport: false }` in nuxt.config — all imports must be explicit)
 - Excalidraw (via @excalidraw/excalidraw)
 - Tailwind CSS v4 (via `@tailwindcss/vite`, not the Nuxt module)
 - TypeScript
+- RoughJS + perfect-freehand (canvas shape rendering)
+- VueUse (`@vueuse/core`)
+- Bun package manager
 
 ## Colors
 
@@ -34,11 +42,17 @@ The original Excalidraw source code lives in `excalidraw/` (git-ignored, not par
 
 ## Structure
 
-- `app/` - Vue application (pages, components, composables)
+- `app/` - Vue application
+  - `features/` - Domain features (binding, canvas, elements, groups, linear-editor, rendering, selection, theme, tools) — isolated by lint rules
+  - `shared/` - Shared components and composables used across features
+  - `pages/` - Top-level page orchestrators
+  - `utils/` - Pure utilities (e.g. `tryCatch.ts`)
+  - `assets/` - CSS and static assets
+  - `__test-utils__/` - Test helpers (withSetup, custom commands)
 - `excalidraw/` - Excalidraw source (reference only, git-ignored)
 - `public/` - Static assets
 - `nuxt.config.ts` - Nuxt configuration
-- `docs/` - Agent memory (gotchas, patterns, architecture)
+- `docs/` - Agent memory (gotchas, patterns, architecture, specs, diagrams)
 
 ## Canvas Testing
 
@@ -62,13 +76,32 @@ Browser tests (`*.browser.test.ts`) test canvas interactions via Vitest browser 
 
 **IMPORTANT:** Before starting any task, identify which docs below are relevant and read them first. Load the full context before making changes.
 
+### Architecture & System
 - `docs/SYSTEM_KNOWLEDGE_MAP.md` - Architecture overview, data flow diagrams
+- `docs/diagrams/` - Mermaid diagrams (architecture, canvas, coordinate system, event flow, render pipeline, selection state machine, etc.)
+- `docs/reference/` - Architectural decisions, element types, technology stack
+
+### Gotchas & Pitfalls
 - `docs/excalidraw-gotchas.md` - Excalidraw integration pitfalls and patterns
 - `docs/nuxt-gotchas.md` - Nuxt 4 specific pitfalls and migration notes
+- `docs/vueuse-gotchas.md` - VueUse pitfalls (useMagicKeys types, document access in node tests, browser vitest config)
+
+### Vue & TypeScript Patterns
 - `docs/advanced-patterns.md` - Vue 3 built-in components (Transition, Teleport, Suspense, KeepAlive) and advanced directives
 - `docs/core-new-apis.md` - Vue 3 reactivity system, lifecycle hooks, and composable patterns
 - `docs/script-setup-macros.md` - Vue 3 script setup syntax and compiler macros (defineProps, defineEmits, defineModel, etc.)
+
+### Testing
+- `docs/testing-conventions.md` - Flat test philosophy, withSetup API, when hooks are OK
 - `docs/vitest-mocking.md` - Mock functions, modules, timers, and dates with vi utilities
 - `docs/vi-utilities.md` - vi helper for mocking, timers, utilities (vi.fn, vi.spyOn, vi.mock, fake timers, etc.)
-- `docs/vueuse-gotchas.md` - VueUse pitfalls (useMagicKeys types, document access in node tests, browser vitest config)
-- `docs/linting-setup.md` - Dual linter setup, banned patterns, component naming rules
+
+### Linting
+- `docs/linting-setup.md` - Dual linter setup, banned patterns, component naming rules, cross-feature isolation
+
+### Feature Specs
+- `docs/arrow-tool-spec.md` - Arrow tool design and Excalidraw reference
+- `docs/arrow-tech-spec.md` - Arrow technical specification (reverse-engineered from Excalidraw)
+- `docs/arrow-parity-spec.md` - Arrow UX parity with Excalidraw
+- `docs/dark-mode-tech-spec.md` - Dark mode technical specification
+- `docs/specs/` - Feature specs (arrow implementation plan, grouping feature)

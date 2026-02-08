@@ -207,6 +207,7 @@ const combinedCursorClass = computed(() => {
 <template>
   <div
     ref="container"
+    data-testid="canvas-container"
     class="relative h-full w-full overflow-hidden"
     :class="combinedCursorClass"
   >

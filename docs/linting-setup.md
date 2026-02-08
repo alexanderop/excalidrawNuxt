@@ -65,17 +65,20 @@ Features in `app/features/` are independent modules. ESLint enforces that no fea
 **Current features with isolation zones:**
 - `groups`, `linear-editor`, `rendering`, `selection`, `tools`
 
-Each zone allows imports only from the feature's own directory:
+**Features on disk without isolation zones (not yet enforced):**
+- `binding`, `canvas`, `elements`, `theme`
+
+Each zone allows imports from its own directory **and from `theme`** (shared exception):
 ```typescript
-{ target: './app/features/groups', from: './app/features', except: ['./groups'] },
+{ target: './app/features/groups', from: './app/features', except: ['./groups', './theme'] },
 ```
 
 **Adding a new feature:** Add a matching zone in `eslint.config.ts` under the "Cross-feature isolation" comment:
 ```typescript
-{ target: './app/features/<name>', from: './app/features', except: ['./<name>'] },
+{ target: './app/features/<name>', from: './app/features', except: ['./<name>', './theme'] },
 ```
 
-Features can import from shared code (`app/composables/`, `app/utils/`, etc.) but never from each other. If two features need shared logic, extract it to `app/composables/` or `app/utils/`.
+Features can import from shared code (`app/shared/`, `app/utils/`, etc.) and from `app/features/theme/`, but never from each other. If two features need shared logic, extract it to `app/shared/` or `app/utils/`.
 
 ## Banned Patterns (enforced by lint)
 
@@ -87,3 +90,27 @@ Features can import from shared code (`app/composables/`, `app/utils/`, etc.) bu
 | Native `try/catch` | `tryCatch()` from `~/utils/tryCatch` |
 | Nested ternaries | Functions with early returns |
 | Hardcoded route strings | Named routes |
+| `console.log` | Remove or use `console.warn`/`console.error` (oxlint) |
+| `any` type | Proper types (oxlint: `typescript/no-explicit-any`) |
+
+## Oxlint Rules (`.oxlintrc.json`)
+
+- **Categories:** `correctness` (error), `suspicious` (warn)
+- **Explicit rules:** `typescript/no-explicit-any` (error), `eslint/no-console` (error, allows `warn`/`error`)
+
+## ESLint Sections Summary
+
+The flat config in `eslint.config.ts` is organized into named sections:
+
+1. **`app/vue-component-rules`** — PascalCase templates, dead code detection, max-template-depth (8), max-props (6), Vue 3.5+ APIs (`define-props-destructuring`, `prefer-use-template-ref`)
+2. **`app/typescript-style`** — Complexity (max 10), no nested ternaries, no `as` assertions, banned syntax (enums, else, try/catch, hardcoded routes)
+3. **`app/import-boundaries`** — Feature isolation zones, shared code cannot import from features/pages
+4. **`app/vitest-rules`** — `it()` not `test()`, hooks on top, max 2 nested describes, prefer Vitest locators over `querySelector`
+5. **`app/vitest-unit-flat-tests`** — Warns on `beforeEach`/`afterEach` in `*.unit.test.ts` (allows `beforeAll`/`afterAll`)
+6. **`app/unicorn-overrides`** — Enables `better-regex`, `custom-error-definition`; disables `no-null`, `filename-case`, `prevent-abbreviations`
+
+## Pre-commit Hooks
+
+Configured via `simple-git-hooks` + `lint-staged`:
+- On commit, staged `*.{ts,vue}` files run through `oxlint --fix` then `eslint --fix --cache`
+- After linting, `bun run typecheck` runs (`nuxi typecheck`)

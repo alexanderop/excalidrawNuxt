@@ -1,33 +1,26 @@
 import { shallowRef } from 'vue'
 import { withSetup } from '~/__test-utils__/withSetup'
+import { createEventHandlerMap } from '~/__test-utils__/mocks/eventListenerMock'
+import { createCanvasStub } from '~/__test-utils__/mocks/canvasStub'
 import type { ExcalidrawElement } from '~/features/elements/types'
 import { useDrawingInteraction } from './useDrawingInteraction'
 import type { ToolType } from './types'
 
 type EventHandler = (...args: unknown[]) => void
-
-// Capture event handlers registered by useEventListener
-const eventHandlers = new Map<string, EventHandler>()
+const { handlers, mockUseEventListener } = vi.hoisted(() => {
+  const handlers = new Map<string, EventHandler[]>()
+  const mockUseEventListener = (_target: unknown, event: string, handler: EventHandler): void => {
+    const existing = handlers.get(event) ?? []
+    existing.push(handler)
+    handlers.set(event, existing)
+  }
+  return { handlers, mockUseEventListener }
+})
+const { firePointer, clear } = createEventHandlerMap(handlers)
 
 vi.mock('@vueuse/core', () => ({
-  useEventListener: (_target: unknown, event: string, handler: EventHandler) => {
-    eventHandlers.set(event, handler)
-  },
+  useEventListener: mockUseEventListener,
 }))
-
-function firePointer(type: 'pointerdown' | 'pointermove' | 'pointerup', x: number, y: number) {
-  const handler = eventHandlers.get(type)
-  if (!handler) throw new Error(`No handler for ${type}`)
-  handler({ offsetX: x, offsetY: y, pointerId: 1, button: 0, shiftKey: false })
-}
-
-function createCanvasStub(): HTMLCanvasElement {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- test stub
-  return {
-    setPointerCapture: vi.fn(),
-    releasePointerCapture: vi.fn(),
-  } as unknown as HTMLCanvasElement
-}
 
 function createSetup() {
   const canvasRef = shallowRef<HTMLCanvasElement | null>(createCanvasStub())
@@ -55,8 +48,10 @@ function createSetup() {
 }
 
 describe('useDrawingInteraction', () => {
+  // eslint-disable-next-line vitest/no-hooks -- clearing shared event handler map between tests
+  beforeEach(() => { clear() })
+
   it('clears new-element canvas after drawing completes (no ghost element)', () => {
-    eventHandlers.clear()
     const opts = createSetup()
 
     using _ctx = withSetup(() => useDrawingInteraction(opts))
@@ -74,7 +69,6 @@ describe('useDrawingInteraction', () => {
   })
 
   it('creates exactly one element after draw-then-release', () => {
-    eventHandlers.clear()
     const opts = createSetup()
 
     using ctx = withSetup(() => useDrawingInteraction(opts))
@@ -97,7 +91,6 @@ describe('useDrawingInteraction', () => {
   })
 
   it('switches to selection tool after drawing', () => {
-    eventHandlers.clear()
     const opts = createSetup()
 
     using _ctx = withSetup(() => useDrawingInteraction(opts))

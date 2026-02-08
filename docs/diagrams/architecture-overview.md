@@ -11,10 +11,20 @@ graph TD
     D --> E2[NewElement Canvas - in-progress shape]
     D --> E3[Interactive Canvas - selection UI + events]
 
+    C --> CL[Canvas Layer Init]
+    CL --> CL1[useCanvasLayers - 2D contexts + RoughCanvas on mount]
+
     C --> F[Canvas Composables]
     F --> F1[useViewport - pan/zoom/coords]
-    F --> F2[useRenderer - RAF loop + dirty flags + callbacks]
+    F --> F2[useRenderer - RAF loop + dirty flags per layer]
     F --> F3[createDirtyFlags - deferred callback binding]
+    F --> F4[useSceneRenderer - wires render callbacks to domain state]
+    F --> F5[useAnimationController - keyed RAF animations]
+
+    C --> TH[Theme Feature]
+    TH --> TH1[useTheme - global light/dark state + Alt+Shift+D toggle]
+    TH --> TH2[resolveColor - dark mode color transform via invert+hue-rotate]
+    TH --> TH3[colors.ts - tinycolor2 CSS filter emulation + cache]
 
     C --> EL[Elements Feature]
     EL --> EL1[useElements - reactive element array]
@@ -22,14 +32,15 @@ graph TD
     EL --> EL3[mutateElement - in-place mutation + version bump]
 
     C --> RN[Rendering Feature]
-    RN --> RN1[renderGrid - dot grid with zoom fade]
+    RN --> RN1[renderGrid - dot grid with zoom fade, theme-aware]
     RN --> RN2[shapeGenerator - roughjs Drawables + cache]
-    RN --> RN3[renderElement / renderScene]
+    RN --> RN3[renderElement / renderScene - theme-aware]
+    RN --> RN4[renderInteractive - selection borders + handles + marquee + groups]
     RN --> RN5[arrowhead.ts - Canvas 2D arrowhead rendering]
 
     C --> TL[Tools Feature]
     TL --> TL1[useTool - active tool + keyboard shortcuts]
-    TL --> TL2[useDrawingInteraction - pointer → shape/arrow]
+    TL --> TL2[useDrawingInteraction - pointer to shape/arrow]
     TL --> TL3[DrawingToolbar.vue - tool selection UI]
 
     C --> LE[Linear Editor Feature]
@@ -53,11 +64,14 @@ graph TD
     BN --> BN3[updateBoundPoints.ts - recalc on move/resize]
     BN --> BN4[renderBindingHighlight.ts - blue highlight]
 
-    RN --> RN4[renderInteractive - selection borders + handles + marquee]
+    C --> GR[Groups Feature]
+    GR --> GR1[useGroups - group/ungroup selection, Cmd+G / Cmd+Shift+G]
+    GR --> GR2[groupUtils.ts - pure functions: expand, reorder, cleanup]
+    GR --> GR3[cleanupAfterDelete - remove orphan groups]
 
     A --> G[shared/]
-    G --> G1[math.ts - Point, distance, clamp, lerp]
-    G --> G2[random.ts - nanoid, randomInteger]
+    G --> G1[math.ts - Point, Box, distance, clamp, lerp, TWO_PI]
+    G --> G2[random.ts - nanoid, randomInteger, generateId]
 
     style C fill:#f9a825,color:#000
     style D fill:#ef6c00,color:#fff
@@ -65,4 +79,6 @@ graph TD
     style EL fill:#2e7d32,color:#fff
     style RN fill:#6a1b9a,color:#fff
     style TL fill:#c62828,color:#fff
+    style TH fill:#00838f,color:#fff
+    style GR fill:#4e342e,color:#fff
 ```

@@ -34,7 +34,7 @@ flowchart TB
         S_PM[pointermove: drag / resize / box]
         S_PU[pointerup: commit interaction]
         S_DBL[dblclick: enter linear editor]
-        S_KD[keydown: Delete / Escape / Ctrl+A / arrows]
+        S_KD[keydown: Delete / Escape / Ctrl+A / Ctrl+G / arrows]
     end
 
     subgraph "useMultiPointCreation"
@@ -155,6 +155,9 @@ flowchart TD
     KEYGUARD -->|Escape| EXIT["Exit mode / clear selection"]
     KEYGUARD -->|Enter| FINALIZE["Finalize multi-point\n(useMultiPointCreation)"]
     KEYGUARD -->|Ctrl+A| SELECT_ALL["Select all elements"]
+    KEYGUARD -->|Ctrl+G| GROUP["Group selection\n(useSelectionInteraction → onGroupAction)"]
+    KEYGUARD -->|Ctrl+Shift+G| UNGROUP["Ungroup selection\n(useSelectionInteraction → onUngroupAction)"]
+    KEYGUARD -->|Alt+Shift+D| THEME_TOGGLE["Toggle dark mode\n(useTheme)"]
     KEYGUARD -->|Arrow keys| NUDGE["Nudge selected elements"]
 
     HANDLER --> MUTATE["mutateElement()\nUpdate element properties"]
@@ -166,6 +169,9 @@ flowchart TD
     EXIT --> DIRTY
     FINALIZE --> DIRTY
     SELECT_ALL --> DIRTY
+    GROUP --> DIRTY
+    UNGROUP --> DIRTY
+    THEME_TOGGLE --> DIRTY
 
     DIRTY --> WHICH{"Which flag?"}
     WHICH -->|markStaticDirty| STATIC["Re-render static canvas\n(committed elements)"]
@@ -184,6 +190,7 @@ flowchart TD
 |---|---|---|---|
 | `usePanning` | `wheel`, `pointerdown`, `pointermove`, `pointerup` | `keydown` (Space), `keyup` (Space) | `spaceHeld`, `isPanning`, viewport scroll/zoom |
 | `useDrawingInteraction` | `pointerdown`, `pointermove`, `pointerup` | -- | `newElement`, element mutations, `suggestedBindings` |
-| `useSelectionInteraction` | `pointerdown`, `pointermove`, `pointerup`, `dblclick` | `keydown` (Delete, Escape, Ctrl+A, arrows) | selection state, `selectionBox`, `cursorStyle`, element mutations |
+| `useSelectionInteraction` | `pointerdown`, `pointermove`, `pointerup`, `dblclick` | `keydown` (Delete, Escape, Ctrl+A, Ctrl+G, Ctrl+Shift+G, arrows) | selection state, `selectionBox`, `cursorStyle`, element mutations, group actions |
 | `useMultiPointCreation` | `pointerdown`, `pointermove`, `dblclick` | `keydown` (Escape, Enter) | `multiElement`, `lastCursorPoint`, `suggestedBindings` |
 | `useLinearEditor` | `pointerdown`, `pointermove`, `pointerup` | `keydown` (Escape, Delete/Backspace) | `editingElement`, `selectedPointIndices`, `hoveredMidpointIndex`, `suggestedBindings` |
+| `useTheme` | -- | `keydown` (Alt+Shift+D) | `theme` (light/dark), document root class toggle |

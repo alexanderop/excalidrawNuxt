@@ -9,7 +9,7 @@ vi.mock('@vueuse/core', () => ({
 }))
 
 describe('useAnimationController', () => {
-  let markInteractiveDirty: ReturnType<typeof vi.fn>
+  let markInteractiveDirty: () => void
   let rafCallbacks: (() => void)[]
   let originalRaf: typeof requestAnimationFrame
   let originalCaf: typeof cancelAnimationFrame
@@ -17,7 +17,7 @@ describe('useAnimationController', () => {
 
   // eslint-disable-next-line vitest/no-hooks -- shared RAF mock must be reset between tests
   beforeEach(() => {
-    markInteractiveDirty = vi.fn()
+    markInteractiveDirty = vi.fn<() => void>()
     visibilityRef.value = 'visible'
     rafCallbacks = []
     nowValue = 1000
@@ -122,7 +122,7 @@ describe('useAnimationController', () => {
     it('marks interactive dirty after each tick', () => {
       using ctrl = createController()
       ctrl.start('test', () => ({ value: 1 }))
-      markInteractiveDirty.mockClear()
+      vi.mocked(markInteractiveDirty).mockClear()
 
       nowValue = 1016
       flushRaf()

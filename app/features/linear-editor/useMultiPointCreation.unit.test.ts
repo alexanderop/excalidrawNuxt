@@ -1,41 +1,30 @@
 import { shallowRef } from 'vue'
 import { withSetup } from '~/__test-utils__/withSetup'
 import { createTestArrowElement } from '~/__test-utils__/factories/element'
+import { createEventHandlerMap } from '~/__test-utils__/mocks/eventListenerMock'
+import { createCanvasStub } from '~/__test-utils__/mocks/canvasStub'
 import { createPoint } from '~/shared/math'
 import type { ExcalidrawElement } from '~/features/elements/types'
 import { useMultiPointCreation } from './useMultiPointCreation'
 
 type EventHandler = (...args: unknown[]) => void
-
-const eventHandlers = new Map<string, EventHandler[]>()
+const { handlers, mockUseEventListener } = vi.hoisted(() => {
+  const handlers = new Map<string, EventHandler[]>()
+  const mockUseEventListener = (_target: unknown, event: string, handler: EventHandler): void => {
+    const existing = handlers.get(event) ?? []
+    existing.push(handler)
+    handlers.set(event, existing)
+  }
+  return { handlers, mockUseEventListener }
+})
+const { fire, clear } = createEventHandlerMap(handlers)
 
 // Stub document for SSR guard in composables
 vi.stubGlobal('document', {})
 
 vi.mock('@vueuse/core', () => ({
-  useEventListener: (_target: unknown, event: string, handler: EventHandler) => {
-    const handlers = eventHandlers.get(event) ?? []
-    handlers.push(handler)
-    eventHandlers.set(event, handlers)
-  },
+  useEventListener: mockUseEventListener,
 }))
-
-function fire(type: string, overrides: Record<string, unknown> = {}) {
-  const handlers = eventHandlers.get(type)
-  if (!handlers?.length) throw new Error(`No handler for ${type}`)
-  const e = { offsetX: 0, offsetY: 0, pointerId: 1, button: 0, shiftKey: false, preventDefault: vi.fn(), ...overrides }
-  for (const handler of handlers) {
-    handler(e)
-  }
-}
-
-function createCanvasStub(): HTMLCanvasElement {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- test stub
-  return {
-    setPointerCapture: vi.fn(),
-    releasePointerCapture: vi.fn(),
-  } as unknown as HTMLCanvasElement
-}
 
 function createSetup() {
   return {
@@ -52,7 +41,7 @@ function createSetup() {
 
 describe('useMultiPointCreation', () => {
   // eslint-disable-next-line vitest/no-hooks -- clearing shared event handler map between tests
-  beforeEach(() => { eventHandlers.clear() })
+  beforeEach(() => { clear() })
 
   it('starts multi-point mode and sets multiElement', () => {
     const opts = createSetup()

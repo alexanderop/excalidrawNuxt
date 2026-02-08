@@ -1,5 +1,5 @@
 import { render } from 'vitest-browser-vue'
-import { userEvent } from '@vitest/browser/context'
+import { userEvent } from 'vitest/browser'
 import CanvasContainer from '~/features/canvas/components/CanvasContainer.vue'
 
 describe('DrawingToolbar numeric shortcuts', () => {

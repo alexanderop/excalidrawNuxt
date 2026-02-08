@@ -23,6 +23,9 @@ graph LR
                 UR[useRenderer.ts]
                 UP[usePanning.ts]
                 DF[createDirtyFlags.ts]
+                UCL[useCanvasLayers.ts]
+                USR[useSceneRenderer.ts]
+                UAC[useAnimationController.ts]
             end
             subgraph "canvas/components/"
                 CC[CanvasContainer.vue]
@@ -34,6 +37,7 @@ graph LR
             ECR[createElement.ts]
             EM[mutateElement.ts]
             UE[useElements.ts]
+            EIX[index.ts]
         end
         subgraph "features/rendering/"
             RG[renderGrid.ts]
@@ -42,6 +46,7 @@ graph LR
             RS[renderScene.ts]
             RI[renderInteractive.ts]
             AH[arrowhead.ts]
+            RDIX[index.ts]
         end
         subgraph "features/selection/"
             SLC[constants.ts]
@@ -50,9 +55,20 @@ graph LR
             SLTH[transformHandles.ts]
             SLD[dragElements.ts]
             SLR[resizeElement.ts]
+            SLIX[index.ts]
             subgraph "selection/composables/"
                 SLS[useSelection.ts]
                 SLSI[useSelectionInteraction.ts]
+            end
+        end
+        subgraph "features/tools/"
+            TT[types.ts]
+            UT2[useTool.ts]
+            UDI[useDrawingInteraction.ts]
+            TLIX[index.ts]
+            subgraph "tools/components/"
+                DT[DrawingToolbar.vue]
+                TI[toolIcons.ts]
             end
         end
         subgraph "features/linear-editor/"
@@ -73,13 +89,18 @@ graph LR
             BRH[renderBindingHighlight.ts]
             BIX[index.ts]
         end
-        subgraph "features/tools/"
-            TT[types.ts]
-            UT2[useTool.ts]
-            UDI[useDrawingInteraction.ts]
-            subgraph "tools/components/"
-                DT[DrawingToolbar.vue]
-                TI[toolIcons.ts]
+        subgraph "features/theme/"
+            THT[types.ts]
+            THC[colors.ts]
+            THU[useTheme.ts]
+            THIX[index.ts]
+        end
+        subgraph "features/groups/"
+            GRT[types.ts]
+            GRU[groupUtils.ts]
+            GRIX[index.ts]
+            subgraph "groups/composables/"
+                GRUG[useGroups.ts]
             end
         end
         subgraph "shared/"
@@ -91,6 +112,10 @@ graph LR
         end
         subgraph "__test-utils__/"
             WS[withSetup.ts]
+            SBR[setup-browser.ts]
+            subgraph "commands/"
+                CD[canvasDrag.ts]
+            end
             subgraph "factories/"
                 VPF[viewport.ts]
                 PTF[point.ts]
@@ -103,5 +128,28 @@ graph LR
         SK[SYSTEM_KNOWLEDGE_MAP.md]
         EG[excalidraw-gotchas.md]
         NG[nuxt-gotchas.md]
+        LS[linting-setup.md]
+        subgraph "docs/diagrams/"
+            DG_AO[architecture-overview.md]
+            DG_FM[file-map.md]
+            DG_FA[feature-architecture.md]
+            DG_RP[render-pipeline.md]
+            DG_CA[canvas-architecture.md]
+            DG_SD[shape-drawing-flow.md]
+            DG_CS[coordinate-system.md]
+            DG_SS[selection-state-machine.md]
+            DG_EF[event-flow.md]
+            DG_IS[initialization-sequence.md]
+            DG_TA[testing-architecture.md]
+        end
+        subgraph "docs/specs/"
+            SP_GF[grouping-feature.md]
+            SP_AI[arrow-implementation-plan.md]
+        end
+        subgraph "docs/reference/"
+            RF_AD[architectural-decisions.md]
+            RF_TS[technology-stack.md]
+            RF_ET[element-types.md]
+        end
     end
 ```

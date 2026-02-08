@@ -1,4 +1,3 @@
-import { describe, it, expect } from 'vitest'
 import { createTestElement } from '~/__test-utils__/factories/element'
 import { resizeElement } from './resizeElement'
 import type { ResizeState } from './resizeElement'
@@ -90,5 +89,46 @@ describe('resizeElement', () => {
     resizeElement({ x: 0.1, y: 0.1 }, state, el, false)
     expect(el.width).toBeGreaterThanOrEqual(1)
     expect(el.height).toBeGreaterThanOrEqual(1)
+  })
+
+  it('enforces minimum size for degenerate dimensions', () => {
+    const el = createTestElement({ x: 0, y: 0, width: 100, height: 100 })
+    const state: ResizeState = {
+      handleType: 'se',
+      originalBounds: { x: 0, y: 0, width: 100, height: 100 },
+      origin: { x: 100, y: 100 },
+    }
+    // Drag to essentially zero size
+    resizeElement({ x: 0, y: 0 }, state, el, false)
+    expect(el.width).toBeGreaterThanOrEqual(1)
+    expect(el.height).toBeGreaterThanOrEqual(1)
+  })
+
+  it('handles negative dimensions by flipping', () => {
+    const el = createTestElement({ x: 50, y: 50, width: 100, height: 100 })
+    const state: ResizeState = {
+      handleType: 'se',
+      originalBounds: { x: 50, y: 50, width: 100, height: 100 },
+      origin: { x: 150, y: 150 },
+    }
+    // Drag well past the opposite edge
+    resizeElement({ x: 10, y: 10 }, state, el, false)
+    expect(el.width).toBeGreaterThan(0)
+    expect(el.height).toBeGreaterThan(0)
+    // X/Y should have shifted to accommodate the flip
+    expect(el.x).toBeLessThanOrEqual(50)
+  })
+
+  it('NE handle flips correctly on negative drag', () => {
+    const el = createTestElement({ x: 0, y: 0, width: 100, height: 100 })
+    const state: ResizeState = {
+      handleType: 'ne',
+      originalBounds: { x: 0, y: 0, width: 100, height: 100 },
+      origin: { x: 100, y: 0 },
+    }
+    // Drag beyond left and bottom edges
+    resizeElement({ x: -50, y: 150 }, state, el, false)
+    expect(el.width).toBeGreaterThan(0)
+    expect(el.height).toBeGreaterThan(0)
   })
 })

@@ -1,5 +1,5 @@
 import { render } from 'vitest-browser-vue'
-import { commands, userEvent } from '@vitest/browser/context'
+import { commands, userEvent } from 'vitest/browser'
 import CanvasContainer from '~/features/canvas/components/CanvasContainer.vue'
 
 const CANVAS_SELECTOR = '[data-testid="interactive-canvas"]'

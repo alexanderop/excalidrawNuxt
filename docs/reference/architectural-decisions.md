@@ -18,3 +18,7 @@
 | Shape cache | Map keyed by id, invalidated by versionNonce | Avoid regenerating roughjs Drawables every frame |
 | roughjs integration | RoughGenerator (headless, testable) + RoughCanvas (render) | Generator works in Node tests; RoughCanvas created per canvas in onMounted |
 | Tool shortcuts | useMagicKeys + useActiveElement typing guard | Simple keyboard shortcuts, safe when typing in inputs |
+| Dark mode | Programmatic color inversion (`invert(93%) + hue-rotate(180deg)`) | Same approach as Excalidraw — no separate dark palette, colors transformed at render time |
+| Theme persistence | `useLocalStorage` via VueUse + `createGlobalState` | Browser-only, not exported, each user sees preferred theme |
+| Groups | Flat `groupIds` array on elements, no tree entity | Excalidraw-compatible model; groups are shared IDs, not separate objects |
+| Binding | `FixedPointBinding` with ratio-based coordinates | Arrows attach to shape surface via `[0-1, 0-1]` fixed point, survives resize/move |

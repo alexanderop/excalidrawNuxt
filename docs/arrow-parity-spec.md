@@ -25,23 +25,28 @@
 | Hit testing (segment distance) | Done | `selection/hitTest.ts:123` |
 | 3-layer canvas (static/newElement/interactive) | Done | `canvas/composables/useCanvasLayers.ts` |
 | Roughjs rendering | Done | `rendering/shapeGenerator.ts` |
+| Binding system (arrows attach to shapes) | Done | `binding/proximity.ts`, `binding/bindUnbind.ts`, `binding/updateBoundPoints.ts` |
+| Bound element back-references | Done | `elements/types.ts` (`boundElements`), `binding/bindUnbind.ts` |
+| Suggested binding highlight | Done | `binding/renderBindingHighlight.ts` |
+| Minimum arrow size threshold (20px) | Done | `binding/constants.ts` (`MINIMUM_ARROW_SIZE`) |
+| Dark mode for canvas + overlays | Done | `theme/colors.ts`, `theme/useTheme.ts` |
+| Grouping support (`groupIds`) | Done | `groups/groupUtils.ts`, `groups/composables/useGroups.ts` |
 
 ## Gap Analysis (what's missing)
 
-### P0 — Core Arrow Behavior
+> **Note (updated):** Binding system (P0 items 1-4) is now **DONE**. The `BindMode` field (`'inside' | 'orbit' | 'skip'`) is NOT yet implemented — current `FixedPointBinding` has only `elementId` + `fixedPoint`. See `arrow-implementation-plan.md` Phase 5 for binding mode plans.
 
-#### 1. Binding System (arrows attach to shapes)
-**What Excalidraw does:** When an arrow endpoint is dragged near a shape, a `FixedPointBinding` is created linking the arrow to the shape. Moving the shape auto-updates the arrow. This is the single biggest feature gap.
+### P0 — Core Arrow Behavior — DONE
 
-**Data model changes needed:**
+#### 1. Binding System (arrows attach to shapes) — DONE
+**Implemented in:** `features/binding/` — proximity detection, bind/unbind, update on move, suggested binding highlight.
+
+**Actual data model (no `mode` field yet):**
 ```ts
 // elements/types.ts
-type BindMode = 'inside' | 'orbit' | 'skip'
-
 interface FixedPointBinding {
-  elementId: string              // ID of bound shape
-  fixedPoint: [number, number]   // 0.0-1.0 ratio on shape surface
-  mode: BindMode
+  readonly elementId: string
+  readonly fixedPoint: readonly [number, number]  // 0-1 ratio on shape bbox
 }
 
 interface ExcalidrawArrowElement extends ExcalidrawElementBase {
@@ -54,65 +59,30 @@ interface ExcalidrawArrowElement extends ExcalidrawElementBase {
 }
 ```
 
-**Behavior to implement:**
-- Proximity detection: `getHoveredElementForBinding()` — find nearest bindable shape within `maxBindingDistance` (15px at zoom=1, scales with zoom)
-- Binding gap: 5px space between arrowhead and shape edge
-- Orbit mode (default): arrow endpoint projected onto shape edge
-- Inside mode (Alt key): arrow endpoint at exact cursor position inside shape
-- Skip mode (Ctrl key): no binding, arrow passes through
+**Implemented behavior:**
+- Proximity detection: `getHoveredElementForBinding()` in `binding/proximity.ts` — `BASE_BINDING_DISTANCE=15`
+- Binding gap: `BASE_BINDING_GAP=5` in `binding/constants.ts`
 - Bidirectional references: arrow stores `startBinding`/`endBinding`, shape stores `boundElements[]`
-- On shape move/resize: recalculate all bound arrow endpoints
-- On arrow finalize: commit binding
+- On shape move/resize: `updateBoundArrowEndpoints()` in `binding/updateBoundPoints.ts`
+- On arrow finalize: `bindArrowToElement()` in `binding/bindUnbind.ts`
+- **NOT yet implemented:** orbit/inside/skip binding modes, Alt/Ctrl modifiers
 
-**New files:**
-- `features/binding/useBinding.ts` — binding composable
-- `features/binding/bindingStrategy.ts` — strategy pattern for different contexts
-- `features/binding/proximity.ts` — proximity detection, hit testing for bindable shapes
-- `features/binding/updateBoundPoints.ts` — recalculate arrow endpoints when shapes move
+**Implemented files:**
+- `features/binding/types.ts` — `BindableElement`, `BindingEndpoint`, `isBindableElement()`
+- `features/binding/constants.ts` — gap, distance, highlight constants
+- `features/binding/proximity.ts` — proximity detection, edge distance, fixed point conversion
+- `features/binding/bindUnbind.ts` — bind/unbind lifecycle
+- `features/binding/updateBoundPoints.ts` — recalculate arrow endpoints on shape move
+- `features/binding/renderBindingHighlight.ts` — suggested binding highlight
 
-**Integration points:**
-- `useDrawingInteraction.ts` pointermove: check for binding candidates, set `suggestedBinding`
-- `useDrawingInteraction.ts` pointerup: commit binding
-- `useSelectionInteraction.ts` drag: recalculate bound arrows when dragging shapes
-- `useSelectionInteraction.ts` resize: recalculate bound arrows when resizing shapes
-- `renderInteractive.ts`: render suggested binding highlight (blue outline on target shape)
+#### 2. Bound Element Back-References — DONE
+Implemented in `ExcalidrawElementBase.boundElements: readonly BoundElement[]`. Managed by `bindUnbind.ts`.
 
-#### 2. Bound Element Back-References
-**What Excalidraw does:** Every bindable shape stores a `boundElements` array: `{ id: string, type: 'arrow' }[]`. When a shape is deleted, its bound arrows are unbound.
+#### 3. Suggested Binding Preview — DONE
+Implemented via `renderSuggestedBinding()` in `binding/renderBindingHighlight.ts`. Theme-aware highlight colors in `BINDING_COLORS`.
 
-**Data model changes needed:**
-```ts
-// elements/types.ts — add to ExcalidrawElementBase or each bindable type
-boundElements?: readonly { id: string; type: 'arrow' }[]
-```
-
-**Behavior:**
-- On bind: add arrow ref to shape's `boundElements`
-- On unbind: remove arrow ref from shape's `boundElements`
-- On shape delete: unbind all arrows in `boundElements`
-- On arrow delete: remove from all bound shapes' `boundElements`
-
-#### 3. Suggested Binding Preview
-**What Excalidraw does:** During arrow creation/editing, the hovered binding target gets a blue highlight (the `suggestedBinding` in app state).
-
-**New state:**
-```ts
-// In CanvasContainer or a binding composable
-const suggestedBinding = shallowRef<ExcalidrawElement | null>(null)
-```
-
-**Render:** Draw a blue stroke outline around the `suggestedBinding` element on the interactive canvas.
-
-#### 4. Minimum Arrow Size Threshold
-**What Excalidraw does:** Arrows smaller than `MINIMUM_ARROW_SIZE = 20px` are deleted on finalize. Prevents accidental micro-arrows.
-
-**Where:** `useDrawingInteraction.ts:118` — currently checks `width > 1 || height > 1`. Change to:
-```ts
-const MINIMUM_ARROW_SIZE = 20
-const isValid = el.type === 'arrow'
-  ? Math.hypot(el.width, el.height) >= MINIMUM_ARROW_SIZE
-  : el.width > 1 || el.height > 1
-```
+#### 4. Minimum Arrow Size Threshold — DONE
+`MINIMUM_ARROW_SIZE = 20` in `binding/constants.ts`. Applied during arrow creation finalization.
 
 ---
 

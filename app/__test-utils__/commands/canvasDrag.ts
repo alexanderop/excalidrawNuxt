@@ -1,6 +1,6 @@
 import type { BrowserCommand } from 'vitest/node'
 
-declare module '@vitest/browser/context' {
+declare module 'vitest/browser' {
   interface BrowserCommands {
     canvasDrag: (
       selector: string,
@@ -35,8 +35,10 @@ export const canvasDrag: BrowserCommand<[
   const frame = await ctx.frame()
   const steps = options?.steps ?? 5
 
+  interface DragParams { sel: string; sx: number; sy: number; ex: number; ey: number; s: number }
+
   await frame.evaluate(
-    ({ sel, sx, sy, ex, ey, s }: { sel: string; sx: number; sy: number; ex: number; ey: number; s: number }) => {
+    ({ sel, sx, sy, ex, ey, s }: DragParams) => {
       const el = document.querySelector(sel)
       if (!el) throw new Error(`Element "${sel}" not found`)
 

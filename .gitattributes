@@ -1,0 +1,2 @@
+# Screenshot baselines for visual regression tests
+__screenshots__/**/*.png binary

@@ -62,7 +62,7 @@ vi.mock('./api', () => ({
 
 import { fetchUser } from './api'
 
-test('mocked module', () => {
+it('mocked module', () => {
   expect(fetchUser()).toEqual({ id: 1, name: 'Mock' })
 })
 ```
@@ -87,7 +87,7 @@ vi.mock('./calculator', { spy: true })
 
 import { add } from './calculator'
 
-test('spy on module', () => {
+it('spy on module', () => {
   const result = add(1, 2) // Real implementation
   expect(result).toBe(3)
   expect(add).toHaveBeenCalledWith(1, 2)
@@ -97,7 +97,7 @@ test('spy on module', () => {
 ### Manual Mocks (__mocks__)
 
 ```
-src/
+app/
   __mocks__/
     axios.ts      # Mocks 'axios'
   api/
@@ -117,7 +117,7 @@ vi.mock('./api/client')
 Not hoisted - use for dynamic imports:
 
 ```ts
-test('dynamic mock', async () => {
+it('dynamic mock', async () => {
   vi.doMock('./config', () => ({
     apiUrl: 'http://test.local',
   }))
@@ -142,7 +142,7 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-test('timers', () => {
+it('timers', () => {
   const fn = vi.fn()
   setTimeout(fn, 1000)
 
@@ -161,7 +161,7 @@ vi.advanceTimersToNextTimer() // Advance to next timer
 ### Async Timer Methods
 
 ```ts
-test('async timers', async () => {
+it('async timers', async () => {
   vi.useFakeTimers()
 
   let resolved = false
@@ -244,7 +244,7 @@ vi.mock('./module', () => ({
 
 import { getData } from './module'
 
-test('hoisted mock', () => {
+it('hoisted mock', () => {
   mockFn.mockReturnValue('test')
   expect(getData()).toBe('test')
 })

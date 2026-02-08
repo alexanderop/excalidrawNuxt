@@ -1,6 +1,8 @@
 import { shallowRef } from 'vue'
 import { withSetup } from '~/__test-utils__/withSetup'
 import { createTestArrowElement, createTestElement } from '~/__test-utils__/factories/element'
+import { createEventHandlerMap } from '~/__test-utils__/mocks/eventListenerMock'
+import { createCanvasStub } from '~/__test-utils__/mocks/canvasStub'
 import { useDrawingInteraction } from './useDrawingInteraction'
 import { hitTest, getElementAtPosition } from '~/features/selection/hitTest'
 import { getElementBounds, getCommonBounds } from '~/features/selection/bounds'
@@ -14,42 +16,24 @@ import type { ToolType } from './types'
 // ---------- useDrawingInteraction helpers ----------
 
 type EventHandler = (...args: unknown[]) => void
-const eventHandlers = new Map<string, EventHandler>()
+const { handlers, mockUseEventListener } = vi.hoisted(() => {
+  const handlers = new Map<string, EventHandler[]>()
+  const mockUseEventListener = (_target: unknown, event: string, handler: EventHandler): void => {
+    const existing = handlers.get(event) ?? []
+    existing.push(handler)
+    handlers.set(event, existing)
+  }
+  return { handlers, mockUseEventListener }
+})
+const { firePointer, fire, clear } = createEventHandlerMap(handlers)
 
 vi.mock('@vueuse/core', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@vueuse/core')>()
   return {
     ...actual,
-    useEventListener: (_target: unknown, event: string, handler: EventHandler) => {
-      eventHandlers.set(event, handler)
-    },
+    useEventListener: mockUseEventListener,
   }
 })
-
-function firePointer(
-  type: 'pointerdown' | 'pointermove' | 'pointerup',
-  x: number,
-  y: number,
-  opts: { shiftKey?: boolean; button?: number } = {},
-) {
-  const handler = eventHandlers.get(type)
-  if (!handler) throw new Error(`No handler for ${type}`)
-  handler({
-    offsetX: x,
-    offsetY: y,
-    pointerId: 1,
-    button: opts.button ?? 0,
-    shiftKey: opts.shiftKey ?? false,
-  })
-}
-
-function createCanvasStub(): HTMLCanvasElement {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- test stub
-  return {
-    setPointerCapture: vi.fn(),
-    releasePointerCapture: vi.fn(),
-  } as unknown as HTMLCanvasElement
-}
 
 function createDrawingSetup(tool: ToolType = 'arrow') {
   const canvasRef = shallowRef<HTMLCanvasElement | null>(createCanvasStub())
@@ -87,7 +71,7 @@ function getCreatedArrow(onElementCreated: ReturnType<typeof vi.fn>, callIndex =
 describe('arrow tool integration', () => {
   // eslint-disable-next-line vitest/no-hooks -- shared handler map must be reset between tests
   beforeEach(() => {
-    eventHandlers.clear()
+    clear()
   })
 
   describe('drawing an arrow via pointer events', () => {
@@ -240,8 +224,7 @@ describe('arrow tool integration', () => {
 
       using _ctx = withSetup(() => useDrawingInteraction(opts))
 
-      const handler = eventHandlers.get('pointerdown')!
-      handler({ offsetX: 10, offsetY: 10, pointerId: 1, button: 2, shiftKey: false })
+      fire('pointerdown', { offsetX: 10, offsetY: 10, button: 2 })
       firePointer('pointermove', 200, 200)
       firePointer('pointerup', 200, 200)
 
