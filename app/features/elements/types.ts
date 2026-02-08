@@ -4,6 +4,8 @@ export type ArrowheadType = 'arrow' | 'triangle' | 'none'
 
 export type FillStyle = 'hachure' | 'solid' | 'cross-hatch' | 'zigzag' | 'dots' | 'dashed' | 'zigzag-line'
 
+export type GroupId = string
+
 export type ExcalidrawElementType = 'rectangle' | 'ellipse' | 'diamond' | 'arrow'
 
 export interface FixedPointBinding {
@@ -34,6 +36,7 @@ export interface ExcalidrawElementBase {
   versionNonce: number
   isDeleted: boolean
   boundElements: readonly BoundElement[]
+  readonly groupIds: readonly GroupId[]
 }
 
 export interface ExcalidrawRectangleElement extends ExcalidrawElementBase {

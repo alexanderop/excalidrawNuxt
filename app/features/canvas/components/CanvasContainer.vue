@@ -13,6 +13,8 @@ import { useSelection, useSelectionInteraction } from '~/features/selection'
 import { useMultiPointCreation } from '~/features/linear-editor/useMultiPointCreation'
 import { useLinearEditor } from '~/features/linear-editor/useLinearEditor'
 import type { ExcalidrawElement } from '~/features/elements/types'
+import { useGroups } from '~/features/groups/composables/useGroups'
+import { cleanupAfterDelete } from '~/features/groups/groupUtils'
 import DrawingToolbar from '~/features/tools/components/DrawingToolbar.vue'
 
 defineExpose({})
@@ -28,7 +30,7 @@ const { width, height } = useElementSize(containerRef)
 const { scrollX, scrollY, zoom, zoomBy, panBy, toScene } = useViewport()
 
 // Domain state
-const { elements, addElement } = useElements()
+const { elements, addElement, replaceElements } = useElements()
 const { activeTool, setTool, onBeforeToolChange } = useToolStore()
 
 const {
@@ -54,6 +56,21 @@ const { staticCtx, newElementCtx, interactiveCtx, staticRc, newElementRc } = use
 
 // Stable deferred dirty callbacks — safe no-ops until bind()
 const dirty = createDirtyFlags()
+
+const {
+  selectedGroupIds,
+  groupSelection,
+  ungroupSelection,
+  expandSelectionForGroups,
+} = useGroups({
+  elements,
+  selectedIds,
+  selectedElements: () => selectedElements.value,
+  replaceSelection,
+  replaceElements,
+  markStaticDirty: dirty.markStaticDirty,
+  markInteractiveDirty: dirty.markInteractiveDirty,
+})
 
 // Panning (only needs canvasRef, panBy, zoomBy, activeTool — all available early)
 const { cursorClass, spaceHeld, isPanning } = usePanning({
@@ -134,6 +151,10 @@ const { selectionBox, cursorStyle } = useSelectionInteraction({
   setTool,
   editingLinearElement,
   onDoubleClickArrow: enterLinearEditor,
+  expandSelectionForGroups,
+  onGroupAction: groupSelection,
+  onUngroupAction: ungroupSelection,
+  onDeleteCleanup: (deletedIds) => cleanupAfterDelete(elements.value, deletedIds),
 })
 
 // Scene renderer (render callbacks + dirty watcher + animation controller)
@@ -152,6 +173,7 @@ const { markStaticDirty, markNewElementDirty, markInteractiveDirty, animations }
   multiElement,
   lastCursorPoint,
   suggestedBindings,
+  selectedGroupIds,
 })
 
 // Bind real renderer callbacks to deferred dirty flags

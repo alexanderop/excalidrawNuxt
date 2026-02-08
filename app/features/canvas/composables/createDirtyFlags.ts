@@ -1,4 +1,4 @@
-function noop() {}
+function noop(): void {}
 
 interface DirtyFlagImpl {
   markStaticDirty: () => void
@@ -6,7 +6,14 @@ interface DirtyFlagImpl {
   markNewElementDirty: () => void
 }
 
-export function createDirtyFlags() {
+export interface DirtyFlags {
+  markStaticDirty: () => void
+  markInteractiveDirty: () => void
+  markNewElementDirty: () => void
+  bind: (impl: DirtyFlagImpl) => void
+}
+
+export function createDirtyFlags(): DirtyFlags {
   let _static = noop
   let _interactive = noop
   let _newElement = noop

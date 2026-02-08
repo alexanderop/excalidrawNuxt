@@ -55,6 +55,10 @@ interface UseSelectionInteractionOptions {
   editingLinearElement?: ShallowRef<ExcalidrawArrowElement | null>
   /** Called when user double-clicks an arrow element */
   onDoubleClickArrow?: (element: ExcalidrawArrowElement) => void
+  expandSelectionForGroups?: () => void
+  onGroupAction?: () => void
+  onUngroupAction?: () => void
+  onDeleteCleanup?: (deletedIds: ReadonlySet<string>) => void
 }
 
 export function useSelectionInteraction(options: UseSelectionInteractionOptions): UseSelectionInteractionReturn {
@@ -116,6 +120,7 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
     if (!e.shiftKey && !isSelected(hitElement.id)) {
       select(hitElement.id)
     }
+    options.expandSelectionForGroups?.()
 
     interaction = {
       type: 'dragging',
@@ -264,6 +269,7 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
     }
 
     replaceSelection(ids)
+    options.expandSelectionForGroups?.()
   }
 
   function unbindBeforeDelete(selected: readonly ExcalidrawElement[]): void {
@@ -283,8 +289,17 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
     for (const el of selected) {
       mutateElement(el, { isDeleted: true })
     }
+    const deletedIds = new Set(selected.map(el => el.id))
+    options.onDeleteCleanup?.(deletedIds)
     clearSelection()
     markSceneDirty()
+  }
+
+  function getModifierAction(e: KeyboardEvent): (() => void) | null {
+    if (e.key === 'a') return () => { selectAll(); markInteractiveDirty() }
+    if (e.key === 'g' && !e.shiftKey) return () => options.onGroupAction?.()
+    if (e.key === 'G' || (e.key === 'g' && e.shiftKey)) return () => options.onUngroupAction?.()
+    return null
   }
 
   function handleKeyDown(e: KeyboardEvent): void {
@@ -304,11 +319,13 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
       return
     }
 
-    if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
-      e.preventDefault()
-      selectAll()
-      markInteractiveDirty()
-      return
+    if (e.ctrlKey || e.metaKey) {
+      const action = getModifierAction(e)
+      if (action) {
+        e.preventDefault()
+        action()
+        return
+      }
     }
 
     handleArrowKey(e, selected)

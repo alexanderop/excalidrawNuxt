@@ -1,6 +1,6 @@
 import { shallowRef } from 'vue'
 import { withSetup } from '~/__test-utils__/withSetup'
-import { createTestArrowElement } from '~/__test-utils__/factories/element'
+import { createTestArrowElement, createTestElement } from '~/__test-utils__/factories/element'
 import { useDrawingInteraction } from './useDrawingInteraction'
 import { hitTest, getElementAtPosition } from '~/features/selection/hitTest'
 import { getElementBounds, getCommonBounds } from '~/features/selection/bounds'
@@ -463,14 +463,10 @@ describe('arrow tool integration', () => {
         width: 100, height: 50,
       })
 
-      const rect: ExcalidrawElement = {
+      const rect = createTestElement({
         id: 'rect-1',
-        type: 'rectangle',
         x: 0, y: 0, width: 50, height: 50,
-        angle: 0, strokeColor: '#000', backgroundColor: 'transparent',
-        fillStyle: 'hachure', strokeWidth: 2, roughness: 1, opacity: 100,
-        seed: 1, versionNonce: 1, isDeleted: false, boundElements: [],
-      }
+      })
 
       expect(getCommonBounds([rect, arrow])).toEqual([0, 0, 300, 250])
     })
@@ -557,14 +553,10 @@ describe('arrow tool integration', () => {
     })
 
     it('selects arrow when mixed with shapes', () => {
-      const rect: ExcalidrawElement = {
+      const rect = createTestElement({
         id: 'rect-1',
-        type: 'rectangle',
         x: 0, y: 0, width: 100, height: 100,
-        angle: 0, strokeColor: '#000', backgroundColor: 'transparent',
-        fillStyle: 'hachure', strokeWidth: 2, roughness: 1, opacity: 100,
-        seed: 1, versionNonce: 1, isDeleted: false, boundElements: [],
-      }
+      })
       const arrow = createTestArrowElement({
         id: 'arrow-1',
         x: 0, y: 50,

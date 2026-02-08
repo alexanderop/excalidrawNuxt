@@ -22,7 +22,7 @@
 
 | Spec | File | Status |
 |------|------|--------|
-| Grouping Feature | [specs/grouping-feature.md](specs/grouping-feature.md) | Draft — not yet implemented |
+| Grouping Feature | [specs/grouping-feature.md](specs/grouping-feature.md) | V1 implemented — flat groupIds, Cmd+G/Cmd+Shift+G, group borders, delete cleanup |
 
 ## Reference
 

@@ -1,6 +1,6 @@
 # Grouping Feature Spec
 
-> Status: **Draft** — implement later.
+> Status: **V1 Implemented** — flat groupIds model, no nested groups.
 
 ## Overview
 

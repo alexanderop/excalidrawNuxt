@@ -33,6 +33,7 @@ export function createElement(
     versionNonce: randomVersionNonce(),
     isDeleted: false,
     boundElements: [],
+    groupIds: [],
     ...overrides,
   }
 

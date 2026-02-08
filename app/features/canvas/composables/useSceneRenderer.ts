@@ -46,6 +46,8 @@ interface UseSceneRendererOptions {
   lastCursorPoint?: ShallowRef<Point | null>
   // Binding highlights
   suggestedBindings?: ShallowRef<readonly ExcalidrawElement[]>
+  // Group selection
+  selectedGroupIds?: ShallowRef<ReadonlySet<string>>
 }
 
 interface UseSceneRendererReturn {
@@ -113,6 +115,7 @@ export function useSceneRenderer(options: UseSceneRendererOptions): UseSceneRend
     multiElement,
     lastCursorPoint,
     suggestedBindings,
+    selectedGroupIds,
   } = options
   const { scrollX, scrollY, zoom, width, height } = viewport
 
@@ -155,6 +158,7 @@ export function useSceneRenderer(options: UseSceneRendererOptions): UseSceneRend
         buildLinearEditorState(editingLinearElement, editingPointIndices, editingHoveredMidpoint),
         buildMultiPointState(multiElement, lastCursorPoint),
         suggestedBindings?.value ?? null,
+        selectedGroupIds?.value,
       )
       ctx.restore()
     },

@@ -25,6 +25,7 @@ const BASE_PROPS: Omit<ExcalidrawElementBase, 'type'> = {
   versionNonce: 67_890,
   isDeleted: false,
   boundElements: [],
+  groupIds: [],
 }
 
 export function createTestElement(overrides?: Partial<ExcalidrawRectangleElement> & { type?: 'rectangle' }): ExcalidrawRectangleElement

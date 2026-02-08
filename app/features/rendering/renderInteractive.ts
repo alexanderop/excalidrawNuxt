@@ -15,6 +15,7 @@ import {
   renderMidpointIndicator,
 } from '~/features/linear-editor/renderLinearEditor'
 import { renderSuggestedBinding } from '~/features/binding'
+import { getCommonBounds } from '~/features/selection/bounds'
 
 export interface LinearEditorRenderState {
   element: ExcalidrawArrowElement
@@ -90,6 +91,28 @@ export function renderSelectionBorder(
   ctx.restore()
 }
 
+function renderGroupSelectionBorder(
+  ctx: CanvasRenderingContext2D,
+  groupElements: readonly ExcalidrawElement[],
+  zoom: number,
+): void {
+  const bounds = getCommonBounds(groupElements)
+  if (!bounds) return
+
+  const [x1, y1, x2, y2] = bounds
+  const padding = SELECTION_PADDING / zoom
+
+  ctx.save()
+  applySelectionStroke(ctx, zoom)
+  ctx.strokeRect(
+    x1 - padding,
+    y1 - padding,
+    x2 - x1 + 2 * padding,
+    y2 - y1 + 2 * padding,
+  )
+  ctx.restore()
+}
+
 function traceHandlePath(
   ctx: CanvasRenderingContext2D,
   type: string,
@@ -148,6 +171,47 @@ export function renderSelectionBox(
   ctx.restore()
 }
 
+function isElementInSelectedGroup(
+  element: ExcalidrawElement,
+  selectedGroupIds: ReadonlySet<string> | undefined,
+): boolean {
+  if (!selectedGroupIds) return false
+  return element.groupIds.some(gid => selectedGroupIds.has(gid))
+}
+
+function renderSelectedElements(
+  ctx: CanvasRenderingContext2D,
+  selectedElements: readonly ExcalidrawElement[],
+  zoom: number,
+  linearEditorState: LinearEditorRenderState | null | undefined,
+  selectedGroupIds: ReadonlySet<string> | undefined,
+): void {
+  for (const el of selectedElements) {
+    if (linearEditorState && el.id === linearEditorState.element.id) continue
+    if (isElementInSelectedGroup(el, selectedGroupIds)) continue
+    renderSelectionBorder(ctx, el, zoom)
+    renderTransformHandles(ctx, getTransformHandles(el, zoom), zoom)
+  }
+
+  if (!selectedGroupIds || selectedGroupIds.size === 0) return
+  for (const groupId of selectedGroupIds) {
+    const groupElements = selectedElements.filter(el => el.groupIds.includes(groupId))
+    renderGroupSelectionBorder(ctx, groupElements, zoom)
+  }
+}
+
+function renderLinearEditorOverlays(
+  ctx: CanvasRenderingContext2D,
+  state: LinearEditorRenderState,
+  zoom: number,
+): void {
+  renderSelectionBorder(ctx, state.element, zoom)
+  renderPointHandles(ctx, state.element, state.selectedPointIndices, zoom)
+  if (state.hoveredMidpointIndex !== null) {
+    renderMidpointIndicator(ctx, state.element, state.hoveredMidpointIndex, zoom)
+  }
+}
+
 export function renderInteractiveScene(
   ctx: CanvasRenderingContext2D,
   selectedElements: readonly ExcalidrawElement[],
@@ -156,36 +220,24 @@ export function renderInteractiveScene(
   linearEditorState?: LinearEditorRenderState | null,
   multiPointState?: MultiPointRenderState | null,
   suggestedBindings?: readonly ExcalidrawElement[] | null,
+  selectedGroupIds?: ReadonlySet<string>,
 ): void {
-  // Render binding highlight before selection overlays
   if (suggestedBindings) {
     for (const el of suggestedBindings) {
       renderSuggestedBinding(ctx, el, zoom)
     }
   }
 
-  for (const el of selectedElements) {
-    // Skip selection border for element being edited in linear editor
-    if (linearEditorState && el.id === linearEditorState.element.id) continue
-    renderSelectionBorder(ctx, el, zoom)
-    const handles = getTransformHandles(el, zoom)
-    renderTransformHandles(ctx, handles, zoom)
-  }
+  renderSelectedElements(ctx, selectedElements, zoom, linearEditorState, selectedGroupIds)
 
   if (selectionBox) {
     renderSelectionBox(ctx, selectionBox, zoom)
   }
 
-  // Render linear editor overlays
   if (linearEditorState) {
-    renderSelectionBorder(ctx, linearEditorState.element, zoom)
-    renderPointHandles(ctx, linearEditorState.element, linearEditorState.selectedPointIndices, zoom)
-    if (linearEditorState.hoveredMidpointIndex !== null) {
-      renderMidpointIndicator(ctx, linearEditorState.element, linearEditorState.hoveredMidpointIndex, zoom)
-    }
+    renderLinearEditorOverlays(ctx, linearEditorState, zoom)
   }
 
-  // Render multi-point creation overlays
   if (multiPointState) {
     renderRubberBand(ctx, multiPointState.element, multiPointState.cursorPoint, zoom)
   }
