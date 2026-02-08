@@ -23,6 +23,7 @@
 | Spec | File | Status |
 |------|------|--------|
 | Grouping Feature | [specs/grouping-feature.md](specs/grouping-feature.md) | V1 implemented — flat groupIds, Cmd+G/Cmd+Shift+G, group borders, delete cleanup |
+| Arrow Implementation Plan | [specs/arrow-implementation-plan.md](specs/arrow-implementation-plan.md) | 10-phase plan: data model → curved → arrowheads → stroke → binding → elbow → creation → UI → cache → text |
 
 ## Reference
 

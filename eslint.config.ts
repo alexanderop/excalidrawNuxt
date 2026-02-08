@@ -127,8 +127,12 @@ export default defineConfigWithVueTs(
             target: './app/features',
             from: './app/pages',
           },
-          // Add cross-feature isolation zones here as features are created:
-          // { target: './app/features/drawing', from: './app/features', except: ['./drawing'] },
+          // Cross-feature isolation: features cannot import from each other
+          { target: './app/features/groups', from: './app/features', except: ['./groups'] },
+          { target: './app/features/linear-editor', from: './app/features', except: ['./linear-editor'] },
+          { target: './app/features/rendering', from: './app/features', except: ['./rendering'] },
+          { target: './app/features/selection', from: './app/features', except: ['./selection'] },
+          { target: './app/features/tools', from: './app/features', except: ['./tools'] },
         ],
       }],
     },

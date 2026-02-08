@@ -58,6 +58,25 @@ The `vue/multi-word-component-names` rule checks the **filename**, not `defineOp
 - Rename to multi-word: `DrawingToolbar.vue`, `MainToolbar.vue`
 - Or add to `ignores` array in `eslint.config.ts` (only for shared/generic components)
 
+## Cross-Feature Import Isolation
+
+Features in `app/features/` are independent modules. ESLint enforces that no feature imports from another feature via `import-x/no-restricted-paths` zones.
+
+**Current features with isolation zones:**
+- `groups`, `linear-editor`, `rendering`, `selection`, `tools`
+
+Each zone allows imports only from the feature's own directory:
+```typescript
+{ target: './app/features/groups', from: './app/features', except: ['./groups'] },
+```
+
+**Adding a new feature:** Add a matching zone in `eslint.config.ts` under the "Cross-feature isolation" comment:
+```typescript
+{ target: './app/features/<name>', from: './app/features', except: ['./<name>'] },
+```
+
+Features can import from shared code (`app/composables/`, `app/utils/`, etc.) but never from each other. If two features need shared logic, extract it to `app/composables/` or `app/utils/`.
+
 ## Banned Patterns (enforced by lint)
 
 | Pattern | Alternative |
