@@ -9,6 +9,7 @@ import { createDirtyFlags } from '../composables/createDirtyFlags'
 import { useElements } from '~/features/elements/useElements'
 import { useToolStore } from '~/features/tools/useTool'
 import { useDrawingInteraction } from '~/features/tools/useDrawingInteraction'
+import { useTextInteraction } from '~/features/tools/useTextInteraction'
 import { useSelection, useSelectionInteraction } from '~/features/selection'
 import { useMultiPointCreation } from '~/features/linear-editor/useMultiPointCreation'
 import { useLinearEditor } from '~/features/linear-editor/useLinearEditor'
@@ -31,6 +32,7 @@ const containerRef = useTemplateRef<HTMLDivElement>('container')
 const staticCanvasRef = useTemplateRef<HTMLCanvasElement>('staticCanvas')
 const newElementCanvasRef = useTemplateRef<HTMLCanvasElement>('newElementCanvas')
 const interactiveCanvasRef = useTemplateRef<HTMLCanvasElement>('interactiveCanvas')
+const textEditorContainerRef = useTemplateRef<HTMLDivElement>('textEditorContainer')
 
 // Viewport & size
 const { width, height } = useElementSize(containerRef)
@@ -120,10 +122,30 @@ const {
   select,
 })
 
+// Text editing
+const { editingTextElement, submitTextEditor } = useTextInteraction({
+  canvasRef: interactiveCanvasRef,
+  textEditorContainerRef,
+  activeTool,
+  setTool,
+  toScene,
+  zoom,
+  scrollX,
+  scrollY,
+  elements,
+  addElement,
+  select,
+  markStaticDirty: dirty.markStaticDirty,
+  markInteractiveDirty: dirty.markInteractiveDirty,
+  spaceHeld,
+  isPanning,
+})
+
 // Finalize in-progress operations when user switches tools
 onBeforeToolChange(() => {
   if (multiElement.value) finalizeMultiPoint()
   if (editingLinearElement.value) exitLinearEditor()
+  if (editingTextElement.value) submitTextEditor()
 })
 
 // Drawing & selection own their refs internally
@@ -181,6 +203,7 @@ const { markStaticDirty, markNewElementDirty, markInteractiveDirty, animations }
   lastCursorPoint,
   suggestedBindings,
   selectedGroupIds,
+  editingTextElement,
 })
 
 // Bind real renderer callbacks to deferred dirty flags
@@ -196,6 +219,8 @@ const combinedCursorClass = computed(() => {
   if (multiElement.value) return 'cursor-crosshair'
   // Linear editor mode → pointer for handles
   if (editingLinearElement.value) return 'cursor-pointer'
+  // Text tool cursor (crosshair like Excalidraw)
+  if (activeTool.value === 'text') return 'cursor-crosshair'
   // Selection interaction cursor only applies in selection tool mode
   if (activeTool.value === 'selection' && cursorStyle.value !== 'default') {
     return `cursor-${cursorStyle.value}`
@@ -223,6 +248,10 @@ const combinedCursorClass = computed(() => {
       ref="interactiveCanvas"
       data-testid="interactive-canvas"
       class="absolute inset-0 z-[2]"
+    />
+    <div
+      ref="textEditorContainer"
+      class="pointer-events-none absolute inset-0 z-[3]"
     />
     <DrawingToolbar />
   </div>

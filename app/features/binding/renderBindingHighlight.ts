@@ -17,6 +17,7 @@ export function renderSuggestedBinding(
   theme: Theme,
 ): void {
   if (element.type === 'arrow') return
+  if (element.type === 'text') return
 
   const padding = BINDING_HIGHLIGHT_PADDING / zoom
   const lineWidth = BINDING_HIGHLIGHT_LINE_WIDTH / zoom

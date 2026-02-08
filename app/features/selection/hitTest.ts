@@ -28,13 +28,22 @@ export function hitTest(
   }
 
   // Phase 2: precise shape test
-  if (element.type === 'arrow') return hitTestArrow(point, element, threshold)
-  if (element.type === 'rectangle') return hitTestRectangle(point, element, threshold)
-  if (element.type === 'ellipse') return hitTestEllipse(point, element, threshold)
-  if (element.type === 'diamond') return hitTestDiamond(point, element, threshold)
+  return hitTestShape(point, element, threshold)
+}
 
-  const _exhaustive: never = element
-  throw new Error(`Unhandled element type: ${String(_exhaustive)}`)
+function hitTestShape(point: Point, element: ExcalidrawElement, threshold: number): boolean {
+  switch (element.type) {
+    case 'arrow': { return hitTestArrow(point, element, threshold)
+    }
+    case 'rectangle': { return hitTestRectangle(point, element, threshold)
+    }
+    case 'ellipse': { return hitTestEllipse(point, element, threshold)
+    }
+    case 'diamond': { return hitTestDiamond(point, element, threshold)
+    }
+    case 'text': { return hitTestRectangle(point, element, threshold)
+    }
+  }
 }
 
 export function getElementAtPosition(

@@ -1,13 +1,17 @@
 import { generateId, randomInteger, randomVersionNonce } from '~/shared/random'
 import { createPoint } from '~/shared/math'
-import type { ExcalidrawElement, ExcalidrawElementType, ExcalidrawArrowElement } from './types'
+import type { ExcalidrawElement, ExcalidrawElementType } from './types'
 import {
   DEFAULT_BG_COLOR,
   DEFAULT_FILL_STYLE,
+  DEFAULT_FONT_FAMILY,
+  DEFAULT_FONT_SIZE,
+  DEFAULT_LINE_HEIGHT,
   DEFAULT_OPACITY,
   DEFAULT_ROUGHNESS,
   DEFAULT_STROKE_COLOR,
   DEFAULT_STROKE_WIDTH,
+  DEFAULT_TEXT_ALIGN,
 } from './constants'
 
 export function createElement(
@@ -37,6 +41,20 @@ export function createElement(
     ...overrides,
   }
 
+  if (type === 'text') {
+    return {
+      ...base,
+      type: 'text',
+      text: '',
+      originalText: '',
+      fontSize: DEFAULT_FONT_SIZE,
+      fontFamily: DEFAULT_FONT_FAMILY,
+      textAlign: DEFAULT_TEXT_ALIGN,
+      lineHeight: DEFAULT_LINE_HEIGHT,
+      autoResize: true,
+    }
+  }
+
   if (type === 'arrow') {
     return {
       ...base,
@@ -46,7 +64,7 @@ export function createElement(
       endArrowhead: 'arrow',
       startBinding: null,
       endBinding: null,
-    } satisfies ExcalidrawArrowElement
+    }
   }
 
   if (type === 'rectangle') return { ...base, type }

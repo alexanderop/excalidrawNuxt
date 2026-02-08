@@ -35,6 +35,10 @@ function elementToRoughOptions(element: ExcalidrawElement, theme: Theme): Option
 }
 
 function generateDrawable(element: ExcalidrawElement, theme: Theme): Drawable {
+  if (element.type === 'text') {
+    throw new Error('Text elements should not use RoughJS shape generation')
+  }
+
   const { width, height } = element
   const options = elementToRoughOptions(element, theme)
 

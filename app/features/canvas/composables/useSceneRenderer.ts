@@ -9,7 +9,7 @@ import { renderScene } from '~/features/rendering/renderScene'
 import { renderElement } from '~/features/rendering/renderElement'
 import { renderInteractiveScene } from '~/features/rendering/renderInteractive'
 import type { LinearEditorRenderState, MultiPointRenderState } from '~/features/rendering/renderInteractive'
-import type { ExcalidrawElement, ExcalidrawArrowElement } from '~/features/elements/types'
+import type { ExcalidrawElement, ExcalidrawArrowElement, ExcalidrawTextElement } from '~/features/elements/types'
 import type { Box, Point } from '~/shared/math'
 import { useTheme, resolveColor } from '~/features/theme'
 
@@ -49,6 +49,8 @@ interface UseSceneRendererOptions {
   suggestedBindings?: ShallowRef<readonly ExcalidrawElement[]>
   // Group selection
   selectedGroupIds?: ShallowRef<ReadonlySet<string>>
+  // Text editing — hide element being edited (textarea overlay replaces canvas-drawn text)
+  editingTextElement?: ShallowRef<ExcalidrawTextElement | null>
 }
 
 interface UseSceneRendererReturn {
@@ -117,6 +119,7 @@ export function useSceneRenderer(options: UseSceneRendererOptions): UseSceneRend
     lastCursorPoint,
     suggestedBindings,
     selectedGroupIds,
+    editingTextElement,
   } = options
   const { scrollX, scrollY, zoom, width, height } = viewport
 
@@ -138,7 +141,11 @@ export function useSceneRenderer(options: UseSceneRendererOptions): UseSceneRend
       renderGrid(ctx, scrollX.value, scrollY.value, zoom.value, width.value, height.value, theme.value)
       const rc = layers.staticRc.value
       if (rc) {
-        renderScene(ctx, rc, elements.value, scrollX.value, scrollY.value, zoom.value, width.value, height.value, theme.value)
+        const editingId = editingTextElement?.value?.id
+        const visibleElements = editingId
+          ? elements.value.filter(el => el.id !== editingId)
+          : elements.value
+        renderScene(ctx, rc, visibleElements, scrollX.value, scrollY.value, zoom.value, width.value, height.value, theme.value)
       }
     },
     onRenderNewElement(ctx) {

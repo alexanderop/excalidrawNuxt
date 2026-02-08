@@ -6,7 +6,9 @@ export type FillStyle = 'hachure' | 'solid' | 'cross-hatch' | 'zigzag' | 'dots' 
 
 export type GroupId = string
 
-export type ExcalidrawElementType = 'rectangle' | 'ellipse' | 'diamond' | 'arrow'
+export type ExcalidrawElementType = 'rectangle' | 'ellipse' | 'diamond' | 'arrow' | 'text'
+
+export type TextAlign = 'left' | 'center' | 'right'
 
 export interface FixedPointBinding {
   readonly elementId: string
@@ -61,8 +63,20 @@ export interface ExcalidrawArrowElement extends ExcalidrawElementBase {
   endBinding: FixedPointBinding | null
 }
 
+export interface ExcalidrawTextElement extends ExcalidrawElementBase {
+  readonly type: 'text'
+  text: string
+  originalText: string
+  fontSize: number
+  fontFamily: number
+  textAlign: TextAlign
+  lineHeight: number
+  autoResize: boolean
+}
+
 export type ExcalidrawElement =
   | ExcalidrawRectangleElement
   | ExcalidrawEllipseElement
   | ExcalidrawDiamondElement
   | ExcalidrawArrowElement
+  | ExcalidrawTextElement
