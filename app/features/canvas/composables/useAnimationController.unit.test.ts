@@ -26,7 +26,6 @@ describe('useAnimationController', () => {
 
     originalRaf = globalThis.requestAnimationFrame
     originalCaf = globalThis.cancelAnimationFrame
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- test stub: mocking RAF
     globalThis.requestAnimationFrame = vi.fn((cb: FrameRequestCallback) => {
       rafCallbacks.push(() => cb(nowValue))
       return rafCallbacks.length

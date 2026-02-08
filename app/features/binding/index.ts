@@ -1,5 +1,5 @@
-export { isBindableElement } from '@excalidraw-vue/core/binding'
-export type { BindableElement, BindingEndpoint } from '@excalidraw-vue/core/binding'
+export { isBindableElement } from './types'
+export type { BindableElement, BindingEndpoint } from './types'
 export {
   BASE_BINDING_GAP,
   BASE_BINDING_DISTANCE,
@@ -7,21 +7,23 @@ export {
   BINDING_COLORS,
   BINDING_HIGHLIGHT_LINE_WIDTH,
   BINDING_HIGHLIGHT_PADDING,
-} from '@excalidraw-vue/core/binding'
+} from './constants'
 export {
   getHoveredElementForBinding,
   distanceToShapeEdge,
   computeFixedPoint,
   getPointFromFixedPoint,
-} from '@excalidraw-vue/core/binding'
+} from './proximity'
 export {
   bindArrowToElement,
   unbindArrowEndpoint,
   unbindAllArrowsFromShape,
   unbindArrow,
-} from '@excalidraw-vue/core/binding'
+  findBindableElement,
+} from './bindUnbind'
 export {
   updateBoundArrowEndpoints,
   updateArrowEndpoint,
-} from '@excalidraw-vue/core/binding'
-export { renderSuggestedBinding } from '@excalidraw-vue/core/binding'
+  updateArrowBindings,
+} from './updateBoundPoints'
+export { renderSuggestedBinding } from './renderBindingHighlight'

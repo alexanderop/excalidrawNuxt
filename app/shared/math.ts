@@ -8,7 +8,7 @@
  * live here since they have no upstream equivalent.
  */
 
-// Re-export from @excalidraw/math via the workspace package
+// Re-export from @excalidraw/math directly
 export {
   pointFrom,
   pointCenter,
@@ -19,19 +19,18 @@ export {
   distanceToLineSegment,
   lineSegment,
   clamp,
-  radiansFrom,
-} from '@excalidraw-vue/core/math'
+} from '@excalidraw/math'
 
 export type {
   GlobalPoint,
   LocalPoint,
   Radians,
   LineSegment,
-} from '@excalidraw-vue/core/math'
+} from '@excalidraw/math'
 
 // Local imports for use within this file
-import { pointFrom } from '@excalidraw-vue/core/math'
-import type { LocalPoint } from '@excalidraw-vue/core/math'
+import { pointFrom } from '@excalidraw/math'
+import type { LocalPoint } from '@excalidraw/math'
 
 export const TWO_PI = Math.PI * 2
 

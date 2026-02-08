@@ -123,6 +123,5 @@ function createEntry<S extends object>(animation: AnimationFn<S>): AnimationEntr
 
 /** Safe narrowing: closure-based state storage guarantees the runtime type matches S. */
 function narrowState<S extends object>(value: object | undefined): S | undefined {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- closure guarantees S
   return value as S | undefined
 }

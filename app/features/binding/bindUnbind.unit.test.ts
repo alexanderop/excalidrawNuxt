@@ -1,4 +1,5 @@
 import { createTestElement, createTestArrowElement } from '~/__test-utils__/factories/element'
+import type { FixedPointBinding } from '~/features/elements/types'
 import { bindArrowToElement, unbindArrowEndpoint, unbindAllArrowsFromShape, unbindArrow, findBindableElement } from './bindUnbind'
 
 describe('bindArrowToElement', () => {
@@ -11,7 +12,7 @@ describe('bindArrowToElement', () => {
 
     expect(arrow.startBinding).not.toBeNull()
     expect(arrow.startBinding?.elementId).toBe('rect1')
-    expect(arrow.startBinding?.fixedPoint).toEqual([0.5, 0.5])
+    expect((arrow.startBinding as FixedPointBinding).fixedPoint).toEqual([0.5, 0.5])
   })
 
   it('sets end binding on arrow', () => {
@@ -23,7 +24,7 @@ describe('bindArrowToElement', () => {
 
     expect(arrow.endBinding).not.toBeNull()
     expect(arrow.endBinding?.elementId).toBe('rect1')
-    expect(arrow.endBinding?.fixedPoint).toEqual([1, 0.5])
+    expect((arrow.endBinding as FixedPointBinding).fixedPoint).toEqual([1, 0.5])
   })
 
   it('adds arrow to target boundElements', () => {
@@ -34,7 +35,7 @@ describe('bindArrowToElement', () => {
     bindArrowToElement(arrow, 'start', rect, fixedPoint)
 
     expect(rect.boundElements).toHaveLength(1)
-    expect(rect.boundElements[0]).toEqual({ id: 'arrow1', type: 'arrow' })
+    expect(rect.boundElements![0]).toEqual({ id: 'arrow1', type: 'arrow' })
   })
 
   it('does not duplicate boundElements entry on repeated bind', () => {
@@ -88,7 +89,7 @@ describe('unbindArrowEndpoint', () => {
     unbindArrowEndpoint(arrow, 'start', [arrow, rect])
 
     expect(arrow.startBinding).toBeNull()
-    expect(rect.boundElements).toHaveLength(0)
+    expect(rect.boundElements ?? []).toHaveLength(0)
   })
 
   it('handles missing shape gracefully', () => {
@@ -133,7 +134,7 @@ describe('unbindAllArrowsFromShape', () => {
     // Should not throw
     unbindAllArrowsFromShape(rect, [rect])
 
-    expect(rect.boundElements).toHaveLength(0)
+    expect(rect.boundElements ?? []).toHaveLength(0)
   })
 })
 

@@ -78,6 +78,29 @@ describe('createElement', () => {
     expect(el.opacity).toBe(50)
   })
 
+  describe('official type fields', () => {
+    it('includes version, index, frameId, locked, updated, link', () => {
+      const el = createElement('rectangle', 0, 0)
+      expect(el.version).toBe(0)
+      expect(el.index).toBeNull()
+      expect(el.frameId).toBeNull()
+      expect(el.locked).toBe(false)
+      expect(typeof el.updated).toBe('number')
+      expect(el.link).toBeNull()
+    })
+
+    it('includes strokeStyle and roundness', () => {
+      const el = createElement('rectangle', 0, 0)
+      expect(el.strokeStyle).toBe('solid')
+      expect(el.roundness).toBeNull()
+    })
+
+    it('sets boundElements to null', () => {
+      const el = createElement('rectangle', 0, 0)
+      expect(el.boundElements).toBeNull()
+    })
+  })
+
   describe('type-specific properties', () => {
     it('creates rectangle with correct type', () => {
       const el = createElement('rectangle', 10, 20)
@@ -111,15 +134,22 @@ describe('createElement', () => {
       expect(el.endBinding).toBeNull()
     })
 
-    it('initializes boundElements as empty array for all types', () => {
+    it('creates arrow with elbowed and lastCommittedPoint', () => {
+      const el = createElement('arrow', 0, 0)
+      assertIsArrow(el)
+      expect(el.elbowed).toBe(false)
+      expect(el.lastCommittedPoint).toBeNull()
+    })
+
+    it('initializes boundElements as null for all types', () => {
       const rect = createElement('rectangle', 0, 0)
       const ellipse = createElement('ellipse', 0, 0)
       const diamond = createElement('diamond', 0, 0)
       const arrow = createElement('arrow', 0, 0)
-      expect(rect.boundElements).toEqual([])
-      expect(ellipse.boundElements).toEqual([])
-      expect(diamond.boundElements).toEqual([])
-      expect(arrow.boundElements).toEqual([])
+      expect(rect.boundElements).toBeNull()
+      expect(ellipse.boundElements).toBeNull()
+      expect(diamond.boundElements).toBeNull()
+      expect(arrow.boundElements).toBeNull()
     })
 
     it('initializes groupIds as empty array for all types', () => {

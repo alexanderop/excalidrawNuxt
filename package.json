@@ -2,9 +2,6 @@
   "name": "excalidrawNuxt",
   "type": "module",
   "private": true,
-  "workspaces": [
-    "packages/*"
-  ],
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
@@ -31,7 +28,7 @@
     ]
   },
   "dependencies": {
-    "@excalidraw-vue/core": "workspace:*",
+    "@excalidraw/common": "0.18.0-f0063e113",
     "@excalidraw/element": "0.18.0-f0063e113",
     "@excalidraw/math": "0.18.0-f0063e113",
     "@tailwindcss/vite": "^4.1.18",
@@ -67,8 +64,5 @@
     "typescript": "^5.9.3",
     "vitest": "^4.0.0",
     "vitest-browser-vue": "^2.0.0"
-  },
-  "patchedDependencies": {
-    "@excalidraw/math@0.18.0-f0063e113": "patches/@excalidraw%2Fmath@0.18.0-f0063e113.patch"
   }
 }

@@ -1,32 +1,40 @@
 import { pointFrom } from '~/shared/math'
-import type { LocalPoint } from '~/shared/math'
+import type { LocalPoint, Radians } from '~/shared/math'
 import type {
   ExcalidrawArrowElement,
   ExcalidrawDiamondElement,
   ExcalidrawElement,
-  ExcalidrawElementBase,
   ExcalidrawEllipseElement,
   ExcalidrawRectangleElement,
 } from '~/features/elements/types'
 
-const BASE_PROPS: Omit<ExcalidrawElementBase, 'type'> = {
+const BASE_PROPS = {
   id: 'test-id',
   x: 0,
   y: 0,
   width: 100,
   height: 100,
-  angle: 0,
+  angle: 0 as Radians,
   strokeColor: '#1e1e1e',
   backgroundColor: 'transparent',
-  fillStyle: 'hachure',
+  fillStyle: 'hachure' as const,
   strokeWidth: 2,
+  strokeStyle: 'solid' as const,
   roughness: 1,
   opacity: 100,
   seed: 12_345,
   versionNonce: 67_890,
+  version: 0,
   isDeleted: false,
-  boundElements: [],
-  groupIds: [],
+  boundElements: null,
+  groupIds: [] as readonly string[],
+  index: null,
+  frameId: null,
+  locked: false,
+  updated: 0,
+  link: null,
+  roundness: null,
+  customData: undefined,
 }
 
 export function createTestElement(overrides?: Partial<ExcalidrawRectangleElement> & { type?: 'rectangle' }): ExcalidrawRectangleElement
@@ -36,22 +44,24 @@ export function createTestElement(
   overrides: Partial<ExcalidrawElement> = {},
 ): ExcalidrawElement {
   const type = overrides.type ?? 'rectangle'
-  if (type === 'ellipse') return { ...BASE_PROPS, ...overrides, type }
-  if (type === 'diamond') return { ...BASE_PROPS, ...overrides, type }
-  return { ...BASE_PROPS, ...overrides, type: 'rectangle' }
+  if (type === 'ellipse') return { ...BASE_PROPS, ...overrides, type } as ExcalidrawElement
+  if (type === 'diamond') return { ...BASE_PROPS, ...overrides, type } as ExcalidrawElement
+  return { ...BASE_PROPS, ...overrides, type: 'rectangle' } as ExcalidrawElement
 }
 
 export function createTestArrowElement(
   overrides: Partial<Omit<ExcalidrawArrowElement, 'type'>> = {},
 ): ExcalidrawArrowElement {
-  const defaults: ExcalidrawArrowElement = {
+  const defaults = {
     ...BASE_PROPS,
-    type: 'arrow',
-    points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(100, 50)],
+    type: 'arrow' as const,
+    points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(100, 50)] as readonly LocalPoint[],
+    lastCommittedPoint: null,
     startArrowhead: null,
-    endArrowhead: 'arrow',
+    endArrowhead: 'arrow' as const,
     startBinding: null,
     endBinding: null,
+    elbowed: false,
   }
-  return Object.assign(defaults, overrides)
+  return Object.assign(defaults, overrides) as ExcalidrawArrowElement
 }

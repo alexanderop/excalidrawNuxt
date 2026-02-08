@@ -1,16 +1,35 @@
-export { createElement } from '@excalidraw-vue/core/elements'
-export { mutateElement } from '@excalidraw-vue/core/elements'
+export { createElement } from './createElement'
+export { mutateElement, moveElement } from './mutateElement'
 export { useElements } from './useElements'
 export type {
   ExcalidrawElement,
-  ExcalidrawElementBase,
   ExcalidrawElementType,
   ExcalidrawRectangleElement,
   ExcalidrawEllipseElement,
   ExcalidrawDiamondElement,
+  ExcalidrawArrowElement,
   ExcalidrawTextElement,
+  ExcalidrawLinearElement,
+  Arrowhead,
+  FillStyle,
+  GroupId,
   TextAlign,
-} from '@excalidraw-vue/core/elements'
+  FixedPointBinding,
+  PointBinding,
+  BoundElement,
+  SupportedElement,
+  SupportedBindableElement,
+  ElementsMap,
+  FractionalIndex,
+  StrokeStyle,
+} from './types'
+export {
+  isArrowElement,
+  isTextElement,
+  isLinearElement,
+  isBindableElement,
+  isFixedPointBinding,
+} from './types'
 export {
   DEFAULT_BG_COLOR,
   DEFAULT_FILL_STYLE,
@@ -22,4 +41,4 @@ export {
   DEFAULT_STROKE_COLOR,
   DEFAULT_STROKE_WIDTH,
   DEFAULT_TEXT_ALIGN,
-} from '@excalidraw-vue/core/elements'
+} from './constants'

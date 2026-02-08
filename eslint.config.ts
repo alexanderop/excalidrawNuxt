@@ -67,10 +67,6 @@ export default defineConfigWithVueTs(
       // No nested ternaries
       'no-nested-ternary': 'error',
 
-      // No type assertions (as Type) — as const is still allowed
-      '@typescript-eslint/consistent-type-assertions': ['error', {
-        assertionStyle: 'never',
-      }],
 
       // Banned syntax patterns
       'no-restricted-syntax': ['error',

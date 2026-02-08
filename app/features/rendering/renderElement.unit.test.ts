@@ -5,22 +5,20 @@ import { pointFrom } from '~/shared/math'
 import type { LocalPoint } from '~/shared/math'
 import { renderElement } from './renderElement'
 
-// eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- test mock with partial Drawable
 const mockDrawable = { shape: 'test', sets: [], options: {} } as unknown as import('roughjs/bin/core').Drawable
-vi.mock('@excalidraw-vue/core/rendering/shapeGenerator', () => ({
+vi.mock('./shapeGenerator', () => ({
   generateShape: vi.fn(() => mockDrawable),
 }))
 
-vi.mock('@excalidraw-vue/core/rendering/arrowhead', () => ({
+vi.mock('./arrowhead', () => ({
   renderArrowheads: vi.fn(),
 }))
 
 // Get references to mocked functions
-import { generateShape } from '@excalidraw-vue/core/rendering/shapeGenerator'
-import { renderArrowheads } from '@excalidraw-vue/core/rendering/arrowhead'
+import { generateShape } from './shapeGenerator'
+import { renderArrowheads } from './arrowhead'
 
 function createRoughCanvasMock(): RoughCanvas {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- test mock
   return { draw: vi.fn() } as unknown as RoughCanvas
 }
 

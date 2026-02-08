@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { createTestElement } from '~/__test-utils__/factories/element'
+import type { Radians } from '~/shared/math'
 import { getElementBounds, getCommonBounds } from './bounds'
 
 describe('getElementBounds', () => {
@@ -14,14 +15,14 @@ describe('getElementBounds', () => {
   })
 
   it('expands bounds for rotated element', () => {
-    const el = createTestElement({ x: 0, y: 0, width: 100, height: 0, angle: Math.PI / 4 })
+    const el = createTestElement({ x: 0, y: 0, width: 100, height: 0, angle: Math.PI / 4 as Radians })
     const [x1, y1, x2, y2] = getElementBounds(el)
     expect(x2 - x1).toBeCloseTo(70.71, 1)
     expect(y2 - y1).toBeCloseTo(70.71, 1)
   })
 
   it('returns same bounds for 0 and 2*PI rotation', () => {
-    const el = createTestElement({ x: 10, y: 20, width: 100, height: 50, angle: Math.PI * 2 })
+    const el = createTestElement({ x: 10, y: 20, width: 100, height: 50, angle: Math.PI * 2 as Radians })
     const bounds = getElementBounds(el)
     expect(bounds[0]).toBeCloseTo(10, 5)
     expect(bounds[1]).toBeCloseTo(20, 5)

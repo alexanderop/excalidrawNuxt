@@ -15,6 +15,20 @@ describe('mutateElement', () => {
     expect(el.versionNonce).not.toBe(999)
   })
 
+  it('bumps the version number', () => {
+    const el = createTestElement()
+    const originalVersion = el.version
+    mutateElement(el, { x: 10 })
+    expect(el.version).toBe(originalVersion + 1)
+  })
+
+  it('updates the updated timestamp', () => {
+    const el = createTestElement()
+    const before = Date.now()
+    mutateElement(el, { x: 10 })
+    expect(el.updated).toBeGreaterThanOrEqual(before)
+  })
+
   it('returns the same object reference', () => {
     const el = createTestElement()
     const returned = mutateElement(el, { width: 300 })

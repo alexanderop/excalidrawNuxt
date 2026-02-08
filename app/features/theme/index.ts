@@ -1,4 +1,4 @@
 export { useTheme } from './useTheme'
-export { applyDarkModeFilter, resolveColor } from '@excalidraw-vue/core/theme'
-export { THEME } from '@excalidraw-vue/core/theme'
-export type { Theme } from '@excalidraw-vue/core/theme'
+export { applyDarkModeFilter, resolveColor } from './colors'
+export { THEME } from './types'
+export type { Theme } from './types'

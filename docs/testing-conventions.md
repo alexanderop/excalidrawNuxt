@@ -91,7 +91,6 @@ Tests that need an `HTMLCanvasElement` use a minimal stub:
 
 ```ts
 function createCanvasStub(): HTMLCanvasElement {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- test stub
   return {
     setPointerCapture: vi.fn(),
     releasePointerCapture: vi.fn(),
@@ -314,5 +313,4 @@ The `app/vitest-unit-flat-tests` config warns on `beforeEach`/`afterEach` in `*.
 | Rule | Reason | Example |
 |------|--------|---------|
 | `vitest/no-hooks` | Shared mock state reset | Event handler map clearing, RAF mock setup |
-| `@typescript-eslint/consistent-type-assertions` | Test stubs need `as unknown as T` | `createCanvasStub()` |
 | `vitest/no-conditional-in-test` | Type narrowing after `createElement` | `if (el.type !== 'arrow') throw` |

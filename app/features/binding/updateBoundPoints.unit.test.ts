@@ -1,6 +1,8 @@
 import { createTestElement, createTestArrowElement } from '~/__test-utils__/factories/element'
 import { pointFrom } from '~/shared/math'
 import type { LocalPoint } from '~/shared/math'
+import type { FixedPointBinding } from '~/features/elements/types'
+import { mutateElement } from '~/features/elements/mutateElement'
 import { updateBoundArrowEndpoints, updateArrowEndpoint } from './updateBoundPoints'
 import { bindArrowToElement } from './bindUnbind'
 
@@ -19,8 +21,7 @@ describe('updateBoundArrowEndpoints', () => {
     const before = { x: arrow.x, y: arrow.y, points: arrow.points.map(p => [p[0], p[1]]) }
 
     // Move the rect
-    rect.x = 50
-    rect.y = 50
+    mutateElement(rect, { x: 50, y: 50 })
 
     updateBoundArrowEndpoints(rect, [rect, arrow])
 
@@ -41,8 +42,7 @@ describe('updateBoundArrowEndpoints', () => {
     bindArrowToElement(arrow, 'end', rect, [0, 0.5])
 
     // Move the rect
-    rect.x = 300
-    rect.y = 50
+    mutateElement(rect, { x: 300, y: 50 })
 
     updateBoundArrowEndpoints(rect, [rect, arrow])
 
@@ -67,7 +67,7 @@ describe('updateBoundArrowEndpoints', () => {
     const rect = createTestElement({ id: 'rect1', x: 0, y: 0, width: 100, height: 100 })
     // No arrows bound, should not throw
     updateBoundArrowEndpoints(rect, [rect])
-    expect(rect.boundElements).toHaveLength(0)
+    expect(rect.boundElements ?? []).toHaveLength(0)
   })
 })
 
@@ -79,7 +79,7 @@ describe('updateArrowEndpoint', () => {
       x: 0,
       y: 0,
       points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(200, 0)],
-      startBinding: { elementId: 'rect1', fixedPoint: [1, 0.5] },
+      startBinding: { elementId: 'rect1', fixedPoint: [1, 0.5], focus: 0, gap: 0 } as FixedPointBinding,
     })
 
     updateArrowEndpoint(arrow, 'start', rect)
@@ -97,7 +97,7 @@ describe('updateArrowEndpoint', () => {
       x: 0,
       y: 50,
       points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(200, 0)],
-      endBinding: { elementId: 'rect1', fixedPoint: [0, 0.5] },
+      endBinding: { elementId: 'rect1', fixedPoint: [0, 0.5], focus: 0, gap: 0 } as FixedPointBinding,
     })
 
     updateArrowEndpoint(arrow, 'end', rect)

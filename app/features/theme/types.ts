@@ -1,2 +1,3 @@
-export type { Theme } from '@excalidraw-vue/core/theme'
-export { THEME } from '@excalidraw-vue/core/theme'
+export type Theme = 'light' | 'dark'
+
+export const THEME = { LIGHT: 'light', DARK: 'dark' } as const satisfies Record<string, Theme>

@@ -30,7 +30,6 @@ export function createCanvasContextMock(): {
     },
   }
 
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- test mock
   const ctx = new Proxy({}, handler) as unknown as CanvasRenderingContext2D
 
   return {

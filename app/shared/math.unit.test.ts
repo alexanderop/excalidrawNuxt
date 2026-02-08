@@ -4,13 +4,12 @@ import {
   pointDistance,
   pointCenter,
   pointRotateRads,
-  radiansFrom,
   clamp,
   snapAngle,
   normalizePoints,
   computeDimensionsFromPoints,
 } from '~/shared/math'
-import type { GlobalPoint, LocalPoint } from '~/shared/math'
+import type { GlobalPoint, LocalPoint, Radians } from '~/shared/math'
 
 describe('math utilities', () => {
   describe('TWO_PI', () => {
@@ -174,7 +173,7 @@ describe('math utilities', () => {
     it('returns the same point when angle is 0', () => {
       const point = pointFrom<GlobalPoint>(5, 0)
       const center = pointFrom<GlobalPoint>(0, 0)
-      const result = pointRotateRads(point, center, radiansFrom(0))
+      const result = pointRotateRads(point, center, 0 as Radians)
       expect(result[0]).toBeCloseTo(5)
       expect(result[1]).toBeCloseTo(0)
     })
@@ -182,7 +181,7 @@ describe('math utilities', () => {
     it('rotates 90 degrees', () => {
       const point = pointFrom<GlobalPoint>(1, 0)
       const center = pointFrom<GlobalPoint>(0, 0)
-      const result = pointRotateRads(point, center, radiansFrom(Math.PI / 2))
+      const result = pointRotateRads(point, center, Math.PI / 2 as Radians)
       expect(result[0]).toBeCloseTo(0)
       expect(result[1]).toBeCloseTo(1)
     })
@@ -190,7 +189,7 @@ describe('math utilities', () => {
     it('rotates 180 degrees', () => {
       const point = pointFrom<GlobalPoint>(1, 0)
       const center = pointFrom<GlobalPoint>(0, 0)
-      const result = pointRotateRads(point, center, radiansFrom(Math.PI))
+      const result = pointRotateRads(point, center, Math.PI as Radians)
       expect(result[0]).toBeCloseTo(-1)
       expect(result[1]).toBeCloseTo(0)
     })
@@ -198,7 +197,7 @@ describe('math utilities', () => {
     it('rotates around a non-origin center', () => {
       const point = pointFrom<GlobalPoint>(3, 2)
       const center = pointFrom<GlobalPoint>(2, 2)
-      const result = pointRotateRads(point, center, radiansFrom(Math.PI / 2))
+      const result = pointRotateRads(point, center, Math.PI / 2 as Radians)
       expect(result[0]).toBeCloseTo(2)
       expect(result[1]).toBeCloseTo(3)
     })
@@ -206,7 +205,7 @@ describe('math utilities', () => {
     it('full rotation returns to original point', () => {
       const point = pointFrom<GlobalPoint>(3, 7)
       const center = pointFrom<GlobalPoint>(1, 1)
-      const result = pointRotateRads(point, center, radiansFrom(TWO_PI))
+      const result = pointRotateRads(point, center, TWO_PI as Radians)
       expect(result[0]).toBeCloseTo(point[0])
       expect(result[1]).toBeCloseTo(point[1])
     })
@@ -214,7 +213,7 @@ describe('math utilities', () => {
     it('preserves distance from center after rotation', () => {
       const point = pointFrom<GlobalPoint>(4, 3)
       const center = pointFrom<GlobalPoint>(1, 1)
-      const result = pointRotateRads(point, center, radiansFrom(1.23))
+      const result = pointRotateRads(point, center, 1.23 as Radians)
       expect(pointDistance(result, center)).toBeCloseTo(pointDistance(point, center))
     })
   })

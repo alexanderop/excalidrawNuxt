@@ -3,14 +3,13 @@ import { createCanvasContextMock } from '~/__test-utils__/mocks/canvasContextMoc
 import { createTestElement } from '~/__test-utils__/factories/element'
 import { renderScene } from './renderScene'
 
-vi.mock('@excalidraw-vue/core/rendering/renderElement', () => ({
+vi.mock('./renderElement', () => ({
   renderElement: vi.fn(),
 }))
 
-import { renderElement } from '@excalidraw-vue/core/rendering/renderElement'
+import { renderElement } from './renderElement'
 
 function createRoughCanvasMock(): RoughCanvas {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- test mock
   return { draw: vi.fn() } as unknown as RoughCanvas
 }
 

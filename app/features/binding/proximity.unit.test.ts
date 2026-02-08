@@ -1,5 +1,6 @@
 import { createTestElement, createTestArrowElement } from '~/__test-utils__/factories/element'
 import { createTestPoint } from '~/__test-utils__/factories/point'
+import type { Radians } from '~/shared/math'
 import { distanceToShapeEdge, getHoveredElementForBinding, computeFixedPoint, getPointFromFixedPoint } from './proximity'
 import { BASE_BINDING_GAP } from './constants'
 
@@ -59,7 +60,7 @@ describe('distanceToShapeEdge', () => {
   })
 
   it('handles rotated elements', () => {
-    const el = createTestElement({ x: 0, y: 0, width: 100, height: 50, angle: Math.PI / 2 })
+    const el = createTestElement({ x: 0, y: 0, width: 100, height: 50, angle: Math.PI / 2 as Radians })
     // After 90 degree rotation, the shape's edges move
     const dist = distanceToShapeEdge(createTestPoint(50, 25), el)
     expect(dist).toBeGreaterThanOrEqual(0)
@@ -97,7 +98,7 @@ describe('computeFixedPoint', () => {
   })
 
   it('handles rotated elements', () => {
-    const el = createTestElement({ x: 0, y: 0, width: 100, height: 100, angle: Math.PI / 4 })
+    const el = createTestElement({ x: 0, y: 0, width: 100, height: 100, angle: Math.PI / 4 as Radians })
     const fp = computeFixedPoint(createTestPoint(50, 50), el)
     // Center should still map to ~[0.5, 0.5] regardless of rotation
     expect(fp[0]).toBeCloseTo(0.5, 5)

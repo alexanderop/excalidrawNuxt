@@ -160,7 +160,7 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
 
   function updateBoundArrowsForSelected(): void {
     for (const el of selectedElements()) {
-      if (!isArrowElement(el) && el.boundElements.length > 0) {
+      if (!isArrowElement(el) && (el.boundElements ?? []).length > 0) {
         updateBoundArrowEndpoints(el, elements.value)
       }
     }
@@ -279,7 +279,7 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
         unbindArrow(el, elements.value)
         continue
       }
-      if (el.boundElements.length > 0) {
+      if ((el.boundElements ?? []).length > 0) {
         unbindAllArrowsFromShape(el, elements.value)
       }
     }

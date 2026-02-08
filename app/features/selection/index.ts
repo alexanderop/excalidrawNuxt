@@ -1,24 +1,24 @@
-export { getElementBounds, getCommonBounds } from '@excalidraw-vue/core/selection'
-export type { Bounds } from '@excalidraw-vue/core/selection'
+export { getElementBounds, getCommonBounds } from './bounds'
+export type { Bounds } from './bounds'
 
-export { hitTest, getElementAtPosition, getHitThreshold } from '@excalidraw-vue/core/selection'
+export { hitTest, getElementAtPosition, getHitThreshold, distanceToSegment } from './hitTest'
 
 export {
   getTransformHandles,
   getTransformHandleAtPosition,
-} from '@excalidraw-vue/core/selection'
+} from './transformHandles'
 export type {
   TransformHandleDirection,
   TransformHandleType,
   TransformHandle,
   TransformHandles,
-} from '@excalidraw-vue/core/selection'
+} from './transformHandles'
 
-export { startDrag, continueDrag, getConstrainedDelta, hasMoved } from '@excalidraw-vue/core/selection'
-export type { DragState } from '@excalidraw-vue/core/selection'
+export { startDrag, continueDrag, getConstrainedDelta, hasMoved } from './dragElements'
+export type { DragState } from './dragElements'
 
-export { resizeElement } from '@excalidraw-vue/core/selection'
-export type { ResizeState } from '@excalidraw-vue/core/selection'
+export { resizeElement } from './resizeElement'
+export type { ResizeState } from './resizeElement'
 
 export { useSelection } from './composables/useSelection'
 export { useSelectionInteraction } from './composables/useSelectionInteraction'
@@ -31,4 +31,4 @@ export {
   SELECTION_LINE_WIDTH,
   SELECTION_PADDING,
   MIN_ELEMENT_SIZE,
-} from '@excalidraw-vue/core/selection'
+} from './constants'

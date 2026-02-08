@@ -26,7 +26,7 @@ describe('element creation snapshots', () => {
       roughness: 1,
       opacity: 100,
       isDeleted: false,
-      boundElements: [],
+      boundElements: null,
       groupIds: [],
     })
     // id should be a non-empty string
