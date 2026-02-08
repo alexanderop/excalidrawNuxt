@@ -1,5 +1,6 @@
 import type { RoughCanvas } from 'roughjs/bin/canvas'
 import type { ExcalidrawElement } from '~/features/elements/types'
+import type { Theme } from '~/features/theme'
 import { generateShape } from './shapeGenerator'
 import { renderArrowheads } from './arrowhead'
 
@@ -7,6 +8,7 @@ export function renderElement(
   ctx: CanvasRenderingContext2D,
   rc: RoughCanvas,
   element: ExcalidrawElement,
+  theme: Theme,
 ): void {
   if (element.isDeleted) return
 
@@ -19,11 +21,11 @@ export function renderElement(
   ctx.translate(element.x, element.y)
   ctx.globalAlpha = element.opacity / 100
 
-  const drawable = generateShape(element)
+  const drawable = generateShape(element, theme)
   rc.draw(drawable)
 
   if (element.type === 'arrow') {
-    renderArrowheads(ctx, element)
+    renderArrowheads(ctx, element, theme)
   }
 
   ctx.restore()

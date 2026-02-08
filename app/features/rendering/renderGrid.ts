@@ -1,9 +1,11 @@
 import { TWO_PI } from '~/shared/math'
+import type { Theme } from '~/features/theme'
+import { resolveColor } from '~/features/theme'
 
 export const GRID_SPACING = 20
 const GRID_DOT_RADIUS = 1
-const GRID_COLOR = '#ddd'
 const GRID_FADE_ZOOM = 0.3
+const GRID_DOT_COLOR = '#ddd'
 
 export function renderGrid(
   ctx: CanvasRenderingContext2D,
@@ -12,6 +14,7 @@ export function renderGrid(
   zoom: number,
   w: number,
   h: number,
+  theme: Theme,
 ): void {
   if (zoom < GRID_FADE_ZOOM) return
 
@@ -30,7 +33,7 @@ export function renderGrid(
   const endX = startX + Math.ceil(w / (zoom * GRID_SPACING)) * GRID_SPACING + GRID_SPACING
   const endY = startY + Math.ceil(h / (zoom * GRID_SPACING)) * GRID_SPACING + GRID_SPACING
 
-  ctx.fillStyle = GRID_COLOR
+  ctx.fillStyle = resolveColor(GRID_DOT_COLOR, theme)
 
   const dotRadius = GRID_DOT_RADIUS / zoom
   ctx.beginPath()

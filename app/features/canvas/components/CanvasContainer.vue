@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { shallowRef, useTemplateRef, computed } from 'vue'
+import { shallowRef, useTemplateRef, computed, watchEffect } from 'vue'
 import { useElementSize } from '@vueuse/core'
 import { useViewport } from '../composables/useViewport'
 import { useCanvasLayers } from '../composables/useCanvasLayers'
@@ -15,9 +15,16 @@ import { useLinearEditor } from '~/features/linear-editor/useLinearEditor'
 import type { ExcalidrawElement } from '~/features/elements/types'
 import { useGroups } from '~/features/groups/composables/useGroups'
 import { cleanupAfterDelete } from '~/features/groups/groupUtils'
+import { useTheme, THEME } from '~/features/theme'
 import DrawingToolbar from '~/features/tools/components/DrawingToolbar.vue'
 
 defineExpose({})
+
+// Theme class on document root
+const { theme } = useTheme()
+watchEffect(() => {
+  document.documentElement.classList.toggle('theme--dark', theme.value === THEME.DARK)
+})
 
 // Template refs
 const containerRef = useTemplateRef<HTMLDivElement>('container')

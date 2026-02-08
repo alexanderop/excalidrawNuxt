@@ -1,11 +1,10 @@
 import type { ExcalidrawElement, ExcalidrawArrowElement } from '~/features/elements/types'
 import type { Box, Point } from '~/shared/math'
+import type { Theme } from '~/features/theme'
 import {
-  SELECTION_COLOR,
+  SELECTION_COLORS,
   SELECTION_LINE_WIDTH,
   SELECTION_PADDING,
-  HANDLE_FILL,
-  HANDLE_STROKE,
 } from '~/features/selection/constants'
 import { getTransformHandles } from '~/features/selection/transformHandles'
 import type { TransformHandles } from '~/features/selection/transformHandles'
@@ -28,8 +27,8 @@ export interface MultiPointRenderState {
   cursorPoint: Point
 }
 
-function applySelectionStroke(ctx: CanvasRenderingContext2D, zoom: number): void {
-  ctx.strokeStyle = SELECTION_COLOR
+function applySelectionStroke(ctx: CanvasRenderingContext2D, zoom: number, theme: Theme): void {
+  ctx.strokeStyle = SELECTION_COLORS[theme].selection
   ctx.lineWidth = SELECTION_LINE_WIDTH / zoom
   ctx.setLineDash([8 / zoom, 4 / zoom])
 }
@@ -38,6 +37,7 @@ function renderArrowSelectionBorder(
   ctx: CanvasRenderingContext2D,
   element: ExcalidrawArrowElement,
   zoom: number,
+  theme: Theme,
 ): void {
   const padding = SELECTION_PADDING / zoom
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
@@ -55,7 +55,7 @@ function renderArrowSelectionBorder(
   maxY += padding
 
   ctx.save()
-  applySelectionStroke(ctx, zoom)
+  applySelectionStroke(ctx, zoom, theme)
   ctx.strokeRect(minX, minY, maxX - minX, maxY - minY)
   ctx.restore()
 }
@@ -64,16 +64,17 @@ export function renderSelectionBorder(
   ctx: CanvasRenderingContext2D,
   element: ExcalidrawElement,
   zoom: number,
+  theme: Theme,
 ): void {
   if (element.type === 'arrow') {
-    renderArrowSelectionBorder(ctx, element, zoom)
+    renderArrowSelectionBorder(ctx, element, zoom, theme)
     return
   }
 
   const padding = SELECTION_PADDING / zoom
 
   ctx.save()
-  applySelectionStroke(ctx, zoom)
+  applySelectionStroke(ctx, zoom, theme)
 
   const cx = element.x + element.width / 2
   const cy = element.y + element.height / 2
@@ -95,6 +96,7 @@ function renderGroupSelectionBorder(
   ctx: CanvasRenderingContext2D,
   groupElements: readonly ExcalidrawElement[],
   zoom: number,
+  theme: Theme,
 ): void {
   const bounds = getCommonBounds(groupElements)
   if (!bounds) return
@@ -103,7 +105,7 @@ function renderGroupSelectionBorder(
   const padding = SELECTION_PADDING / zoom
 
   ctx.save()
-  applySelectionStroke(ctx, zoom)
+  applySelectionStroke(ctx, zoom, theme)
   ctx.strokeRect(
     x1 - padding,
     y1 - padding,
@@ -134,13 +136,15 @@ export function renderTransformHandles(
   ctx: CanvasRenderingContext2D,
   handles: TransformHandles,
   zoom: number,
+  theme: Theme,
 ): void {
   const lineWidth = 1 / zoom
   const cornerRadius = 2 / zoom
+  const colors = SELECTION_COLORS[theme]
 
   ctx.save()
-  ctx.fillStyle = HANDLE_FILL
-  ctx.strokeStyle = HANDLE_STROKE
+  ctx.fillStyle = colors.handleFill
+  ctx.strokeStyle = colors.handleStroke
   ctx.lineWidth = lineWidth
   ctx.setLineDash([])
 
@@ -159,10 +163,13 @@ export function renderSelectionBox(
   ctx: CanvasRenderingContext2D,
   box: Box,
   zoom: number,
+  theme: Theme,
 ): void {
+  const colors = SELECTION_COLORS[theme]
+
   ctx.save()
-  ctx.fillStyle = 'rgba(74, 144, 217, 0.1)'
-  ctx.strokeStyle = SELECTION_COLOR
+  ctx.fillStyle = colors.selectionFill
+  ctx.strokeStyle = colors.selection
   ctx.lineWidth = 1 / zoom
   ctx.setLineDash([])
 
@@ -185,18 +192,19 @@ function renderSelectedElements(
   zoom: number,
   linearEditorState: LinearEditorRenderState | null | undefined,
   selectedGroupIds: ReadonlySet<string> | undefined,
+  theme: Theme,
 ): void {
   for (const el of selectedElements) {
     if (linearEditorState && el.id === linearEditorState.element.id) continue
     if (isElementInSelectedGroup(el, selectedGroupIds)) continue
-    renderSelectionBorder(ctx, el, zoom)
-    renderTransformHandles(ctx, getTransformHandles(el, zoom), zoom)
+    renderSelectionBorder(ctx, el, zoom, theme)
+    renderTransformHandles(ctx, getTransformHandles(el, zoom), zoom, theme)
   }
 
   if (!selectedGroupIds || selectedGroupIds.size === 0) return
   for (const groupId of selectedGroupIds) {
     const groupElements = selectedElements.filter(el => el.groupIds.includes(groupId))
-    renderGroupSelectionBorder(ctx, groupElements, zoom)
+    renderGroupSelectionBorder(ctx, groupElements, zoom, theme)
   }
 }
 
@@ -204,11 +212,12 @@ function renderLinearEditorOverlays(
   ctx: CanvasRenderingContext2D,
   state: LinearEditorRenderState,
   zoom: number,
+  theme: Theme,
 ): void {
-  renderSelectionBorder(ctx, state.element, zoom)
-  renderPointHandles(ctx, state.element, state.selectedPointIndices, zoom)
+  renderSelectionBorder(ctx, state.element, zoom, theme)
+  renderPointHandles(ctx, state.element, state.selectedPointIndices, zoom, theme)
   if (state.hoveredMidpointIndex !== null) {
-    renderMidpointIndicator(ctx, state.element, state.hoveredMidpointIndex, zoom)
+    renderMidpointIndicator(ctx, state.element, state.hoveredMidpointIndex, zoom, theme)
   }
 }
 
@@ -217,6 +226,7 @@ export function renderInteractiveScene(
   selectedElements: readonly ExcalidrawElement[],
   zoom: number,
   selectionBox: Box | null,
+  theme: Theme,
   linearEditorState?: LinearEditorRenderState | null,
   multiPointState?: MultiPointRenderState | null,
   suggestedBindings?: readonly ExcalidrawElement[] | null,
@@ -224,21 +234,21 @@ export function renderInteractiveScene(
 ): void {
   if (suggestedBindings) {
     for (const el of suggestedBindings) {
-      renderSuggestedBinding(ctx, el, zoom)
+      renderSuggestedBinding(ctx, el, zoom, theme)
     }
   }
 
-  renderSelectedElements(ctx, selectedElements, zoom, linearEditorState, selectedGroupIds)
+  renderSelectedElements(ctx, selectedElements, zoom, linearEditorState, selectedGroupIds, theme)
 
   if (selectionBox) {
-    renderSelectionBox(ctx, selectionBox, zoom)
+    renderSelectionBox(ctx, selectionBox, zoom, theme)
   }
 
   if (linearEditorState) {
-    renderLinearEditorOverlays(ctx, linearEditorState, zoom)
+    renderLinearEditorOverlays(ctx, linearEditorState, zoom, theme)
   }
 
   if (multiPointState) {
-    renderRubberBand(ctx, multiPointState.element, multiPointState.cursorPoint, zoom)
+    renderRubberBand(ctx, multiPointState.element, multiPointState.cursorPoint, zoom, theme)
   }
 }

@@ -1,18 +1,20 @@
 import type { ExcalidrawElement } from '~/features/elements/types'
+import type { Theme } from '~/features/theme'
 import {
-  BINDING_HIGHLIGHT_COLOR,
+  BINDING_COLORS,
   BINDING_HIGHLIGHT_LINE_WIDTH,
   BINDING_HIGHLIGHT_PADDING,
 } from './constants'
 
 /**
- * Draw a blue highlight outline around a bindable shape to indicate
+ * Draw a highlight outline around a bindable shape to indicate
  * that an arrow endpoint can bind to it.
  */
 export function renderSuggestedBinding(
   ctx: CanvasRenderingContext2D,
   element: ExcalidrawElement,
   zoom: number,
+  theme: Theme,
 ): void {
   if (element.type === 'arrow') return
 
@@ -20,7 +22,7 @@ export function renderSuggestedBinding(
   const lineWidth = BINDING_HIGHLIGHT_LINE_WIDTH / zoom
 
   ctx.save()
-  ctx.strokeStyle = BINDING_HIGHLIGHT_COLOR
+  ctx.strokeStyle = BINDING_COLORS[theme].highlight
   ctx.lineWidth = lineWidth
   ctx.setLineDash([])
 

@@ -1,4 +1,4 @@
-import { watch } from 'vue'
+import { computed, watch } from 'vue'
 import type { Ref, ShallowRef, ComputedRef } from 'vue'
 import type { RoughCanvas } from 'roughjs/bin/canvas'
 import { useRenderer } from './useRenderer'
@@ -11,6 +11,7 @@ import { renderInteractiveScene } from '~/features/rendering/renderInteractive'
 import type { LinearEditorRenderState, MultiPointRenderState } from '~/features/rendering/renderInteractive'
 import type { ExcalidrawElement, ExcalidrawArrowElement } from '~/features/elements/types'
 import type { Box, Point } from '~/shared/math'
+import { useTheme, resolveColor } from '~/features/theme'
 
 interface UseSceneRendererOptions {
   layers: {
@@ -119,7 +120,11 @@ export function useSceneRenderer(options: UseSceneRendererOptions): UseSceneRend
   } = options
   const { scrollX, scrollY, zoom, width, height } = viewport
 
-  const { markStaticDirty, markNewElementDirty, markInteractiveDirty } = useRenderer({
+  const { theme } = useTheme()
+  const CANVAS_BG = '#ffffff'
+  const bgColor = computed(() => resolveColor(CANVAS_BG, theme.value))
+
+  const { markStaticDirty, markNewElementDirty, markInteractiveDirty, markAllDirty } = useRenderer({
     staticLayer: { ctx: layers.staticCtx, canvas: canvasRefs.staticCanvasRef },
     newElementLayer: { ctx: layers.newElementCtx, canvas: canvasRefs.newElementCanvasRef },
     interactiveLayer: { ctx: layers.interactiveCtx, canvas: canvasRefs.interactiveCanvasRef },
@@ -128,11 +133,12 @@ export function useSceneRenderer(options: UseSceneRendererOptions): UseSceneRend
     scrollX,
     scrollY,
     zoom,
+    bgColor,
     onRenderStatic(ctx) {
-      renderGrid(ctx, scrollX.value, scrollY.value, zoom.value, width.value, height.value)
+      renderGrid(ctx, scrollX.value, scrollY.value, zoom.value, width.value, height.value, theme.value)
       const rc = layers.staticRc.value
       if (rc) {
-        renderScene(ctx, rc, elements.value, scrollX.value, scrollY.value, zoom.value, width.value, height.value)
+        renderScene(ctx, rc, elements.value, scrollX.value, scrollY.value, zoom.value, width.value, height.value, theme.value)
       }
     },
     onRenderNewElement(ctx) {
@@ -142,7 +148,7 @@ export function useSceneRenderer(options: UseSceneRendererOptions): UseSceneRend
       ctx.save()
       ctx.scale(zoom.value, zoom.value)
       ctx.translate(scrollX.value, scrollY.value)
-      renderElement(ctx, rc, el)
+      renderElement(ctx, rc, el, theme.value)
       ctx.restore()
     },
     onRenderInteractive(ctx) {
@@ -155,6 +161,7 @@ export function useSceneRenderer(options: UseSceneRendererOptions): UseSceneRend
         selectedElements.value,
         zoom.value,
         selectionBox.value,
+        theme.value,
         buildLinearEditorState(editingLinearElement, editingPointIndices, editingHoveredMidpoint),
         buildMultiPointState(multiElement, lastCursorPoint),
         suggestedBindings?.value ?? null,
@@ -167,6 +174,7 @@ export function useSceneRenderer(options: UseSceneRendererOptions): UseSceneRend
   const animations = useAnimationController({ markInteractiveDirty })
 
   watch(selectedIds, markInteractiveDirty)
+  watch(theme, markAllDirty)
 
   return { markStaticDirty, markNewElementDirty, markInteractiveDirty, animations }
 }

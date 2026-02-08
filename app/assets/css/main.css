@@ -17,4 +17,12 @@ body,
   margin: 0;
   padding: 0;
   overflow: hidden;
+  background: #ffffff;
+  transition: background-color 200ms;
+}
+
+html.theme--dark,
+html.theme--dark body,
+html.theme--dark #__nuxt {
+  background: #121212;
 }

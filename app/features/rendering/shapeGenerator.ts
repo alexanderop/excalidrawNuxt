@@ -1,11 +1,14 @@
 import { RoughGenerator } from 'roughjs/bin/generator'
 import type { Drawable, Options } from 'roughjs/bin/core'
 import type { ExcalidrawElement } from '~/features/elements/types'
+import type { Theme } from '~/features/theme'
+import { resolveColor } from '~/features/theme'
 
 const generator = new RoughGenerator()
 
 interface CacheEntry {
   nonce: number
+  theme: Theme
   drawable: Drawable
 }
 
@@ -15,25 +18,25 @@ export function clearShapeCache(): void {
   shapeCache.clear()
 }
 
-function elementToRoughOptions(element: ExcalidrawElement): Options {
+function elementToRoughOptions(element: ExcalidrawElement, theme: Theme): Options {
   const options: Options = {
     seed: element.seed,
     roughness: element.roughness,
-    stroke: element.strokeColor,
+    stroke: resolveColor(element.strokeColor, theme),
     strokeWidth: element.strokeWidth,
     fillStyle: element.fillStyle,
   }
 
   if (element.backgroundColor !== 'transparent') {
-    options.fill = element.backgroundColor
+    options.fill = resolveColor(element.backgroundColor, theme)
   }
 
   return options
 }
 
-function generateDrawable(element: ExcalidrawElement): Drawable {
+function generateDrawable(element: ExcalidrawElement, theme: Theme): Drawable {
   const { width, height } = element
-  const options = elementToRoughOptions(element)
+  const options = elementToRoughOptions(element, theme)
 
   if (element.type === 'arrow') {
     const { points } = element
@@ -76,13 +79,13 @@ export function pruneShapeCache(elements: readonly ExcalidrawElement[]): void {
   }
 }
 
-export function generateShape(element: ExcalidrawElement): Drawable {
+export function generateShape(element: ExcalidrawElement, theme: Theme): Drawable {
   const cached = shapeCache.get(element.id)
-  if (cached && cached.nonce === element.versionNonce) {
+  if (cached && cached.nonce === element.versionNonce && cached.theme === theme) {
     return cached.drawable
   }
 
-  const drawable = generateDrawable(element)
-  shapeCache.set(element.id, { nonce: element.versionNonce, drawable })
+  const drawable = generateDrawable(element, theme)
+  shapeCache.set(element.id, { nonce: element.versionNonce, theme, drawable })
   return drawable
 }

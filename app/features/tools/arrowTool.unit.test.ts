@@ -16,11 +16,15 @@ import type { ToolType } from './types'
 type EventHandler = (...args: unknown[]) => void
 const eventHandlers = new Map<string, EventHandler>()
 
-vi.mock('@vueuse/core', () => ({
-  useEventListener: (_target: unknown, event: string, handler: EventHandler) => {
-    eventHandlers.set(event, handler)
-  },
-}))
+vi.mock('@vueuse/core', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@vueuse/core')>()
+  return {
+    ...actual,
+    useEventListener: (_target: unknown, event: string, handler: EventHandler) => {
+      eventHandlers.set(event, handler)
+    },
+  }
+})
 
 function firePointer(
   type: 'pointerdown' | 'pointermove' | 'pointerup',
@@ -480,7 +484,7 @@ describe('arrow tool integration', () => {
 
     it('generates a linearPath drawable for arrow', () => {
       const arrow = createTestArrowElement()
-      const drawable = generateShape(arrow)
+      const drawable = generateShape(arrow, 'light')
 
       expect(drawable).toBeDefined()
       expect(drawable.shape).toBe('linearPath')
@@ -494,7 +498,7 @@ describe('arrow tool integration', () => {
         roughness: 2,
         seed: 42,
       })
-      const drawable = generateShape(arrow)
+      const drawable = generateShape(arrow, 'light')
 
       expect(drawable.options.stroke).toBe('#ff0000')
       expect(drawable.options.strokeWidth).toBe(4)
@@ -504,18 +508,18 @@ describe('arrow tool integration', () => {
 
     it('caches drawable by id and versionNonce', () => {
       const arrow = createTestArrowElement()
-      const first = generateShape(arrow)
-      const second = generateShape(arrow)
+      const first = generateShape(arrow, 'light')
+      const second = generateShape(arrow, 'light')
 
       expect(first).toBe(second)
     })
 
     it('invalidates cache when versionNonce changes', () => {
       const arrow = createTestArrowElement({ versionNonce: 1 })
-      const first = generateShape(arrow)
+      const first = generateShape(arrow, 'light')
 
       const updated = createTestArrowElement({ versionNonce: 2 })
-      const second = generateShape(updated)
+      const second = generateShape(updated, 'light')
 
       expect(first).not.toBe(second)
     })
@@ -613,7 +617,7 @@ describe('arrow tool integration', () => {
       firePointer('pointerup', 150, 75)
 
       const arrow = getCreatedArrow(opts.onElementCreated)
-      const drawable = generateShape(arrow)
+      const drawable = generateShape(arrow, 'light')
 
       expect(drawable).toBeDefined()
       expect(drawable.shape).toBe('linearPath')

@@ -1,25 +1,30 @@
 import type { ExcalidrawArrowElement, ArrowheadType } from '~/features/elements/types'
 import type { Point } from '~/shared/math'
+import type { Theme } from '~/features/theme'
+import { resolveColor } from '~/features/theme'
 
 export function renderArrowheads(
   ctx: CanvasRenderingContext2D,
   element: ExcalidrawArrowElement,
+  theme: Theme,
 ): void {
   const { points, endArrowhead, startArrowhead, strokeWidth, strokeColor } = element
   if (points.length < 2) return
+
+  const color = resolveColor(strokeColor, theme)
 
   if (endArrowhead && endArrowhead !== 'none') {
     const tip = points.at(-1)
     const prev = points.at(-2)
     if (!tip || !prev) return
-    drawArrowhead(ctx, prev, tip, endArrowhead, strokeWidth, strokeColor)
+    drawArrowhead(ctx, prev, tip, endArrowhead, strokeWidth, color)
   }
 
   if (startArrowhead && startArrowhead !== 'none') {
     const tip = points[0]
     const next = points[1]
     if (!tip || !next) return
-    drawArrowhead(ctx, next, tip, startArrowhead, strokeWidth, strokeColor)
+    drawArrowhead(ctx, next, tip, startArrowhead, strokeWidth, color)
   }
 }
 
@@ -46,23 +51,26 @@ function drawArrowhead(
   ctx.lineCap = 'round'
   ctx.lineJoin = 'round'
 
-  if (style === 'arrow') {
-    ctx.beginPath()
-    ctx.moveTo(wingLeftX, wingLeftY)
-    ctx.lineTo(tip.x, tip.y)
-    ctx.lineTo(wingRightX, wingRightY)
-    ctx.stroke()
-  }
-
-  if (style === 'triangle') {
-    ctx.fillStyle = color
-    ctx.beginPath()
-    ctx.moveTo(tip.x, tip.y)
-    ctx.lineTo(wingLeftX, wingLeftY)
-    ctx.lineTo(wingRightX, wingRightY)
-    ctx.closePath()
-    ctx.fill()
-    ctx.stroke()
+  switch (style) {
+    case 'arrow': {
+      ctx.beginPath()
+      ctx.moveTo(wingLeftX, wingLeftY)
+      ctx.lineTo(tip.x, tip.y)
+      ctx.lineTo(wingRightX, wingRightY)
+      ctx.stroke()
+      break
+    }
+    case 'triangle': {
+      ctx.fillStyle = color
+      ctx.beginPath()
+      ctx.moveTo(tip.x, tip.y)
+      ctx.lineTo(wingLeftX, wingLeftY)
+      ctx.lineTo(wingRightX, wingRightY)
+      ctx.closePath()
+      ctx.fill()
+      ctx.stroke()
+      break
+    }
   }
 
   ctx.restore()

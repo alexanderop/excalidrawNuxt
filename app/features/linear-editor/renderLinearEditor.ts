@@ -1,15 +1,11 @@
 import type { ExcalidrawArrowElement } from '~/features/elements/types'
 import type { Point } from '~/shared/math'
+import type { Theme } from '~/features/theme'
 import { getPointPositions, getMidpointPositions } from './pointHandles'
 import {
   POINT_HANDLE_RADIUS,
   MIDPOINT_HANDLE_RADIUS,
-  POINT_HANDLE_FILL,
-  POINT_HANDLE_STROKE,
-  POINT_HANDLE_SELECTED_FILL,
-  MIDPOINT_HANDLE_FILL,
-  MIDPOINT_HANDLE_STROKE,
-  RUBBER_BAND_COLOR,
+  LINEAR_EDITOR_COLORS,
   RUBBER_BAND_DASH,
   RUBBER_BAND_WIDTH,
 } from './constants'
@@ -23,15 +19,17 @@ export function renderRubberBand(
   element: ExcalidrawArrowElement,
   cursorPoint: Point,
   zoom: number,
+  theme: Theme,
 ): void {
   const lastPt = element.points.at(-1)
   if (!lastPt) return
 
   const sceneX = lastPt.x + element.x
   const sceneY = lastPt.y + element.y
+  const colors = LINEAR_EDITOR_COLORS[theme]
 
   ctx.save()
-  ctx.strokeStyle = RUBBER_BAND_COLOR
+  ctx.strokeStyle = colors.rubberBand
   ctx.lineWidth = RUBBER_BAND_WIDTH / zoom
   ctx.setLineDash(RUBBER_BAND_DASH.map(d => d / zoom))
 
@@ -52,22 +50,21 @@ export function renderPointHandles(
   element: ExcalidrawArrowElement,
   selectedIndices: ReadonlySet<number>,
   zoom: number,
+  theme: Theme,
 ): void {
   const positions = getPointPositions(element)
   const radius = POINT_HANDLE_RADIUS / zoom
   const lineWidth = 1.5 / zoom
+  const colors = LINEAR_EDITOR_COLORS[theme]
 
   ctx.save()
   ctx.lineWidth = lineWidth
 
-  for (const [i, position] of positions.entries()) {
-    const pos = position!
-    const isSelected = selectedIndices.has(i)
-
+  for (const [i, pos] of positions.entries()) {
     ctx.beginPath()
     ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2)
-    ctx.fillStyle = isSelected ? POINT_HANDLE_SELECTED_FILL : POINT_HANDLE_FILL
-    ctx.strokeStyle = POINT_HANDLE_STROKE
+    ctx.fillStyle = selectedIndices.has(i) ? colors.pointSelectedFill : colors.pointFill
+    ctx.strokeStyle = colors.pointStroke
     ctx.fill()
     ctx.stroke()
   }
@@ -84,6 +81,7 @@ export function renderMidpointIndicator(
   element: ExcalidrawArrowElement,
   hoveredSegmentIndex: number,
   zoom: number,
+  theme: Theme,
 ): void {
   const midpoints = getMidpointPositions(element)
   const midpoint = midpoints[hoveredSegmentIndex]
@@ -91,11 +89,12 @@ export function renderMidpointIndicator(
 
   const radius = MIDPOINT_HANDLE_RADIUS / zoom
   const lineWidth = 1 / zoom
+  const colors = LINEAR_EDITOR_COLORS[theme]
 
   ctx.save()
   ctx.lineWidth = lineWidth
-  ctx.fillStyle = MIDPOINT_HANDLE_FILL
-  ctx.strokeStyle = MIDPOINT_HANDLE_STROKE
+  ctx.fillStyle = colors.midpointFill
+  ctx.strokeStyle = colors.midpointStroke
 
   ctx.beginPath()
   ctx.arc(midpoint.x, midpoint.y, radius, 0, Math.PI * 2)

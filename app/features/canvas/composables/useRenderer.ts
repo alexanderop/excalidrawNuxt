@@ -16,6 +16,7 @@ interface UseRendererOptions {
   scrollX: Ref<number>
   scrollY: Ref<number>
   zoom: Ref<number>
+  bgColor: Ref<string>
   onRenderStatic?: (ctx: CanvasRenderingContext2D) => void
   onRenderNewElement?: (ctx: CanvasRenderingContext2D) => void
   onRenderInteractive?: (ctx: CanvasRenderingContext2D) => void
@@ -79,7 +80,7 @@ function renderDirtyCanvas(
 export function useRenderer(options: UseRendererOptions): UseRendererReturn {
   const {
     staticLayer, newElementLayer, interactiveLayer,
-    width, height, scrollX, scrollY, zoom,
+    width, height, scrollX, scrollY, zoom, bgColor,
     onRenderStatic, onRenderNewElement, onRenderInteractive,
   } = options
 
@@ -101,7 +102,7 @@ export function useRenderer(options: UseRendererOptions): UseRendererReturn {
       const h = height.value
       if (w === 0 || h === 0) return
       const currentDpr = dpr.value
-      renderDirtyCanvas(staticDirty, staticLayer, currentDpr, w, h, '#ffffff', onRenderStatic)
+      renderDirtyCanvas(staticDirty, staticLayer, currentDpr, w, h, bgColor.value, onRenderStatic)
       renderDirtyCanvas(newElementDirty, newElementLayer, currentDpr, w, h, undefined, onRenderNewElement)
       renderDirtyCanvas(interactiveDirty, interactiveLayer, currentDpr, w, h, undefined, onRenderInteractive)
     })
@@ -126,7 +127,7 @@ export function useRenderer(options: UseRendererOptions): UseRendererReturn {
     scheduleRender()
   }
 
-  watch([width, height, scrollX, scrollY, zoom], markAllDirty)
+  watch([width, height, scrollX, scrollY, zoom, bgColor], markAllDirty)
 
   // Resume rendering when tab becomes visible again
   watch(visibility, (v) => {
