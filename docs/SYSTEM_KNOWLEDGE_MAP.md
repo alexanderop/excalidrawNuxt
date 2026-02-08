@@ -18,6 +18,12 @@
 | Initialization Sequence | [diagrams/initialization-sequence.md](diagrams/initialization-sequence.md) | Composable boot order, deferred dirty-flag binding pattern |
 | Event Flow | [diagrams/event-flow.md](diagrams/event-flow.md) | Listener targets, pointer capture, panning priority, event pipeline |
 
+## Specs
+
+| Spec | File | Status |
+|------|------|--------|
+| Grouping Feature | [specs/grouping-feature.md](specs/grouping-feature.md) | Draft — not yet implemented |
+
 ## Reference
 
 | Topic | File | What it covers |
@@ -25,5 +31,6 @@
 | Architectural Decisions | [reference/architectural-decisions.md](reference/architectural-decisions.md) | Rendering, state, reactivity, SSR, testing, and other key choices with rationale |
 | Technology Stack | [reference/technology-stack.md](reference/technology-stack.md) | Framework, UI, styling, canvas, composables, and utility libraries |
 | Element Types | [reference/element-types.md](reference/element-types.md) | Shape/arrow models, arrow architecture, linear editor, and binding feature |
+| Arrow Tech Spec | [arrow-tech-spec.md](arrow-tech-spec.md) | Complete arrow behavior spec: data model, binding, curves, elbow routing, hit testing, creation flow |
 
 > **Note:** Update this map when new features, diagrams, or reference docs are added.
