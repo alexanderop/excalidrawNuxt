@@ -1,5 +1,5 @@
-export { createElement } from './createElement'
-export { mutateElement } from './mutateElement'
+export { createElement } from '@excalidraw-vue/core/elements'
+export { mutateElement } from '@excalidraw-vue/core/elements'
 export { useElements } from './useElements'
 export type {
   ExcalidrawElement,
@@ -10,7 +10,7 @@ export type {
   ExcalidrawDiamondElement,
   ExcalidrawTextElement,
   TextAlign,
-} from './types'
+} from '@excalidraw-vue/core/elements'
 export {
   DEFAULT_BG_COLOR,
   DEFAULT_FILL_STYLE,
@@ -22,4 +22,4 @@ export {
   DEFAULT_STROKE_COLOR,
   DEFAULT_STROKE_WIDTH,
   DEFAULT_TEXT_ALIGN,
-} from './constants'
+} from '@excalidraw-vue/core/elements'

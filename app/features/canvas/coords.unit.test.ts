@@ -6,37 +6,37 @@ describe('coords', () => {
     it('returns unchanged coords with identity viewport', () => {
       const vp = createViewport()
       const result = screenToScene(100, 200, vp)
-      expect(result).toEqual({ x: 100, y: 200 })
+      expect(result).toEqual([100, 200])
     })
 
     it('applies scroll offset', () => {
       const vp = createViewport({ scrollX: 50, scrollY: 30 })
       const result = screenToScene(100, 200, vp)
-      expect(result).toEqual({ x: 50, y: 170 })
+      expect(result).toEqual([50, 170])
     })
 
     it('applies zoom', () => {
       const vp = createViewport({ zoom: 2 })
       const result = screenToScene(100, 200, vp)
-      expect(result).toEqual({ x: 50, y: 100 })
+      expect(result).toEqual([50, 100])
     })
 
     it('applies combined scroll and zoom', () => {
       const vp = createViewport({ scrollX: 10, scrollY: 20, zoom: 2 })
       const result = screenToScene(100, 200, vp)
-      expect(result).toEqual({ x: 40, y: 80 })
+      expect(result).toEqual([40, 80])
     })
 
     it('handles zero screen coordinates', () => {
       const vp = createViewport({ scrollX: 50, scrollY: 30, zoom: 2 })
       const result = screenToScene(0, 0, vp)
-      expect(result).toEqual({ x: -50, y: -30 })
+      expect(result).toEqual([-50, -30])
     })
 
     it('handles fractional zoom', () => {
       const vp = createViewport({ zoom: 0.5 })
       const result = screenToScene(100, 200, vp)
-      expect(result).toEqual({ x: 200, y: 400 })
+      expect(result).toEqual([200, 400])
     })
   })
 
@@ -44,31 +44,31 @@ describe('coords', () => {
     it('returns unchanged coords with identity viewport', () => {
       const vp = createViewport()
       const result = sceneToScreen(100, 200, vp)
-      expect(result).toEqual({ x: 100, y: 200 })
+      expect(result).toEqual([100, 200])
     })
 
     it('applies scroll offset', () => {
       const vp = createViewport({ scrollX: 50, scrollY: 30 })
       const result = sceneToScreen(100, 200, vp)
-      expect(result).toEqual({ x: 150, y: 230 })
+      expect(result).toEqual([150, 230])
     })
 
     it('applies zoom', () => {
       const vp = createViewport({ zoom: 2 })
       const result = sceneToScreen(100, 200, vp)
-      expect(result).toEqual({ x: 200, y: 400 })
+      expect(result).toEqual([200, 400])
     })
 
     it('applies combined scroll and zoom', () => {
       const vp = createViewport({ scrollX: 10, scrollY: 20, zoom: 2 })
       const result = sceneToScreen(100, 200, vp)
-      expect(result).toEqual({ x: 220, y: 440 })
+      expect(result).toEqual([220, 440])
     })
 
     it('handles zero scene coordinates', () => {
       const vp = createViewport({ scrollX: 50, scrollY: 30, zoom: 2 })
       const result = sceneToScreen(0, 0, vp)
-      expect(result).toEqual({ x: 100, y: 60 })
+      expect(result).toEqual([100, 60])
     })
   })
 
@@ -86,18 +86,18 @@ describe('coords', () => {
         const screenX = 250
         const screenY = 175
         const scene = screenToScene(screenX, screenY, vp)
-        const back = sceneToScreen(scene.x, scene.y, vp)
-        expect(back.x).toBeCloseTo(screenX)
-        expect(back.y).toBeCloseTo(screenY)
+        const back = sceneToScreen(scene[0], scene[1], vp)
+        expect(back[0]).toBeCloseTo(screenX)
+        expect(back[1]).toBeCloseTo(screenY)
       })
 
       it(`scene->screen->scene round-trip with viewport ${JSON.stringify(vp)}`, () => {
         const sceneX = 400
         const sceneY = -300
         const screen = sceneToScreen(sceneX, sceneY, vp)
-        const back = screenToScene(screen.x, screen.y, vp)
-        expect(back.x).toBeCloseTo(sceneX)
-        expect(back.y).toBeCloseTo(sceneY)
+        const back = screenToScene(screen[0], screen[1], vp)
+        expect(back[0]).toBeCloseTo(sceneX)
+        expect(back[1]).toBeCloseTo(sceneY)
       })
     }
   })

@@ -1,5 +1,6 @@
 import { createTestElement, createTestArrowElement } from '~/__test-utils__/factories/element'
-import { createPoint } from '~/shared/math'
+import { pointFrom } from '~/shared/math'
+import type { LocalPoint } from '~/shared/math'
 import { updateBoundArrowEndpoints, updateArrowEndpoint } from './updateBoundPoints'
 import { bindArrowToElement } from './bindUnbind'
 
@@ -10,12 +11,12 @@ describe('updateBoundArrowEndpoints', () => {
       id: 'arrow1',
       x: 0,
       y: 0,
-      points: [createPoint(0, 0), createPoint(200, 0)],
+      points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(200, 0)],
     })
 
     bindArrowToElement(arrow, 'start', rect, [1, 0.5])
 
-    const before = { x: arrow.x, y: arrow.y, points: arrow.points.map(p => ({ ...p })) }
+    const before = { x: arrow.x, y: arrow.y, points: arrow.points.map(p => [p[0], p[1]]) }
 
     // Move the rect
     rect.x = 50
@@ -24,7 +25,7 @@ describe('updateBoundArrowEndpoints', () => {
     updateBoundArrowEndpoints(rect, [rect, arrow])
 
     // Arrow points should have been updated relative to the new shape position
-    const after = { x: arrow.x, y: arrow.y, points: arrow.points.map(p => ({ ...p })) }
+    const after = { x: arrow.x, y: arrow.y, points: arrow.points.map(p => [p[0], p[1]]) }
     expect(after).not.toEqual(before)
   })
 
@@ -34,7 +35,7 @@ describe('updateBoundArrowEndpoints', () => {
       id: 'arrow1',
       x: 0,
       y: 50,
-      points: [createPoint(0, 0), createPoint(200, 0)],
+      points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(200, 0)],
     })
 
     bindArrowToElement(arrow, 'end', rect, [0, 0.5])
@@ -77,7 +78,7 @@ describe('updateArrowEndpoint', () => {
       id: 'arrow1',
       x: 0,
       y: 0,
-      points: [createPoint(0, 0), createPoint(200, 0)],
+      points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(200, 0)],
       startBinding: { elementId: 'rect1', fixedPoint: [1, 0.5] },
     })
 
@@ -95,7 +96,7 @@ describe('updateArrowEndpoint', () => {
       id: 'arrow1',
       x: 0,
       y: 50,
-      points: [createPoint(0, 0), createPoint(200, 0)],
+      points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(200, 0)],
       endBinding: { elementId: 'rect1', fixedPoint: [0, 0.5] },
     })
 
@@ -103,8 +104,8 @@ describe('updateArrowEndpoint', () => {
 
     const lastPoint = arrow.points.at(-1)
     expect(lastPoint).toBeDefined()
-    expect(Number.isFinite(lastPoint?.x)).toBe(true)
-    expect(Number.isFinite(lastPoint?.y)).toBe(true)
+    expect(Number.isFinite(lastPoint![0])).toBe(true)
+    expect(Number.isFinite(lastPoint![1])).toBe(true)
   })
 
   it('is no-op when binding is null', () => {
@@ -113,17 +114,17 @@ describe('updateArrowEndpoint', () => {
       id: 'arrow1',
       x: 10,
       y: 20,
-      points: [createPoint(0, 0), createPoint(100, 50)],
+      points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(100, 50)],
     })
 
     const originalX = arrow.x
     const originalY = arrow.y
-    const originalPoints = arrow.points.map(p => ({ ...p }))
+    const originalPoints = arrow.points.map(p => [p[0], p[1]])
 
     updateArrowEndpoint(arrow, 'start', rect)
 
     expect(arrow.x).toBe(originalX)
     expect(arrow.y).toBe(originalY)
-    expect(arrow.points).toEqual(originalPoints)
+    expect(arrow.points.map(p => [p[0], p[1]])).toEqual(originalPoints)
   })
 })

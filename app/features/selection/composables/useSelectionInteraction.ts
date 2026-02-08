@@ -2,8 +2,9 @@ import { shallowRef } from 'vue'
 import type { Ref, ShallowRef } from 'vue'
 import { useEventListener } from '@vueuse/core'
 import type { ExcalidrawElement, ExcalidrawArrowElement } from '~/features/elements/types'
+import { isArrowElement } from '~/features/elements/types'
 import { mutateElement } from '~/features/elements/mutateElement'
-import type { Box, Point } from '~/shared/math'
+import type { Box, GlobalPoint } from '~/shared/math'
 import type { ToolType } from '~/features/tools/types'
 import {
   updateBoundArrowEndpoints,
@@ -24,7 +25,7 @@ type InteractionState =
   | { type: 'idle' }
   | { type: 'dragging'; dragState: DragState }
   | { type: 'resizing'; resizeState: ResizeState }
-  | { type: 'boxSelecting'; startPoint: Point }
+  | { type: 'boxSelecting'; startPoint: GlobalPoint }
 
 interface UseSelectionInteractionReturn {
   selectionBox: ShallowRef<Box | null>
@@ -37,7 +38,7 @@ interface UseSelectionInteractionOptions {
   spaceHeld: Ref<boolean>
   isPanning: Ref<boolean>
   zoom: Ref<number>
-  toScene: (screenX: number, screenY: number) => Point
+  toScene: (screenX: number, screenY: number) => GlobalPoint
   elements: ShallowRef<readonly ExcalidrawElement[]>
   selectedElements: () => readonly ExcalidrawElement[]
   select: (id: string) => void
@@ -89,7 +90,7 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
   const selectionBox = options.selectionBox ?? shallowRef<Box | null>(null)
   const cursorStyle = shallowRef('default')
 
-  function tryStartResize(scenePoint: Point, e: PointerEvent): boolean {
+  function tryStartResize(scenePoint: GlobalPoint, e: PointerEvent): boolean {
     const selected = selectedElements()
     if (selected.length !== 1) return false
 
@@ -110,7 +111,7 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
     return true
   }
 
-  function tryStartDrag(scenePoint: Point, e: PointerEvent): boolean {
+  function tryStartDrag(scenePoint: GlobalPoint, e: PointerEvent): boolean {
     const hitElement = getElementAtPosition(scenePoint, elements.value, zoom.value)
     if (!hitElement) return false
 
@@ -159,7 +160,7 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
 
   function updateBoundArrowsForSelected(): void {
     for (const el of selectedElements()) {
-      if (el.type !== 'arrow' && el.boundElements.length > 0) {
+      if (!isArrowElement(el) && el.boundElements.length > 0) {
         updateBoundArrowEndpoints(el, elements.value)
       }
     }
@@ -217,7 +218,7 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
     if (prevInteraction.type === 'dragging') {
       // Unbind arrows that were dragged as a whole (detaches from shapes)
       for (const el of selectedElements()) {
-        if (el.type === 'arrow' && (el.startBinding || el.endBinding)) {
+        if (isArrowElement(el) && (el.startBinding || el.endBinding)) {
           unbindArrow(el, elements.value)
         }
       }
@@ -230,7 +231,7 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
     }
   }
 
-  function updateCursor(scenePoint: Point): void {
+  function updateCursor(scenePoint: GlobalPoint): void {
     if (activeTool.value !== 'selection') return
 
     const selected = selectedElements()
@@ -274,7 +275,7 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
 
   function unbindBeforeDelete(selected: readonly ExcalidrawElement[]): void {
     for (const el of selected) {
-      if (el.type === 'arrow') {
+      if (isArrowElement(el)) {
         unbindArrow(el, elements.value)
         continue
       }
@@ -358,7 +359,7 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
 
     const scenePoint = toScene(e.offsetX, e.offsetY)
     const hitElement = getElementAtPosition(scenePoint, elements.value, zoom.value)
-    if (!hitElement || hitElement.type !== 'arrow') return
+    if (!hitElement || !isArrowElement(hitElement)) return
 
     onDoubleClickArrow(hitElement)
   })
@@ -378,12 +379,12 @@ const ARROW_DIRECTIONS: Record<string, { x: number; y: number }> = {
   ArrowRight: { x: 1, y: 0 },
 }
 
-function normalizeBox(start: Point, end: Point): Box {
+function normalizeBox(start: GlobalPoint, end: GlobalPoint): Box {
   return {
-    x: Math.min(start.x, end.x),
-    y: Math.min(start.y, end.y),
-    width: Math.abs(end.x - start.x),
-    height: Math.abs(end.y - start.y),
+    x: Math.min(start[0], end[0]),
+    y: Math.min(start[1], end[1]),
+    width: Math.abs(end[0] - start[0]),
+    height: Math.abs(end[1] - start[1]),
   }
 }
 

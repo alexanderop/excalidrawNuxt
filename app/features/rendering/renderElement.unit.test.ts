@@ -1,22 +1,23 @@
 import type { RoughCanvas } from 'roughjs/bin/canvas'
 import { createCanvasContextMock } from '~/__test-utils__/mocks/canvasContextMock'
 import { createTestElement, createTestArrowElement } from '~/__test-utils__/factories/element'
-import { createPoint } from '~/shared/math'
+import { pointFrom } from '~/shared/math'
+import type { LocalPoint } from '~/shared/math'
 import { renderElement } from './renderElement'
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- test mock with partial Drawable
 const mockDrawable = { shape: 'test', sets: [], options: {} } as unknown as import('roughjs/bin/core').Drawable
-vi.mock('./shapeGenerator', () => ({
+vi.mock('@excalidraw-vue/core/rendering/shapeGenerator', () => ({
   generateShape: vi.fn(() => mockDrawable),
 }))
 
-vi.mock('./arrowhead', () => ({
+vi.mock('@excalidraw-vue/core/rendering/arrowhead', () => ({
   renderArrowheads: vi.fn(),
 }))
 
 // Get references to mocked functions
-import { generateShape } from './shapeGenerator'
-import { renderArrowheads } from './arrowhead'
+import { generateShape } from '@excalidraw-vue/core/rendering/shapeGenerator'
+import { renderArrowheads } from '@excalidraw-vue/core/rendering/arrowhead'
 
 function createRoughCanvasMock(): RoughCanvas {
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- test mock
@@ -41,7 +42,7 @@ describe('renderElement', () => {
   it('skips arrows with fewer than 2 points', () => {
     const { ctx, getCallsFor } = createCanvasContextMock()
     const rc = createRoughCanvasMock()
-    const el = createTestArrowElement({ points: [createPoint(0, 0)] })
+    const el = createTestArrowElement({ points: [pointFrom<LocalPoint>(0, 0)] })
     renderElement(ctx, rc, el, 'light')
     expect(getCallsFor('save')).toHaveLength(0)
   })
@@ -85,7 +86,7 @@ describe('renderElement', () => {
   it('renders arrowheads for arrow elements', () => {
     const { ctx } = createCanvasContextMock()
     const rc = createRoughCanvasMock()
-    const el = createTestArrowElement({ points: [createPoint(0, 0), createPoint(100, 50)] })
+    const el = createTestArrowElement({ points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(100, 50)] })
     renderElement(ctx, rc, el, 'light')
     expect(renderArrowheads).toHaveBeenCalledTimes(1)
     const callArgs = vi.mocked(renderArrowheads).mock.calls[0]

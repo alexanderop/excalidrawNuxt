@@ -104,7 +104,7 @@ describe('createElement', () => {
       const el = createElement('arrow', 70, 80)
       assertIsArrow(el)
       expect(el.points).toHaveLength(1)
-      expect(el.points[0]).toEqual({ x: 0, y: 0 })
+      expect(el.points[0]).toEqual([0, 0])
       expect(el.startArrowhead).toBeNull()
       expect(el.endArrowhead).toBe('arrow')
       expect(el.startBinding).toBeNull()

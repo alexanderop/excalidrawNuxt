@@ -1,7 +1,7 @@
 import { ref, computed } from 'vue'
 import type { ComputedRef, Ref } from 'vue'
 import { clamp } from '~/shared/math'
-import type { Point } from '~/shared/math'
+import type { GlobalPoint } from '~/shared/math'
 import { screenToScene, sceneToScreen } from '../coords'
 import type { Viewport } from '../coords'
 
@@ -13,10 +13,10 @@ interface UseViewportReturn {
   scrollY: Ref<number>
   zoom: Ref<number>
   viewport: ComputedRef<Viewport>
-  toScene: (screenX: number, screenY: number) => Point
-  toScreen: (sceneX: number, sceneY: number) => Point
-  zoomTo: (newZoom: number, center?: Point) => void
-  zoomBy: (delta: number, center?: Point) => void
+  toScene: (screenX: number, screenY: number) => GlobalPoint
+  toScreen: (sceneX: number, sceneY: number) => GlobalPoint
+  zoomTo: (newZoom: number, center?: GlobalPoint) => void
+  zoomBy: (delta: number, center?: GlobalPoint) => void
   panBy: (dx: number, dy: number) => void
 }
 
@@ -31,27 +31,27 @@ export function useViewport(): UseViewportReturn {
     zoom: zoom.value,
   }))
 
-  function toScene(screenX: number, screenY: number): Point {
+  function toScene(screenX: number, screenY: number): GlobalPoint {
     return screenToScene(screenX, screenY, viewport.value)
   }
 
-  function toScreen(sceneX: number, sceneY: number): Point {
+  function toScreen(sceneX: number, sceneY: number): GlobalPoint {
     return sceneToScreen(sceneX, sceneY, viewport.value)
   }
 
-  function zoomTo(newZoom: number, center?: Point): void {
+  function zoomTo(newZoom: number, center?: GlobalPoint): void {
     const clampedZoom = clamp(newZoom, MIN_ZOOM, MAX_ZOOM)
 
     if (center) {
-      const scenePoint = screenToScene(center.x, center.y, viewport.value)
-      scrollX.value = center.x / clampedZoom - scenePoint.x
-      scrollY.value = center.y / clampedZoom - scenePoint.y
+      const scenePoint = screenToScene(center[0], center[1], viewport.value)
+      scrollX.value = center[0] / clampedZoom - scenePoint[0]
+      scrollY.value = center[1] / clampedZoom - scenePoint[1]
     }
 
     zoom.value = clampedZoom
   }
 
-  function zoomBy(delta: number, center?: Point): void {
+  function zoomBy(delta: number, center?: GlobalPoint): void {
     zoomTo(zoom.value * (1 + delta), center)
   }
 

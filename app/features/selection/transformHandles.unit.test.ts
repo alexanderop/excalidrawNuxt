@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { createTestElement } from '~/__test-utils__/factories/element'
+import { createTestPoint } from '~/__test-utils__/factories/point'
 import { getTransformHandles, getTransformHandleAtPosition } from './transformHandles'
 
 describe('getTransformHandles', () => {
@@ -50,26 +51,26 @@ describe('getTransformHandleAtPosition', () => {
     const el = createTestElement({ x: 0, y: 0, width: 100, height: 100 })
     const handles = getTransformHandles(el, 1)
     const se = handles.se!
-    const seCenter = {
-      x: se[0] + se[2] / 2,
-      y: se[1] + se[3] / 2,
-    }
+    const seCenter = createTestPoint(
+      se[0] + se[2] / 2,
+      se[1] + se[3] / 2,
+    )
     expect(getTransformHandleAtPosition(seCenter, el, 1)).toBe('se')
   })
 
   it('returns null when not on any handle', () => {
     const el = createTestElement({ x: 0, y: 0, width: 100, height: 100 })
-    expect(getTransformHandleAtPosition({ x: 50, y: 50 }, el, 1)).toBeNull()
+    expect(getTransformHandleAtPosition(createTestPoint(50, 50), el, 1)).toBeNull()
   })
 
   it('detects rotation handle', () => {
     const el = createTestElement({ x: 0, y: 0, width: 100, height: 100 })
     const handles = getTransformHandles(el, 1)
     const rot = handles.rotation!
-    const rotCenter = {
-      x: rot[0] + rot[2] / 2,
-      y: rot[1] + rot[3] / 2,
-    }
+    const rotCenter = createTestPoint(
+      rot[0] + rot[2] / 2,
+      rot[1] + rot[3] / 2,
+    )
     expect(getTransformHandleAtPosition(rotCenter, el, 1)).toBe('rotation')
   })
 })

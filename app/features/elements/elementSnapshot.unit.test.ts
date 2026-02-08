@@ -46,7 +46,7 @@ describe('element creation snapshots', () => {
   it('creates arrow with arrow-specific defaults', () => {
     const el = createElement('arrow', 5, 10)
     assertIsArrow(el)
-    expect(el.points).toEqual([{ x: 0, y: 0 }])
+    expect(el.points).toEqual([[0, 0]])
     expect(el.startArrowhead).toBeNull()
     expect(el.endArrowhead).toBe('arrow')
     expect(el.startBinding).toBeNull()

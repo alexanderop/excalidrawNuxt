@@ -3,6 +3,8 @@ import { withSetup } from '~/__test-utils__/withSetup'
 import { createEventHandlerMap } from '~/__test-utils__/mocks/eventListenerMock'
 import { createCanvasStub } from '~/__test-utils__/mocks/canvasStub'
 import type { ExcalidrawElement } from '~/features/elements/types'
+import { pointFrom } from '~/shared/math'
+import type { GlobalPoint } from '~/shared/math'
 import { useDrawingInteraction } from './useDrawingInteraction'
 import type { ToolType } from './types'
 
@@ -36,7 +38,7 @@ function createSetup() {
     setTool: (tool: ToolType) => { activeTool.value = tool },
     spaceHeld: shallowRef(false),
     isPanning: shallowRef(false),
-    toScene: (x: number, y: number) => ({ x, y }),
+    toScene: (x: number, y: number) => pointFrom<GlobalPoint>(x, y),
     onElementCreated,
     markNewElementDirty,
     markStaticDirty,
@@ -56,7 +58,7 @@ describe('useDrawingInteraction', () => {
 
     using _ctx = withSetup(() => useDrawingInteraction(opts))
 
-    // Draw: pointerdown → pointermove → pointerup
+    // Draw: pointerdown -> pointermove -> pointerup
     firePointer('pointerdown', 100, 100)
     firePointer('pointermove', 200, 200)
 

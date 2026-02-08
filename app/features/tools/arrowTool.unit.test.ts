@@ -9,7 +9,8 @@ import { getElementBounds, getCommonBounds } from '~/features/selection/bounds'
 import { createElement } from '~/features/elements/createElement'
 import { mutateElement } from '~/features/elements/mutateElement'
 import { generateShape, clearShapeCache } from '~/features/rendering/shapeGenerator'
-import { createPoint } from '~/shared/math'
+import { pointFrom } from '~/shared/math'
+import type { LocalPoint, GlobalPoint } from '~/shared/math'
 import type { ExcalidrawArrowElement, ExcalidrawElement } from '~/features/elements/types'
 import type { ToolType } from './types'
 
@@ -49,7 +50,7 @@ function createDrawingSetup(tool: ToolType = 'arrow') {
     setTool: (t: ToolType) => { activeTool.value = t },
     spaceHeld: shallowRef(false),
     isPanning: shallowRef(false),
-    toScene: (x: number, y: number) => ({ x, y }),
+    toScene: (x: number, y: number) => pointFrom<GlobalPoint>(x, y),
     onElementCreated,
     markNewElementDirty,
     markStaticDirty,
@@ -103,8 +104,8 @@ describe('arrow tool integration', () => {
       expect(arrow.x).toBe(30)
       expect(arrow.y).toBe(40)
       expect(arrow.points).toHaveLength(2)
-      expect(arrow.points[0]).toEqual({ x: 0, y: 0 })
-      expect(arrow.points[1]).toEqual({ x: 100, y: 50 })
+      expect(arrow.points[0]).toEqual([0, 0])
+      expect(arrow.points[1]).toEqual([100, 50])
     })
 
     it('sets width and height as absolute deltas', () => {
@@ -212,7 +213,7 @@ describe('arrow tool integration', () => {
 
       const arrow = getCreatedArrow(opts.onElementCreated)
       const endPt = arrow.points[1]!
-      const angle = Math.atan2(endPt.y, endPt.x)
+      const angle = Math.atan2(endPt[1], endPt[0])
       const snappedDeg = Math.round((angle * 180) / Math.PI)
 
       // Should snap to a 15° multiple
@@ -265,7 +266,7 @@ describe('arrow tool integration', () => {
       expect(el.type).toBe('arrow')
       // eslint-disable-next-line vitest/no-conditional-in-test -- type narrowing for TypeScript
       if (el.type !== 'arrow') throw new Error('Expected arrow')
-      expect(el.points).toEqual([{ x: 0, y: 0 }])
+      expect(el.points).toEqual([[0, 0]])
       expect(el.x).toBe(50)
       expect(el.y).toBe(75)
     })
@@ -290,7 +291,7 @@ describe('arrow tool integration', () => {
   describe('arrow mutation', () => {
     it('updates points array via mutateElement', () => {
       const arrow = createTestArrowElement()
-      const newPoints = [createPoint(0, 0), createPoint(200, 150)]
+      const newPoints = [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(200, 150)]
 
       mutateElement(arrow, { points: newPoints })
 
@@ -310,98 +311,98 @@ describe('arrow tool integration', () => {
     it('hits point on the arrow shaft', () => {
       const arrow = createTestArrowElement({
         x: 0, y: 0,
-        points: [createPoint(0, 0), createPoint(100, 0)],
+        points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(100, 0)],
         width: 100, height: 0,
       })
 
       // midpoint of horizontal arrow
-      expect(hitTest({ x: 50, y: 0 }, arrow, 1)).toBe(true)
+      expect(hitTest(pointFrom<GlobalPoint>(50, 0), arrow, 1)).toBe(true)
     })
 
     it('hits near the arrow shaft within threshold', () => {
       const arrow = createTestArrowElement({
         x: 0, y: 0,
-        points: [createPoint(0, 0), createPoint(100, 0)],
+        points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(100, 0)],
         width: 100, height: 0,
         strokeWidth: 2,
       })
 
       // 5px away from horizontal arrow — within threshold (max(1+0.1, 10/1) = 10)
-      expect(hitTest({ x: 50, y: 5 }, arrow, 1)).toBe(true)
+      expect(hitTest(pointFrom<GlobalPoint>(50, 5), arrow, 1)).toBe(true)
     })
 
     it('misses point far from the arrow shaft', () => {
       const arrow = createTestArrowElement({
         x: 0, y: 0,
-        points: [createPoint(0, 0), createPoint(100, 0)],
+        points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(100, 0)],
         width: 100, height: 0,
       })
 
-      expect(hitTest({ x: 50, y: 50 }, arrow, 1)).toBe(false)
+      expect(hitTest(pointFrom<GlobalPoint>(50, 50), arrow, 1)).toBe(false)
     })
 
     it('hits diagonal arrow at midpoint', () => {
       const arrow = createTestArrowElement({
         x: 0, y: 0,
-        points: [createPoint(0, 0), createPoint(100, 100)],
+        points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(100, 100)],
         width: 100, height: 100,
       })
 
-      expect(hitTest({ x: 50, y: 50 }, arrow, 1)).toBe(true)
+      expect(hitTest(pointFrom<GlobalPoint>(50, 50), arrow, 1)).toBe(true)
     })
 
     it('hits vertical arrow', () => {
       const arrow = createTestArrowElement({
         x: 50, y: 0,
-        points: [createPoint(0, 0), createPoint(0, 200)],
+        points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(0, 200)],
         width: 0, height: 200,
       })
 
-      expect(hitTest({ x: 50, y: 100 }, arrow, 1)).toBe(true)
+      expect(hitTest(pointFrom<GlobalPoint>(50, 100), arrow, 1)).toBe(true)
     })
 
     it('threshold grows at low zoom', () => {
       const arrow = createTestArrowElement({
         x: 0, y: 0,
-        points: [createPoint(0, 0), createPoint(100, 0)],
+        points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(100, 0)],
         width: 100, height: 0,
       })
 
       // 25px away — misses at zoom=1 (threshold ~10)
-      expect(hitTest({ x: 50, y: 25 }, arrow, 1)).toBe(false)
+      expect(hitTest(pointFrom<GlobalPoint>(50, 25), arrow, 1)).toBe(false)
       // hits at zoom=0.2 (threshold = 10/0.2 = 50)
-      expect(hitTest({ x: 50, y: 25 }, arrow, 0.2)).toBe(true)
+      expect(hitTest(pointFrom<GlobalPoint>(50, 25), arrow, 0.2)).toBe(true)
     })
 
     it('skips deleted arrow', () => {
       const arrow = createTestArrowElement({
         x: 0, y: 0,
-        points: [createPoint(0, 0), createPoint(100, 0)],
+        points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(100, 0)],
         width: 100, height: 0,
         isDeleted: true,
       })
 
-      expect(hitTest({ x: 50, y: 0 }, arrow, 1)).toBe(false)
+      expect(hitTest(pointFrom<GlobalPoint>(50, 0), arrow, 1)).toBe(false)
     })
 
     it('hits start point of arrow', () => {
       const arrow = createTestArrowElement({
         x: 10, y: 20,
-        points: [createPoint(0, 0), createPoint(100, 50)],
+        points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(100, 50)],
         width: 100, height: 50,
       })
 
-      expect(hitTest({ x: 10, y: 20 }, arrow, 1)).toBe(true)
+      expect(hitTest(pointFrom<GlobalPoint>(10, 20), arrow, 1)).toBe(true)
     })
 
     it('hits end point of arrow', () => {
       const arrow = createTestArrowElement({
         x: 10, y: 20,
-        points: [createPoint(0, 0), createPoint(100, 50)],
+        points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(100, 50)],
         width: 100, height: 50,
       })
 
-      expect(hitTest({ x: 110, y: 70 }, arrow, 1)).toBe(true)
+      expect(hitTest(pointFrom<GlobalPoint>(110, 70), arrow, 1)).toBe(true)
     })
   })
 
@@ -409,7 +410,7 @@ describe('arrow tool integration', () => {
     it('returns bounds for horizontal arrow', () => {
       const arrow = createTestArrowElement({
         x: 10, y: 20,
-        points: [createPoint(0, 0), createPoint(100, 0)],
+        points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(100, 0)],
       })
 
       expect(getElementBounds(arrow)).toEqual([10, 20, 110, 20])
@@ -418,7 +419,7 @@ describe('arrow tool integration', () => {
     it('returns bounds for vertical arrow', () => {
       const arrow = createTestArrowElement({
         x: 10, y: 20,
-        points: [createPoint(0, 0), createPoint(0, 80)],
+        points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(0, 80)],
       })
 
       expect(getElementBounds(arrow)).toEqual([10, 20, 10, 100])
@@ -427,7 +428,7 @@ describe('arrow tool integration', () => {
     it('returns bounds for diagonal arrow', () => {
       const arrow = createTestArrowElement({
         x: 10, y: 20,
-        points: [createPoint(0, 0), createPoint(50, 30)],
+        points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(50, 30)],
       })
 
       expect(getElementBounds(arrow)).toEqual([10, 20, 60, 50])
@@ -436,7 +437,7 @@ describe('arrow tool integration', () => {
     it('handles arrow pointing in negative direction', () => {
       const arrow = createTestArrowElement({
         x: 100, y: 100,
-        points: [createPoint(0, 0), createPoint(-80, -60)],
+        points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(-80, -60)],
       })
 
       expect(getElementBounds(arrow)).toEqual([20, 40, 100, 100])
@@ -446,7 +447,7 @@ describe('arrow tool integration', () => {
       const arrow = createTestArrowElement({
         id: 'arrow-1',
         x: 200, y: 200,
-        points: [createPoint(0, 0), createPoint(100, 50)],
+        points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(100, 50)],
         width: 100, height: 50,
       })
 
@@ -513,11 +514,11 @@ describe('arrow tool integration', () => {
       const arrow = createTestArrowElement({
         id: 'arrow-1',
         x: 0, y: 0,
-        points: [createPoint(0, 0), createPoint(200, 0)],
+        points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(200, 0)],
         width: 200, height: 0,
       })
 
-      const found = getElementAtPosition({ x: 100, y: 0 }, [arrow], 1)
+      const found = getElementAtPosition(pointFrom<GlobalPoint>(100, 0), [arrow], 1)
       expect(found?.id).toBe('arrow-1')
     })
 
@@ -525,17 +526,17 @@ describe('arrow tool integration', () => {
       const bottom = createTestArrowElement({
         id: 'bottom',
         x: 0, y: 0,
-        points: [createPoint(0, 0), createPoint(200, 200)],
+        points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(200, 200)],
         width: 200, height: 200,
       })
       const top = createTestArrowElement({
         id: 'top',
         x: 0, y: 0,
-        points: [createPoint(0, 0), createPoint(200, 200)],
+        points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(200, 200)],
         width: 200, height: 200,
       })
 
-      const found = getElementAtPosition({ x: 100, y: 100 }, [bottom, top], 1)
+      const found = getElementAtPosition(pointFrom<GlobalPoint>(100, 100), [bottom, top], 1)
       expect(found?.id).toBe('top')
     })
 
@@ -547,12 +548,12 @@ describe('arrow tool integration', () => {
       const arrow = createTestArrowElement({
         id: 'arrow-1',
         x: 0, y: 50,
-        points: [createPoint(0, 0), createPoint(200, 0)],
+        points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(200, 0)],
         width: 200, height: 0,
       })
 
       // Click on arrow shaft at x=150 (outside the rect)
-      const found = getElementAtPosition({ x: 150, y: 50 }, [rect, arrow], 1)
+      const found = getElementAtPosition(pointFrom<GlobalPoint>(150, 50), [rect, arrow], 1)
       expect(found?.id).toBe('arrow-1')
     })
   })
@@ -571,7 +572,7 @@ describe('arrow tool integration', () => {
       const arrow = getCreatedArrow(opts.onElementCreated)
 
       // Midpoint of arrow shaft in scene coordinates
-      expect(hitTest({ x: 110, y: 70 }, arrow, 1)).toBe(true)
+      expect(hitTest(pointFrom<GlobalPoint>(110, 70), arrow, 1)).toBe(true)
     })
 
     it('arrow drawn via interaction has correct bounds', () => {

@@ -6,7 +6,7 @@ export {
   LINEAR_EDITOR_COLORS,
   RUBBER_BAND_DASH,
   RUBBER_BAND_WIDTH,
-} from './constants'
+} from '@excalidraw-vue/core/linear-editor'
 
 export type {
   MultiPointCreationState,
@@ -24,7 +24,7 @@ export {
   movePoint,
   movePoints,
   computeDimensionsFromPoints,
-} from './pointHandles'
+} from '@excalidraw-vue/core/linear-editor'
 
 export { useMultiPointCreation } from './useMultiPointCreation'
 export { useLinearEditor } from './useLinearEditor'
@@ -33,4 +33,4 @@ export {
   renderRubberBand,
   renderPointHandles,
   renderMidpointIndicator,
-} from './renderLinearEditor'
+} from '@excalidraw-vue/core/linear-editor'

@@ -1,4 +1,5 @@
 import { withSetup } from '~/__test-utils__/withSetup'
+import { createTestPoint } from '~/__test-utils__/factories/point'
 import { useViewport } from './useViewport'
 
 describe('useViewport', () => {
@@ -81,14 +82,14 @@ describe('useViewport', () => {
       vp.scrollY.value = 50
       vp.zoom.value = 1
 
-      const center = { x: 200, y: 200 }
-      const sceneBefore = vp.toScene(center.x, center.y)
+      const center = createTestPoint(200, 200)
+      const sceneBefore = vp.toScene(center[0], center[1])
 
       vp.zoomTo(2, center)
 
-      const sceneAfter = vp.toScene(center.x, center.y)
-      expect(sceneAfter.x).toBeCloseTo(sceneBefore.x)
-      expect(sceneAfter.y).toBeCloseTo(sceneBefore.y)
+      const sceneAfter = vp.toScene(center[0], center[1])
+      expect(sceneAfter[0]).toBeCloseTo(sceneBefore[0])
+      expect(sceneAfter[1]).toBeCloseTo(sceneBefore[1])
     })
 
     it('does not adjust scroll when no center is provided', () => {
@@ -124,14 +125,14 @@ describe('useViewport', () => {
       using vp = withSetup(() => useViewport())
       vp.scrollX.value = 20
       vp.scrollY.value = 20
-      const center = { x: 100, y: 100 }
-      const sceneBefore = vp.toScene(center.x, center.y)
+      const center = createTestPoint(100, 100)
+      const sceneBefore = vp.toScene(center[0], center[1])
 
       vp.zoomBy(1, center)
 
-      const sceneAfter = vp.toScene(center.x, center.y)
-      expect(sceneAfter.x).toBeCloseTo(sceneBefore.x)
-      expect(sceneAfter.y).toBeCloseTo(sceneBefore.y)
+      const sceneAfter = vp.toScene(center[0], center[1])
+      expect(sceneAfter[0]).toBeCloseTo(sceneBefore[0])
+      expect(sceneAfter[1]).toBeCloseTo(sceneBefore[1])
     })
   })
 
@@ -141,8 +142,8 @@ describe('useViewport', () => {
       vp.scrollX.value = 10
       vp.zoom.value = 2
       const scene = vp.toScene(100, 200)
-      expect(scene.x).toBe(40)
-      expect(scene.y).toBe(100)
+      expect(scene[0]).toBe(40)
+      expect(scene[1]).toBe(100)
     })
 
     it('toScreen converts scene to screen coordinates', () => {
@@ -150,8 +151,8 @@ describe('useViewport', () => {
       vp.scrollX.value = 10
       vp.zoom.value = 2
       const screen = vp.toScreen(100, 200)
-      expect(screen.x).toBe(220)
-      expect(screen.y).toBe(400)
+      expect(screen[0]).toBe(220)
+      expect(screen[1]).toBe(400)
     })
 
     it('round-trips screen -> scene -> screen', () => {
@@ -163,10 +164,10 @@ describe('useViewport', () => {
       const screenX = 300
       const screenY = 450
       const scene = vp.toScene(screenX, screenY)
-      const back = vp.toScreen(scene.x, scene.y)
+      const back = vp.toScreen(scene[0], scene[1])
 
-      expect(back.x).toBeCloseTo(screenX)
-      expect(back.y).toBeCloseTo(screenY)
+      expect(back[0]).toBeCloseTo(screenX)
+      expect(back[1]).toBeCloseTo(screenY)
     })
   })
 })

@@ -10,7 +10,7 @@ import { renderElement } from '~/features/rendering/renderElement'
 import { renderInteractiveScene } from '~/features/rendering/renderInteractive'
 import type { LinearEditorRenderState, MultiPointRenderState } from '~/features/rendering/renderInteractive'
 import type { ExcalidrawElement, ExcalidrawArrowElement, ExcalidrawTextElement } from '~/features/elements/types'
-import type { Box, Point } from '~/shared/math'
+import type { Box, GlobalPoint } from '~/shared/math'
 import { useTheme, resolveColor } from '~/features/theme'
 
 interface UseSceneRendererOptions {
@@ -44,7 +44,7 @@ interface UseSceneRendererOptions {
   editingHoveredMidpoint?: ShallowRef<number | null>
   // Multi-point creation state
   multiElement?: ShallowRef<ExcalidrawArrowElement | null>
-  lastCursorPoint?: ShallowRef<Point | null>
+  lastCursorPoint?: ShallowRef<GlobalPoint | null>
   // Binding highlights
   suggestedBindings?: ShallowRef<readonly ExcalidrawElement[]>
   // Group selection
@@ -77,7 +77,7 @@ function buildLinearEditorState(
 
 function buildMultiPointState(
   multiElement: ShallowRef<ExcalidrawArrowElement | null> | undefined,
-  lastCursorPoint: ShallowRef<Point | null> | undefined,
+  lastCursorPoint: ShallowRef<GlobalPoint | null> | undefined,
 ): MultiPointRenderState | null {
   const el = multiElement?.value
   const cursor = lastCursorPoint?.value

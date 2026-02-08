@@ -2,7 +2,9 @@ import { shallowRef } from 'vue'
 import type { Ref, ShallowRef } from 'vue'
 import { useEventListener } from '@vueuse/core'
 import type { ExcalidrawElement, ExcalidrawTextElement } from '~/features/elements/types'
+import { isTextElement } from '~/features/elements/types'
 import type { ToolType } from './types'
+import type { GlobalPoint } from '~/shared/math'
 import { createElement } from '~/features/elements/createElement'
 import { mutateElement } from '~/features/elements/mutateElement'
 import { getElementAtPosition } from '~/features/selection/hitTest'
@@ -14,7 +16,7 @@ interface UseTextInteractionOptions {
   textEditorContainerRef: Ref<HTMLDivElement | null>
   activeTool: ShallowRef<ToolType>
   setTool: (tool: ToolType) => void
-  toScene: (x: number, y: number) => { x: number; y: number }
+  toScene: (x: number, y: number) => GlobalPoint
   zoom: Ref<number>
   scrollX: Ref<number>
   scrollY: Ref<number>
@@ -176,7 +178,7 @@ export function useTextInteraction(options: UseTextInteractionOptions): UseTextI
     select(element.id)
 
     const textEl = elements.value.find(el => el.id === element.id)
-    if (!textEl || textEl.type !== 'text') return
+    if (!textEl || !isTextElement(textEl)) return
 
     openEditor(textEl)
   }
@@ -192,7 +194,7 @@ export function useTextInteraction(options: UseTextInteractionOptions): UseTextI
     // Switch tool BEFORE opening editor — otherwise onBeforeToolChange
     // sees editingTextElement and immediately closes the editor
     setTool('selection')
-    createAndEditText(scenePoint.x, scenePoint.y)
+    createAndEditText(scenePoint[0], scenePoint[1])
   })
 
   // Entry point 2: Double-click to edit existing text or create new
@@ -203,7 +205,7 @@ export function useTextInteraction(options: UseTextInteractionOptions): UseTextI
     const scenePoint = toScene(e.offsetX, e.offsetY)
     const hitElement = getElementAtPosition(scenePoint, elements.value, zoom.value)
 
-    if (hitElement && hitElement.type === 'text') {
+    if (hitElement && isTextElement(hitElement)) {
       openEditor(hitElement)
       return
     }
@@ -211,7 +213,7 @@ export function useTextInteraction(options: UseTextInteractionOptions): UseTextI
     // Don't create new text if another element was hit (e.g. arrow double-click)
     if (hitElement) return
 
-    createAndEditText(scenePoint.x, scenePoint.y)
+    createAndEditText(scenePoint[0], scenePoint[1])
   })
 
   return { editingTextElement, submitTextEditor: submitAndClose }

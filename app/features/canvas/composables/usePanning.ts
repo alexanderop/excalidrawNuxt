@@ -1,13 +1,15 @@
 import { ref, computed } from 'vue'
 import type { ComputedRef, Ref, ShallowRef } from 'vue'
 import { useEventListener } from '@vueuse/core'
+import { pointFrom } from '~/shared/math'
+import type { GlobalPoint } from '~/shared/math'
 import type { ToolType } from '~/features/tools/types'
 import { isDrawingTool } from '~/features/tools/types'
 
 interface UsePanningOptions {
   canvasRef: Readonly<Ref<HTMLCanvasElement | null>>
   panBy: (dx: number, dy: number) => void
-  zoomBy: (delta: number, center: { x: number; y: number }) => void
+  zoomBy: (delta: number, center?: GlobalPoint) => void
   activeTool: ShallowRef<ToolType>
 }
 
@@ -35,7 +37,7 @@ export function usePanning({ canvasRef, panBy, zoomBy, activeTool }: UsePanningO
     e.preventDefault()
     if (e.ctrlKey || e.metaKey) {
       const delta = -e.deltaY * 0.01
-      zoomBy(delta, { x: e.offsetX, y: e.offsetY })
+      zoomBy(delta, pointFrom<GlobalPoint>(e.offsetX, e.offsetY))
       return
     }
     panBy(-e.deltaX, -e.deltaY)

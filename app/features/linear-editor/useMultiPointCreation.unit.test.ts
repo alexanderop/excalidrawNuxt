@@ -3,7 +3,8 @@ import { withSetup } from '~/__test-utils__/withSetup'
 import { createTestArrowElement } from '~/__test-utils__/factories/element'
 import { createEventHandlerMap } from '~/__test-utils__/mocks/eventListenerMock'
 import { createCanvasStub } from '~/__test-utils__/mocks/canvasStub'
-import { createPoint } from '~/shared/math'
+import { pointFrom } from '~/shared/math'
+import type { LocalPoint, GlobalPoint } from '~/shared/math'
 import type { ExcalidrawElement } from '~/features/elements/types'
 import { useMultiPointCreation } from './useMultiPointCreation'
 
@@ -29,7 +30,7 @@ vi.mock('@vueuse/core', () => ({
 function createSetup() {
   return {
     canvasRef: shallowRef<HTMLCanvasElement | null>(createCanvasStub()),
-    toScene: (x: number, y: number) => ({ x, y }),
+    toScene: (x: number, y: number) => pointFrom<GlobalPoint>(x, y),
     markStaticDirty: vi.fn(),
     markInteractiveDirty: vi.fn(),
     onFinalize: vi.fn(),
@@ -49,12 +50,12 @@ describe('useMultiPointCreation', () => {
 
     const arrow = createTestArrowElement({
       x: 10, y: 20,
-      points: [createPoint(0, 0), createPoint(50, 30)],
+      points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(50, 30)],
     })
     ctx.startMultiPoint(arrow)
 
     expect(ctx.multiElement.value).toBe(arrow)
-    expect(ctx.lastCursorPoint.value).toEqual({ x: 60, y: 50 })
+    expect(ctx.lastCursorPoint.value).toEqual([60, 50])
   })
 
   it('adds a new point on click', () => {
@@ -63,14 +64,14 @@ describe('useMultiPointCreation', () => {
 
     const arrow = createTestArrowElement({
       x: 0, y: 0,
-      points: [createPoint(0, 0), createPoint(100, 0)],
+      points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(100, 0)],
     })
     ctx.startMultiPoint(arrow)
 
     fire('pointerdown', { offsetX: 100, offsetY: 50, button: 0 })
 
     expect(arrow.points).toHaveLength(3)
-    expect(arrow.points[2]).toEqual({ x: 100, y: 50 })
+    expect(arrow.points[2]).toEqual([100, 50])
     expect(opts.markStaticDirty).toHaveBeenCalled()
   })
 
@@ -80,13 +81,13 @@ describe('useMultiPointCreation', () => {
 
     const arrow = createTestArrowElement({
       x: 0, y: 0,
-      points: [createPoint(0, 0), createPoint(100, 0)],
+      points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(100, 0)],
     })
     ctx.startMultiPoint(arrow)
 
     fire('pointermove', { offsetX: 200, offsetY: 100 })
 
-    expect(ctx.lastCursorPoint.value).toEqual({ x: 200, y: 100 })
+    expect(ctx.lastCursorPoint.value).toEqual([200, 100])
     expect(opts.markInteractiveDirty).toHaveBeenCalled()
   })
 
@@ -96,7 +97,7 @@ describe('useMultiPointCreation', () => {
 
     const arrow = createTestArrowElement({
       x: 0, y: 0,
-      points: [createPoint(0, 0), createPoint(100, 0)],
+      points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(100, 0)],
     })
     ctx.startMultiPoint(arrow)
 
@@ -113,7 +114,7 @@ describe('useMultiPointCreation', () => {
 
     const arrow = createTestArrowElement({
       x: 0, y: 0,
-      points: [createPoint(0, 0), createPoint(100, 0)],
+      points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(100, 0)],
     })
     ctx.startMultiPoint(arrow)
 
@@ -129,7 +130,7 @@ describe('useMultiPointCreation', () => {
 
     const arrow = createTestArrowElement({
       x: 0, y: 0,
-      points: [createPoint(0, 0), createPoint(100, 0)],
+      points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(100, 0)],
     })
     ctx.startMultiPoint(arrow)
 

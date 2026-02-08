@@ -3,8 +3,8 @@ import type { Ref, ShallowRef } from 'vue'
 import { useEventListener } from '@vueuse/core'
 import type { ExcalidrawElement, ExcalidrawArrowElement } from '~/features/elements/types'
 import { mutateElement } from '~/features/elements/mutateElement'
-import { createPoint, snapAngle } from '~/shared/math'
-import type { Point } from '~/shared/math'
+import { pointFrom, snapAngle } from '~/shared/math'
+import type { GlobalPoint, LocalPoint } from '~/shared/math'
 import {
   getHoveredElementForBinding,
   bindArrowToElement,
@@ -16,7 +16,7 @@ const _excludeIds = new Set<string>()
 
 interface UseMultiPointCreationOptions {
   canvasRef: Readonly<Ref<HTMLCanvasElement | null>>
-  toScene: (screenX: number, screenY: number) => Point
+  toScene: (screenX: number, screenY: number) => GlobalPoint
   markStaticDirty: () => void
   markInteractiveDirty: () => void
   onFinalize: () => void
@@ -27,7 +27,7 @@ interface UseMultiPointCreationOptions {
 
 interface UseMultiPointCreationReturn {
   multiElement: ShallowRef<ExcalidrawArrowElement | null>
-  lastCursorPoint: ShallowRef<Point | null>
+  lastCursorPoint: ShallowRef<GlobalPoint | null>
   startMultiPoint: (element: ExcalidrawArrowElement) => void
   finalizeMultiPoint: () => void
 }
@@ -45,16 +45,16 @@ export function useMultiPointCreation(options: UseMultiPointCreationOptions): Us
   } = options
 
   const multiElement = shallowRef<ExcalidrawArrowElement | null>(null)
-  const lastCursorPoint = shallowRef<Point | null>(null)
+  const lastCursorPoint = shallowRef<GlobalPoint | null>(null)
 
   function startMultiPoint(element: ExcalidrawArrowElement): void {
     multiElement.value = element
     const lastPt = element.points.at(-1)
     if (!lastPt) return
-    lastCursorPoint.value = {
-      x: lastPt.x + element.x,
-      y: lastPt.y + element.y,
-    }
+    lastCursorPoint.value = pointFrom<GlobalPoint>(
+      lastPt[0] + element.x,
+      lastPt[1] + element.y,
+    )
     markInteractiveDirty()
   }
 
@@ -64,7 +64,7 @@ export function useMultiPointCreation(options: UseMultiPointCreationOptions): Us
       // Bind end endpoint if near a shape
       const lastPt = el.points.at(-1)
       if (lastPt) {
-        const endScene = { x: el.x + lastPt.x, y: el.y + lastPt.y }
+        const endScene = pointFrom<GlobalPoint>(el.x + lastPt[0], el.y + lastPt[1])
         _excludeIds.clear()
         _excludeIds.add(el.id)
         const candidate = getHoveredElementForBinding(endScene, elements.value, zoom.value, _excludeIds)
@@ -90,19 +90,19 @@ export function useMultiPointCreation(options: UseMultiPointCreationOptions): Us
     const scene = toScene(e.offsetX, e.offsetY)
     const lastPt = el.points.at(-1)
     if (!lastPt) return
-    const lastSceneX = lastPt.x + el.x
-    const lastSceneY = lastPt.y + el.y
+    const lastSceneX = lastPt[0] + el.x
+    const lastSceneY = lastPt[1] + el.y
 
-    let dx = scene.x - lastSceneX
-    let dy = scene.y - lastSceneY
+    let dx = scene[0] - lastSceneX
+    let dy = scene[1] - lastSceneY
 
     if (e.shiftKey) {
       const snapped = snapAngle(dx, dy)
-      dx = snapped.x
-      dy = snapped.y
+      dx = snapped.dx
+      dy = snapped.dy
     }
 
-    const newRelativePoint = createPoint(lastPt.x + dx, lastPt.y + dy)
+    const newRelativePoint = pointFrom<LocalPoint>(lastPt[0] + dx, lastPt[1] + dy)
     const newPoints = [...el.points, newRelativePoint]
     const dims = computeDimensionsFromPoints(newPoints)
 

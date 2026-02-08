@@ -3,7 +3,7 @@ import type { Ref, ShallowRef } from 'vue'
 import { useEventListener } from '@vueuse/core'
 import type { ExcalidrawElement, ExcalidrawArrowElement } from '~/features/elements/types'
 import { mutateElement } from '~/features/elements/mutateElement'
-import type { Point } from '~/shared/math'
+import type { GlobalPoint } from '~/shared/math'
 import {
   getHoveredElementForBinding,
   bindArrowToElement,
@@ -24,7 +24,7 @@ const _excludeIds = new Set<string>()
 interface UseLinearEditorOptions {
   canvasRef: Readonly<Ref<HTMLCanvasElement | null>>
   zoom: Ref<number>
-  toScene: (screenX: number, screenY: number) => Point
+  toScene: (screenX: number, screenY: number) => GlobalPoint
   markStaticDirty: () => void
   markInteractiveDirty: () => void
   select: (id: string) => void
@@ -42,7 +42,7 @@ interface UseLinearEditorReturn {
 
 type EditorInteraction =
   | { type: 'idle' }
-  | { type: 'dragging'; lastScene: Point }
+  | { type: 'dragging'; lastScene: GlobalPoint }
 
 function togglePointInSet(set: Set<number>, idx: number): void {
   if (set.has(idx)) {
@@ -178,8 +178,8 @@ export function useLinearEditor(options: UseLinearEditorOptions): UseLinearEdito
     const scene = toScene(e.offsetX, e.offsetY)
 
     if (interaction.type === 'dragging') {
-      const dx = scene.x - interaction.lastScene.x
-      const dy = scene.y - interaction.lastScene.y
+      const dx = scene[0] - interaction.lastScene[0]
+      const dy = scene[1] - interaction.lastScene[1]
       interaction.lastScene = scene
 
       if (selectedPointIndices.value.size > 0) {

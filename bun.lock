@@ -5,6 +5,9 @@
     "": {
       "name": "excalidrawNuxt",
       "dependencies": {
+        "@excalidraw-vue/core": "workspace:*",
+        "@excalidraw/element": "0.18.0-f0063e113",
+        "@excalidraw/math": "0.18.0-f0063e113",
         "@tailwindcss/vite": "^4.1.18",
         "@vueuse/core": "^14.2.0",
         "nanoid": "^5.1.6",
@@ -18,6 +21,7 @@
       },
       "devDependencies": {
         "@types/tinycolor2": "^1.4.6",
+        "@vitejs/plugin-vue": "^6.0.4",
         "@vitest/browser-playwright": "^4.0.0",
         "@vitest/coverage-v8": "^4.0.0",
         "@vitest/eslint-plugin": "^1.6.6",
@@ -39,6 +43,24 @@
         "vitest-browser-vue": "^2.0.0",
       },
     },
+    "packages/excalidraw-vue-core": {
+      "name": "@excalidraw-vue/core",
+      "version": "0.0.1",
+      "dependencies": {
+        "@excalidraw/common": "0.18.0-f0063e113",
+        "@excalidraw/element": "0.18.0-f0063e113",
+        "@excalidraw/math": "0.18.0-f0063e113",
+        "nanoid": "^5.1.5",
+        "roughjs": "^4.6.6",
+        "tinycolor2": "^1.6.0",
+      },
+      "peerDependencies": {
+        "vue": "^3.5.0",
+      },
+    },
+  },
+  "patchedDependencies": {
+    "@excalidraw/math@0.18.0-f0063e113": "patches/@excalidraw%2Fmath@0.18.0-f0063e113.patch",
   },
   "packages": {
     "@babel/code-frame": ["@babel/code-frame@7.29.0", "", { "dependencies": { "@babel/helper-validator-identifier": "^7.28.5", "js-tokens": "^4.0.0", "picocolors": "^1.1.1" } }, "sha512-9NhCeYjq9+3uxgdtp20LSiJXJvN0FeCtNGpJxuMFZ1Kv3cWUNb6DOhJwUvcVCzKGR66cw4njwM6hrJLqgOwbcw=="],
@@ -178,6 +200,14 @@
     "@eslint/object-schema": ["@eslint/object-schema@3.0.1", "", {}, "sha512-P9cq2dpr+LU8j3qbLygLcSZrl2/ds/pUpfnHNNuk5HW7mnngHs+6WSq5C9mO3rqRX8A1poxqLTC9cu0KOyJlBg=="],
 
     "@eslint/plugin-kit": ["@eslint/plugin-kit@0.6.0", "", { "dependencies": { "@eslint/core": "^1.1.0", "levn": "^0.4.1" } }, "sha512-bIZEUzOI1jkhviX2cp5vNyXQc6olzb2ohewQubuYlMXZ2Q/XjBO0x0XhGPvc9fjSIiUN0vw+0hq53BJ4eQSJKQ=="],
+
+    "@excalidraw-vue/core": ["@excalidraw-vue/core@workspace:packages/excalidraw-vue-core"],
+
+    "@excalidraw/common": ["@excalidraw/common@0.18.0-f0063e113", "", {}, "sha512-VS9aBg3vRYn8jrvuaAYVrM2Q3rokDO6gmx3bmYZ22fCr6rnnumhJpQvpQEv3fh7YrvnIrihhLgIt8eiCIfzXag=="],
+
+    "@excalidraw/element": ["@excalidraw/element@0.18.0-f0063e113", "", { "dependencies": { "@excalidraw/common": "0.18.0-f0063e113" } }, "sha512-xd3/it2NCGa0gEKnNkSCxDj5seAgEOhGxKfpSUkPLvQXV743THdnh+vVU1dT4xg6/YrMdCCk9GgoLPMw0DP2vg=="],
+
+    "@excalidraw/math": ["@excalidraw/math@0.18.0-f0063e113", "", { "dependencies": { "@excalidraw/common": "0.18.0-f0063e113" } }, "sha512-WLFqyqo2AcrRNmCpP0QG7kf98zAakAj2TadjlEVwUDQ4YwH8o90TC/phpx7xhTL5cJwMtNyAubNswR4aKCyPrQ=="],
 
     "@humanfs/core": ["@humanfs/core@0.19.1", "", {}, "sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA=="],
 

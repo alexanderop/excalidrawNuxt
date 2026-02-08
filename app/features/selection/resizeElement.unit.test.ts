@@ -1,4 +1,5 @@
 import { createTestElement } from '~/__test-utils__/factories/element'
+import { createTestPoint } from '~/__test-utils__/factories/point'
 import { resizeElement } from './resizeElement'
 import type { ResizeState } from './resizeElement'
 
@@ -8,9 +9,9 @@ describe('resizeElement', () => {
     const state: ResizeState = {
       handleType: 'se',
       originalBounds: { x: 0, y: 0, width: 100, height: 100 },
-      origin: { x: 100, y: 100 },
+      origin: createTestPoint(100, 100),
     }
-    resizeElement({ x: 150, y: 130 }, state, el, false)
+    resizeElement(createTestPoint(150, 130), state, el, false)
     expect(el.width).toBe(150)
     expect(el.height).toBe(130)
     expect(el.x).toBe(0)
@@ -22,9 +23,9 @@ describe('resizeElement', () => {
     const state: ResizeState = {
       handleType: 'nw',
       originalBounds: { x: 0, y: 0, width: 100, height: 100 },
-      origin: { x: 0, y: 0 },
+      origin: createTestPoint(0, 0),
     }
-    resizeElement({ x: 20, y: 30 }, state, el, false)
+    resizeElement(createTestPoint(20, 30), state, el, false)
     expect(el.x).toBe(20)
     expect(el.y).toBe(30)
     expect(el.width).toBe(80)
@@ -36,9 +37,9 @@ describe('resizeElement', () => {
     const state: ResizeState = {
       handleType: 'e',
       originalBounds: { x: 0, y: 0, width: 100, height: 100 },
-      origin: { x: 100, y: 50 },
+      origin: createTestPoint(100, 50),
     }
-    resizeElement({ x: 200, y: 80 }, state, el, false)
+    resizeElement(createTestPoint(200, 80), state, el, false)
     expect(el.width).toBe(200)
     expect(el.height).toBe(100)
   })
@@ -48,9 +49,9 @@ describe('resizeElement', () => {
     const state: ResizeState = {
       handleType: 'n',
       originalBounds: { x: 0, y: 0, width: 100, height: 100 },
-      origin: { x: 50, y: 0 },
+      origin: createTestPoint(50, 0),
     }
-    resizeElement({ x: 50, y: 20 }, state, el, false)
+    resizeElement(createTestPoint(50, 20), state, el, false)
     expect(el.y).toBe(20)
     expect(el.height).toBe(80)
     expect(el.width).toBe(100)
@@ -61,9 +62,9 @@ describe('resizeElement', () => {
     const state: ResizeState = {
       handleType: 'se',
       originalBounds: { x: 0, y: 0, width: 100, height: 50 },
-      origin: { x: 100, y: 50 },
+      origin: createTestPoint(100, 50),
     }
-    resizeElement({ x: 200, y: 80 }, state, el, true)
+    resizeElement(createTestPoint(200, 80), state, el, true)
     expect(el.width / el.height).toBeCloseTo(2, 5)
   })
 
@@ -72,9 +73,9 @@ describe('resizeElement', () => {
     const state: ResizeState = {
       handleType: 'se',
       originalBounds: { x: 50, y: 50, width: 100, height: 100 },
-      origin: { x: 150, y: 150 },
+      origin: createTestPoint(150, 150),
     }
-    resizeElement({ x: 30, y: 30 }, state, el, false)
+    resizeElement(createTestPoint(30, 30), state, el, false)
     expect(el.width).toBeGreaterThan(0)
     expect(el.height).toBeGreaterThan(0)
   })
@@ -84,9 +85,9 @@ describe('resizeElement', () => {
     const state: ResizeState = {
       handleType: 'se',
       originalBounds: { x: 0, y: 0, width: 100, height: 100 },
-      origin: { x: 100, y: 100 },
+      origin: createTestPoint(100, 100),
     }
-    resizeElement({ x: 0.1, y: 0.1 }, state, el, false)
+    resizeElement(createTestPoint(0.1, 0.1), state, el, false)
     expect(el.width).toBeGreaterThanOrEqual(1)
     expect(el.height).toBeGreaterThanOrEqual(1)
   })
@@ -96,10 +97,10 @@ describe('resizeElement', () => {
     const state: ResizeState = {
       handleType: 'se',
       originalBounds: { x: 0, y: 0, width: 100, height: 100 },
-      origin: { x: 100, y: 100 },
+      origin: createTestPoint(100, 100),
     }
     // Drag to essentially zero size
-    resizeElement({ x: 0, y: 0 }, state, el, false)
+    resizeElement(createTestPoint(0, 0), state, el, false)
     expect(el.width).toBeGreaterThanOrEqual(1)
     expect(el.height).toBeGreaterThanOrEqual(1)
   })
@@ -109,10 +110,10 @@ describe('resizeElement', () => {
     const state: ResizeState = {
       handleType: 'se',
       originalBounds: { x: 50, y: 50, width: 100, height: 100 },
-      origin: { x: 150, y: 150 },
+      origin: createTestPoint(150, 150),
     }
     // Drag well past the opposite edge
-    resizeElement({ x: 10, y: 10 }, state, el, false)
+    resizeElement(createTestPoint(10, 10), state, el, false)
     expect(el.width).toBeGreaterThan(0)
     expect(el.height).toBeGreaterThan(0)
     // X/Y should have shifted to accommodate the flip
@@ -124,10 +125,10 @@ describe('resizeElement', () => {
     const state: ResizeState = {
       handleType: 'ne',
       originalBounds: { x: 0, y: 0, width: 100, height: 100 },
-      origin: { x: 100, y: 0 },
+      origin: createTestPoint(100, 0),
     }
     // Drag beyond left and bottom edges
-    resizeElement({ x: -50, y: 150 }, state, el, false)
+    resizeElement(createTestPoint(-50, 150), state, el, false)
     expect(el.width).toBeGreaterThan(0)
     expect(el.height).toBeGreaterThan(0)
   })

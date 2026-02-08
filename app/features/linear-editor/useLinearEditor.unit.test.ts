@@ -3,7 +3,8 @@ import { withSetup } from '~/__test-utils__/withSetup'
 import { createTestArrowElement } from '~/__test-utils__/factories/element'
 import { createEventHandlerMap } from '~/__test-utils__/mocks/eventListenerMock'
 import { createCanvasStub } from '~/__test-utils__/mocks/canvasStub'
-import { createPoint } from '~/shared/math'
+import { pointFrom } from '~/shared/math'
+import type { LocalPoint, GlobalPoint } from '~/shared/math'
 import type { ExcalidrawElement } from '~/features/elements/types'
 import { useLinearEditor } from './useLinearEditor'
 
@@ -30,7 +31,7 @@ function createSetup() {
   return {
     canvasRef: shallowRef<HTMLCanvasElement | null>(createCanvasStub()),
     zoom: shallowRef(1),
-    toScene: (x: number, y: number) => ({ x, y }),
+    toScene: (x: number, y: number) => pointFrom<GlobalPoint>(x, y),
     markStaticDirty: vi.fn(),
     markInteractiveDirty: vi.fn(),
     select: vi.fn(),
@@ -49,7 +50,7 @@ describe('useLinearEditor', () => {
 
     const arrow = createTestArrowElement({
       x: 0, y: 0,
-      points: [createPoint(0, 0), createPoint(100, 0)],
+      points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(100, 0)],
     })
 
     ctx.enterEditor(arrow)
@@ -65,7 +66,7 @@ describe('useLinearEditor', () => {
 
     const arrow = createTestArrowElement({
       x: 0, y: 0,
-      points: [createPoint(0, 0), createPoint(100, 0)],
+      points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(100, 0)],
     })
 
     ctx.enterEditor(arrow)
@@ -84,7 +85,7 @@ describe('useLinearEditor', () => {
 
     const arrow = createTestArrowElement({
       x: 0, y: 0,
-      points: [createPoint(0, 0), createPoint(100, 0)],
+      points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(100, 0)],
     })
 
     ctx.enterEditor(arrow)
@@ -101,7 +102,7 @@ describe('useLinearEditor', () => {
 
     const arrow = createTestArrowElement({
       x: 0, y: 0,
-      points: [createPoint(0, 0), createPoint(100, 0)],
+      points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(100, 0)],
     })
 
     ctx.enterEditor(arrow)
@@ -114,8 +115,8 @@ describe('useLinearEditor', () => {
     fire('pointermove', { offsetX: 120, offsetY: 10 })
 
     // Point should have moved
-    expect(arrow.points[1]!.x).toBe(120)
-    expect(arrow.points[1]!.y).toBe(10)
+    expect(arrow.points[1]![0]).toBe(120)
+    expect(arrow.points[1]![1]).toBe(10)
     expect(opts.markStaticDirty).toHaveBeenCalled()
   })
 
@@ -125,7 +126,7 @@ describe('useLinearEditor', () => {
 
     const arrow = createTestArrowElement({
       x: 0, y: 0,
-      points: [createPoint(0, 0), createPoint(100, 0)],
+      points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(100, 0)],
     })
 
     ctx.enterEditor(arrow)
@@ -142,7 +143,7 @@ describe('useLinearEditor', () => {
 
     const arrow = createTestArrowElement({
       x: 0, y: 0,
-      points: [createPoint(0, 0), createPoint(50, 0), createPoint(100, 0)],
+      points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(50, 0), pointFrom<LocalPoint>(100, 0)],
     })
 
     ctx.enterEditor(arrow)
@@ -165,7 +166,7 @@ describe('useLinearEditor', () => {
 
     const arrow = createTestArrowElement({
       x: 0, y: 0,
-      points: [createPoint(0, 0), createPoint(100, 0)],
+      points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(100, 0)],
     })
 
     ctx.enterEditor(arrow)
@@ -186,7 +187,7 @@ describe('useLinearEditor', () => {
 
     const arrow = createTestArrowElement({
       x: 0, y: 0,
-      points: [createPoint(0, 0), createPoint(50, 0), createPoint(100, 0)],
+      points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(50, 0), pointFrom<LocalPoint>(100, 0)],
     })
 
     ctx.enterEditor(arrow)

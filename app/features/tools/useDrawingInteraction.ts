@@ -2,9 +2,11 @@ import { shallowRef } from 'vue'
 import type { Ref, ShallowRef } from 'vue'
 import { useEventListener } from '@vueuse/core'
 import type { ExcalidrawElement, ExcalidrawArrowElement } from '~/features/elements/types'
+import { isArrowElement } from '~/features/elements/types'
 import { createElement } from '~/features/elements/createElement'
 import { mutateElement } from '~/features/elements/mutateElement'
-import { createPoint, snapAngle } from '~/shared/math'
+import { pointFrom, snapAngle } from '~/shared/math'
+import type { GlobalPoint, LocalPoint } from '~/shared/math'
 import {
   getHoveredElementForBinding,
   bindArrowToElement,
@@ -22,7 +24,7 @@ interface UseDrawingInteractionOptions {
   setTool: (tool: ToolType) => void
   spaceHeld: Ref<boolean>
   isPanning: Ref<boolean>
-  toScene: (screenX: number, screenY: number) => { x: number; y: number }
+  toScene: (screenX: number, screenY: number) => GlobalPoint
   onElementCreated: (element: ExcalidrawElement) => void
   markNewElementDirty: () => void
   markStaticDirty: () => void
@@ -69,8 +71,8 @@ export function useDrawingInteraction(options: UseDrawingInteractionOptions): Us
     if (e.button !== 0) return
 
     const scene = toScene(e.offsetX, e.offsetY)
-    originX = scene.x
-    originY = scene.y
+    originX = scene[0]
+    originY = scene[1]
 
     newElement.value = createElement(tool, originX, originY)
 
@@ -83,16 +85,16 @@ export function useDrawingInteraction(options: UseDrawingInteractionOptions): Us
     const scene = toScene(e.offsetX, e.offsetY)
 
     if (isLinearTool(activeTool.value)) {
-      let dx = scene.x - originX
-      let dy = scene.y - originY
+      let dx = scene[0] - originX
+      let dy = scene[1] - originY
 
       if (e.shiftKey) {
         const snapped = snapAngle(dx, dy)
-        dx = snapped.x
-        dy = snapped.y
+        dx = snapped.dx
+        dy = snapped.dy
       }
 
-      const points = [createPoint(0, 0), createPoint(dx, dy)]
+      const points = [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(dx, dy)]
 
       mutateElement(newElement.value, {
         points,
@@ -103,11 +105,11 @@ export function useDrawingInteraction(options: UseDrawingInteractionOptions): Us
       })
 
       // Update suggested bindings for arrow endpoints
-      if (newElement.value.type === 'arrow') {
+      if (isArrowElement(newElement.value)) {
         _excludeIds.clear()
         _excludeIds.add(newElement.value.id)
-        const endPoint = { x: originX + dx, y: originY + dy }
-        const startPoint = { x: originX, y: originY }
+        const endPoint = pointFrom<GlobalPoint>(originX + dx, originY + dy)
+        const startPoint = pointFrom<GlobalPoint>(originX, originY)
         const candidates: ExcalidrawElement[] = []
 
         const startCandidate = getHoveredElementForBinding(startPoint, elements.value, zoom.value, _excludeIds)
@@ -124,8 +126,8 @@ export function useDrawingInteraction(options: UseDrawingInteractionOptions): Us
       return
     }
 
-    let rawW = scene.x - originX
-    let rawH = scene.y - originY
+    let rawW = scene[0] - originX
+    let rawH = scene[1] - originY
 
     if (e.shiftKey) {
       const side = Math.max(Math.abs(rawW), Math.abs(rawH))
@@ -147,7 +149,7 @@ export function useDrawingInteraction(options: UseDrawingInteractionOptions): Us
     _excludeIds.clear()
     _excludeIds.add(arrowEl.id)
 
-    const startScenePoint = { x: arrowEl.x, y: arrowEl.y }
+    const startScenePoint = pointFrom<GlobalPoint>(arrowEl.x, arrowEl.y)
     const startCandidate = getHoveredElementForBinding(startScenePoint, elements.value, zoom.value, _excludeIds)
     if (startCandidate) {
       bindArrowToElement(arrowEl, 'start', startCandidate.element, startCandidate.fixedPoint)
@@ -156,7 +158,7 @@ export function useDrawingInteraction(options: UseDrawingInteractionOptions): Us
 
     const lastPt = arrowEl.points.at(-1)
     if (!lastPt) return
-    const endScenePoint = { x: arrowEl.x + lastPt.x, y: arrowEl.y + lastPt.y }
+    const endScenePoint = pointFrom<GlobalPoint>(arrowEl.x + lastPt[0], arrowEl.y + lastPt[1])
     const endCandidate = getHoveredElementForBinding(endScenePoint, elements.value, zoom.value, _excludeIds)
     if (endCandidate) {
       bindArrowToElement(arrowEl, 'end', endCandidate.element, endCandidate.fixedPoint)
@@ -167,7 +169,7 @@ export function useDrawingInteraction(options: UseDrawingInteractionOptions): Us
   }
 
   function isElementValid(el: ExcalidrawElement): boolean {
-    if (el.type === 'arrow') {
+    if (isArrowElement(el)) {
       return Math.hypot(el.width, el.height) >= MINIMUM_ARROW_SIZE
     }
     return el.width > 1 || el.height > 1
@@ -182,7 +184,7 @@ export function useDrawingInteraction(options: UseDrawingInteractionOptions): Us
     if (isElementValid(el)) {
       onElementCreated(el)
       // Bind arrow endpoints to nearby shapes
-      if (el.type === 'arrow') {
+      if (isArrowElement(el)) {
         tryBindArrowEndpoints(el)
       }
     }

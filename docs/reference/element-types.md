@@ -14,7 +14,7 @@ All element types share these fields (defined in `elements/types.ts`):
 | Field | Type | Notes |
 |-------|------|-------|
 | `id` | `string` (readonly) | Unique ID via `nanoid` |
-| `type` | `ExcalidrawElementType` (readonly) | `'rectangle' \| 'ellipse' \| 'diamond' \| 'arrow'` |
+| `type` | `ExcalidrawElementType` (readonly) | `'rectangle' \| 'ellipse' \| 'diamond' \| 'arrow' \| 'text'` |
 | `x`, `y` | `number` | Scene position |
 | `width`, `height` | `number` | Bounding box size |
 | `angle` | `number` | Rotation in radians |
@@ -29,6 +29,21 @@ All element types share these fields (defined in `elements/types.ts`):
 | `isDeleted` | `boolean` | Soft-delete flag |
 | `boundElements` | `readonly BoundElement[]` | Which arrows are bound to this element |
 | `groupIds` | `readonly GroupId[]` (readonly) | Group membership (empty = ungrouped) |
+
+## Type Guards (`elements/types.ts`)
+
+Prefer type guard functions over inline `el.type === '...'` checks when the variable is typed as the union `ExcalidrawElement`. The guards narrow the type for downstream code.
+
+| Guard | Narrows To | Replaces |
+|-------|-----------|----------|
+| `isArrowElement(el)` | `ExcalidrawArrowElement` | `el.type === 'arrow'` |
+| `isTextElement(el)` | `ExcalidrawTextElement` | `el.type === 'text'` |
+| `isLinearElement(el)` | `ExcalidrawArrowElement` | `el.type === 'arrow'` (alias, for semantic clarity in linear contexts) |
+| `isBindableElement(el)` | `BindableElement` | `el.type === 'rectangle' \|\| el.type === 'ellipse' \|\| el.type === 'diamond'` |
+
+**When NOT to use guards:** In exhaustive switch/if-chains that handle every type branch (e.g., `createElement.ts`, `shapeGenerator.ts`, `distanceToShapeEdge`). Those must list types explicitly for `never`-exhaustiveness checks.
+
+`BindableElement` type and `isBindableElement` guard are canonical in `elements/types.ts` and re-exported from `binding/types.ts` for convenience.
 
 ## Grouping Feature (`features/groups/`)
 
@@ -72,7 +87,7 @@ Arrows attach to shapes via `FixedPointBinding` (elementId + 0-1 ratio on bbox).
 
 | File | Purpose |
 |------|---------|
-| `types.ts` | `BindableElement` union (rect/ellipse/diamond), `BindingEndpoint` (`'start' \| 'end'`), `isBindableElement()` guard |
+| `types.ts` | Re-exports `BindableElement` and `isBindableElement()` from `elements/types.ts`, defines `BindingEndpoint` (`'start' \| 'end'`) |
 | `constants.ts` | `BASE_BINDING_GAP=5`, `BASE_BINDING_DISTANCE=15`, `MINIMUM_ARROW_SIZE=20`, `BINDING_HIGHLIGHT_LINE_WIDTH=2`, `BINDING_HIGHLIGHT_PADDING=6`, theme-aware `BINDING_COLORS` |
 | `proximity.ts` | `getHoveredElementForBinding()` proximity detection, `distanceToShapeEdge()` per shape type, `computeFixedPoint()` / `getPointFromFixedPoint()` coordinate conversion |
 | `bindUnbind.ts` | `bindArrowToElement()` — mutates arrow binding + shape boundElements. `unbindArrowEndpoint()` / `unbindArrow()` / `unbindAllArrowsFromShape()` |

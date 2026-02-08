@@ -1,4 +1,5 @@
-import { createPoint } from '~/shared/math'
+import { pointFrom } from '~/shared/math'
+import type { LocalPoint } from '~/shared/math'
 import type {
   ExcalidrawArrowElement,
   ExcalidrawDiamondElement,
@@ -46,7 +47,7 @@ export function createTestArrowElement(
   const defaults: ExcalidrawArrowElement = {
     ...BASE_PROPS,
     type: 'arrow',
-    points: [createPoint(0, 0), createPoint(100, 50)],
+    points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(100, 50)],
     startArrowhead: null,
     endArrowhead: 'arrow',
     startBinding: null,

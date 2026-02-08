@@ -1,12 +1,12 @@
 import type { ShallowRef } from 'vue'
 import type { ExcalidrawArrowElement } from '~/features/elements/types'
-import type { Point } from '~/shared/math'
+import type { GlobalPoint } from '~/shared/math'
 
 export interface MultiPointCreationState {
   /** The arrow being actively constructed via click-to-place */
   element: ShallowRef<ExcalidrawArrowElement | null>
   /** Current cursor position for rubber-band preview */
-  lastCursorPoint: ShallowRef<Point | null>
+  lastCursorPoint: ShallowRef<GlobalPoint | null>
 }
 
 export interface LinearEditorState {
