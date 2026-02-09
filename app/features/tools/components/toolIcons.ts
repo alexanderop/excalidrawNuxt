@@ -53,4 +53,11 @@ export const TOOL_ICONS: Record<ToolType, ToolIconDef> = {
       <line x1="12" y1="5" x2="12" y2="19"/>
     </g>`,
   },
+  code: {
+    viewBox: '0 0 24 24',
+    paths: `<g stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="16,18 22,12 16,6"/>
+      <polyline points="8,6 2,12 8,18"/>
+    </g>`,
+  },
 }

@@ -10,6 +10,7 @@ import { useElements } from '~/features/elements/useElements'
 import { useToolStore } from '~/features/tools/useTool'
 import { useDrawingInteraction } from '~/features/tools/useDrawingInteraction'
 import { useTextInteraction } from '~/features/tools/useTextInteraction'
+import { useCodeInteraction } from '~/features/code'
 import { useSelection, useSelectionInteraction } from '~/features/selection'
 import { useMultiPointCreation } from '~/features/linear-editor/useMultiPointCreation'
 import { useLinearEditor } from '~/features/linear-editor/useLinearEditor'
@@ -144,11 +145,33 @@ const { editingTextElement, submitTextEditor } = useTextInteraction({
   isPanning,
 })
 
+// Code editing
+const { editingCodeElement, submitCodeEditor } = useCodeInteraction({
+  canvasRef: interactiveCanvasRef,
+  textEditorContainerRef,
+  activeTool,
+  setTool,
+  toScene,
+  zoom,
+  scrollX,
+  scrollY,
+  elements,
+  elementMap,
+  addElement,
+  getElementById,
+  select,
+  markStaticDirty: dirty.markStaticDirty,
+  markInteractiveDirty: dirty.markInteractiveDirty,
+  spaceHeld,
+  isPanning,
+})
+
 // Finalize in-progress operations when user switches tools
 onBeforeToolChange(() => {
   if (multiElement.value) finalizeMultiPoint()
   if (editingLinearElement.value) exitLinearEditor()
   if (editingTextElement.value) submitTextEditor()
+  if (editingCodeElement.value) submitCodeEditor()
 })
 
 // Drawing & selection own their refs internally
@@ -209,6 +232,7 @@ const { markStaticDirty, markNewElementDirty, markInteractiveDirty, animations }
   suggestedBindings,
   selectedGroupIds,
   editingTextElement,
+  editingCodeElement,
 })
 
 // Bind real renderer callbacks to deferred dirty flags
@@ -224,8 +248,8 @@ const combinedCursorClass = computed(() => {
   if (multiElement.value) return 'cursor-crosshair'
   // Linear editor mode → pointer for handles
   if (editingLinearElement.value) return 'cursor-pointer'
-  // Text tool cursor (crosshair like Excalidraw)
-  if (activeTool.value === 'text') return 'cursor-crosshair'
+  // Text/code tool cursor (crosshair like Excalidraw)
+  if (activeTool.value === 'text' || activeTool.value === 'code') return 'cursor-crosshair'
   // Selection interaction cursor only applies in selection tool mode
   if (activeTool.value === 'selection' && cursorStyle.value !== 'default') {
     return `cursor-${cursorStyle.value}`

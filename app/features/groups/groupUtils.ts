@@ -1,23 +1,15 @@
 import type { ExcalidrawElement, GroupId } from '~/features/elements/types'
 import { mutateElement } from '~/features/elements/mutateElement'
 
+export {
+  isElementInGroup,
+  getElementsInGroup,
+  elementsAreInSameGroup,
+} from '@excalidraw/element'
+
 export interface GroupExpansionResult {
   elementIds: ReadonlySet<string>
   groupIds: ReadonlySet<GroupId>
-}
-
-export function getElementsInGroup(
-  elements: readonly ExcalidrawElement[],
-  groupId: GroupId,
-): ExcalidrawElement[] {
-  return elements.filter(el => el.groupIds.includes(groupId))
-}
-
-export function isElementInGroup(
-  element: ExcalidrawElement,
-  groupId: GroupId,
-): boolean {
-  return element.groupIds.includes(groupId)
 }
 
 export function getOutermostGroupId(element: ExcalidrawElement): GroupId | null {
@@ -68,19 +60,6 @@ export function isSelectedViaGroup(
   selectedGroupIds: ReadonlySet<GroupId>,
 ): boolean {
   return element.groupIds.some(id => selectedGroupIds.has(id))
-}
-
-export function elementsAreInSameGroup(
-  elements: readonly ExcalidrawElement[],
-): boolean {
-  if (elements.length < 2) return false
-
-  const first = elements[0]
-  if (!first || first.groupIds.length === 0) return false
-
-  return first.groupIds.some(groupId =>
-    elements.every(el => el.groupIds.includes(groupId)),
-  )
 }
 
 export function reorderElementsForGroup(

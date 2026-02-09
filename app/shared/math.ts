@@ -140,6 +140,24 @@ export {
 export type { Curve } from '@excalidraw/math'
 
 // ---------------------------------------------------------------------------
+// Triangles (1 function + 1 type)
+// ---------------------------------------------------------------------------
+export { triangleIncludesPoint } from '@excalidraw/math'
+export type { Triangle } from '@excalidraw/math'
+
+// ---------------------------------------------------------------------------
+// Ranges (4 functions + 1 type)
+// ---------------------------------------------------------------------------
+export {
+  rangeInclusive,
+  rangesOverlap,
+  rangeIntersection,
+  rangeIncludesValue,
+} from '@excalidraw/math'
+
+export type { InclusiveRange } from '@excalidraw/math'
+
+// ---------------------------------------------------------------------------
 // Utils (7 functions)
 // ---------------------------------------------------------------------------
 export {

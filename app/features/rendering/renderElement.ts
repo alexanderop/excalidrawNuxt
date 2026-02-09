@@ -3,6 +3,7 @@ import type { ExcalidrawElement, ExcalidrawTextElement } from '~/features/elemen
 import { isArrowElement, isTextElement } from '~/features/elements/types'
 import type { Theme } from '~/features/theme/types'
 import { resolveColor } from '~/features/theme/colors'
+import { isCodeElement, renderCodeElement } from '~/features/code'
 import { generateShape } from './shapeGenerator'
 import { renderArrowheads } from './arrowhead'
 import { getFontString, getLineHeightInPx } from './textMeasurement'
@@ -15,6 +16,10 @@ export function renderElement(
 ): void {
   if (element.isDeleted) return
 
+  if (isCodeElement(element)) {
+    renderCodeElement(ctx, element, theme)
+    return
+  }
   if (isArrowElement(element) && element.points.length < 2) return
   if (isTextElement(element)) {
     if (!element.text) return

@@ -1,3 +1,5 @@
+import { reseed as excalidrawReseed } from '@excalidraw/common'
+
 function mulberry32(seed: number): () => number {
   // eslint-disable-next-line unicorn/prefer-math-trunc -- bitwise OR coerces to 32-bit signed integer (not truncation)
   let a = seed | 0
@@ -17,6 +19,7 @@ export function reseed(seed = 12_345): void {
   originalRandom = Math.random
   const rng = mulberry32(seed)
   Math.random = rng
+  excalidrawReseed(seed)
   counter = 0
 }
 

@@ -367,3 +367,69 @@ The viewport frustum culling (skipping off-screen elements) only happens in `ren
 ## useElements: shallowRef + elementMap Dual Tracking
 
 `useElements()` maintains both a `shallowRef<readonly ExcalidrawElement[]>` for reactivity and a `Map<string, ExcalidrawElement>` for O(1) ID lookups. When using `replaceElements()`, both must be synchronized. Direct mutation of the array without going through `addElement`/`replaceElements` will desync the Map.
+
+## @excalidraw/common Has Its Own PRNG (Not Math.random)
+
+`randomInteger()` from `@excalidraw/common` uses RoughJS's LCG (Linear Congruential Generator) PRNG, seeded with `Date.now()` at module load — **not `Math.random()`**.
+
+```mermaid
+flowchart LR
+    A["Math.random seeding"] -->|"❌ no effect on"| B["randomInteger()"]
+    C["@excalidraw/common reseed()"] -->|"✅ seeds internal LCG"| B
+```
+
+**Impact**: Element `seed` properties (used by RoughJS for hand-drawn stroke jitter) become non-deterministic across runs. Screenshot tests fail with varying pixel diffs.
+
+**Fix**: Seed BOTH sources in test setup:
+
+```ts
+import { reseed as excalidrawReseed } from '@excalidraw/common'
+
+export function reseed(seed = 12_345): void {
+  // Seed Math.random (for any code using it directly)
+  originalRandom = Math.random
+  Math.random = mulberry32(seed)
+
+  // Seed @excalidraw/common's PRNG (for element seeds)
+  excalidrawReseed(seed)
+}
+```
+
+**Rule**: When writing deterministic tests involving element creation, always call `@excalidraw/common`'s `reseed()` alongside any `Math.random` seeding.
+
+## Focusing Elements Inside pointerdown Handlers
+
+When creating and focusing an input/textarea inside a `pointerdown` handler, the browser's native pointer event processing will steal focus back after the handler returns. This causes an immediate `blur` event with `relatedTarget: null`.
+
+```mermaid
+flowchart LR
+    A["pointerdown fires"] --> B["Handler creates textarea"]
+    B --> C["textarea.focus() called"]
+    C --> D["Handler returns"]
+    D --> E["Browser native handling"]
+    E -->|"steals focus"| F["textarea.blur fired"]
+    F --> G["Editor closes immediately"]
+```
+
+**Symptom**: Editor opens and closes instantly on click — no error, no console warning.
+
+**Diagnosis**: Add a blur listener and check `relatedTarget`. If it's `null`, focus was stolen by native pointer handling.
+
+**Fix pattern (both required):**
+
+1. **Defer focus** — use `requestAnimationFrame` so focus happens after native handling completes:
+   ```ts
+   requestAnimationFrame(() => {
+     textarea.focus()
+     if (initialText) textarea.select()
+   })
+   ```
+
+2. **Switch tool before opening editor** — prevents `onBeforeToolChange` from closing the editor if another tool switch occurs:
+   ```ts
+   // In pointerdown handler:
+   setTool('selection')  // Switch BEFORE opening
+   openEditor(element)   // Editor sets editingElement ref
+   ```
+
+**Reference**: See `useTextInteraction.ts` (lines 329-332) for the canonical pattern, and the fix applied to `useCodeInteraction.ts`.

@@ -51,6 +51,8 @@ export {
   hashString,
   isInvisiblySmallElement,
   getNormalizedDimensions,
+  newElementWith,
+  bumpVersion,
 } from '@excalidraw/element'
 
 export {
@@ -82,4 +84,4 @@ export {
   isBoundToContainer,
 } from '@excalidraw/element'
 
-export { BOUND_TEXT_PADDING } from '@excalidraw/common'
+export { BOUND_TEXT_PADDING, arrayToMap } from '@excalidraw/common'

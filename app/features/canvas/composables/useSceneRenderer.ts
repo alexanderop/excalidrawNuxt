@@ -51,6 +51,8 @@ interface UseSceneRendererOptions {
   selectedGroupIds?: ShallowRef<ReadonlySet<string>>
   // Text editing — hide element being edited (textarea overlay replaces canvas-drawn text)
   editingTextElement?: ShallowRef<ExcalidrawTextElement | null>
+  // Code editing — hide element being edited (editor overlay replaces canvas-drawn code)
+  editingCodeElement?: ShallowRef<ExcalidrawElement | null>
 }
 
 interface UseSceneRendererReturn {
@@ -120,6 +122,7 @@ export function useSceneRenderer(options: UseSceneRendererOptions): UseSceneRend
     suggestedBindings,
     selectedGroupIds,
     editingTextElement,
+    editingCodeElement,
   } = options
   const { scrollX, scrollY, zoom, width, height } = viewport
 
@@ -141,9 +144,11 @@ export function useSceneRenderer(options: UseSceneRendererOptions): UseSceneRend
       renderGrid(ctx, scrollX.value, scrollY.value, zoom.value, width.value, height.value, theme.value)
       const rc = layers.staticRc.value
       if (rc) {
-        const editingId = editingTextElement?.value?.id
-        const visibleElements = editingId
-          ? elements.value.filter(el => el.id !== editingId)
+        const editingTextId = editingTextElement?.value?.id
+        const editingCodeId = editingCodeElement?.value?.id
+        const hiddenId = editingTextId ?? editingCodeId
+        const visibleElements = hiddenId
+          ? elements.value.filter(el => el.id !== hiddenId)
           : elements.value
         renderScene(ctx, rc, visibleElements, scrollX.value, scrollY.value, zoom.value, width.value, height.value, theme.value)
       }

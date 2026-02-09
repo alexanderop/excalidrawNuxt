@@ -37,6 +37,7 @@
     "nuxt": "^4.3.0",
     "perfect-freehand": "^1.2.3",
     "roughjs": "^4.6.6",
+    "shiki": "^3.22.0",
     "tailwindcss": "^4.1.18",
     "tinycolor2": "^1.6.0",
     "vue": "^3.5.27",

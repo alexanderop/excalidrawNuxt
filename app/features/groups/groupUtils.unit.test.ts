@@ -163,10 +163,10 @@ describe('elementsAreInSameGroup', () => {
     expect(elementsAreInSameGroup([el1, el2])).toBe(false)
   })
 
-  it('returns false for fewer than 2 elements', () => {
+  it('returns true for fewer than 2 elements (vacuous truth)', () => {
     const el1 = createTestElement({ id: 'a', groupIds: ['g1'] })
-    expect(elementsAreInSameGroup([el1])).toBe(false)
-    expect(elementsAreInSameGroup([])).toBe(false)
+    expect(elementsAreInSameGroup([el1])).toBe(true)
+    expect(elementsAreInSameGroup([])).toBe(true)
   })
 
   it('returns false when first element has no groups', () => {

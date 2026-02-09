@@ -17,6 +17,7 @@ const tools: Array<{ type: ToolType; label: string; shortcutNumber: number | nul
   { type: 'ellipse', label: 'Ellipse', shortcutNumber: 4 },
   { type: 'arrow', label: 'Arrow', shortcutNumber: 5 },
   { type: 'text', label: 'Text', shortcutNumber: 6 },
+  { type: 'code', label: 'Code', shortcutNumber: 7 },
 ]
 </script>
 

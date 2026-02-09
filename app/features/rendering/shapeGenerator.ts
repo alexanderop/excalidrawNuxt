@@ -3,6 +3,7 @@ import type { Drawable, Options } from 'roughjs/bin/core'
 import type { ExcalidrawElement } from '~/features/elements/types'
 import type { Theme } from '~/features/theme/types'
 import { resolveColor } from '~/features/theme/colors'
+import { isCodeElement } from '~/features/code'
 
 const generator = new RoughGenerator()
 
@@ -37,6 +38,9 @@ function elementToRoughOptions(element: ExcalidrawElement, theme: Theme): Option
 function generateDrawable(element: ExcalidrawElement, theme: Theme): Drawable {
   if (element.type === 'text') {
     throw new Error('Text elements should not use RoughJS shape generation')
+  }
+  if (isCodeElement(element)) {
+    throw new Error('Code elements should not use RoughJS shape generation')
   }
 
   const { width, height } = element

@@ -23,6 +23,7 @@ import {
   bindTextToContainer,
   unbindTextFromContainer,
 } from '~/features/binding'
+import { isCodeElement } from '~/features/code'
 
 interface UseTextInteractionOptions {
   canvasRef: Ref<HTMLCanvasElement | null>
@@ -332,6 +333,9 @@ export function useTextInteraction(options: UseTextInteractionOptions): UseTextI
   })
 
   function handleDblClickOnElement(hitElement: ExcalidrawElement): boolean {
+    // Let code interaction handle code elements
+    if (isCodeElement(hitElement)) return false
+
     // Edit standalone text (not bound to a container)
     if (isTextElement(hitElement) && !hitElement.containerId) {
       openEditor(hitElement)
