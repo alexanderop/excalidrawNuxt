@@ -27,3 +27,9 @@ export {
   updateArrowBindings,
 } from './updateBoundPoints'
 export { renderSuggestedBinding } from './renderBindingHighlight'
+export {
+  bindTextToContainer,
+  unbindTextFromContainer,
+  deleteBoundTextForContainer,
+  updateBoundTextAfterContainerChange,
+} from './boundText'

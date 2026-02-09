@@ -1,7 +1,7 @@
 import { shallowRef } from 'vue'
 import type { Ref, ShallowRef } from 'vue'
 import { useEventListener } from '@vueuse/core'
-import type { ExcalidrawElement, ExcalidrawArrowElement } from '~/features/elements/types'
+import type { ExcalidrawElement, ExcalidrawArrowElement, ElementsMap } from '~/features/elements/types'
 import { isArrowElement } from '~/features/elements/types'
 import { mutateElement } from '~/features/elements/mutateElement'
 import type { Box, GlobalPoint } from '~/shared/math'
@@ -10,6 +10,7 @@ import {
   updateBoundArrowEndpoints,
   unbindArrow,
   unbindAllArrowsFromShape,
+  deleteBoundTextForContainer,
 } from '~/features/binding'
 import { hitTest, getElementAtPosition } from '../hitTest'
 import { getTransformHandleAtPosition } from '../transformHandles'
@@ -60,6 +61,10 @@ interface UseSelectionInteractionOptions {
   onGroupAction?: () => void
   onUngroupAction?: () => void
   onDeleteCleanup?: (deletedIds: ReadonlySet<string>) => void
+  /** ElementsMap for bound text lookups */
+  elementMap?: ElementsMap
+  /** Called after drag/resize on containers that have bound text */
+  onContainerChanged?: (container: ExcalidrawElement) => void
 }
 
 export function useSelectionInteraction(options: UseSelectionInteractionOptions): UseSelectionInteractionReturn {
@@ -83,6 +88,8 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
     setTool,
     editingLinearElement,
     onDoubleClickArrow,
+    elementMap,
+    onContainerChanged,
   } = options
 
   let interaction: InteractionState = { type: 'idle' }
@@ -166,6 +173,17 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
     }
   }
 
+  function updateBoundTextForSelected(): void {
+    if (!onContainerChanged) return
+    for (const el of selectedElements()) {
+      if (isArrowElement(el)) continue
+      const hasBoundText = (el.boundElements ?? []).some(be => be.type === 'text')
+      if (hasBoundText) {
+        onContainerChanged(el)
+      }
+    }
+  }
+
   function markSceneDirty(): void {
     markStaticDirty()
     markInteractiveDirty()
@@ -182,6 +200,7 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
     if (interaction.type === 'dragging') {
       continueDrag(scenePoint, interaction.dragState, selectedElements())
       updateBoundArrowsForSelected()
+      updateBoundTextForSelected()
       markSceneDirty()
       return
     }
@@ -193,6 +212,7 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
       if (!el) return
       resizeElement(scenePoint, interaction.resizeState, el, e.shiftKey)
       updateBoundArrowsForSelected()
+      updateBoundTextForSelected()
       markSceneDirty()
       return
     }
@@ -261,12 +281,9 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
     const ids = new Set<string>()
 
     for (const el of elements.value) {
-      if (el.isDeleted) continue
+      if (!isBoxSelectable(el)) continue
       const [ex1, ey1, ex2, ey2] = getElementBounds(el)
-      // Fully enclosed check
-      if (ex1 >= boxBounds[0] && ey1 >= boxBounds[1] && ex2 <= boxBounds[2] && ey2 <= boxBounds[3]) {
-        ids.add(el.id)
-      }
+      if (isFullyEnclosed(ex1, ey1, ex2, ey2, boxBounds)) ids.add(el.id)
     }
 
     replaceSelection(ids)
@@ -287,6 +304,16 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
 
   function handleDelete(selected: readonly ExcalidrawElement[]): void {
     unbindBeforeDelete(selected)
+
+    // Delete bound text for containers being deleted
+    if (elementMap) {
+      for (const el of selected) {
+        if (!isArrowElement(el)) {
+          deleteBoundTextForContainer(el, elementMap)
+        }
+      }
+    }
+
     for (const el of selected) {
       mutateElement(el, { isDeleted: true })
     }
@@ -305,6 +332,9 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
 
   function handleKeyDown(e: KeyboardEvent): void {
     if (isSelectionBlocked()) return
+    // Don't intercept keys while typing in an input/textarea (e.g. text editor)
+    const tag = (e.target as HTMLElement)?.tagName
+    if (tag === 'TEXTAREA' || tag === 'INPUT') return
 
     const selected = selectedElements()
 
@@ -346,6 +376,7 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
       })
     }
     updateBoundArrowsForSelected()
+    updateBoundTextForSelected()
     markSceneDirty()
   }
 
@@ -402,4 +433,17 @@ const RESIZE_CURSORS: Record<TransformHandleDirection, string> = {
 function getResizeCursor(handleType: TransformHandleType): string {
   if (handleType === 'rotation') return 'grab'
   return RESIZE_CURSORS[handleType]
+}
+
+function isBoxSelectable(el: ExcalidrawElement): boolean {
+  if (el.isDeleted) return false
+  if (el.type === 'text' && 'containerId' in el && el.containerId) return false
+  return true
+}
+
+function isFullyEnclosed(
+  ex1: number, ey1: number, ex2: number, ey2: number,
+  boxBounds: Bounds,
+): boolean {
+  return ex1 >= boxBounds[0] && ey1 >= boxBounds[1] && ex2 <= boxBounds[2] && ey2 <= boxBounds[3]
 }

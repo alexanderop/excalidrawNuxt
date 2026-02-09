@@ -12,9 +12,9 @@ Nine feature modules under `app/features/`:
 | **Elements** | `elements/` | `useElements`, `createElement`, `mutateElement`, element types | Reactive element array, factory, in-place mutation + version bump |
 | **Rendering** | `rendering/` | `renderGrid`, `renderScene`, `renderElement`, `renderInteractiveScene`, `generateShape`, `renderArrowheads` | Grid, roughjs shapes, arrowheads, interactive overlays (selection borders, handles, linear editor, binding highlights, groups) |
 | **Selection** | `selection/` | `useSelection`, `useSelectionInteraction`, `hitTest`, `getTransformHandles`, `dragElements`, `resizeElement`, `bounds` | Click/drag selection, state machine, hit testing, transform handles, drag + resize |
-| **Tools** | `tools/` | `useToolStore`, `useDrawingInteraction`, `DrawingToolbar.vue` | Active tool state, keyboard shortcuts, pointer-to-shape/arrow creation |
+| **Tools** | `tools/` | `useToolStore`, `useDrawingInteraction`, `useTextInteraction`, `DrawingToolbar.vue` | Active tool state, keyboard shortcuts, pointer-to-shape/arrow creation, bound text on shapes |
 | **Linear Editor** | `linear-editor/` | `useLinearEditor`, `useMultiPointCreation`, `pointHandles`, `renderLinearEditor` | Arrow point editing (double-click), multi-point click-to-place creation, rubber band preview |
-| **Binding** | `binding/` | `getHoveredElementForBinding`, `bindArrowToElement`, `unbindArrowEndpoint`, `updateBoundArrowEndpoints`, `renderSuggestedBinding`, `proximity` | Arrow-to-shape binding, fixedPoint system, edge distance, blue highlight |
+| **Binding** | `binding/` | `getHoveredElementForBinding`, `bindArrowToElement`, `unbindArrowEndpoint`, `updateBoundArrowEndpoints`, `renderSuggestedBinding`, `proximity`, `bindTextToContainer`, `unbindTextFromContainer`, `updateBoundTextAfterContainerChange` | Arrow-to-shape binding, fixedPoint system, edge distance, blue highlight, bound text lifecycle |
 | **Groups** | `groups/` | `useGroups`, `expandSelectionToGroups`, `addToGroup`, `removeFromGroups`, `reorderElementsForGroup`, `cleanupAfterDelete` | Flat groupIds model, Cmd+G/Cmd+Shift+G, group selection expansion, z-order reordering |
 | **Theme** | `theme/` | `useTheme`, `resolveColor`, `applyDarkModeFilter`, `THEME` | Light/dark mode via localStorage, CSS invert+hue-rotate color transform, Alt+Shift+D toggle |
 
@@ -41,6 +41,7 @@ graph TD
     Rendering --> Theme
 
     Selection --> Elements
+    Selection --> Binding
 
     LinearEditor --> Elements
     LinearEditor --> Binding

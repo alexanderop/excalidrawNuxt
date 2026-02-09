@@ -66,6 +66,7 @@ export function createElement(
       containerId: null,
       lineHeight: DEFAULT_LINE_HEIGHT as number & { _brand: 'unitlessLineHeight' },
       autoResize: true,
+      ...overrides,
     } as SupportedElement
   }
 

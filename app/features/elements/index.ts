@@ -65,3 +65,21 @@ export {
   DEFAULT_STROKE_WIDTH,
   DEFAULT_TEXT_ALIGN,
 } from './constants'
+
+// ---------------------------------------------------------------------------
+// Bound text utilities from @excalidraw/element
+// ---------------------------------------------------------------------------
+export {
+  wrapText,
+  getBoundTextMaxWidth,
+  getBoundTextMaxHeight,
+  computeBoundTextPosition,
+  computeContainerDimensionForBoundText,
+  getBoundTextElement,
+  getContainerElement,
+  isTextBindableContainer,
+  hasBoundTextElement,
+  isBoundToContainer,
+} from '@excalidraw/element'
+
+export { BOUND_TEXT_PADDING } from '@excalidraw/common'

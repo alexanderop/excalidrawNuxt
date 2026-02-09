@@ -68,6 +68,8 @@ export function getElementAtPosition(
     const el = elements[i]
     if (!el) continue
     if (el.isDeleted) continue
+    // Skip bound text — clicking it should hit the container behind it
+    if (el.type === 'text' && 'containerId' in el && el.containerId) continue
     if (hitTest(scenePoint, el, zoom)) return el
   }
   return null

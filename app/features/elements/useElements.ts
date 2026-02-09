@@ -1,9 +1,10 @@
 import { shallowRef } from 'vue'
 import type { ShallowRef } from 'vue'
-import type { ExcalidrawElement } from './types'
+import type { ExcalidrawElement, ElementsMap } from './types'
 
 interface UseElementsReturn {
   elements: ShallowRef<readonly ExcalidrawElement[]>
+  elementMap: ElementsMap
   addElement: (element: ExcalidrawElement) => void
   replaceElements: (newElements: readonly ExcalidrawElement[]) => void
   getElementById: (id: string) => ExcalidrawElement | undefined
@@ -32,6 +33,7 @@ export function useElements(): UseElementsReturn {
 
   return {
     elements,
+    elementMap,
     addElement,
     replaceElements,
     getElementById,

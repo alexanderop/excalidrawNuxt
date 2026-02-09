@@ -14,6 +14,7 @@ import { useSelection, useSelectionInteraction } from '~/features/selection'
 import { useMultiPointCreation } from '~/features/linear-editor/useMultiPointCreation'
 import { useLinearEditor } from '~/features/linear-editor/useLinearEditor'
 import type { ExcalidrawElement } from '~/features/elements/types'
+import { updateBoundTextAfterContainerChange } from '~/features/binding'
 import { useGroups } from '~/features/groups/composables/useGroups'
 import { cleanupAfterDelete } from '~/features/groups/groupUtils'
 import { useTheme, THEME } from '~/features/theme'
@@ -39,7 +40,7 @@ const { width, height } = useElementSize(containerRef)
 const { scrollX, scrollY, zoom, zoomBy, panBy, toScene } = useViewport()
 
 // Domain state
-const { elements, addElement, replaceElements } = useElements()
+const { elements, elementMap, addElement, replaceElements, getElementById } = useElements()
 const { activeTool, setTool, onBeforeToolChange } = useToolStore()
 
 const {
@@ -133,7 +134,9 @@ const { editingTextElement, submitTextEditor } = useTextInteraction({
   scrollX,
   scrollY,
   elements,
+  elementMap,
   addElement,
+  getElementById,
   select,
   markStaticDirty: dirty.markStaticDirty,
   markInteractiveDirty: dirty.markInteractiveDirty,
@@ -184,6 +187,8 @@ const { selectionBox, cursorStyle } = useSelectionInteraction({
   onGroupAction: groupSelection,
   onUngroupAction: ungroupSelection,
   onDeleteCleanup: (deletedIds) => cleanupAfterDelete(elements.value, deletedIds),
+  elementMap,
+  onContainerChanged: (container) => updateBoundTextAfterContainerChange(container, elementMap),
 })
 
 // Scene renderer (render callbacks + dirty watcher + animation controller)
