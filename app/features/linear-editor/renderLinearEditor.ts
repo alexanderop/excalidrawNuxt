@@ -1,5 +1,5 @@
 import type { ExcalidrawArrowElement } from '~/features/elements/types'
-import type { GlobalPoint } from '@excalidraw/math'
+import type { GlobalPoint } from '~/shared/math'
 import type { Theme } from '~/features/theme/types'
 import { getPointPositions, getMidpointPositions } from './pointHandles'
 import {

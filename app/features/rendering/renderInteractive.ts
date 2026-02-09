@@ -1,6 +1,6 @@
 import type { ExcalidrawElement, ExcalidrawArrowElement } from '~/features/elements/types'
 import { isArrowElement } from '~/features/elements/types'
-import type { GlobalPoint } from '@excalidraw/math'
+import type { GlobalPoint } from '~/shared/math'
 import type { Theme } from '~/features/theme/types'
 import {
   SELECTION_COLORS,

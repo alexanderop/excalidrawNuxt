@@ -1,7 +1,7 @@
 import type { ExcalidrawElement } from '~/features/elements/types'
 import { isArrowElement } from '~/features/elements/types'
-import { pointFrom, pointRotateRads } from '@excalidraw/math'
-import type { GlobalPoint } from '@excalidraw/math'
+import { pointFrom, pointRotateRads } from '~/shared/math'
+import type { GlobalPoint } from '~/shared/math'
 
 export type Bounds = [x1: number, y1: number, x2: number, y2: number]
 

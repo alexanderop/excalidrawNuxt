@@ -1,6 +1,6 @@
 import type { ExcalidrawElement } from '~/features/elements/types'
-import { pointFrom, pointRotateRads } from '@excalidraw/math'
-import type { GlobalPoint } from '@excalidraw/math'
+import { pointFrom, pointRotateRads } from '~/shared/math'
+import type { GlobalPoint } from '~/shared/math'
 import { getElementBounds } from './bounds'
 import { HANDLE_SIZE, HANDLE_MARGIN, ROTATION_HANDLE_OFFSET } from './constants'
 

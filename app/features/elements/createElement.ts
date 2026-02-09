@@ -1,6 +1,6 @@
 import { generateId, randomInteger, randomVersionNonce } from '~/shared/random'
-import { pointFrom } from '@excalidraw/math'
-import type { LocalPoint, Radians } from '@excalidraw/math'
+import { pointFrom } from '~/shared/math'
+import type { LocalPoint, Radians } from '~/shared/math'
 import type { SupportedElement } from './types'
 import {
   DEFAULT_BG_COLOR,

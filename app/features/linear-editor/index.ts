@@ -23,7 +23,7 @@ export {
   normalizePoints,
   movePoint,
   movePoints,
-  computeDimensionsFromPoints,
+  getSizeFromPoints,
 } from './pointHandles'
 
 export { useMultiPointCreation } from './useMultiPointCreation'

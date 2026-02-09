@@ -1,34 +1,165 @@
 /**
- * Thin re-export layer over @excalidraw/math.
+ * Thin re-export layer over @excalidraw/math and @excalidraw/common.
  *
  * All point types are branded tuples: GlobalPoint (scene coordinates)
  * and LocalPoint (element-relative coordinates).
  *
- * Project-specific utilities (snapAngle, normalizePoints, computeDimensionsFromPoints)
- * live here since they have no upstream equivalent.
+ * Project-specific utilities (snapAngle, normalizePoints) live here
+ * since they have no upstream equivalent.
  */
 
-// Re-export from @excalidraw/math directly
+// ---------------------------------------------------------------------------
+// Points (11 functions + 2 types)
+// ---------------------------------------------------------------------------
 export {
   pointFrom,
+  pointFromArray,
+  pointFromPair,
+  pointFromVector,
+  isPoint,
   pointCenter,
   pointDistance,
   pointDistanceSq,
   pointRotateRads,
+  pointRotateDegs,
+  pointTranslate,
   pointsEqual,
-  distanceToLineSegment,
-  lineSegment,
-  clamp,
+  pointScaleFromOrigin,
+  isPointWithinBounds,
 } from '@excalidraw/math'
 
 export type {
   GlobalPoint,
   LocalPoint,
-  Radians,
-  LineSegment,
 } from '@excalidraw/math'
 
+// ---------------------------------------------------------------------------
+// Vectors (12 functions + 1 type)
+// ---------------------------------------------------------------------------
+export {
+  vector,
+  vectorFromPoint,
+  vectorCross,
+  vectorDot,
+  vectorAdd,
+  vectorSubtract,
+  vectorScale,
+  vectorMagnitudeSq,
+  vectorMagnitude,
+  vectorNormalize,
+  vectorNormal,
+  isVector,
+} from '@excalidraw/math'
+
+export type { Vector } from '@excalidraw/math'
+
+// ---------------------------------------------------------------------------
+// Angles (7 functions + 2 types)
+// ---------------------------------------------------------------------------
+export {
+  degreesToRadians,
+  radiansToDegrees,
+  normalizeRadians,
+  radiansDifference,
+  radiansBetweenAngles,
+  cartesian2Polar,
+  isRightAngleRads,
+} from '@excalidraw/math'
+
+export type { Radians, Degrees } from '@excalidraw/math'
+
+// ---------------------------------------------------------------------------
+// Segments (6 functions + 1 type)
+// ---------------------------------------------------------------------------
+export {
+  lineSegment,
+  isLineSegment,
+  lineSegmentRotate,
+  segmentsIntersectAt,
+  pointOnLineSegment,
+  distanceToLineSegment,
+  lineSegmentIntersectionPoints,
+} from '@excalidraw/math'
+
+export type { LineSegment } from '@excalidraw/math'
+
+// ---------------------------------------------------------------------------
+// Lines (2 functions + 1 type)
+// ---------------------------------------------------------------------------
+export { line, linesIntersectAt } from '@excalidraw/math'
+export type { Line } from '@excalidraw/math'
+
+// ---------------------------------------------------------------------------
+// Polygons (5 functions + 1 type)
+// ---------------------------------------------------------------------------
+export {
+  polygon,
+  polygonFromPoints,
+  polygonIncludesPoint,
+  polygonIncludesPointNonZero,
+  pointOnPolygon,
+} from '@excalidraw/math'
+
+export type { Polygon } from '@excalidraw/math'
+
+// ---------------------------------------------------------------------------
+// Ellipses (5 functions + 1 type)
+// ---------------------------------------------------------------------------
+export {
+  ellipse,
+  ellipseIncludesPoint,
+  ellipseTouchesPoint,
+  ellipseDistanceFromPoint,
+  ellipseSegmentInterceptPoints,
+} from '@excalidraw/math'
+
+export type { Ellipse } from '@excalidraw/math'
+
+// ---------------------------------------------------------------------------
+// Rectangles (3 functions + 1 type)
+// ---------------------------------------------------------------------------
+export {
+  rectangle,
+  rectangleIntersectLineSegment,
+  rectangleIntersectRectangle,
+} from '@excalidraw/math'
+
+export type { Rectangle } from '@excalidraw/math'
+
+// ---------------------------------------------------------------------------
+// Curves (5 functions + 1 type)
+// ---------------------------------------------------------------------------
+export {
+  curve,
+  curvePointDistance,
+  curveClosestPoint,
+  curveIntersectLineSegment,
+  curveLength,
+} from '@excalidraw/math'
+
+export type { Curve } from '@excalidraw/math'
+
+// ---------------------------------------------------------------------------
+// Utils (7 functions)
+// ---------------------------------------------------------------------------
+export {
+  PRECISION,
+  clamp,
+  round,
+  roundToStep,
+  average,
+  isFiniteNumber,
+  isCloseTo,
+} from '@excalidraw/math'
+
+// ---------------------------------------------------------------------------
+// From @excalidraw/common
+// ---------------------------------------------------------------------------
+export { getSizeFromPoints } from '@excalidraw/common'
+
+// ---------------------------------------------------------------------------
 // Local imports for use within this file
+// ---------------------------------------------------------------------------
 import { pointFrom } from '@excalidraw/math'
 import type { LocalPoint } from '@excalidraw/math'
 
@@ -75,28 +206,4 @@ export function normalizePoints(
     y: elementY + dy,
     points: points.map(p => pointFrom<LocalPoint>(p[0] - dx, p[1] - dy)),
   }
-}
-
-/**
- * Compute width/height from points array (for keeping element dimensions in sync).
- */
-export function computeDimensionsFromPoints(points: readonly (readonly [number, number])[]): {
-  width: number
-  height: number
-} {
-  if (points.length === 0) return { width: 0, height: 0 }
-
-  let minX = Infinity
-  let minY = Infinity
-  let maxX = -Infinity
-  let maxY = -Infinity
-
-  for (const p of points) {
-    if (p[0] < minX) minX = p[0]
-    if (p[1] < minY) minY = p[1]
-    if (p[0] > maxX) maxX = p[0]
-    if (p[1] > maxY) maxY = p[1]
-  }
-
-  return { width: maxX - minX, height: maxY - minY }
 }

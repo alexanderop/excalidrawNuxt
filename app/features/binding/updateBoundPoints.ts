@@ -1,9 +1,9 @@
 import type { ExcalidrawElement, ExcalidrawArrowElement } from '~/features/elements/types'
 import { isArrowElement, isFixedPointBinding } from '~/features/elements/types'
 import { mutateElement } from '~/features/elements/mutateElement'
-import { pointFrom } from '@excalidraw/math'
-import type { LocalPoint } from '@excalidraw/math'
-import { normalizePoints, computeDimensionsFromPoints } from '~/features/linear-editor/pointHandles'
+import { pointFrom } from '~/shared/math'
+import type { LocalPoint } from '~/shared/math'
+import { normalizePoints, getSizeFromPoints } from '~/features/linear-editor/pointHandles'
 import { isBindableElement } from './types'
 import type { BindableElement } from './types'
 import { getPointFromFixedPoint } from './proximity'
@@ -60,7 +60,7 @@ export function updateArrowEndpoint(
   )
 
   const normalized = normalizePoints(arrow.x, arrow.y, newPoints)
-  const dims = computeDimensionsFromPoints(normalized.points)
+  const dims = getSizeFromPoints(normalized.points)
 
   mutateElement(arrow, {
     x: normalized.x,

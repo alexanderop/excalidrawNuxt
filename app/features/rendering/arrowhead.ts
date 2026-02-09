@@ -1,5 +1,5 @@
 import type { ExcalidrawArrowElement, Arrowhead } from '~/features/elements/types'
-import type { LocalPoint } from '@excalidraw/math'
+import type { LocalPoint } from '~/shared/math'
 import type { Theme } from '~/features/theme/types'
 import { resolveColor } from '~/features/theme/colors'
 

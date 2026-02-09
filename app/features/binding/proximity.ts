@@ -1,7 +1,13 @@
-import { pointFrom, pointRotateRads } from '@excalidraw/math'
-import type { GlobalPoint, Radians } from '@excalidraw/math'
+import {
+  pointFrom,
+  pointRotateRads,
+  lineSegment,
+  distanceToLineSegment,
+  ellipse,
+  ellipseDistanceFromPoint,
+} from '~/shared/math'
+import type { GlobalPoint, Radians } from '~/shared/math'
 import type { ExcalidrawElement } from '~/features/elements/types'
-import { distanceToSegment } from '~/features/selection/hitTest'
 import { isBindableElement } from './types'
 import type { BindableElement } from './types'
 import { BASE_BINDING_DISTANCE, BASE_BINDING_GAP } from './constants'
@@ -77,7 +83,7 @@ function distanceToRectangleEdge(point: GlobalPoint, el: BindableElement): numbe
   ]
   let minDist = Infinity
   for (const [a, b] of edges) {
-    const d = distanceToSegment(point, a, b)
+    const d = distanceToLineSegment(point, lineSegment(a, b))
     if (d < minDist) minDist = d
   }
   return minDist
@@ -91,13 +97,8 @@ function distanceToEllipseEdge(point: GlobalPoint, el: BindableElement): number 
 
   if (rx === 0 || ry === 0) return Math.hypot(point[0] - cx, point[1] - cy)
 
-  // Approximate distance to ellipse boundary
-  const dx = point[0] - cx
-  const dy = point[1] - cy
-  const angle = Math.atan2(dy, dx)
-  const edgeX = cx + rx * Math.cos(angle)
-  const edgeY = cy + ry * Math.sin(angle)
-  return Math.hypot(point[0] - edgeX, point[1] - edgeY)
+  const e = ellipse(pointFrom<GlobalPoint>(cx, cy), rx, ry)
+  return ellipseDistanceFromPoint(point, e)
 }
 
 function distanceToDiamondEdge(point: GlobalPoint, el: BindableElement): number {
@@ -114,7 +115,7 @@ function distanceToDiamondEdge(point: GlobalPoint, el: BindableElement): number 
     const a = vertices[i]
     const b = vertices[(i + 1) % 4]
     if (!a || !b) continue
-    const d = distanceToSegment(point, a, b)
+    const d = distanceToLineSegment(point, lineSegment(a, b))
     if (d < minDist) minDist = d
   }
   return minDist

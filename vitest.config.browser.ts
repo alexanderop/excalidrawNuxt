@@ -9,6 +9,9 @@ import { showGridOverlay } from './app/__test-utils__/commands/showGridOverlay'
 
 export default defineConfig({
   plugins: [vue(), tailwindcss()],
+  optimizeDeps: {
+    include: ['@excalidraw/common'],
+  },
   test: {
     name: 'browser',
     include: ['app/**/*.browser.test.ts'],

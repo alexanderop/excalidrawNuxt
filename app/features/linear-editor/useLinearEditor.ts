@@ -16,7 +16,7 @@ import {
   insertPointAtSegment,
   removePoints,
   movePoints,
-  computeDimensionsFromPoints,
+  getSizeFromPoints,
 } from './pointHandles'
 
 const _excludeIds = new Set<string>()
@@ -94,7 +94,7 @@ export function useLinearEditor(options: UseLinearEditorOptions): UseLinearEdito
     dy: number,
   ): void {
     const result = movePoints(el.x, el.y, el.points, indices, dx, dy)
-    const dims = computeDimensionsFromPoints(result.points)
+    const dims = getSizeFromPoints(result.points)
 
     mutateElement(el, {
       x: result.x,
@@ -153,7 +153,7 @@ export function useLinearEditor(options: UseLinearEditorOptions): UseLinearEdito
 
   function handleMidpointClick(el: ExcalidrawArrowElement, midIdx: number, e: PointerEvent): void {
     const result = insertPointAtSegment(el.points, midIdx)
-    const dims = computeDimensionsFromPoints(result.points)
+    const dims = getSizeFromPoints(result.points)
 
     mutateElement(el, {
       points: result.points,
@@ -263,7 +263,7 @@ export function useLinearEditor(options: UseLinearEditorOptions): UseLinearEdito
       if (!newPoints) return
 
       e.preventDefault()
-      const dims = computeDimensionsFromPoints(newPoints)
+      const dims = getSizeFromPoints(newPoints)
       mutateElement(el, {
         points: newPoints,
         width: dims.width,

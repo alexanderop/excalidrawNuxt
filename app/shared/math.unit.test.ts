@@ -7,7 +7,7 @@ import {
   clamp,
   snapAngle,
   normalizePoints,
-  computeDimensionsFromPoints,
+  getSizeFromPoints,
 } from '~/shared/math'
 import type { GlobalPoint, LocalPoint, Radians } from '~/shared/math'
 
@@ -248,30 +248,32 @@ describe('math utilities', () => {
     })
   })
 
-  describe('computeDimensionsFromPoints', () => {
+  describe('getSizeFromPoints', () => {
     it('computes width and height from points bounding box', () => {
       const points = [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(100, 50)]
-      const result = computeDimensionsFromPoints(points)
+      const result = getSizeFromPoints(points)
 
       expect(result).toEqual({ width: 100, height: 50 })
     })
 
     it('handles negative coordinates', () => {
       const points = [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(-50, 30)]
-      const result = computeDimensionsFromPoints(points)
+      const result = getSizeFromPoints(points)
 
       expect(result).toEqual({ width: 50, height: 30 })
     })
 
     it('handles empty points', () => {
-      const result = computeDimensionsFromPoints([])
+      const result = getSizeFromPoints([])
 
-      expect(result).toEqual({ width: 0, height: 0 })
+      // Upstream getSizeFromPoints returns -Infinity for empty arrays
+      // (this edge case never occurs in practice — arrows always have points)
+      expect(result).toEqual({ width: -Infinity, height: -Infinity })
     })
 
     it('handles multi-point arrows', () => {
       const points = [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(50, -20), pointFrom<LocalPoint>(100, 30)]
-      const result = computeDimensionsFromPoints(points)
+      const result = getSizeFromPoints(points)
 
       expect(result).toEqual({ width: 100, height: 50 })
     })

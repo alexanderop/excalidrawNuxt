@@ -1,5 +1,5 @@
-import { pointFrom, pointDistance, pointCenter } from '@excalidraw/math'
-import type { GlobalPoint, LocalPoint } from '@excalidraw/math'
+import { pointFrom, pointDistance, pointCenter } from '~/shared/math'
+import type { GlobalPoint, LocalPoint } from '~/shared/math'
 import type { ExcalidrawArrowElement } from '~/features/elements/types'
 import { POINT_HIT_THRESHOLD, MIDPOINT_HIT_THRESHOLD } from './constants'
 
@@ -168,26 +168,5 @@ export function movePoints(
   return normalizePoints(elementX, elementY, newPoints)
 }
 
-/**
- * Compute width/height from points array (for keeping element dimensions in sync).
- */
-export function computeDimensionsFromPoints(points: readonly LocalPoint[]): {
-  width: number
-  height: number
-} {
-  if (points.length === 0) return { width: 0, height: 0 }
-
-  let minX = Infinity
-  let minY = Infinity
-  let maxX = -Infinity
-  let maxY = -Infinity
-
-  for (const p of points) {
-    if (p[0] < minX) minX = p[0]
-    if (p[1] < minY) minY = p[1]
-    if (p[0] > maxX) maxX = p[0]
-    if (p[1] > maxY) maxY = p[1]
-  }
-
-  return { width: maxX - minX, height: maxY - minY }
-}
+// Re-export getSizeFromPoints for consumers that previously used computeDimensionsFromPoints
+export { getSizeFromPoints } from '@excalidraw/common'

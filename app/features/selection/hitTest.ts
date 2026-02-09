@@ -1,7 +1,15 @@
 import type { ExcalidrawElement, ExcalidrawLinearElement } from '~/features/elements/types'
 import { isLinearElement } from '~/features/elements/types'
-import { clamp, pointFrom, pointRotateRads } from '@excalidraw/math'
-import type { GlobalPoint, Radians } from '@excalidraw/math'
+import {
+  pointFrom,
+  pointRotateRads,
+  lineSegment,
+  distanceToLineSegment,
+  polygonFromPoints,
+  polygonIncludesPoint,
+  pointOnPolygon,
+} from '~/shared/math'
+import type { GlobalPoint, Radians } from '~/shared/math'
 import { getElementBounds } from './bounds'
 
 export function getHitThreshold(element: ExcalidrawElement, zoom: number): number {
@@ -109,34 +117,9 @@ function hitTestDiamond(point: GlobalPoint, el: ExcalidrawElement, threshold: nu
 }
 
 function isPointInPolygon(point: GlobalPoint, vertices: GlobalPoint[], threshold: number): boolean {
-  if (isInsidePolygon(point, vertices)) return true
-  return isPointNearPolygonOutline(point, vertices, threshold)
-}
-
-function isInsidePolygon(point: GlobalPoint, vertices: GlobalPoint[]): boolean {
-  let inside = false
-  const n = vertices.length
-  for (let i = 0, j = n - 1; i < n; j = i++) {
-    const vi = vertices[i]
-    const vj = vertices[j]
-    if (!vi || !vj) continue
-
-    const intersect = ((vi[1] > point[1]) !== (vj[1] > point[1]))
-      && (point[0] < (vj[0] - vi[0]) * (point[1] - vi[1]) / (vj[1] - vi[1]) + vi[0])
-    if (intersect) inside = !inside
-  }
-  return inside
-}
-
-function isPointNearPolygonOutline(point: GlobalPoint, vertices: GlobalPoint[], threshold: number): boolean {
-  const n = vertices.length
-  for (let i = 0; i < n; i++) {
-    const a = vertices[i]
-    const b = vertices[(i + 1) % n]
-    if (!a || !b) continue
-    if (distanceToSegment(point, a, b) <= threshold) return true
-  }
-  return false
+  const poly = polygonFromPoints<GlobalPoint>(vertices)
+  if (polygonIncludesPoint(point, poly)) return true
+  return pointOnPolygon(point, poly, threshold)
 }
 
 function hitTestArrow(point: GlobalPoint, el: ExcalidrawLinearElement, threshold: number): boolean {
@@ -145,22 +128,7 @@ function hitTestArrow(point: GlobalPoint, el: ExcalidrawLinearElement, threshold
     const a = pts[i]
     const b = pts[i + 1]
     if (!a || !b) continue
-    if (distanceToSegment(point, a, b) <= threshold) return true
+    if (distanceToLineSegment(point, lineSegment(a, b)) <= threshold) return true
   }
   return false
-}
-
-export function distanceToSegment(point: GlobalPoint, a: GlobalPoint, b: GlobalPoint): number {
-  const dx = b[0] - a[0]
-  const dy = b[1] - a[1]
-  const lengthSq = dx * dx + dy * dy
-
-  if (lengthSq === 0) {
-    return Math.hypot(point[0] - a[0], point[1] - a[1])
-  }
-
-  const t = clamp(((point[0] - a[0]) * dx + (point[1] - a[1]) * dy) / lengthSq, 0, 1)
-  const closestX = a[0] + t * dx
-  const closestY = a[1] + t * dy
-  return Math.hypot(point[0] - closestX, point[1] - closestY)
 }

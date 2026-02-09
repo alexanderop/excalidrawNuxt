@@ -1,7 +1,7 @@
 import type { ExcalidrawElement } from '~/features/elements/types'
 import { mutateElement } from '~/features/elements/mutateElement'
-import { pointFrom, pointRotateRads } from '@excalidraw/math'
-import type { GlobalPoint, Radians } from '@excalidraw/math'
+import { pointFrom, pointRotateRads } from '~/shared/math'
+import type { GlobalPoint, Radians } from '~/shared/math'
 import { MIN_ELEMENT_SIZE } from './constants'
 import type { TransformHandleDirection } from './transformHandles'
 

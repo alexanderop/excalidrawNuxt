@@ -1,7 +1,7 @@
 import type { ExcalidrawElement } from '~/features/elements/types'
 import { mutateElement } from '~/features/elements/mutateElement'
-import { pointFrom } from '@excalidraw/math'
-import type { GlobalPoint } from '@excalidraw/math'
+import { pointFrom } from '~/shared/math'
+import type { GlobalPoint } from '~/shared/math'
 
 export interface DragState {
   /** Scene-space pointer position at drag start */

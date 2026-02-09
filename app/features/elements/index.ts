@@ -22,6 +22,8 @@ export type {
   ElementsMap,
   FractionalIndex,
   StrokeStyle,
+  NonDeletedExcalidrawElement,
+  NonDeleted,
 } from './types'
 export {
   isArrowElement,
@@ -29,7 +31,28 @@ export {
   isLinearElement,
   isBindableElement,
   isFixedPointBinding,
+  isEmbeddableElement,
+  isFreeDrawElement,
+  isFrameElement,
+  isFrameLikeElement,
+  isElbowArrow,
+  isLineElement,
+  isExcalidrawElement,
 } from './types'
+
+// ---------------------------------------------------------------------------
+// Element utilities from @excalidraw/element
+// ---------------------------------------------------------------------------
+export {
+  getNonDeletedElements,
+  getVisibleElements,
+  isNonDeletedElement,
+  hashElementsVersion,
+  hashString,
+  isInvisiblySmallElement,
+  getNormalizedDimensions,
+} from '@excalidraw/element'
+
 export {
   DEFAULT_BG_COLOR,
   DEFAULT_FILL_STYLE,

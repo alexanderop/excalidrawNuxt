@@ -10,7 +10,7 @@ import {
   bindArrowToElement,
   updateArrowEndpoint,
 } from '~/features/binding'
-import { computeDimensionsFromPoints } from './pointHandles'
+import { getSizeFromPoints } from './pointHandles'
 
 const _excludeIds = new Set<string>()
 
@@ -104,7 +104,7 @@ export function useMultiPointCreation(options: UseMultiPointCreationOptions): Us
 
     const newRelativePoint = pointFrom<LocalPoint>(lastPt[0] + dx, lastPt[1] + dy)
     const newPoints = [...el.points, newRelativePoint]
-    const dims = computeDimensionsFromPoints(newPoints)
+    const dims = getSizeFromPoints(newPoints)
 
     mutateElement(el, {
       points: newPoints,

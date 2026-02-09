@@ -29,6 +29,8 @@ export type {
   ElementsMap,
   FractionalIndex,
   StrokeStyle,
+  NonDeletedExcalidrawElement,
+  NonDeleted,
 } from '@excalidraw/element/types'
 
 // ---------------------------------------------------------------------------
@@ -40,6 +42,13 @@ export {
   isLinearElement,
   isBindableElement,
   isFixedPointBinding,
+  isEmbeddableElement,
+  isFreeDrawElement,
+  isFrameElement,
+  isFrameLikeElement,
+  isElbowArrow,
+  isLineElement,
+  isExcalidrawElement,
 } from '@excalidraw/element'
 
 // ---------------------------------------------------------------------------

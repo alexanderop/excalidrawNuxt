@@ -1,7 +1,7 @@
 export { getElementBounds, getCommonBounds } from './bounds'
 export type { Bounds } from './bounds'
 
-export { hitTest, getElementAtPosition, getHitThreshold, distanceToSegment } from './hitTest'
+export { hitTest, getElementAtPosition, getHitThreshold } from './hitTest'
 
 export {
   getTransformHandles,
