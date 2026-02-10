@@ -45,15 +45,19 @@ function hitTestShape(point: GlobalPoint, element: ExcalidrawElement, threshold:
     return hitTestArrow(point, element, threshold)
   }
   switch (element.type) {
-    case 'rectangle': { return hitTestRectangle(point, element, threshold)
+    case 'rectangle':
+    case 'text':
+    case 'image': {
+      return hitTestRectangle(point, element, threshold)
     }
-    case 'ellipse': { return hitTestEllipse(point, element, threshold)
+    case 'ellipse': {
+      return hitTestEllipse(point, element, threshold)
     }
-    case 'diamond': { return hitTestDiamond(point, element, threshold)
+    case 'diamond': {
+      return hitTestDiamond(point, element, threshold)
     }
-    case 'text': { return hitTestRectangle(point, element, threshold)
-    }
-    default: { return false
+    default: {
+      return false
     }
   }
 }

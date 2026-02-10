@@ -1,5 +1,11 @@
-import { expect } from 'vitest'
+import { expect, beforeAll } from 'vitest'
+import { page } from 'vitest/browser'
 import '~/assets/css/main.css'
+
+// Desktop-sized viewport for all browser tests (screenshots are resolution-dependent)
+beforeAll(async () => {
+  await page.viewport(1280, 800)
+})
 
 // vitest-browser-vue mounts components into a <div> under <body>.
 // main.css sizes html/body/#__nuxt to 100%, but there is no #__nuxt in tests

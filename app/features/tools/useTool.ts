@@ -21,6 +21,8 @@ const KEY_TO_TOOL: Record<string, ToolType> = {
   '6': 'text',
   c: 'code',
   '7': 'code',
+  i: 'image',
+  '9': 'image',
 }
 
 export const useToolStore = createGlobalState(() => {

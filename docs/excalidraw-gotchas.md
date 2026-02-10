@@ -369,3 +369,32 @@ openEditor(element)   // Editor sets editingElement ref
 ```
 
 **Reference**: See `useTextInteraction.ts` (line ~329) and `useCodeInteraction.ts` (line ~162).
+
+## createElement Override Ordering
+
+When adding a new element type branch in `createElement.ts`, **always spread `...overrides` after type-specific defaults**:
+
+```ts
+// ❌ Bug: overrides from base get overwritten by type-specific defaults
+if (type === 'image') {
+  return {
+    ...base,           // base includes ...overrides
+    type: 'image',
+    fileId: null,      // overwrites caller's fileId!
+    status: 'pending',
+  } as SupportedElement
+}
+
+// ✅ Correct: spread overrides again after defaults
+if (type === 'image') {
+  return {
+    ...base,
+    type: 'image',
+    fileId: null,
+    status: 'pending',
+    ...overrides,      // caller overrides win
+  } as SupportedElement
+}
+```
+
+The `base` object already includes `...overrides`, but type-specific defaults set afterward overwrite them. This gotcha is non-obvious because `base` appears to handle overrides, yet type-specific branches silently clobber them.

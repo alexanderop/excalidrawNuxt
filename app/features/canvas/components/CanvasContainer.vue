@@ -10,9 +10,11 @@ import { useElements } from '~/features/elements/useElements'
 import { useLayerOrder } from '~/features/elements/composables/useLayerOrder'
 import { mutateElement } from '~/features/elements/mutateElement'
 import { useToolStore } from '~/features/tools/useTool'
+import type { ToolType } from '~/features/tools/types'
 import { useDrawingInteraction } from '~/features/tools/useDrawingInteraction'
 import { useTextInteraction } from '~/features/tools/useTextInteraction'
 import { useCodeInteraction } from '~/features/code'
+import { useImageInteraction } from '~/features/image'
 import { useSelection, useSelectionInteraction } from '~/features/selection'
 import { useMultiPointCreation } from '~/features/linear-editor/useMultiPointCreation'
 import { useLinearEditor } from '~/features/linear-editor/useLinearEditor'
@@ -259,6 +261,21 @@ const { editingCodeElement, submitCodeEditor } = useCodeInteraction({
   isPanning,
 })
 
+// Image insertion (file dialog, drop zone, paste)
+useImageInteraction({
+  canvasRef: interactiveCanvasRef,
+  activeTool,
+  setTool,
+  toScene,
+  zoom,
+  width,
+  height,
+  addElement,
+  select,
+  markStaticDirty: dirty.markStaticDirty,
+  markInteractiveDirty: dirty.markInteractiveDirty,
+})
+
 // Finalize in-progress operations when user switches tools
 onBeforeToolChange(() => {
   if (multiElement.value) finalizeMultiPoint()
@@ -342,16 +359,13 @@ dirty.bind({ markStaticDirty, markInteractiveDirty, markNewElementDirty })
   markStaticDirty, markInteractiveDirty,
 }
 
+const CROSSHAIR_TOOLS = new Set<ToolType>(['text', 'code', 'image'])
+
 const combinedCursorClass = computed(() => {
-  // Panning cursor takes priority over selection cursor
   if (cursorClass.value !== 'cursor-default') return cursorClass.value
-  // Multi-point mode → crosshair
   if (multiElement.value) return 'cursor-crosshair'
-  // Linear editor mode → pointer for handles
   if (editingLinearElement.value) return 'cursor-pointer'
-  // Text/code tool cursor (crosshair like Excalidraw)
-  if (activeTool.value === 'text' || activeTool.value === 'code') return 'cursor-crosshair'
-  // Selection interaction cursor only applies in selection tool mode
+  if (CROSSHAIR_TOOLS.has(activeTool.value)) return 'cursor-crosshair'
   if (activeTool.value === 'selection' && cursorStyle.value !== 'default') {
     return `cursor-${cursorStyle.value}`
   }

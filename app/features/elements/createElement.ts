@@ -102,5 +102,17 @@ export function createElement(
     return { ...base, type } as SupportedElement
   }
 
+  if (type === 'image') {
+    return {
+      ...base,
+      type: 'image',
+      fileId: null,
+      status: 'pending',
+      scale: [1, 1],
+      crop: null,
+      ...overrides,
+    } as SupportedElement
+  }
+
   throw new Error(`Unhandled element type: ${String(type)}`)
 }

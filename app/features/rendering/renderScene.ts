@@ -1,6 +1,7 @@
 import type { RoughCanvas } from 'roughjs/bin/canvas'
 import type { ExcalidrawElement } from '~/features/elements/types'
 import type { Theme } from '~/features/theme/types'
+import type { FileId, ImageCacheEntry } from '~/features/image'
 import { getElementBounds } from '~/features/selection/bounds'
 import { renderElement } from './renderElement'
 
@@ -14,6 +15,7 @@ export function renderScene(
   w: number,
   h: number,
   theme: Theme,
+  imageCache?: ReadonlyMap<FileId, ImageCacheEntry>,
 ): void {
   ctx.save()
   ctx.scale(zoom, zoom)
@@ -27,7 +29,7 @@ export function renderScene(
   for (const element of elements) {
     const [x1, y1, x2, y2] = getElementBounds(element)
     if (x2 < viewMinX || x1 > viewMaxX || y2 < viewMinY || y1 > viewMaxY) continue
-    renderElement(ctx, rc, element, theme)
+    renderElement(ctx, rc, element, theme, imageCache)
   }
 
   ctx.restore()

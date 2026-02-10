@@ -19,6 +19,7 @@ const tools: Array<{ type: ToolType; label: string; shortcutNumber: number | nul
   { type: 'text', label: 'Text', shortcutNumber: 6 },
   { type: 'code', label: 'Code', shortcutNumber: 7 },
   { type: 'line', label: 'Line', shortcutNumber: 8 },
+  { type: 'image', label: 'Image', shortcutNumber: 9 },
 ]
 </script>
 

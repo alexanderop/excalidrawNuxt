@@ -12,6 +12,7 @@ import type { LinearEditorRenderState, MultiPointRenderState } from '~/features/
 import type { ExcalidrawElement, ExcalidrawLinearElement, ExcalidrawTextElement } from '~/features/elements/types'
 import type { Box, GlobalPoint } from '~/shared/math'
 import { useTheme, resolveColor } from '~/features/theme'
+import { useImageCache } from '~/features/image/useImageCache'
 
 interface UseSceneRendererOptions {
   layers: {
@@ -127,6 +128,7 @@ export function useSceneRenderer(options: UseSceneRendererOptions): UseSceneRend
   const { scrollX, scrollY, zoom, width, height } = viewport
 
   const { theme } = useTheme()
+  const { cache: imageCache } = useImageCache()
   const CANVAS_BG = '#ffffff'
   const bgColor = computed(() => resolveColor(CANVAS_BG, theme.value))
 
@@ -150,7 +152,7 @@ export function useSceneRenderer(options: UseSceneRendererOptions): UseSceneRend
         const visibleElements = hiddenId
           ? elements.value.filter(el => el.id !== hiddenId)
           : elements.value
-        renderScene(ctx, rc, visibleElements, scrollX.value, scrollY.value, zoom.value, width.value, height.value, theme.value)
+        renderScene(ctx, rc, visibleElements, scrollX.value, scrollY.value, zoom.value, width.value, height.value, theme.value, imageCache.value)
       }
     },
     onRenderNewElement(ctx) {
@@ -160,7 +162,7 @@ export function useSceneRenderer(options: UseSceneRendererOptions): UseSceneRend
       ctx.save()
       ctx.scale(zoom.value, zoom.value)
       ctx.translate(scrollX.value, scrollY.value)
-      renderElement(ctx, rc, el, theme.value)
+      renderElement(ctx, rc, el, theme.value, imageCache.value)
       ctx.restore()
     },
     onRenderInteractive(ctx) {

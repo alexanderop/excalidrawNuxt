@@ -11,6 +11,9 @@ export type {
   ExcalidrawArrowElement,
   ExcalidrawTextElement,
   ExcalidrawLinearElement,
+  ExcalidrawImageElement,
+  InitializedExcalidrawImageElement,
+  FileId,
   Arrowhead,
   FillStyle,
   GroupId,
@@ -39,6 +42,8 @@ export {
   isElbowArrow,
   isLineElement,
   isExcalidrawElement,
+  isImageElement,
+  isInitializedImageElement,
 } from './types'
 
 // ---------------------------------------------------------------------------

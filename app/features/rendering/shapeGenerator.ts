@@ -42,6 +42,9 @@ function generateDrawable(element: ExcalidrawElement, theme: Theme): Drawable {
   if (isCodeElement(element)) {
     throw new Error('Code elements should not use RoughJS shape generation')
   }
+  if (element.type === 'image') {
+    throw new Error('Image elements should not use RoughJS shape generation')
+  }
 
   const { width, height } = element
   const options = elementToRoughOptions(element, theme)

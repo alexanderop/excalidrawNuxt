@@ -2,7 +2,7 @@ export type LinearToolType = 'arrow' | 'line'
 export type ShapeToolType = 'rectangle' | 'ellipse' | 'diamond'
 export type DrawingToolType = ShapeToolType | LinearToolType
 
-export type ToolType = 'selection' | 'hand' | 'text' | 'code' | DrawingToolType
+export type ToolType = 'selection' | 'hand' | 'text' | 'code' | 'image' | DrawingToolType
 
 export function isDrawingTool(tool: ToolType): tool is DrawingToolType {
   return tool === 'rectangle' || tool === 'ellipse' || tool === 'diamond' || tool === 'arrow' || tool === 'line'
@@ -22,4 +22,8 @@ export function isTextTool(tool: ToolType): tool is 'text' {
 
 export function isCodeTool(tool: ToolType): tool is 'code' {
   return tool === 'code'
+}
+
+export function isImageTool(tool: ToolType): tool is 'image' {
+  return tool === 'image'
 }

@@ -38,7 +38,10 @@ export function resizeElement(
 
   let { x, y, width, height } = applyHandleDelta(ob, handleType, dx, dy)
 
-  if (shiftKey && ob.height !== 0) {
+  // Images: aspect-ratio-locked by default, Shift to free-resize (inverted from other shapes)
+  const isImage = element.type === 'image'
+  const shouldLockAspectRatio = isImage ? !shiftKey : shiftKey
+  if (shouldLockAspectRatio && ob.height !== 0) {
     ({ width, height } = applyAspectRatio(ob, handleType, width, height))
   }
 

@@ -4,6 +4,8 @@ import { isArrowElement, isLinearElement, isTextElement } from '~/features/eleme
 import type { Theme } from '~/features/theme/types'
 import { resolveColor } from '~/features/theme/colors'
 import { isCodeElement, renderCodeElement } from '~/features/code'
+import { isImageElement, renderImageElement } from '~/features/image'
+import type { FileId, ImageCacheEntry } from '~/features/image'
 import { generateShape } from './shapeGenerator'
 import { renderArrowheads } from './arrowhead'
 import { getFontString, getLineHeightInPx } from './textMeasurement'
@@ -17,21 +19,39 @@ export function renderElement(
   rc: RoughCanvas,
   element: ExcalidrawElement,
   theme: Theme,
+  imageCache?: ReadonlyMap<FileId, ImageCacheEntry>,
 ): void {
   if (element.isDeleted) return
+
+  if (isImageElement(element)) {
+    renderImageElement(ctx, element, imageCache ?? new Map())
+    return
+  }
 
   if (isCodeElement(element)) {
     renderCodeElement(ctx, element, theme)
     return
   }
+
   if (isLinearElement(element) && element.points.length < 2) return
+
   if (isTextElement(element)) {
     if (!element.text) return
     renderTextElement(ctx, element, theme)
     return
   }
+
   if (isZeroSizeShape(element)) return
 
+  renderRoughShape(ctx, rc, element, theme)
+}
+
+function renderRoughShape(
+  ctx: CanvasRenderingContext2D,
+  rc: RoughCanvas,
+  element: ExcalidrawElement,
+  theme: Theme,
+): void {
   ctx.save()
   ctx.translate(element.x, element.y)
   ctx.globalAlpha = element.opacity / 100
