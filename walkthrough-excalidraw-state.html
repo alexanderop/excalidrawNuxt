@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="en" style="color-scheme:dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Excalidraw State & Persistence — Walkthrough</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            wt: {
+              bg: '#000000', surface: '#0a0a0a', raised: '#141414',
+              border: '#2a2a2a', fg: '#ffffff', muted: '#a0a0a0',
+              accent: '#a855f7', file: '#c084fc', red: '#ef4444',
+              green: '#22c55e', yellow: '#eab308', cyan: '#06b6d4',
+            },
+            node: {
+              component: '#a855f7', composable: '#7c3aed', utility: '#6d28d9',
+              external: '#525252', event: '#d8b4fe', data: '#9333ea',
+            },
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    .mermaid-wrap svg { max-width: none !important; height: auto !important; }
+    .mermaid-wrap .node { cursor: pointer; }
+    .mermaid-wrap .node:hover rect,
+    .mermaid-wrap .node:hover polygon,
+    .mermaid-wrap .node:hover circle,
+    .mermaid-wrap .node:hover .label-container {
+      filter: brightness(1.3); transition: filter .15s;
+    }
+    .dt-body p { color:#a0a0a0; font-size:.88rem; line-height:1.65; margin-bottom:10px; }
+    .dt-body p code {
+      background:rgba(168,85,247,.12); padding:1px 6px; border-radius:4px;
+      font-family:'SF Mono','Fira Code',monospace; font-size:.82rem; color:#c084fc;
+    }
+    .dt-body .shiki {
+      background: #000000 !important;
+      border: 1px solid #2a2a2a;
+      border-radius: 8px;
+      padding: 14px 16px;
+      overflow-x: auto;
+      margin: 8px 0 14px;
+    }
+    .dt-body .shiki code {
+      font-family: 'SF Mono','Fira Code',monospace;
+      font-size: .78rem;
+      line-height: 1.55;
+      background: none;
+      padding: 0;
+      border-radius: 0;
+      color: inherit;
+    }
+    .dt-body pre.code-fallback {
+      background: #000000;
+      border: 1px solid #2a2a2a;
+      border-radius: 8px;
+      padding: 14px 16px;
+      overflow-x: auto;
+      margin: 8px 0 14px;
+    }
+    .dt-body pre.code-fallback code {
+      font-family: 'SF Mono','Fira Code',monospace;
+      font-size: .78rem;
+      line-height: 1.55;
+      color: #e0e0e0;
+      background: none;
+      padding: 0;
+      border-radius: 0;
+    }
+    .mini-table { width: 100%; border-collapse: collapse; margin: 8px 0 14px; font-size: .78rem; }
+    .mini-table th {
+      background: #141414; color: #a0a0a0; text-align: left; padding: 6px 10px;
+      border: 1px solid #2a2a2a; font-weight: 600; font-size: .72rem;
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .mini-table td {
+      padding: 5px 10px; border: 1px solid #2a2a2a; color: #d0d0d0;
+      font-family: 'SF Mono','Fira Code',monospace; font-size: .76rem;
+    }
+    .mini-table tr:hover td { background: rgba(168,85,247,.06); }
+    .tab-btn { cursor: pointer; user-select: none; transition: all .15s; }
+    .tab-btn:hover { opacity: 1 !important; }
+    .badge-pill {
+      display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 9999px;
+      font-size: .65rem; font-weight: 600; letter-spacing: 0.03em; white-space: nowrap;
+    }
+    .cross-link { cursor: pointer; transition: color .15s; }
+    .cross-link:hover { color: #c084fc !important; text-decoration: underline; }
+    .overlay-card {
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    }
+    .step-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 20px; height: 20px; border-radius: 50%; background: #7c3aed;
+      color: #fff; font-size: .68rem; font-weight: 700; flex-shrink: 0;
+    }
+  </style>
+</head>
+<body class="bg-wt-bg text-wt-fg m-0 overflow-hidden">
+  <div id="root"></div>
+
+  <script type="module">
+    import { createHighlighter } from 'https://cdn.jsdelivr.net/npm/shiki@3.22.0/+esm'
+
+    const { useState, useEffect, useRef, useCallback, useMemo } = React;
+    const h = React.createElement;
+
+    const SUMMARY = "Excalidraw manages state through five cooperating layers: AppState (UI), Scene (elements), Store (change tracking), History (undo/redo via deltas), and Actions (the command dispatcher that ties them together). Persistence fans out to localStorage, IndexedDB, file exports, and Firebase depending on the data type and collaboration needs.";
+
+    const DIAGRAM = `graph TD
+      subgraph user_input["User Input"]
+        userAction["User Action"]:::event
+        actionManager["Action Manager"]:::composable
+      end
+
+      subgraph state_layers["State Layers"]
+        appState["App State"]:::data
+        scene["Scene Graph"]:::data
+        store["Change Tracker"]:::composable
+        history["History Stacks"]:::composable
+      end
+
+      subgraph element_model["Element Model"]
+        elements["Element Mutability"]:::utility
+        fractionalIndex["Fractional Indexing"]:::utility
+      end
+
+      subgraph persistence["Persistence"]
+        localStorage["Local Storage"]:::external
+        indexedDB["IndexedDB"]:::external
+        fileExport["File Export"]:::external
+        collaboration["Collaboration"]:::external
+      end
+
+      userAction -->|"dispatches"| actionManager
+      actionManager -->|"returns ActionResult"| appState
+      actionManager -->|"replaces elements"| scene
+      actionManager -->|"schedules capture"| store
+      store -->|"emits deltas"| history
+
+      scene -->|"uses"| elements
+      scene -->|"maintains order"| fractionalIndex
+
+      appState -->|"auto-saves"| localStorage
+      scene -->|"auto-saves"| localStorage
+      scene -->|"binary files"| indexedDB
+      scene -->|"exports .excalidraw"| fileExport
+      scene -->|"encrypted sync"| collaboration
+
+      classDef component fill:#a855f7,stroke:#c084fc,color:#fff
+      classDef composable fill:#7c3aed,stroke:#a78bfa,color:#fff
+      classDef utility fill:#6d28d9,stroke:#8b5cf6,color:#fff
+      classDef external fill:#525252,stroke:#737373,color:#fff
+      classDef event fill:#d8b4fe,stroke:#e9d5ff,color:#000
+      classDef data fill:#9333ea,stroke:#a855f7,color:#fff
+
+      click userAction nodeClickHandler "View details"
+      click actionManager nodeClickHandler "View details"
+      click appState nodeClickHandler "View details"
+      click scene nodeClickHandler "View details"
+      click store nodeClickHandler "View details"
+      click history nodeClickHandler "View details"
+      click elements nodeClickHandler "View details"
+      click fractionalIndex nodeClickHandler "View details"
+      click localStorage nodeClickHandler "View details"
+      click indexedDB nodeClickHandler "View details"
+      click fileExport nodeClickHandler "View details"
+      click collaboration nodeClickHandler "View details"
+    `;
+
+    // --- Node Data (Overview + Internals + Vue Translation + Badges + Cross-links) ---
+
+    const NODES = {
+      userAction: {
+        title: "User Action",
+        badges: { persisted: 'never', undoable: 'no', runtimeOnly: true },
+        connectedTo: ['actionManager'],
+        overview: "Every state change starts with a user event \u2014 a click, drag, keypress, or menu selection. These events are captured by the App component and routed to the ActionManager for processing.",
+        internals: {
+          text: "Events are normalized before dispatch. Pointer events carry canvas coordinates (accounting for zoom/scroll). Keyboard events are tested against action keyTest() functions for shortcut matching.",
+          tables: [{
+            title: "Event Types \u2192 Action Flow",
+            headers: ["Event Source", "Handler", "Destination"],
+            rows: [
+              ["Pointer (click/drag)", "onPointerDown/Move/Up", "Tool-specific action"],
+              ["Keyboard shortcut", "onKeyDown \u2192 keyTest()", "Matched action.perform()"],
+              ["Menu / Toolbar", "onClick handler", "executeAction(action)"],
+              ["Context menu", "onContextMenu", "Action with formData"],
+              ["Paste / Drop", "onPaste / onDrop", "Import + scene update"],
+            ]
+          }]
+        },
+        vue: {
+          text: "In Vue, event handling maps naturally to template v-on directives and composables.",
+          mapping: "App.tsx event handlers \u2192 useCanvasEvents() composable with template @pointerdown etc.",
+          adopt: ["Normalize pointer events in a composable, not component methods", "Use VueUse useEventListener() for cleanup"],
+          simplify: ["No need for class-based event binding \u2014 composables + template refs suffice"],
+        },
+        files: ["packages/excalidraw/components/App.tsx"],
+      },
+      actionManager: {
+        title: "Action Manager",
+        badges: { persisted: 'never', undoable: 'no', runtimeOnly: true },
+        connectedTo: ['appState', 'scene', 'store'],
+        overview: "The command dispatcher that encapsulates all state mutations. Each action has a perform() method that receives the current elements and appState, then returns an ActionResult containing new elements, state patches, and a history capture mode (IMMEDIATELY, EVENTUALLY, or NEVER).",
+        internals: {
+          text: "ActionManager maintains a registry of all actions. It resolves keyboard shortcuts via keyTest(), dispatches perform(), and feeds results through syncActionResult() which fans out to store, scene, and setState.",
+          tables: [
+            {
+              title: "CaptureUpdateAction Modes",
+              headers: ["Mode", "When Used", "Undoable?"],
+              rows: [
+                ["IMMEDIATELY", "User-initiated: draw, delete, style change", "Yes, immediately"],
+                ["EVENTUALLY", "Frequent: scroll, zoom, typing batches", "Yes, batched later"],
+                ["NEVER", "Remote collab updates, scene init", "No"],
+              ]
+            },
+            {
+              title: "ActionResult Shape",
+              headers: ["Field", "Type", "Purpose"],
+              rows: [
+                ["elements", "ExcalidrawElement[] | null", "New elements array to replace scene"],
+                ["appState", "Partial<AppState> | null", "State patches to merge"],
+                ["files", "BinaryFiles | null", "Binary file updates (images)"],
+                ["captureUpdate", "CaptureUpdateActionType", "History control mode"],
+                ["replaceFiles", "boolean", "If true, replace all files (not merge)"],
+              ]
+            }
+          ]
+        },
+        vue: {
+          text: "The ActionManager class translates to a composable with an action registry.",
+          mapping: "ActionManager class \u2192 useActionManager() composable with action registry Map",
+          adopt: ["Keep the 3-mode capture pattern (IMMEDIATELY/EVENTUALLY/NEVER)", "Action interface with perform() returning result objects"],
+          simplify: ["Vue composables can directly mutate reactive state \u2014 no need for setState()", "Actions can be plain functions, not class instances"],
+        },
+        files: ["packages/excalidraw/actions/manager.tsx", "packages/excalidraw/actions/types.ts"],
+        code: `interface ActionResult {
+  elements?: ExcalidrawElement[];
+  appState?: Partial<AppState>;
+  captureUpdate: CaptureUpdateActionType;
+}`,
+        lang: "typescript",
+      },
+      appState: {
+        title: "App State",
+        badges: { persisted: 'partial', undoable: 'batched', runtimeOnly: false },
+        connectedTo: ['localStorage', 'actionManager'],
+        overview: "A single large interface (~130 properties) managed as React component state. Covers active tool, viewport (zoom/scroll), selections, drawing preferences, UI panel visibility, and transient flags. Each field has a storage config controlling whether it persists to browser, export, or server.",
+        internals: {
+          text: "APP_STATE_STORAGE_CONF defines per-field persistence targets. Three cleanup functions filter before storage. Initialization merges defaults with props.",
+          tables: [{
+            title: "Property Groups",
+            headers: ["Group", "Examples", "Persistence Target"],
+            rows: [
+              ["Active Tool", "activeTool, preferredSelectionTool", "Browser only"],
+              ["Viewport", "zoom, scrollX, scrollY, width, height", "Browser only"],
+              ["Selection", "selectedElementIds, selectedGroupIds, editingGroupId", "Browser only"],
+              ["Editing", "editingTextElement, newElement, multiElement", "Never"],
+              ["Drawing Prefs", "currentItemStrokeColor, currentItemFontFamily", "All (browser + export + server)"],
+              ["UI Panels", "openMenu, openPopup, openSidebar, openDialog", "Never"],
+              ["Canvas", "gridSize, gridModeEnabled, zenModeEnabled, theme", "All"],
+              ["Collaboration", "collaborators, followedBy, userToFollow", "Never"],
+              ["Transient", "isLoading, isResizing, isRotating, isCropping", "Never"],
+            ]
+          },
+          {
+            title: "Storage Config Examples",
+            headers: ["Field", "browser", "export", "server"],
+            rows: [
+              ["theme", "\u2713", "\u2713", "\u2713"],
+              ["gridSize", "\u2713", "\u2713", "\u2713"],
+              ["currentItemStrokeColor", "\u2713", "\u2713", "\u2713"],
+              ["selectedElementIds", "\u2713", "\u2718", "\u2718"],
+              ["newElement", "\u2718", "\u2718", "\u2718"],
+              ["isLoading", "\u2718", "\u2718", "\u2718"],
+            ]
+          }]
+        },
+        vue: {
+          text: "React this.state/setState() maps directly to reactive()/ref() in composables.",
+          mapping: "this.state + setState() \u2192 reactive() / ref() in useAppState() composable",
+          adopt: ["Per-field storage config \u2014 explicit control over what persists where", "Cleanup functions that strip transient fields before storage"],
+          simplify: ["No monolithic state object \u2014 split into focused composables (useViewport, useActiveTool, useDrawingPrefs)", "Vue reactivity eliminates manual setState merging"],
+        },
+        files: ["packages/excalidraw/types.ts:269-463", "packages/excalidraw/appState.ts"],
+        code: `// Storage config per field:
+theme:              { browser: true, export: true,  server: true  }
+selectedElementIds: { browser: true, export: false, server: false }
+newElement:         { browser: false, export: false, server: false }`,
+        lang: "typescript",
+      },
+      scene: {
+        title: "Scene Graph",
+        badges: { persisted: 'all', undoable: 'yes', runtimeOnly: false },
+        connectedTo: ['elements', 'fractionalIndex', 'localStorage', 'indexedDB', 'fileExport', 'collaboration'],
+        overview: "The authoritative element store. Maintains four synchronized data structures: the full elements array (including soft-deleted), an ID-to-element map, and filtered non-deleted versions of both. Elements are never hard-deleted \u2014 they get isDeleted: true so undo/redo and collaboration can restore them.",
+        internals: {
+          text: "The Scene class is the single source of truth. sceneNonce (random int) is regenerated on every update for renderer cache invalidation.",
+          tables: [{
+            title: "4 Synchronized Data Structures",
+            headers: ["Structure", "Type", "Contents"],
+            rows: [
+              ["elements", "readonly ExcalidrawElement[]", "ALL elements including soft-deleted"],
+              ["elementsMap", "Map<id, Ordered<Element>>", "SceneElementsMap \u2014 fast ID lookup"],
+              ["nonDeletedElements", "NonDeleted<Element>[]", "Filtered array (isDeleted: false)"],
+              ["nonDeletedElementsMap", "Map<id, NonDeleted<...>>", "NonDeletedSceneElementsMap"],
+            ]
+          },
+          {
+            title: "Key Methods",
+            headers: ["Method", "Purpose"],
+            rows: [
+              ["replaceAllElements(next)", "Bulk replace (used by actions, reconciliation)"],
+              ["insertElement(el)", "Add single element"],
+              ["mutateElement(el, updates)", "In-place mutation + version bump"],
+              ["mapElements(fn)", "Map + auto-invalidation"],
+              ["getSelectedElements(opts)", "Cached selection lookup"],
+              ["getElement(id)", "By-ID lookup from elementsMap"],
+            ]
+          }]
+        },
+        vue: {
+          text: "PureComponent translates to defineComponent with shallowRef for elements.",
+          mapping: "Scene class (PureComponent) \u2192 useScene() composable with shallowRef(elements)",
+          adopt: ["Single source of truth pattern \u2014 one composable owns all elements", "Soft deletion (isDeleted flag) for undo/redo and collaboration", "sceneNonce for render invalidation \u2192 Vue triggerRef() on shallowRef"],
+          simplify: ["shallowRef(elements) triggers reactivity on array replacement only \u2014 matches replaceAllElements() pattern", "Computed properties replace manual filtered-view maintenance"],
+        },
+        files: ["packages/element/src/Scene.ts"],
+        code: `elements            \u2192 readonly array (ALL, incl. deleted)
+elementsMap         \u2192 Map<id, Element>
+nonDeletedElements  \u2192 filtered array
+nonDeletedElementsMap \u2192 filtered Map`,
+        lang: "typescript",
+      },
+      store: {
+        title: "Change Tracker (Store)",
+        badges: { persisted: 'never', undoable: 'no', runtimeOnly: true },
+        connectedTo: ['history', 'actionManager'],
+        overview: "Detects what changed between snapshots using reference equality (cheap) and hashing. Produces StoreIncrements: DurableIncrements carry full bidirectional deltas for undo/redo, while EphemeralIncrements are lightweight change notifications. Uses macro/micro action scheduling to batch and prioritize updates.",
+        internals: {
+          text: "The Store maintains immutable StoreSnapshot objects for change detection. The Delta<T> class stores bidirectional changes (deleted/inserted). ElementsDelta categorizes changes into added, removed, and updated.",
+          tables: [{
+            title: "Delta Hierarchy",
+            headers: ["Type", "Contains", "Purpose"],
+            rows: [
+              ["StoreChange", "Reference comparison result", "What changed (lightweight)"],
+              ["StoreDelta", "Property-level diffs (Delta<T>)", "How to reverse it (heavy)"],
+              ["StoreIncrement", "Change event wrapper", "Emitted to consumers"],
+              ["\u2514 DurableIncrement", "StoreChange + StoreDelta", "Undoable \u2014 has full delta"],
+              ["\u2514 EphemeralIncrement", "StoreChange only", "Not undoable \u2014 lightweight"],
+            ]
+          },
+          {
+            title: "Delta<T> Structure",
+            headers: ["Field", "Type", "Meaning"],
+            rows: [
+              ["deleted", "Partial<T>", "Values BEFORE the change"],
+              ["inserted", "Partial<T>", "Values AFTER the change"],
+            ]
+          },
+          {
+            title: "Macro vs Micro Actions",
+            headers: ["Type", "Priority", "Used By"],
+            rows: [
+              ["Macro", "IMMEDIATELY > NEVER > EVENTUALLY", "One per commit cycle from ActionManager"],
+              ["Micro", "Pre-executed before macro", "History re-emitting changes without re-recording"],
+            ]
+          }]
+        },
+        vue: {
+          text: "The Store/Delta pattern translates well to Vue \u2014 same concept, just reactive wrappers.",
+          mapping: "Store class \u2192 useChangeTracker() composable; Delta<T> stays a plain class",
+          adopt: ["Delta-based change tracking (bidirectional diffs)", "StoreSnapshot for cheap reference-equality diffing", "Durable vs Ephemeral increment distinction"],
+          simplify: ["Vue watch() can detect changes reactively \u2014 may simplify snapshot scheduling", "shallowRef replacement naturally triggers change detection"],
+        },
+        files: ["packages/element/src/store.ts", "packages/element/src/delta.ts"],
+      },
+      history: {
+        title: "History (Undo/Redo)",
+        badges: { persisted: 'never', undoable: 'yes', runtimeOnly: true },
+        connectedTo: ['store'],
+        overview: "Dual-stack architecture storing inverted deltas, not full snapshots. On record, the delta is inverted and pushed to the undo stack. On undo, it pops, applies the inverse, and pushes to redo. Automatically skips invisible changes and excludes version/versionNonce from history so each undo is treated as a fresh edit for collaboration.",
+        internals: {
+          text: "History stores inverted deltas, not snapshots \u2014 more memory-efficient and collaboration-friendly. Key design: excludes version/versionNonce so each undo/redo is treated as a new edit for collaboration sync.",
+          tables: [{
+            title: "5-Step Undo/Redo Flow",
+            headers: ["Step", "Action", "Detail"],
+            rows: [
+              ["\u2460", "Record", "Store emits DurableIncrement \u2192 History.record(delta)"],
+              ["\u2461", "Invert", "delta.inverse() \u2192 push to undoStack"],
+              ["\u2462", "Clear redo", "If element changes occurred, redoStack.clear()"],
+              ["\u2463", "Undo", "Pop undoStack \u2192 apply inverse \u2192 push to redoStack"],
+              ["\u2464", "Redo", "Pop redoStack \u2192 apply inverse \u2192 push to undoStack"],
+            ]
+          },
+          {
+            title: "Design Decisions",
+            headers: ["Decision", "Rationale"],
+            rows: [
+              ["Deltas, not snapshots", "More memory-efficient; enables collaboration"],
+              ["Skip invisible changes", "If undo results in no visible diff, auto-continue to next"],
+              ["Exclude version/versionNonce", "Each undo is a fresh edit for collab sync"],
+              ["AppState-only changes preserve redo", "Zooming/scrolling doesn't break redo chain"],
+            ]
+          }]
+        },
+        vue: {
+          text: "Same delta-based pattern, just with Vue reactive wrappers.",
+          mapping: "History class \u2192 useHistory() composable; stacks are shallowRef([])",
+          adopt: ["Delta-based history (not snapshot-based)", "Automatic skip of invisible changes", "Separation of element vs appState redo-clearing"],
+          simplify: ["Vue reactivity can trigger UI updates on stack changes automatically", "Composable can expose undo/redo as simple functions"],
+        },
+        files: ["packages/excalidraw/history.ts"],
+      },
+      elements: {
+        title: "Element Mutability",
+        badges: { persisted: 'all', undoable: 'yes', runtimeOnly: false },
+        connectedTo: ['scene'],
+        overview: "Two mutation strategies: mutateElement() for in-place mutation during performance-critical paths (dragging, resizing), and newElementWith() for immutable spread in actions. Both bump version, versionNonce, and updated timestamp. Every element carries these three fields for deterministic conflict resolution.",
+        internals: {
+          text: "Elements are typed as Readonly<> but Excalidraw uses two mutation paths for different performance needs. In-place mutation is used during real-time interaction; immutable spread is used in action results.",
+          tables: [{
+            title: "Version Tracking Fields (Per Element)",
+            headers: ["Field", "Type", "Purpose"],
+            rows: [
+              ["version", "number", "Sequential counter, incremented on every change"],
+              ["versionNonce", "number", "Random integer for deterministic tie-breaking"],
+              ["updated", "number", "Epoch ms timestamp of last change"],
+            ]
+          },
+          {
+            title: "Mutation Strategies",
+            headers: ["Strategy", "Function", "When Used", "Performance"],
+            rows: [
+              ["In-place", "mutateElement(el, map, updates)", "Dragging, resizing, real-time editing", "Fast (no allocation)"],
+              ["Immutable spread", "newElementWith(el, updates)", "Action results, batch changes", "Safe (new object)"],
+            ]
+          }]
+        },
+        vue: {
+          text: "Vue's reactivity system aligns well with Excalidraw's mutation patterns.",
+          mapping: "mutateElement() \u2192 direct property assignment on reactive element; newElementWith() \u2192 spread + shallowRef trigger",
+          adopt: ["version + versionNonce + updated per element \u2014 essential for conflict resolution", "Both mutation strategies for different performance needs"],
+          simplify: ["With shallowRef for elements array, use triggerRef() after in-place mutation instead of replaceAllElements()"],
+        },
+        files: ["packages/element/src/mutateElement.ts"],
+        code: `// Per-element versioning:
+version      \u2192 sequential counter
+versionNonce \u2192 random int (tie-breaking)
+updated      \u2192 epoch ms timestamp`,
+        lang: "typescript",
+      },
+      fractionalIndex: {
+        title: "Fractional Indexing",
+        badges: { persisted: 'all', undoable: 'yes', runtimeOnly: false },
+        connectedTo: ['scene'],
+        overview: "String-based element ordering that enables reordering in multiplayer without global index coordination. Each element has an index property maintained by the Scene class. Uses the fractional-indexing library from Rocicorp.",
+        internals: {
+          text: "Fractional indexing assigns string-based keys that maintain sort order between any two existing elements. The Scene class keeps indices in sync with array order on every mutation.",
+          tables: [{
+            title: "Key Functions",
+            headers: ["Function", "Purpose"],
+            rows: [
+              ["orderByFractionalIndex(elements)", "Sort by index, break ties by ID"],
+              ["syncMovedIndices(elements, moved)", "Generate new indices for moved elements only"],
+              ["syncInvalidIndices(elements)", "Fix contiguous groups of invalid indices"],
+              ["validateFractionalIndices(elements)", "Assert: prev.index < el.index < next.index"],
+            ]
+          }]
+        },
+        vue: {
+          text: "Fractional indexing is framework-agnostic \u2014 use the same library directly.",
+          mapping: "fractional-indexing library \u2192 same npm package, called from useScene() composable",
+          adopt: ["Use the same fractional-indexing library from Rocicorp", "Keep invariant: Scene always syncs indices on mutation"],
+          simplify: ["No special Vue adaptation needed \u2014 pure utility functions"],
+        },
+        files: ["packages/element/src/fractionalIndex.ts"],
+      },
+      localStorage: {
+        title: "Local Storage Auto-Save",
+        badges: { persisted: 'all', undoable: 'no', runtimeOnly: false },
+        connectedTo: ['appState', 'scene'],
+        overview: "Debounced auto-save of elements and appState to localStorage (~5\u201310MB limit). Strips transient fields via clearAppStateForLocalStorage(), filters out soft-deleted elements, and catches QuotaExceededError for graceful degradation. Save can be paused during collaboration or when the tab is hidden.",
+        internals: {
+          text: "The auto-save pipeline runs on a debounce timer. Save can be paused/resumed (e.g., during collaboration or when the tab is hidden).",
+          tables: [{
+            title: "Storage Limits",
+            headers: ["Aspect", "Value", "Note"],
+            rows: [
+              ["Total capacity", "~5\u201310 MB", "Browser-dependent"],
+              ["Per-origin limit", "Shared across keys", "All excalidraw keys compete"],
+              ["Error handling", "QuotaExceededError", "Caught for graceful degradation"],
+              ["Save timing", "Debounced", "Prevents excessive writes"],
+              ["Pausable", "Yes", "Paused during collab or tab hidden"],
+            ]
+          },
+          {
+            title: "Auto-Save Pipeline (5 steps)",
+            headers: ["Step", "Operation"],
+            rows: [
+              ["\u2460", "clearAppStateForLocalStorage(appState) \u2014 strip transient fields"],
+              ["\u2461", "getNonDeletedElements(elements) \u2014 filter soft-deleted"],
+              ["\u2462", "localStorage.setItem(ELEMENTS_KEY, JSON.stringify(...))"],
+              ["\u2463", "localStorage.setItem(APP_STATE_KEY, JSON.stringify(...))"],
+              ["\u2464", "Update version tracking"],
+            ]
+          }]
+        },
+        vue: {
+          text: "VueUse provides ready-made localStorage composables.",
+          mapping: "Custom save logic \u2192 useLocalStorage() from VueUse + watchDebounced()",
+          adopt: ["Debounced save pattern", "Transient field stripping before persistence", "QuotaExceededError handling"],
+          simplify: ["VueUse useLocalStorage() handles serialization automatically", "watchDebounced() replaces manual debounce timer"],
+        },
+        files: ["packages/excalidraw/data/localStorage.ts"],
+      },
+      indexedDB: {
+        title: "IndexedDB (Binary Files)",
+        badges: { persisted: 'all', undoable: 'no', runtimeOnly: false },
+        connectedTo: ['scene', 'fileExport'],
+        overview: "Stores large binary data like images using the idb-keyval library. Each file entry tracks creation time and last retrieval for cleanup \u2014 files older than 24 hours that aren't referenced on the canvas are automatically deleted.",
+        internals: {
+          text: "Uses idb-keyval for a simple key-value interface on top of IndexedDB. Quota is browser-managed (typically hundreds of MB to GB).",
+          tables: [{
+            title: "File Entry Schema",
+            headers: ["Field", "Type", "Purpose"],
+            rows: [
+              ["id", "FileId", "Unique identifier"],
+              ["mimeType", "string", "MIME type (image/png, etc.)"],
+              ["created", "number", "Epoch ms creation time"],
+              ["lastRetrieved", "number", "Epoch ms last access (for cleanup)"],
+              ["data", "ArrayBuffer", "Raw binary data"],
+            ]
+          },
+          {
+            title: "Cleanup Rules",
+            headers: ["Rule", "Detail"],
+            rows: [
+              ["Max age", "Files older than 24h"],
+              ["Reference check", "Not referenced by any canvas element"],
+              ["Both conditions", "Must be BOTH old AND unreferenced"],
+            ]
+          }]
+        },
+        vue: {
+          text: "idb-keyval works identically in Vue. No framework adaptation needed.",
+          mapping: "idb-keyval \u2192 same library, wrapped in useFileStorage() composable",
+          adopt: ["Same idb-keyval library for simplicity", "File entry schema with lastRetrieved for cleanup"],
+          simplify: ["No special Vue wrappers needed \u2014 idb-keyval is already promise-based"],
+        },
+        files: ["packages/excalidraw/data/filesystem.ts"],
+      },
+      fileExport: {
+        title: "File Export (.excalidraw)",
+        badges: { persisted: 'all', undoable: 'no', runtimeOnly: false },
+        connectedTo: ['scene', 'indexedDB'],
+        overview: "Exports to .excalidraw JSON (MIME: application/vnd.excalidraw+json) containing elements, cleaned appState, and binary files. Also supports embedding scene data in PNG (compressed tEXt chunk) and SVG (Base64 metadata). The restore pipeline handles schema migrations and binding repair on import.",
+        internals: {
+          text: "The serialization pipeline cleans appState, filters deleted files, and pretty-prints JSON. Scene data can be embedded in images for sharing.",
+          tables: [{
+            title: ".excalidraw JSON Schema",
+            headers: ["Field", "Type", "Content"],
+            rows: [
+              ["type", '"excalidraw"', "File type identifier"],
+              ["version", "2", "Schema version"],
+              ["source", '"https://excalidraw.com"', "Origin URL"],
+              ["elements", "ExcalidrawElement[]", "All non-deleted elements"],
+              ["appState", "Partial<AppState>", "Cleaned AppState (export-safe fields only)"],
+              ["files", "Record<FileId, BinaryFileData>", "Referenced binary files"],
+            ]
+          },
+          {
+            title: "Embedded Scene in Images",
+            headers: ["Format", "Embedding Method", "Encoding"],
+            rows: [
+              ["PNG", "tEXt chunk (keyword: application/vnd.excalidraw+json)", "pako-compressed"],
+              ["SVG", "SVG metadata element", "Base64-encoded"],
+            ]
+          }]
+        },
+        vue: {
+          text: "Serialization is framework-agnostic. Use the same pipeline.",
+          mapping: "serializeAsJSON() \u2192 same utility function, called from useExport() composable",
+          adopt: ["Same .excalidraw JSON schema for interoperability", "cleanAppStateForExport() pattern for field stripping"],
+          simplify: ["Start without PNG/SVG scene embedding \u2014 add later if needed"],
+        },
+        files: ["packages/excalidraw/data/"],
+      },
+      collaboration: {
+        title: "Collaboration & Reconciliation",
+        badges: { persisted: 'all', undoable: 'no', runtimeOnly: false },
+        connectedTo: ['scene', 'elements'],
+        overview: "Real-time sync via WebSocket with Firebase Firestore as the persistence backend. Elements are AES-GCM encrypted per room. The reconciliation algorithm resolves conflicts: local wins if the element is being actively edited or has a higher version; remote wins otherwise. Scene version is the sum of all element versions.",
+        internals: {
+          text: "The reconciliation algorithm is deterministic: it uses version numbers and versionNonce for tie-breaking. Encryption uses AES-GCM with per-room keys via Web Crypto API.",
+          tables: [{
+            title: "Reconciliation Rules",
+            headers: ["Condition", "Winner", "Reason"],
+            rows: [
+              ["Element actively edited locally", "Local", "User shouldn't lose in-progress work"],
+              ["Local version > remote version", "Local", "More edits = more recent"],
+              ["Same version, local nonce \u2264 remote nonce", "Local", "Deterministic tie-break"],
+              ["Otherwise", "Remote", "Remote has newer data"],
+            ]
+          },
+          {
+            title: "Encryption Details",
+            headers: ["Property", "Value"],
+            rows: [
+              ["Algorithm", "AES-GCM (128-bit key, 12-byte IV)"],
+              ["Key format", "JWK (JSON Web Key)"],
+              ["API", "Web Crypto API (crypto.subtle)"],
+              ["Scope", "Per collaboration room"],
+            ]
+          },
+          {
+            title: "Firebase Storage Structure",
+            headers: ["Location", "Contents"],
+            rows: [
+              ["Firestore doc (per room)", "sceneVersion + iv + ciphertext (encrypted elements)"],
+              ["Cloud Storage files/rooms/{roomId}/{fileId}", "Binary files (images)"],
+            ]
+          }]
+        },
+        vue: {
+          text: "Collaboration is the most complex layer. Start simple, add incrementally.",
+          mapping: "Collab.tsx class \u2192 useCollaboration() composable with WebSocket connection",
+          adopt: ["Reconciliation algorithm (version + nonce tie-breaking)", "Scene version = sum of element versions for broadcast gating"],
+          simplify: ["No Firebase initially \u2014 start with localStorage + IndexedDB", "No encryption initially \u2014 add when collaboration is implemented", "Consider simpler transport (e.g., WebSocket without Firebase)"],
+        },
+        files: ["excalidraw-app/collab/Collab.tsx", "packages/excalidraw/data/reconcile.ts"],
+      },
+    };
+
+    // --- Persistence Matrix Data ---
+    const PERSISTENCE_MATRIX = {
+      headers: ["Data", "localStorage", "IndexedDB", "File Export", "Firebase"],
+      rows: [
+        ["Elements", "\u2713 (JSON)", "", "\u2713", "\u2713 (encrypted)"],
+        ["AppState", "\u2713 (filtered)", "", "\u2713 (cleaned)", "\u2713 (cleaned)"],
+        ["Binary Files", "", "\u2713", "\u2713", "\u2713"],
+        ["Scene in Images", "", "", "\u2713 (PNG tEXt / SVG meta)", ""],
+      ]
+    };
+
+    // --- Vue Translation Quick-Ref Data ---
+    const VUE_TRANSLATION_TABLE = {
+      mappings: [
+        ["this.state + setState()", "reactive() / ref() in composables"],
+        ["React Context + hooks", "provide/inject or composables with shared state"],
+        ["Jotai atoms", "ref() in module-scoped composables"],
+        ["ActionManager class", "Composable with action registry"],
+        ["withBatchedUpdates()", "nextTick() or watchEffect() batching"],
+        ["PureComponent", "defineComponent with shallowRef for elements"],
+      ],
+      simplifications: [
+        "No Firebase initially \u2014 start with localStorage + IndexedDB",
+        "No encryption \u2014 add when collaboration is implemented",
+        "Simpler action system \u2014 Vue composables can directly mutate reactive state",
+        "Use shallowRef for elements array",
+      ]
+    };
+
+    const LEGEND = [
+      { label: "Event", color: "bg-node-event" },
+      { label: "Composable", color: "bg-node-composable" },
+      { label: "Data Store", color: "bg-node-data" },
+      { label: "Utility", color: "bg-node-utility" },
+      { label: "External", color: "bg-node-external" },
+    ];
+
+    // Shiki init
+    const langs = [...new Set(Object.values(NODES).map(n => n.lang).filter(Boolean))];
+    if (langs.length === 0) langs.push('typescript');
+
+    let highlighter = null;
+    try {
+      highlighter = await createHighlighter({ themes: ['vitesse-dark'], langs });
+    } catch (e) {
+      console.warn('Shiki failed to load:', e);
+    }
+
+    const HIGHLIGHTED = {};
+    for (const [id, node] of Object.entries(NODES)) {
+      if (node.code && highlighter) {
+        try {
+          HIGHLIGHTED[id] = highlighter.codeToHtml(node.code, {
+            lang: node.lang || 'typescript',
+            theme: 'vitesse-dark',
+          });
+        } catch (e) { console.warn(`Highlight failed for ${id}:`, e); }
+      }
+    }
+
+    // --- React Components ---
+
+    function usePanZoom() {
+      const viewportRef = useRef(null);
+      const canvasRef = useRef(null);
+      const zoomDisplayRef = useRef(null);
+      const st = useRef({ zoom: 1, panX: 0, panY: 0 });
+      const drag = useRef({ on: false, lx: 0, ly: 0 });
+
+      const apply = useCallback(() => {
+        const { zoom, panX, panY } = st.current;
+        if (canvasRef.current)
+          canvasRef.current.style.transform = `translate(${panX}px,${panY}px) scale(${zoom})`;
+        if (zoomDisplayRef.current)
+          zoomDisplayRef.current.textContent = Math.round(zoom * 100) + '%';
+      }, []);
+
+      const fitToScreen = useCallback(() => {
+        const svg = canvasRef.current?.querySelector('svg');
+        const vp = viewportRef.current;
+        if (!svg || !vp) return;
+        const s = st.current;
+        const vw = vp.clientWidth, vh = vp.clientHeight;
+        const sw = svg.getBoundingClientRect().width / s.zoom;
+        const sh = svg.getBoundingClientRect().height / s.zoom;
+        const fit = Math.max(0.15, Math.min(2, Math.min((vw - 80) / sw, (vh - 80) / sh)));
+        s.zoom = fit;
+        s.panX = (vw - sw * fit) / 2;
+        s.panY = (vh - sh * fit) / 2;
+        apply();
+      }, [apply]);
+
+      useEffect(() => {
+        const vp = viewportRef.current;
+        if (!vp) return;
+
+        const onWheel = (e) => {
+          e.preventDefault();
+          const r = vp.getBoundingClientRect();
+          const mx = e.clientX - r.left, my = e.clientY - r.top;
+          const s = st.current;
+          const f = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+          const nz = Math.min(4, Math.max(0.15, s.zoom * f));
+          const sc = nz / s.zoom;
+          s.panX = mx - sc * (mx - s.panX);
+          s.panY = my - sc * (my - s.panY);
+          s.zoom = nz;
+          apply();
+        };
+
+        const onDown = (e) => {
+          if (e.target.closest('.node')) return;
+          drag.current = { on: true, lx: e.clientX, ly: e.clientY };
+          vp.setPointerCapture(e.pointerId);
+        };
+        const onMove = (e) => {
+          const d = drag.current;
+          if (!d.on) return;
+          st.current.panX += e.clientX - d.lx;
+          st.current.panY += e.clientY - d.ly;
+          d.lx = e.clientX; d.ly = e.clientY;
+          apply();
+        };
+        const onUp = () => { drag.current.on = false; };
+
+        vp.addEventListener('wheel', onWheel, { passive: false });
+        vp.addEventListener('pointerdown', onDown);
+        vp.addEventListener('pointermove', onMove);
+        vp.addEventListener('pointerup', onUp);
+        vp.addEventListener('pointercancel', onUp);
+        window.addEventListener('resize', fitToScreen);
+
+        return () => {
+          vp.removeEventListener('wheel', onWheel);
+          vp.removeEventListener('pointerdown', onDown);
+          vp.removeEventListener('pointermove', onMove);
+          vp.removeEventListener('pointerup', onUp);
+          vp.removeEventListener('pointercancel', onUp);
+          window.removeEventListener('resize', fitToScreen);
+        };
+      }, [apply, fitToScreen]);
+
+      const zoomIn = useCallback(() => { st.current.zoom = Math.min(4, st.current.zoom * 1.25); apply(); }, [apply]);
+      const zoomOut = useCallback(() => { st.current.zoom = Math.max(0.15, st.current.zoom / 1.25); apply(); }, [apply]);
+
+      return { viewportRef, canvasRef, zoomDisplayRef, zoomIn, zoomOut, fitToScreen };
+    }
+
+    function MermaidDiagram({ onNodeClick }) {
+      const ref = useRef(null);
+
+      useEffect(() => {
+        window.nodeClickHandler = onNodeClick;
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: 'dark',
+          themeVariables: {
+            primaryColor: '#0a0a0a',
+            primaryTextColor: '#ffffff',
+            primaryBorderColor: '#2a2a2a',
+            lineColor: '#a0a0a0',
+            secondaryColor: '#000000',
+            tertiaryColor: '#000000',
+            background: '#000000',
+            mainBkg: '#0a0a0a',
+            nodeBorder: '#2a2a2a',
+            clusterBkg: 'rgba(10,10,10,0.8)',
+            clusterBorder: '#7c3aed',
+            titleColor: '#ffffff',
+            edgeLabelBackground: 'transparent',
+          },
+          flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis' },
+          securityLevel: 'loose',
+        });
+        mermaid.render('walkthrough-diagram', DIAGRAM).then(({ svg, bindFunctions }) => {
+          if (ref.current) {
+            ref.current.innerHTML = svg;
+            bindFunctions?.(ref.current);
+          }
+        });
+        return () => { delete window.nodeClickHandler; };
+      }, [onNodeClick]);
+
+      return h('div', { ref, className: 'mermaid-wrap' });
+    }
+
+    function Summary() {
+      return h('div', {
+        className: 'fixed top-16 left-6 z-10 max-w-lg px-4 py-3 bg-wt-surface/80 backdrop-blur border border-wt-border rounded-lg shadow-lg pointer-events-none'
+      },
+        h('p', { className: 'text-sm text-wt-muted leading-relaxed' }, SUMMARY)
+      );
+    }
+
+    // --- Badge Component ---
+    function Badge({ type, value }) {
+      const configs = {
+        persisted: {
+          all:     { bg: 'bg-wt-green/20', text: 'text-green-400', border: 'border-green-500/30', label: 'Persisted: All' },
+          partial: { bg: 'bg-yellow-500/20', text: 'text-yellow-400', border: 'border-yellow-500/30', label: 'Persisted: Partial' },
+          never:   { bg: 'bg-wt-red/20', text: 'text-red-400', border: 'border-red-500/30', label: 'Persisted: Never' },
+        },
+        undoable: {
+          yes:     { bg: 'bg-wt-green/20', text: 'text-green-400', border: 'border-green-500/30', label: 'Undoable' },
+          batched: { bg: 'bg-yellow-500/20', text: 'text-yellow-400', border: 'border-yellow-500/30', label: 'Undoable: Batched' },
+          no:      { bg: 'bg-neutral-700/40', text: 'text-neutral-400', border: 'border-neutral-600/30', label: 'Not Undoable' },
+        },
+        runtimeOnly: {
+          true:  { bg: 'bg-cyan-500/20', text: 'text-cyan-400', border: 'border-cyan-500/30', label: 'Runtime Only' },
+        }
+      };
+      const cfg = configs[type]?.[String(value)];
+      if (!cfg) return null;
+      return h('span', {
+        className: `badge-pill ${cfg.bg} ${cfg.text} border ${cfg.border}`
+      }, cfg.label);
+    }
+
+    // --- Mini Table Component ---
+    function MiniTable({ title, headers, rows }) {
+      return h('div', { className: 'mb-4' },
+        title ? h('div', { className: 'text-[0.7rem] uppercase tracking-wider text-wt-muted font-semibold mb-1.5' }, title) : null,
+        h('table', { className: 'mini-table' },
+          h('thead', null,
+            h('tr', null, headers.map((hdr, i) => h('th', { key: i }, hdr)))
+          ),
+          h('tbody', null,
+            rows.map((row, ri) =>
+              h('tr', { key: ri },
+                row.map((cell, ci) => h('td', { key: ci }, cell))
+              )
+            )
+          )
+        )
+      );
+    }
+
+    // --- Cross Links Component ---
+    function CrossLinks({ connectedTo, onNavigate }) {
+      if (!connectedTo || connectedTo.length === 0) return null;
+      return h('div', { className: 'mt-3 pt-3 border-t border-wt-border' },
+        h('div', { className: 'text-[0.7rem] uppercase tracking-wider text-wt-muted font-semibold mb-2' }, 'Connected To'),
+        h('div', { className: 'flex flex-wrap gap-1.5' },
+          connectedTo.map(id => {
+            const node = NODES[id];
+            if (!node) return null;
+            return h('button', {
+              key: id,
+              onClick: (e) => { e.stopPropagation(); onNavigate(id); },
+              className: 'cross-link text-xs px-2.5 py-1 rounded-md bg-wt-raised border border-wt-border text-wt-accent hover:bg-wt-surface transition-colors'
+            }, node.title);
+          })
+        )
+      );
+    }
+
+    // --- Tabbed Detail Panel ---
+    function DetailPanel({ nodeId, node, onClose, onNavigate }) {
+      const [tab, setTab] = useState('overview');
+
+      useEffect(() => {
+        setTab('overview');
+      }, [nodeId]);
+
+      useEffect(() => {
+        const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+        document.addEventListener('keydown', onKey);
+        return () => document.removeEventListener('keydown', onKey);
+      }, [onClose]);
+
+      const codeHtml = HIGHLIGHTED[nodeId];
+      const badges = node.badges || {};
+
+      const tabs = [
+        { id: 'overview', label: 'Overview' },
+        { id: 'internals', label: 'Internals' },
+        { id: 'vue', label: 'Vue Translation' },
+      ];
+
+      return h('div', {
+        className: 'fixed top-4 right-4 bottom-4 w-[600px] z-30 bg-wt-surface border border-wt-border rounded-xl shadow-2xl flex flex-col overflow-hidden'
+      },
+        // Close button
+        h('button', {
+          onClick: onClose,
+          className: 'absolute top-3 right-3 z-10 w-7 h-7 rounded-md border border-wt-border bg-wt-raised text-wt-muted flex items-center justify-center text-lg hover:bg-wt-red hover:border-wt-red hover:text-white transition-colors'
+        }, '\u00d7'),
+
+        // Header with title + badges
+        h('div', { className: 'px-5 pt-5 pb-0 flex-shrink-0' },
+          h('h2', { className: 'text-lg font-bold text-wt-fg mb-2 pr-9' }, node.title),
+          // Badges
+          h('div', { className: 'flex flex-wrap gap-1.5 mb-3' },
+            h(Badge, { type: 'persisted', value: badges.persisted }),
+            h(Badge, { type: 'undoable', value: badges.undoable }),
+            badges.runtimeOnly ? h(Badge, { type: 'runtimeOnly', value: true }) : null
+          ),
+          // Tabs
+          h('div', { className: 'flex gap-1 border-b border-wt-border pb-0' },
+            tabs.map(t =>
+              h('button', {
+                key: t.id,
+                onClick: () => setTab(t.id),
+                className: `tab-btn text-xs px-3 py-1.5 rounded-t-md border border-b-0 transition-colors ${
+                  tab === t.id
+                    ? 'bg-wt-raised border-wt-border text-wt-fg font-semibold'
+                    : 'bg-transparent border-transparent text-wt-muted opacity-60 hover:opacity-100'
+                }`
+              }, t.label)
+            )
+          )
+        ),
+
+        // Scrollable content area
+        h('div', { className: 'flex-1 overflow-y-auto px-5 py-4' },
+
+          // --- Overview Tab ---
+          tab === 'overview' ? h('div', null,
+            h('div', { className: 'dt-body' },
+              h('p', null, node.overview)
+            ),
+            node.code ? h('div', { className: 'dt-body' },
+              codeHtml
+                ? h('div', { dangerouslySetInnerHTML: { __html: codeHtml } })
+                : h('pre', { className: 'code-fallback' }, h('code', null, node.code))
+            ) : null,
+            node.files && node.files.length > 0
+              ? h('div', { className: 'mt-4 pt-3 border-t border-wt-border' },
+                  h('div', { className: 'text-[0.7rem] uppercase tracking-wider text-wt-muted font-semibold mb-1.5' }, 'Source Files'),
+                  h('code', { className: 'text-sm text-wt-file font-mono leading-relaxed' },
+                    node.files.map((f, i) => h('span', { key: i }, f, h('br')))
+                  )
+                )
+              : null,
+            h(CrossLinks, { connectedTo: node.connectedTo, onNavigate })
+          ) : null,
+
+          // --- Internals Tab ---
+          tab === 'internals' ? h('div', null,
+            node.internals ? h(React.Fragment, null,
+              node.internals.text ? h('div', { className: 'dt-body mb-3' },
+                h('p', null, node.internals.text)
+              ) : null,
+              node.internals.tables ? node.internals.tables.map((tbl, i) =>
+                h(MiniTable, { key: i, title: tbl.title, headers: tbl.headers, rows: tbl.rows })
+              ) : null
+            ) : h('div', { className: 'dt-body' },
+              h('p', null, 'No additional internals documented for this node.')
+            ),
+            h(CrossLinks, { connectedTo: node.connectedTo, onNavigate })
+          ) : null,
+
+          // --- Vue Translation Tab ---
+          tab === 'vue' ? h('div', null,
+            node.vue ? h(React.Fragment, null,
+              h('div', { className: 'dt-body mb-3' },
+                h('p', null, node.vue.text)
+              ),
+              // Mapping
+              node.vue.mapping ? h('div', { className: 'mb-4' },
+                h('div', { className: 'text-[0.7rem] uppercase tracking-wider text-wt-muted font-semibold mb-1.5' }, 'React \u2192 Vue Mapping'),
+                h('div', { className: 'px-3 py-2 rounded-md bg-wt-bg border border-wt-border' },
+                  h('code', { className: 'text-sm text-wt-accent font-mono' }, node.vue.mapping)
+                )
+              ) : null,
+              // What to adopt
+              node.vue.adopt && node.vue.adopt.length > 0 ? h('div', { className: 'mb-4' },
+                h('div', { className: 'text-[0.7rem] uppercase tracking-wider text-wt-green font-semibold mb-1.5' }, '\u2713 What to Adopt'),
+                h('ul', { className: 'list-none space-y-1' },
+                  node.vue.adopt.map((item, i) =>
+                    h('li', { key: i, className: 'text-sm text-wt-muted flex gap-2 items-start' },
+                      h('span', { className: 'text-green-400 flex-shrink-0 mt-0.5' }, '\u2022'),
+                      item
+                    )
+                  )
+                )
+              ) : null,
+              // What to simplify
+              node.vue.simplify && node.vue.simplify.length > 0 ? h('div', { className: 'mb-4' },
+                h('div', { className: 'text-[0.7rem] uppercase tracking-wider text-yellow-400 font-semibold mb-1.5' }, '\u26a1 What to Simplify'),
+                h('ul', { className: 'list-none space-y-1' },
+                  node.vue.simplify.map((item, i) =>
+                    h('li', { key: i, className: 'text-sm text-wt-muted flex gap-2 items-start' },
+                      h('span', { className: 'text-yellow-400 flex-shrink-0 mt-0.5' }, '\u2022'),
+                      item
+                    )
+                  )
+                )
+              ) : null
+            ) : h('div', { className: 'dt-body' },
+              h('p', null, 'No Vue translation notes for this node.')
+            ),
+            h(CrossLinks, { connectedTo: node.connectedTo, onNavigate })
+          ) : null
+        )
+      );
+    }
+
+    // --- Vue Translation Quick-Ref Floating Card ---
+    function VueQuickRef({ visible, onClose }) {
+      if (!visible) return null;
+      return h('div', {
+        className: 'fixed bottom-16 left-16 z-40 w-[520px] max-h-[70vh] bg-wt-surface/95 overlay-card border border-wt-border rounded-xl shadow-2xl flex flex-col overflow-hidden'
+      },
+        h('div', { className: 'flex items-center justify-between px-4 py-3 border-b border-wt-border flex-shrink-0' },
+          h('div', { className: 'flex items-center gap-2' },
+            h('span', { className: 'text-sm font-bold text-wt-accent' }, '\u269b'),
+            h('span', { className: 'text-sm font-bold text-wt-fg' }, 'React \u2192 Vue Translation Quick-Ref')
+          ),
+          h('button', {
+            onClick: onClose,
+            className: 'w-6 h-6 rounded-md border border-wt-border bg-wt-raised text-wt-muted flex items-center justify-center text-sm hover:bg-wt-red hover:border-wt-red hover:text-white transition-colors'
+          }, '\u00d7')
+        ),
+        h('div', { className: 'flex-1 overflow-y-auto p-4' },
+          h('div', { className: 'text-[0.7rem] uppercase tracking-wider text-wt-muted font-semibold mb-2' }, 'Pattern Mappings'),
+          h('table', { className: 'mini-table' },
+            h('thead', null,
+              h('tr', null,
+                h('th', null, 'React Pattern'),
+                h('th', null, 'Vue Equivalent')
+              )
+            ),
+            h('tbody', null,
+              VUE_TRANSLATION_TABLE.mappings.map((row, i) =>
+                h('tr', { key: i },
+                  h('td', { style: { color: '#ef4444' } }, row[0]),
+                  h('td', { style: { color: '#22c55e' } }, row[1])
+                )
+              )
+            )
+          ),
+          h('div', { className: 'text-[0.7rem] uppercase tracking-wider text-yellow-400 font-semibold mb-2 mt-4' }, '\u26a1 What to Simplify'),
+          h('ul', { className: 'list-none space-y-1.5' },
+            VUE_TRANSLATION_TABLE.simplifications.map((item, i) =>
+              h('li', { key: i, className: 'text-sm text-wt-muted flex gap-2 items-start' },
+                h('span', { className: 'text-yellow-400 flex-shrink-0 mt-0.5' }, '\u2022'),
+                item
+              )
+            )
+          )
+        )
+      );
+    }
+
+    // --- Persistence Matrix Floating Card ---
+    function PersistenceMatrix({ visible, onClose }) {
+      if (!visible) return null;
+      return h('div', {
+        className: 'fixed bottom-16 left-16 z-40 w-[560px] bg-wt-surface/95 overlay-card border border-wt-border rounded-xl shadow-2xl flex flex-col overflow-hidden'
+      },
+        h('div', { className: 'flex items-center justify-between px-4 py-3 border-b border-wt-border flex-shrink-0' },
+          h('div', { className: 'flex items-center gap-2' },
+            h('span', { className: 'text-sm font-bold text-wt-cyan' }, '\u2637'),
+            h('span', { className: 'text-sm font-bold text-wt-fg' }, 'Persistence Matrix')
+          ),
+          h('button', {
+            onClick: onClose,
+            className: 'w-6 h-6 rounded-md border border-wt-border bg-wt-raised text-wt-muted flex items-center justify-center text-sm hover:bg-wt-red hover:border-wt-red hover:text-white transition-colors'
+          }, '\u00d7')
+        ),
+        h('div', { className: 'p-4' },
+          h('table', { className: 'mini-table' },
+            h('thead', null,
+              h('tr', null, PERSISTENCE_MATRIX.headers.map((hdr, i) => h('th', { key: i }, hdr)))
+            ),
+            h('tbody', null,
+              PERSISTENCE_MATRIX.rows.map((row, ri) =>
+                h('tr', { key: ri },
+                  row.map((cell, ci) =>
+                    h('td', {
+                      key: ci,
+                      style: ci === 0 ? { fontWeight: 600, color: '#c084fc' } :
+                             cell.startsWith('\u2713') ? { color: '#22c55e' } :
+                             { color: '#525252' }
+                    }, cell || '\u2014')
+                  )
+                )
+              )
+            )
+          ),
+          h('div', { className: 'mt-3 text-xs text-wt-muted opacity-70' },
+            'Data flows from state layers to persistence layers based on type and collaboration needs.'
+          )
+        )
+      );
+    }
+
+    function ZoomControls({ zoomDisplayRef, onZoomIn, onZoomOut, onFit }) {
+      return h('div', {
+        className: 'fixed bottom-5 left-5 z-20 flex flex-col gap-1'
+      },
+        h('button', {
+          onClick: onZoomIn,
+          className: 'w-8 h-8 rounded-md bg-wt-surface border border-wt-border text-wt-muted flex items-center justify-center hover:bg-wt-raised transition-colors text-lg'
+        }, '+'),
+        h('div', {
+          ref: zoomDisplayRef,
+          className: 'text-[0.65rem] text-wt-muted text-center py-0.5'
+        }, '100%'),
+        h('button', {
+          onClick: onZoomOut,
+          className: 'w-8 h-8 rounded-md bg-wt-surface border border-wt-border text-wt-muted flex items-center justify-center hover:bg-wt-raised transition-colors text-lg'
+        }, '\u2212'),
+        h('button', {
+          onClick: onFit,
+          className: 'w-8 h-8 rounded-md bg-wt-surface border border-wt-border text-wt-muted flex items-center justify-center hover:bg-wt-raised transition-colors text-xs mt-1'
+        }, 'Fit')
+      );
+    }
+
+    // --- Overlay Toggle Buttons ---
+    function OverlayButtons({ onToggleVue, onToggleMatrix, vueActive, matrixActive }) {
+      return h('div', {
+        className: 'fixed bottom-16 left-5 z-20 flex flex-col gap-1.5'
+      },
+        h('button', {
+          onClick: onToggleVue,
+          title: 'React \u2192 Vue Translation Quick-Ref',
+          className: `w-8 h-8 rounded-md border text-xs flex items-center justify-center transition-colors ${
+            vueActive
+              ? 'bg-wt-accent/30 border-wt-accent text-wt-accent'
+              : 'bg-wt-surface border-wt-border text-wt-muted hover:bg-wt-raised'
+          }`
+        }, '\u269b'),
+        h('button', {
+          onClick: onToggleMatrix,
+          title: 'Persistence Matrix',
+          className: `w-8 h-8 rounded-md border text-xs flex items-center justify-center transition-colors ${
+            matrixActive
+              ? 'bg-wt-cyan/30 border-wt-cyan text-wt-cyan'
+              : 'bg-wt-surface border-wt-border text-wt-muted hover:bg-wt-raised'
+          }`
+        }, '\u2637')
+      );
+    }
+
+    function App() {
+      const [activeId, _setActiveId] = useState(null);
+      const [showVueRef, setShowVueRef] = useState(false);
+      const [showMatrix, setShowMatrix] = useState(false);
+      const pz = usePanZoom();
+
+      const setActiveNode = useCallback((nodeId) => {
+        _setActiveId(nodeId);
+        document.querySelectorAll('.mermaid-wrap .node').forEach(n => { n.style.opacity = nodeId ? '0.4' : '1'; });
+        if (nodeId) {
+          const el = document.querySelector(`.mermaid-wrap .node[id*="${nodeId}"]`);
+          if (el) el.style.opacity = '1';
+        }
+      }, []);
+
+      const closeDetail = useCallback(() => {
+        _setActiveId(null);
+        document.querySelectorAll('.mermaid-wrap .node').forEach(n => { n.style.opacity = '1'; });
+      }, []);
+
+      useEffect(() => { setTimeout(pz.fitToScreen, 600); }, [pz.fitToScreen]);
+
+      const toggleVue = useCallback(() => {
+        setShowVueRef(v => !v);
+        setShowMatrix(false);
+      }, []);
+
+      const toggleMatrix = useCallback(() => {
+        setShowMatrix(v => !v);
+        setShowVueRef(false);
+      }, []);
+
+      return h(React.Fragment, null,
+        h('header', {
+          className: 'fixed top-0 inset-x-0 z-10 px-6 py-3.5 bg-gradient-to-b from-wt-bg to-transparent pointer-events-none'
+        },
+          h('h1', { className: 'text-base font-semibold text-wt-fg' }, 'Excalidraw State & Persistence'),
+          h('p', { className: 'text-sm text-wt-muted mt-0.5' }, 'How Excalidraw manages state, tracks changes, and persists data')
+        ),
+
+        h(Summary),
+
+        h('div', {
+          ref: pz.viewportRef,
+          className: 'w-full h-screen overflow-hidden cursor-grab active:cursor-grabbing'
+        },
+          h('div', {
+            ref: pz.canvasRef,
+            className: 'origin-top-left will-change-transform inline-block p-[80px_60px_60px]'
+          },
+            h(MermaidDiagram, { onNodeClick: setActiveNode })
+          )
+        ),
+
+        h(ZoomControls, {
+          zoomDisplayRef: pz.zoomDisplayRef,
+          onZoomIn: pz.zoomIn,
+          onZoomOut: pz.zoomOut,
+          onFit: pz.fitToScreen
+        }),
+
+        h(OverlayButtons, {
+          onToggleVue: toggleVue,
+          onToggleMatrix: toggleMatrix,
+          vueActive: showVueRef,
+          matrixActive: showMatrix
+        }),
+
+        h(VueQuickRef, { visible: showVueRef, onClose: () => setShowVueRef(false) }),
+        h(PersistenceMatrix, { visible: showMatrix, onClose: () => setShowMatrix(false) }),
+
+        h('div', {
+          className: 'fixed bottom-5 left-1/2 -translate-x-1/2 z-20 flex gap-4 px-4 py-2 bg-wt-surface border border-wt-border rounded-lg shadow-xl'
+        },
+          LEGEND.map(l =>
+            h('span', { key: l.label, className: 'flex items-center gap-1.5 text-xs text-wt-muted' },
+              h('span', { className: `w-2 h-2 rounded-full ${l.color}` }),
+              l.label
+            )
+          )
+        ),
+
+        activeId && NODES[activeId]
+          ? h(DetailPanel, { nodeId: activeId, node: NODES[activeId], onClose: closeDetail, onNavigate: setActiveNode })
+          : null,
+
+        h('div', {
+          className: 'fixed bottom-5 right-5 z-20 text-xs text-wt-muted opacity-50'
+        },
+          h('kbd', null, 'Scroll'), ' zoom \u00b7 ', h('kbd', null, 'Drag'), ' pan \u00b7 Click nodes \u00b7 ',
+          h('kbd', null, '\u269b'), ' Vue ref \u00b7 ',
+          h('kbd', null, '\u2637'), ' Persistence'
+        )
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(h(App));
+  </script>
+</body>
+</html>
