@@ -63,7 +63,7 @@ The `vue/multi-word-component-names` rule checks the **filename**, not `defineOp
 Features in `app/features/` are independent modules. ESLint enforces that no feature imports from another feature via `import-x/no-restricted-paths` zones.
 
 **Current features with isolation zones:**
-- `code`, `groups`, `linear-editor`, `rendering`, `selection`, `tools`
+- `code`, `context-menu`, `groups`, `linear-editor`, `properties`, `rendering`, `selection`, `tools`
 
 **Features on disk without isolation zones (not yet enforced):**
 - `binding`, `canvas`, `elements`, `theme`

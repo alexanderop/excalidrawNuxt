@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { shallowRef, useTemplateRef, computed, watchEffect } from 'vue'
-import { useElementSize } from '@vueuse/core'
+import { useElementSize, useEventListener, useActiveElement } from '@vueuse/core'
 import { useViewport } from '../composables/useViewport'
 import { useCanvasLayers } from '../composables/useCanvasLayers'
 import { useSceneRenderer } from '../composables/useSceneRenderer'
@@ -19,7 +19,13 @@ import { updateBoundTextAfterContainerChange } from '~/features/binding'
 import { useGroups } from '~/features/groups/composables/useGroups'
 import { cleanupAfterDelete } from '~/features/groups/groupUtils'
 import { useTheme, THEME } from '~/features/theme'
+import { useContextMenu, ContextMenu } from '~/features/context-menu'
+import type { ContextMenuContext } from '~/features/context-menu'
+import { getElementAtPosition } from '~/features/selection'
 import DrawingToolbar from '~/features/tools/components/DrawingToolbar.vue'
+import { PropertiesPanel } from '~/features/properties'
+import { useStyleClipboard } from '~/features/properties/composables/useStyleClipboard'
+import { isTypingElement } from '~/shared/isTypingElement'
 
 defineExpose({})
 
@@ -81,6 +87,69 @@ const {
   replaceElements,
   markStaticDirty: dirty.markStaticDirty,
   markInteractiveDirty: dirty.markInteractiveDirty,
+})
+
+// Context menu
+function getContextMenuContext(): ContextMenuContext {
+  return {
+    selectedIds: selectedIds.value,
+    selectedElements: selectedElements.value,
+    hasGroups: selectedGroupIds.value.size > 0,
+    isMultiSelect: selectedIds.value.size > 1,
+    markDirty: dirty.markStaticDirty,
+  }
+}
+
+const {
+  isOpen: contextMenuOpen,
+  position: contextMenuPosition,
+  filteredItems: contextMenuItems,
+  open: openContextMenu,
+  close: closeContextMenu,
+} = useContextMenu({ context: getContextMenuContext })
+
+function handleContextMenu(e: MouseEvent): void {
+  e.preventDefault()
+  closeContextMenu()
+
+  const scenePoint = toScene(e.offsetX, e.offsetY)
+  const hitElement = getElementAtPosition(scenePoint, elements.value, zoom.value)
+
+  if (hitElement) {
+    if (!isSelected(hitElement.id)) {
+      select(hitElement.id)
+      expandSelectionForGroups()
+      dirty.markInteractiveDirty()
+    }
+    openContextMenu(e, 'element')
+    return
+  }
+
+  clearSelection()
+  dirty.markInteractiveDirty()
+  openContextMenu(e, 'canvas')
+}
+
+// Style clipboard keyboard shortcuts (Cmd+Alt+C / Cmd+Alt+V)
+const { copyStyles, pasteStyles, hasStoredStyles } = useStyleClipboard()
+const activeEl = useActiveElement()
+useEventListener(document, 'keydown', (e: KeyboardEvent) => {
+  if (isTypingElement(activeEl.value)) return
+  if (!e.metaKey || !e.altKey) return
+
+  if (e.code === 'KeyC') {
+    if (selectedElements.value.length === 0) return
+    e.preventDefault()
+    copyStyles(selectedElements.value[0]!)
+    return
+  }
+
+  if (e.code === 'KeyV') {
+    if (selectedElements.value.length === 0) return
+    if (!hasStoredStyles.value) return
+    e.preventDefault()
+    pasteStyles([...selectedElements.value], dirty.markStaticDirty)
+  }
 })
 
 // Panning (only needs canvasRef, panBy, zoomBy, activeTool — all available early)
@@ -285,11 +354,24 @@ const combinedCursorClass = computed(() => {
       ref="interactiveCanvas"
       data-testid="interactive-canvas"
       class="absolute inset-0 z-[2]"
+      @contextmenu="handleContextMenu"
     />
     <div
       ref="textEditorContainer"
       class="pointer-events-none absolute inset-0 z-[3]"
     />
     <DrawingToolbar />
+    <PropertiesPanel
+      v-if="selectedElements.length > 0"
+      :selected-elements="selectedElements"
+      :mark-dirty="dirty.markStaticDirty"
+    />
+    <ContextMenu
+      :is-open="contextMenuOpen"
+      :position="contextMenuPosition"
+      :items="contextMenuItems"
+      :context="getContextMenuContext()"
+      @close="closeContextMenu"
+    />
   </div>
 </template>

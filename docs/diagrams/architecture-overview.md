@@ -82,6 +82,19 @@ graph TD
     GR --> GR2[groupUtils.ts - pure functions: expand, reorder, cleanup]
     GR --> GR3[cleanupAfterDelete - remove orphan groups]
 
+    C --> CTX[Context Menu Feature]
+    CTX --> CTX1[useContextMenu - open/close, position, element vs canvas type]
+    CTX --> CTX2[ContextMenu.vue - Teleported right-click overlay]
+    CTX --> CTX3[contextMenuItems.ts - element + canvas menu definitions]
+
+    C --> PR[Properties Feature]
+    PR --> PR1[useStyleDefaults - 14 reactive sticky style defaults]
+    PR --> PR2[usePropertyActions - 11 change methods + mixed-value detection]
+    PR --> PR3[useStyleClipboard - copy/paste styles Cmd+Alt+C/V]
+    PR --> PR4[PropertiesPanel.vue - horizontal toolbar with style controls]
+    PR --> PR5[ColorPicker.vue - palette grid + hex input + recents]
+    PR --> PR6[palette.ts - COLOR_PALETTE constants]
+
     A --> G[shared/]
     G --> G1[math.ts - Point, Box, distance, clamp, lerp, TWO_PI]
     G --> G2[random.ts - nanoid, randomInteger, generateId]
@@ -97,4 +110,6 @@ graph TD
     style GR fill:#4e342e,color:#fff
     style CD fill:#1b5e20,color:#fff
     style BN fill:#4a148c,color:#fff
+    style CTX fill:#bf360c,color:#fff
+    style PR fill:#880e4f,color:#fff
 ```

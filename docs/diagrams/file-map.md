@@ -31,6 +31,17 @@ graph LR
                 CC[CanvasContainer.vue]
             end
         end
+        subgraph "features/context-menu/"
+            CMTY[types.ts]
+            CMIT[contextMenuItems.ts]
+            CMIX[index.ts]
+            subgraph "context-menu/composables/"
+                CMUC[useContextMenu.ts]
+            end
+            subgraph "context-menu/components/"
+                CMCV[ContextMenu.vue]
+            end
+        end
         subgraph "features/elements/"
             ET[types.ts]
             EC[constants.ts]
@@ -38,6 +49,9 @@ graph LR
             EM[mutateElement.ts]
             UE[useElements.ts]
             EIX[index.ts]
+            subgraph "elements/composables/"
+                ULO[useLayerOrder.ts]
+            end
         end
         subgraph "features/rendering/"
             RG[renderGrid.ts]
@@ -91,6 +105,25 @@ graph LR
             BBTX[boundText.ts]
             BRH[renderBindingHighlight.ts]
             BIX[index.ts]
+        end
+        subgraph "features/properties/"
+            PRPAL[palette.ts]
+            PRTY[types.ts]
+            PRIX[index.ts]
+            subgraph "properties/composables/"
+                PRUSD[useStyleDefaults.ts]
+                PRUPA[usePropertyActions.ts]
+                PRUSC[useStyleClipboard.ts]
+            end
+            subgraph "properties/components/"
+                PRPP[PropertiesPanel.vue]
+                PRCP[ColorPicker.vue]
+                PRCSW[ColorSwatch.vue]
+                PRBIS[ButtonIconSelect.vue]
+                PROS[OpacitySlider.vue]
+                PRFP[FontPicker.vue]
+                PRAHP[ArrowheadPicker.vue]
+            end
         end
         subgraph "features/code/"
             CDT[types.ts]
@@ -172,6 +205,7 @@ graph LR
         EG[excalidraw-gotchas.md]
         NG[nuxt-gotchas.md]
         LS[linting-setup.md]
+        CMPS[context-menu-properties-spec.md]
         BTDN[bound-text-debug-notes.md]
         ETS[excalidraw-testing-strategy.md]
         OTS[our-testing-strategy.md]

@@ -1,6 +1,7 @@
 export { createElement } from './createElement'
 export { mutateElement, moveElement } from './mutateElement'
 export { useElements } from './useElements'
+export { useLayerOrder } from './composables/useLayerOrder'
 export type {
   ExcalidrawElement,
   ExcalidrawElementType,
