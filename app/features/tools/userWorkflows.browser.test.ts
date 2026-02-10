@@ -67,7 +67,7 @@ describe('user drawing workflows', () => {
 
     // Switch to arrow (a)
     await userEvent.keyboard('a')
-    const arrowBtn = screen.getByRole('button', { name: 'Arrow' })
+    const arrowBtn = screen.getByRole('button', { name: /^Arrow$/ })
     await expect.element(arrowBtn).toHaveAttribute('aria-pressed', 'true')
     await expect.element(ellipseBtn).toHaveAttribute('aria-pressed', 'false')
 
@@ -98,7 +98,7 @@ describe('user drawing workflows', () => {
 
     // Select arrow tool
     await userEvent.keyboard('a')
-    const arrowBtn = screen.getByRole('button', { name: 'Arrow' })
+    const arrowBtn = screen.getByRole('button', { name: /^Arrow$/ })
     await expect.element(arrowBtn).toHaveAttribute('aria-pressed', 'true')
 
     // Draw the arrow

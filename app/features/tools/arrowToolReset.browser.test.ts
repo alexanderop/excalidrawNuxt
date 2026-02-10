@@ -10,7 +10,7 @@ describe('drawing tool resets to selection after use', () => {
 
     await userEvent.keyboard('a')
 
-    const arrowBtn = screen.getByRole('button', { name: 'Arrow' })
+    const arrowBtn = screen.getByRole('button', { name: /^Arrow$/ })
     await expect.element(arrowBtn).toHaveAttribute('aria-pressed', 'true')
 
     // Realistic drag via Playwright's Mouse API (real CDP events)

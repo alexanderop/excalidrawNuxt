@@ -15,7 +15,7 @@ describe('CanvasContainer', () => {
     const rectangleBtn = screen.getByRole('button', { name: 'Rectangle' })
     const diamondBtn = screen.getByRole('button', { name: 'Diamond' })
     const ellipseBtn = screen.getByRole('button', { name: 'Ellipse' })
-    const arrowBtn = screen.getByRole('button', { name: 'Arrow' })
+    const arrowBtn = screen.getByRole('button', { name: /^Arrow$/ })
     await expect.element(handBtn).toBeVisible()
     await expect.element(selectionBtn).toBeVisible()
     await expect.element(rectangleBtn).toBeVisible()
