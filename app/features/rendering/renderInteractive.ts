@@ -15,7 +15,7 @@ import {
   renderMidpointIndicator,
 } from '~/features/linear-editor/renderLinearEditor'
 import { renderSuggestedBinding } from '~/features/binding/renderBindingHighlight'
-import { getCommonBounds } from '~/features/selection/bounds'
+import { getCommonBounds, getElementBounds } from '~/features/selection/bounds'
 
 export interface LinearEditorRenderState {
   element: ExcalidrawArrowElement
@@ -48,23 +48,16 @@ function renderArrowSelectionBorder(
   theme: Theme,
 ): void {
   const padding = SELECTION_PADDING / zoom
-  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
-  for (const p of element.points) {
-    const px = p[0] + element.x
-    const py = p[1] + element.y
-    if (px < minX) minX = px
-    if (py < minY) minY = py
-    if (px > maxX) maxX = px
-    if (py > maxY) maxY = py
-  }
-  minX -= padding
-  minY -= padding
-  maxX += padding
-  maxY += padding
+  const [x1, y1, x2, y2] = getElementBounds(element)
 
   ctx.save()
   applySelectionStroke(ctx, zoom, theme)
-  ctx.strokeRect(minX, minY, maxX - minX, maxY - minY)
+  ctx.strokeRect(
+    x1 - padding,
+    y1 - padding,
+    x2 - x1 + 2 * padding,
+    y2 - y1 + 2 * padding,
+  )
   ctx.restore()
 }
 
@@ -229,17 +222,31 @@ function renderLinearEditorOverlays(
   }
 }
 
-export function renderInteractiveScene(
-  ctx: CanvasRenderingContext2D,
-  selectedElements: readonly ExcalidrawElement[],
-  zoom: number,
-  selectionBox: Box | null,
-  theme: Theme,
-  linearEditorState?: LinearEditorRenderState | null,
-  multiPointState?: MultiPointRenderState | null,
-  suggestedBindings?: readonly ExcalidrawElement[] | null,
-  selectedGroupIds?: ReadonlySet<string>,
-): void {
+export interface InteractiveSceneOptions {
+  ctx: CanvasRenderingContext2D
+  selectedElements: readonly ExcalidrawElement[]
+  zoom: number
+  selectionBox: Box | null
+  theme: Theme
+  linearEditorState?: LinearEditorRenderState | null
+  multiPointState?: MultiPointRenderState | null
+  suggestedBindings?: readonly ExcalidrawElement[] | null
+  selectedGroupIds?: ReadonlySet<string>
+}
+
+export function renderInteractiveScene(options: InteractiveSceneOptions): void {
+  const {
+    ctx,
+    selectedElements,
+    zoom,
+    selectionBox,
+    theme,
+    linearEditorState,
+    multiPointState,
+    suggestedBindings,
+    selectedGroupIds,
+  } = options
+
   if (suggestedBindings) {
     for (const el of suggestedBindings) {
       renderSuggestedBinding(ctx, el, zoom, theme)

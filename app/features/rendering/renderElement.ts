@@ -8,6 +8,10 @@ import { generateShape } from './shapeGenerator'
 import { renderArrowheads } from './arrowhead'
 import { getFontString, getLineHeightInPx } from './textMeasurement'
 
+function isZeroSizeShape(element: ExcalidrawElement): boolean {
+  return !isArrowElement(element) && element.width === 0 && element.height === 0
+}
+
 export function renderElement(
   ctx: CanvasRenderingContext2D,
   rc: RoughCanvas,
@@ -26,9 +30,7 @@ export function renderElement(
     renderTextElement(ctx, element, theme)
     return
   }
-  if (!isArrowElement(element) && element.width === 0 && element.height === 0) {
-    return
-  }
+  if (isZeroSizeShape(element)) return
 
   ctx.save()
   ctx.translate(element.x, element.y)

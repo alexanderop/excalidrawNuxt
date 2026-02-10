@@ -168,17 +168,17 @@ export function useSceneRenderer(options: UseSceneRendererOptions): UseSceneRend
       ctx.scale(zoom.value, zoom.value)
       ctx.translate(scrollX.value, scrollY.value)
 
-      renderInteractiveScene(
+      renderInteractiveScene({
         ctx,
-        selectedElements.value,
-        zoom.value,
-        selectionBox.value,
-        theme.value,
-        buildLinearEditorState(editingLinearElement, editingPointIndices, editingHoveredMidpoint),
-        buildMultiPointState(multiElement, lastCursorPoint),
-        suggestedBindings?.value ?? null,
-        selectedGroupIds?.value,
-      )
+        selectedElements: selectedElements.value,
+        zoom: zoom.value,
+        selectionBox: selectionBox.value,
+        theme: theme.value,
+        linearEditorState: buildLinearEditorState(editingLinearElement, editingPointIndices, editingHoveredMidpoint),
+        multiPointState: buildMultiPointState(multiElement, lastCursorPoint),
+        suggestedBindings: suggestedBindings?.value ?? null,
+        selectedGroupIds: selectedGroupIds?.value,
+      })
       ctx.restore()
     },
   })

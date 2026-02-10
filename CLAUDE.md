@@ -87,6 +87,7 @@ Browser tests (`*.browser.test.ts`) test canvas interactions via Vitest browser 
 - `docs/vueuse-gotchas.md` - VueUse pitfalls (useMagicKeys types, document access in node tests, browser vitest config)
 
 ### Vue & TypeScript Patterns
+- `docs/vue-design-patterns.md` - 12 Vue design patterns for refactoring and component planning (Data Store, Thin Composables, Humble/Controller Components, Strategy, etc.)
 - `docs/advanced-patterns.md` - Vue 3 built-in components (Transition, Teleport, Suspense, KeepAlive) and advanced directives
 - `docs/core-new-apis.md` - Vue 3 reactivity system, lifecycle hooks, and composable patterns
 - `docs/script-setup-macros.md` - Vue 3 script setup syntax and compiler macros (defineProps, defineEmits, defineModel, etc.)

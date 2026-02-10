@@ -21,6 +21,24 @@ import {
 
 const _excludeIds = new Set<string>()
 
+function commitEndpointBinding(
+  el: ExcalidrawArrowElement,
+  endpoint: 'start' | 'end',
+  scene: GlobalPoint,
+  allElements: readonly ExcalidrawElement[],
+  zoomValue: number,
+  excludeIds: ReadonlySet<string>,
+): void {
+  const binding = endpoint === 'start' ? el.startBinding : el.endBinding
+  if (binding) unbindArrowEndpoint(el, endpoint, allElements)
+
+  const candidate = getHoveredElementForBinding(scene, allElements, zoomValue, excludeIds)
+  if (!candidate) return
+
+  bindArrowToElement(el, endpoint, candidate.element, candidate.fixedPoint)
+  updateArrowEndpoint(el, endpoint, candidate.element)
+}
+
 interface UseLinearEditorOptions {
   canvasRef: Readonly<Ref<HTMLCanvasElement | null>>
   zoom: Ref<number>
@@ -221,23 +239,11 @@ export function useLinearEditor(options: UseLinearEditorOptions): UseLinearEdito
     _excludeIds.add(el.id)
 
     if (indices.has(0)) {
-      // Start endpoint dragged
-      if (el.startBinding) unbindArrowEndpoint(el, 'start', elements.value)
-      const candidate = getHoveredElementForBinding(scene, elements.value, zoom.value, _excludeIds)
-      if (candidate) {
-        bindArrowToElement(el, 'start', candidate.element, candidate.fixedPoint)
-        updateArrowEndpoint(el, 'start', candidate.element)
-      }
+      commitEndpointBinding(el, 'start', scene, elements.value, zoom.value, _excludeIds)
     }
 
     if (indices.has(el.points.length - 1)) {
-      // End endpoint dragged
-      if (el.endBinding) unbindArrowEndpoint(el, 'end', elements.value)
-      const candidate = getHoveredElementForBinding(scene, elements.value, zoom.value, _excludeIds)
-      if (candidate) {
-        bindArrowToElement(el, 'end', candidate.element, candidate.fixedPoint)
-        updateArrowEndpoint(el, 'end', candidate.element)
-      }
+      commitEndpointBinding(el, 'end', scene, elements.value, zoom.value, _excludeIds)
     }
 
     suggestedBindings.value = []

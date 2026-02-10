@@ -2,6 +2,7 @@ import { computed, type Ref } from 'vue'
 import { createGlobalState, useLocalStorage, useActiveElement, useEventListener } from '@vueuse/core'
 import { THEME } from './types'
 import type { Theme } from './types'
+import { isTypingElement } from '~/shared/isTypingElement'
 
 export const useTheme = createGlobalState(() => {
   const theme: Ref<Theme> = useLocalStorage<Theme>('excalidraw-theme', THEME.LIGHT)
@@ -13,17 +14,10 @@ export const useTheme = createGlobalState(() => {
     theme.value = theme.value === THEME.LIGHT ? THEME.DARK : THEME.LIGHT
   }
 
-  function isTyping(): boolean {
-    const el = activeElement.value
-    if (!el) return false
-    const tag = el.tagName
-    return tag === 'INPUT' || tag === 'TEXTAREA'
-  }
-
   // Keyboard shortcut: Alt+Shift+D
   if (typeof document !== 'undefined') {
     useEventListener(document, 'keydown', (e: KeyboardEvent) => {
-      if (isTyping()) return
+      if (isTypingElement(activeElement.value)) return
       if (e.altKey && e.shiftKey && e.code === 'KeyD') {
         e.preventDefault()
         toggleTheme()

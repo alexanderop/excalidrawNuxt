@@ -84,6 +84,14 @@ export function renderCodeElement(
   // 4. Syntax-highlighted tokens (or plain text fallback)
   ctx.textAlign = 'left'
 
+  if (!ready.value) {
+    ctx.fillStyle = colors.defaultText
+    for (const [i, line] of lines.entries()) {
+      const y = CODE_PADDING.top + i * lineHeightPx
+      ctx.fillText(line, CODE_PADDING.left, y)
+    }
+  }
+
   if (ready.value) {
     const tokens = highlight(code, language, theme)
 
@@ -96,14 +104,6 @@ export function renderCodeElement(
         ctx.fillText(token.content, x, y)
         x += token.content.length * CODE_CHAR_WIDTH
       }
-    }
-  }
-
-  if (!ready.value) {
-    ctx.fillStyle = colors.defaultText
-    for (const [i, line] of lines.entries()) {
-      const y = CODE_PADDING.top + i * lineHeightPx
-      ctx.fillText(line, CODE_PADDING.left, y)
     }
   }
 

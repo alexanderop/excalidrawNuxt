@@ -10,6 +10,7 @@ export {
   renderSelectionBox,
 } from './renderInteractive'
 export type {
+  InteractiveSceneOptions,
   LinearEditorRenderState,
   MultiPointRenderState,
 } from './renderInteractive'

@@ -332,9 +332,7 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
 
   function handleKeyDown(e: KeyboardEvent): void {
     if (isSelectionBlocked()) return
-    // Don't intercept keys while typing in an input/textarea (e.g. text editor)
-    const tag = (e.target as HTMLElement)?.tagName
-    if (tag === 'TEXTAREA' || tag === 'INPUT') return
+    if (isTypingInInput(e)) return
 
     const selected = selectedElements()
 
@@ -433,6 +431,11 @@ const RESIZE_CURSORS: Record<TransformHandleDirection, string> = {
 function getResizeCursor(handleType: TransformHandleType): string {
   if (handleType === 'rotation') return 'grab'
   return RESIZE_CURSORS[handleType]
+}
+
+function isTypingInInput(e: KeyboardEvent): boolean {
+  const tag = (e.target as HTMLElement)?.tagName
+  return tag === 'TEXTAREA' || tag === 'INPUT'
 }
 
 function isBoxSelectable(el: ExcalidrawElement): boolean {

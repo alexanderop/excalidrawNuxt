@@ -215,7 +215,7 @@ const { selectionBox, cursorStyle } = useSelectionInteraction({
 })
 
 // Scene renderer (render callbacks + dirty watcher + animation controller)
-const { markStaticDirty, markNewElementDirty, markInteractiveDirty, animations } = useSceneRenderer({
+const { markStaticDirty, markNewElementDirty, markInteractiveDirty } = useSceneRenderer({
   layers: { staticCtx, newElementCtx, interactiveCtx, staticRc, newElementRc },
   canvasRefs: { staticCanvasRef, newElementCanvasRef, interactiveCanvasRef },
   viewport: { scrollX, scrollY, zoom, width, height },
@@ -237,9 +237,6 @@ const { markStaticDirty, markNewElementDirty, markInteractiveDirty, animations }
 
 // Bind real renderer callbacks to deferred dirty flags
 dirty.bind({ markStaticDirty, markInteractiveDirty, markNewElementDirty })
-
-// Expose animation controller for interaction composables (available before any user events fire)
-Object.assign(shared, { animations })
 
 const combinedCursorClass = computed(() => {
   // Panning cursor takes priority over selection cursor

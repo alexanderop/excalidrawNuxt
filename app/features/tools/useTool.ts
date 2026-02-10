@@ -1,6 +1,7 @@
 import { shallowRef } from 'vue'
 import { createGlobalState, createEventHook, useActiveElement, useEventListener } from '@vueuse/core'
 import type { ToolType } from './types'
+import { isTypingElement } from '~/shared/isTypingElement'
 
 const KEY_TO_TOOL: Record<string, ToolType> = {
   r: 'rectangle',
@@ -30,17 +31,10 @@ export const useToolStore = createGlobalState(() => {
     activeTool.value = tool
   }
 
-  function isTyping(): boolean {
-    const el = activeElement.value
-    if (!el) return false
-    const tag = el.tagName
-    return tag === 'INPUT' || tag === 'TEXTAREA'
-  }
-
   // Guard needed: createGlobalState runs in Node test environment where document is undefined
   if (typeof document !== 'undefined') {
     useEventListener(document, 'keydown', (e: KeyboardEvent) => {
-      if (isTyping()) return
+      if (isTypingElement(activeElement.value)) return
       const tool = KEY_TO_TOOL[e.key]
       if (!tool) return
       setTool(tool)

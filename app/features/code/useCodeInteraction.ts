@@ -12,12 +12,11 @@ import { isCodeElement, getCodeData } from './types'
 import type { CodeLanguage } from './types'
 import { measureCode } from './measureCode'
 import { useShikiHighlighter } from './useShikiHighlighter'
+import { buildEditorDom } from './buildEditorDom'
 import {
   CODE_FONT_SIZE,
-  CODE_FONT_FAMILY,
   CODE_THEME_COLORS,
   DEFAULT_CODE_LANGUAGE,
-  CODE_LANGUAGE_LABELS,
 } from './constants'
 
 interface UseCodeInteractionOptions {
@@ -75,125 +74,45 @@ export function useCodeInteraction(options: UseCodeInteractionOptions): UseCodeI
     if (!editorContainer) return
 
     const codeData = getCodeData(element)
+    const colors = CODE_THEME_COLORS[theme.value]
 
-    // Build editor DOM
-    const container = document.createElement('div')
-    container.style.position = 'absolute'
-    container.style.pointerEvents = 'auto'
-    container.style.display = 'flex'
-    container.style.flexDirection = 'column'
-    container.style.gap = '4px'
+    const { container, selectEl, textarea, preEl } = buildEditorDom(
+      {
+        viewX: (element.x + scrollX.value) * zoom.value,
+        viewY: (element.y + scrollY.value) * zoom.value,
+        zoom: zoom.value,
+      },
+      { width: element.width, height: element.height },
+      { bg: colors.bg, defaultText: colors.defaultText },
+      codeData.language,
+      codeData.code,
+    )
 
-    // Position with zoom-aware transforms
-    const viewX = (element.x + scrollX.value) * zoom.value
-    const viewY = (element.y + scrollY.value) * zoom.value
-    container.style.left = `${viewX}px`
-    container.style.top = `${viewY}px`
-    container.style.transform = `scale(${zoom.value})`
-    container.style.transformOrigin = '0 0'
-
-    // Language selector
-    const selectEl = document.createElement('select')
-    selectEl.style.background = '#2a2a3a'
-    selectEl.style.color = '#cdd6f4'
-    selectEl.style.border = '1px solid #585b70'
-    selectEl.style.borderRadius = '4px'
-    selectEl.style.padding = '2px 6px'
-    selectEl.style.fontSize = '12px'
-    selectEl.style.fontFamily = CODE_FONT_FAMILY
-    selectEl.style.outline = 'none'
-    selectEl.style.cursor = 'pointer'
-
-    for (const lang of Object.keys(CODE_LANGUAGE_LABELS)) {
-      const option = document.createElement('option')
-      option.value = lang
-      option.textContent = CODE_LANGUAGE_LABELS[lang] ?? lang
-      if (lang === codeData.language) option.selected = true
-      selectEl.append(option)
-    }
-
+    // Wire up event handlers
     selectEl.addEventListener('change', () => {
       const newLang = selectEl.value as CodeLanguage
       mutateElement(element, { customData: { ...getCodeData(element), language: newLang } })
       markStaticDirty()
-      // Re-highlight immediately with new language
       updateHighlight(textarea.value)
     })
 
-    // Code editing area — transparent textarea over highlighted <pre>
-    const colors = CODE_THEME_COLORS[theme.value]
-    const sharedFontStyles = {
-      fontSize: `${CODE_FONT_SIZE}px`,
-      fontFamily: CODE_FONT_FAMILY,
-      lineHeight: '1.5',
-      padding: '8px',
-      tabSize: '2',
-      whiteSpace: 'pre',
-      overflowWrap: 'normal',
-    } as const
-
-    // Wrapper for textarea + pre overlay
-    const codeWrapper = document.createElement('div')
-    codeWrapper.style.position = 'relative'
-    codeWrapper.style.minWidth = `${element.width}px`
-    codeWrapper.style.minHeight = `${Math.max(element.height - 40, 80)}px`
-
-    // Highlighted overlay (behind textarea)
-    const preEl = document.createElement('pre')
-    Object.assign(preEl.style, sharedFontStyles)
-    preEl.style.position = 'absolute'
-    preEl.style.top = '0'
-    preEl.style.left = '0'
-    preEl.style.width = '100%'
-    preEl.style.height = '100%'
-    preEl.style.margin = '0'
-    preEl.style.background = colors.bg
-    preEl.style.color = colors.defaultText
-    preEl.style.border = '1px solid #585b70'
-    preEl.style.borderRadius = '4px'
-    preEl.style.overflow = 'auto'
-    preEl.style.pointerEvents = 'none'
-    preEl.style.boxSizing = 'border-box'
-
-    // Textarea (transparent text, visible caret)
-    const textarea = document.createElement('textarea')
-    Object.assign(textarea.style, sharedFontStyles)
-    textarea.style.position = 'relative'
-    textarea.style.width = '100%'
-    textarea.style.minWidth = `${element.width}px`
-    textarea.style.minHeight = `${Math.max(element.height - 40, 80)}px`
-    textarea.style.background = 'transparent'
-    textarea.style.color = 'transparent'
-    textarea.style.caretColor = colors.defaultText
-    textarea.style.border = '1px solid transparent'
-    textarea.style.borderRadius = '4px'
-    textarea.style.resize = 'none'
-    textarea.style.outline = 'none'
-    textarea.style.boxSizing = 'border-box'
-    textarea.style.zIndex = '1'
-    textarea.value = codeData.code
-    textarea.spellcheck = false
-
-    // Sync scroll positions
     textarea.addEventListener('scroll', () => {
       preEl.scrollTop = textarea.scrollTop
       preEl.scrollLeft = textarea.scrollLeft
     })
 
-    // Highlighting helpers
     function updateHighlight(code: string): void {
       const lang = (selectEl.value as CodeLanguage) || codeData.language
       const tokens = highlight(code, lang, theme.value)
       if (tokens.length > 0) {
         preEl.innerHTML = tokensToHtml(tokens)
+        return
       }
-      // If highlighter isn't ready yet, keep previous content (or fallback text)
-      if (tokens.length === 0 && preEl.innerHTML === '') {
+      if (preEl.innerHTML === '') {
         preEl.textContent = code
       }
     }
 
-    // Initial highlight
     updateHighlight(codeData.code)
 
     textarea.addEventListener('input', () => {
@@ -228,25 +147,18 @@ export function useCodeInteraction(options: UseCodeInteractionOptions): UseCodeI
     })
 
     textarea.addEventListener('blur', (e: FocusEvent) => {
-      // Don't close if focus moved to the language selector
       if (e.relatedTarget === selectEl) return
       submitAndClose()
     })
 
     selectEl.addEventListener('blur', (e: FocusEvent) => {
-      // Don't close if focus moved to the textarea
       if (e.relatedTarget === textarea) return
       submitAndClose()
     })
 
-    codeWrapper.append(preEl)
-    codeWrapper.append(textarea)
-    container.append(selectEl)
-    container.append(codeWrapper)
     editorContainer.append(container)
     activeEditorContainer = container
 
-    // Defer focus — pointerdown native handling steals focus if we focus synchronously
     requestAnimationFrame(() => {
       textarea.focus()
       if (codeData.code.length > 0) textarea.select()
