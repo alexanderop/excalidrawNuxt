@@ -15,6 +15,8 @@ const KEY_TO_TOOL: Record<string, ToolType> = {
   '4': 'ellipse',
   a: 'arrow',
   '5': 'arrow',
+  l: 'line',
+  '8': 'line',
   t: 'text',
   '6': 'text',
   c: 'code',

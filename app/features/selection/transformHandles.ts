@@ -1,4 +1,5 @@
 import type { ExcalidrawElement } from '~/features/elements/types'
+import { isLinearElement } from '~/features/elements/types'
 import { pointFrom, pointRotateRads } from '~/shared/math'
 import type { GlobalPoint } from '~/shared/math'
 import { getElementBounds } from './bounds'
@@ -19,7 +20,7 @@ export function getTransformHandles(
   element: ExcalidrawElement,
   zoom: number,
 ): TransformHandles {
-  if (element.type === 'arrow') return {}
+  if (isLinearElement(element)) return {}
 
   const size = HANDLE_SIZE / zoom
   const margin = HANDLE_MARGIN / zoom
@@ -84,7 +85,7 @@ export function getTransformHandleAtPosition(
   element: ExcalidrawElement,
   zoom: number,
 ): TransformHandleType | null {
-  if (element.type === 'arrow') return null
+  if (isLinearElement(element)) return null
 
   const handles = getTransformHandles(element, zoom)
 

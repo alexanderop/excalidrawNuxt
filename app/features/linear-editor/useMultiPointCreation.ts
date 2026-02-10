@@ -1,7 +1,8 @@
 import { shallowRef, triggerRef } from 'vue'
 import type { Ref, ShallowRef } from 'vue'
 import { useEventListener } from '@vueuse/core'
-import type { ExcalidrawElement, ExcalidrawArrowElement } from '~/features/elements/types'
+import type { ExcalidrawElement, ExcalidrawLinearElement } from '~/features/elements/types'
+import { isArrowElement } from '~/features/elements/types'
 import { mutateElement } from '~/features/elements/mutateElement'
 import { pointFrom, snapAngle } from '~/shared/math'
 import type { GlobalPoint, LocalPoint } from '~/shared/math'
@@ -26,9 +27,9 @@ interface UseMultiPointCreationOptions {
 }
 
 interface UseMultiPointCreationReturn {
-  multiElement: ShallowRef<ExcalidrawArrowElement | null>
+  multiElement: ShallowRef<ExcalidrawLinearElement | null>
   lastCursorPoint: ShallowRef<GlobalPoint | null>
-  startMultiPoint: (element: ExcalidrawArrowElement) => void
+  startMultiPoint: (element: ExcalidrawLinearElement) => void
   finalizeMultiPoint: () => void
 }
 
@@ -44,10 +45,10 @@ export function useMultiPointCreation(options: UseMultiPointCreationOptions): Us
     suggestedBindings,
   } = options
 
-  const multiElement = shallowRef<ExcalidrawArrowElement | null>(null)
+  const multiElement = shallowRef<ExcalidrawLinearElement | null>(null)
   const lastCursorPoint = shallowRef<GlobalPoint | null>(null)
 
-  function startMultiPoint(element: ExcalidrawArrowElement): void {
+  function startMultiPoint(element: ExcalidrawLinearElement): void {
     multiElement.value = element
     const lastPt = element.points.at(-1)
     if (!lastPt) return
@@ -61,16 +62,18 @@ export function useMultiPointCreation(options: UseMultiPointCreationOptions): Us
   function finalizeMultiPoint(): void {
     const el = multiElement.value
     if (el) {
-      // Bind end endpoint if near a shape
-      const lastPt = el.points.at(-1)
-      if (lastPt) {
-        const endScene = pointFrom<GlobalPoint>(el.x + lastPt[0], el.y + lastPt[1])
-        _excludeIds.clear()
-        _excludeIds.add(el.id)
-        const candidate = getHoveredElementForBinding(endScene, elements.value, zoom.value, _excludeIds)
-        if (candidate) {
-          bindArrowToElement(el, 'end', candidate.element, candidate.fixedPoint)
-          updateArrowEndpoint(el, 'end', candidate.element)
+      // Bind end endpoint if near a shape (arrows only — lines don't bind)
+      if (isArrowElement(el)) {
+        const lastPt = el.points.at(-1)
+        if (lastPt) {
+          const endScene = pointFrom<GlobalPoint>(el.x + lastPt[0], el.y + lastPt[1])
+          _excludeIds.clear()
+          _excludeIds.add(el.id)
+          const candidate = getHoveredElementForBinding(endScene, elements.value, zoom.value, _excludeIds)
+          if (candidate) {
+            bindArrowToElement(el, 'end', candidate.element, candidate.fixedPoint)
+            updateArrowEndpoint(el, 'end', candidate.element)
+          }
         }
       }
       suggestedBindings.value = []
@@ -124,11 +127,13 @@ export function useMultiPointCreation(options: UseMultiPointCreationOptions): Us
     const scene = toScene(e.offsetX, e.offsetY)
     lastCursorPoint.value = scene
 
-    // Update suggested bindings based on cursor proximity
-    _excludeIds.clear()
-    _excludeIds.add(multiElement.value.id)
-    const candidate = getHoveredElementForBinding(scene, elements.value, zoom.value, _excludeIds)
-    suggestedBindings.value = candidate ? [candidate.element] : []
+    // Update suggested bindings based on cursor proximity (arrows only — lines don't bind)
+    if (isArrowElement(multiElement.value)) {
+      _excludeIds.clear()
+      _excludeIds.add(multiElement.value.id)
+      const candidate = getHoveredElementForBinding(scene, elements.value, zoom.value, _excludeIds)
+      suggestedBindings.value = candidate ? [candidate.element] : []
+    }
 
     markInteractiveDirty()
   })

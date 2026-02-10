@@ -1,12 +1,12 @@
 import { pointFrom, pointDistance, pointCenter } from '~/shared/math'
 import type { GlobalPoint, LocalPoint } from '~/shared/math'
-import type { ExcalidrawArrowElement } from '~/features/elements/types'
+import type { ExcalidrawLinearElement } from '~/features/elements/types'
 import { POINT_HIT_THRESHOLD, MIDPOINT_HIT_THRESHOLD } from './constants'
 
 /**
  * Get scene-space positions for all points of an arrow element.
  */
-export function getPointPositions(element: ExcalidrawArrowElement): GlobalPoint[] {
+export function getPointPositions(element: ExcalidrawLinearElement): GlobalPoint[] {
   return element.points.map(p => pointFrom<GlobalPoint>(
     p[0] + element.x,
     p[1] + element.y,
@@ -16,7 +16,7 @@ export function getPointPositions(element: ExcalidrawArrowElement): GlobalPoint[
 /**
  * Get scene-space midpoint positions between consecutive points.
  */
-export function getMidpointPositions(element: ExcalidrawArrowElement): GlobalPoint[] {
+export function getMidpointPositions(element: ExcalidrawLinearElement): GlobalPoint[] {
   const scenePoints = getPointPositions(element)
   const midpoints: GlobalPoint[] = []
   for (let i = 0; i < scenePoints.length - 1; i++) {
@@ -34,7 +34,7 @@ export function getMidpointPositions(element: ExcalidrawArrowElement): GlobalPoi
  */
 export function hitTestPointHandles(
   scenePoint: GlobalPoint,
-  element: ExcalidrawArrowElement,
+  element: ExcalidrawLinearElement,
   zoom: number,
 ): number {
   const positions = getPointPositions(element)
@@ -52,7 +52,7 @@ export function hitTestPointHandles(
  */
 export function hitTestMidpoints(
   scenePoint: GlobalPoint,
-  element: ExcalidrawArrowElement,
+  element: ExcalidrawLinearElement,
   zoom: number,
 ): number {
   const midpoints = getMidpointPositions(element)

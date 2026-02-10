@@ -16,6 +16,7 @@ export type {
   ExcalidrawEllipseElement,
   ExcalidrawDiamondElement,
   ExcalidrawArrowElement,
+  ExcalidrawLineElement,
   ExcalidrawTextElement,
   ExcalidrawLinearElement,
   FixedPointBinding,
@@ -59,15 +60,17 @@ import type {
   ExcalidrawEllipseElement,
   ExcalidrawDiamondElement,
   ExcalidrawArrowElement,
+  ExcalidrawLineElement,
   ExcalidrawTextElement,
 } from '@excalidraw/element/types'
 
-/** The 5 element types our app creates and renders. */
+/** The element types our app creates and renders. */
 export type SupportedElement =
   | ExcalidrawRectangleElement
   | ExcalidrawEllipseElement
   | ExcalidrawDiamondElement
   | ExcalidrawArrowElement
+  | ExcalidrawLineElement
   | ExcalidrawTextElement
 
 /** The 3 shape types that arrows can bind to. */

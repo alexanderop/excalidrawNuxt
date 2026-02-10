@@ -1,8 +1,8 @@
 import { shallowRef } from 'vue'
 import type { Ref, ShallowRef } from 'vue'
 import { useEventListener } from '@vueuse/core'
-import type { ExcalidrawElement, ExcalidrawArrowElement, ElementsMap } from '~/features/elements/types'
-import { isArrowElement } from '~/features/elements/types'
+import type { ExcalidrawElement, ExcalidrawLinearElement, ElementsMap } from '~/features/elements/types'
+import { isArrowElement, isLinearElement } from '~/features/elements/types'
 import { mutateElement } from '~/features/elements/mutateElement'
 import type { Box, GlobalPoint } from '~/shared/math'
 import type { ToolType } from '~/features/tools/types'
@@ -54,9 +54,9 @@ interface UseSelectionInteractionOptions {
   setTool: (tool: ToolType) => void
   selectionBox?: ShallowRef<Box | null>
   /** When set, selection interaction defers to the linear editor */
-  editingLinearElement?: ShallowRef<ExcalidrawArrowElement | null>
-  /** Called when user double-clicks an arrow element */
-  onDoubleClickArrow?: (element: ExcalidrawArrowElement) => void
+  editingLinearElement?: ShallowRef<ExcalidrawLinearElement | null>
+  /** Called when user double-clicks a linear element (arrow or line) */
+  onDoubleClickLinear?: (element: ExcalidrawLinearElement) => void
   expandSelectionForGroups?: () => void
   onGroupAction?: () => void
   onUngroupAction?: () => void
@@ -87,7 +87,7 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
     markInteractiveDirty,
     setTool,
     editingLinearElement,
-    onDoubleClickArrow,
+    onDoubleClickLinear,
     elementMap,
     onContainerChanged,
   } = options
@@ -384,13 +384,13 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
 
   useEventListener(canvasRef, 'dblclick', (e: MouseEvent) => {
     if (activeTool.value !== 'selection') return
-    if (!onDoubleClickArrow) return
+    if (!onDoubleClickLinear) return
 
     const scenePoint = toScene(e.offsetX, e.offsetY)
     const hitElement = getElementAtPosition(scenePoint, elements.value, zoom.value)
-    if (!hitElement || !isArrowElement(hitElement)) return
+    if (!hitElement || !isLinearElement(hitElement)) return
 
-    onDoubleClickArrow(hitElement)
+    onDoubleClickLinear(hitElement)
   })
 
   useEventListener(document, 'keydown', handleKeyDown)

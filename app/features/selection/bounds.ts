@@ -1,12 +1,12 @@
 import type { ExcalidrawElement } from '~/features/elements/types'
-import { isArrowElement } from '~/features/elements/types'
+import { isLinearElement } from '~/features/elements/types'
 import { pointFrom, pointRotateRads } from '~/shared/math'
 import type { GlobalPoint } from '~/shared/math'
 
 export type Bounds = [x1: number, y1: number, x2: number, y2: number]
 
 export function getElementBounds(element: ExcalidrawElement): Bounds {
-  if (isArrowElement(element)) {
+  if (isLinearElement(element)) {
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
     for (const p of element.points) {
       const px = p[0] + element.x

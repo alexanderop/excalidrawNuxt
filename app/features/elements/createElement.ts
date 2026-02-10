@@ -84,6 +84,20 @@ export function createElement(
     } as SupportedElement
   }
 
+  if (type === 'line') {
+    return {
+      ...base,
+      type: 'line',
+      points: [pointFrom<LocalPoint>(0, 0)],
+      lastCommittedPoint: null,
+      startArrowhead: null,
+      endArrowhead: null,
+      startBinding: null,
+      endBinding: null,
+      polygon: false,
+    } as SupportedElement
+  }
+
   if (type === 'rectangle') return { ...base, type } as SupportedElement
   if (type === 'ellipse') return { ...base, type } as SupportedElement
   if (type === 'diamond') return { ...base, type } as SupportedElement

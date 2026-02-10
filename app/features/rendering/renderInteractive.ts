@@ -1,5 +1,5 @@
-import type { ExcalidrawElement, ExcalidrawArrowElement } from '~/features/elements/types'
-import { isArrowElement } from '~/features/elements/types'
+import type { ExcalidrawElement, ExcalidrawLinearElement } from '~/features/elements/types'
+import { isLinearElement } from '~/features/elements/types'
 import type { GlobalPoint } from '~/shared/math'
 import type { Theme } from '~/features/theme/types'
 import {
@@ -18,13 +18,13 @@ import { renderSuggestedBinding } from '~/features/binding/renderBindingHighligh
 import { getCommonBounds, getElementBounds } from '~/features/selection/bounds'
 
 export interface LinearEditorRenderState {
-  element: ExcalidrawArrowElement
+  element: ExcalidrawLinearElement
   selectedPointIndices: ReadonlySet<number>
   hoveredMidpointIndex: number | null
 }
 
 export interface MultiPointRenderState {
-  element: ExcalidrawArrowElement
+  element: ExcalidrawLinearElement
   cursorPoint: GlobalPoint
 }
 
@@ -41,9 +41,9 @@ function applySelectionStroke(ctx: CanvasRenderingContext2D, zoom: number, theme
   ctx.setLineDash([8 / zoom, 4 / zoom])
 }
 
-function renderArrowSelectionBorder(
+function renderLinearSelectionBorder(
   ctx: CanvasRenderingContext2D,
-  element: ExcalidrawArrowElement,
+  element: ExcalidrawLinearElement,
   zoom: number,
   theme: Theme,
 ): void {
@@ -67,8 +67,8 @@ export function renderSelectionBorder(
   zoom: number,
   theme: Theme,
 ): void {
-  if (isArrowElement(element)) {
-    renderArrowSelectionBorder(ctx, element, zoom, theme)
+  if (isLinearElement(element)) {
+    renderLinearSelectionBorder(ctx, element, zoom, theme)
     return
   }
 

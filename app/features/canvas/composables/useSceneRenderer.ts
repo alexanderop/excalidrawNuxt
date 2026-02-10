@@ -9,7 +9,7 @@ import { renderScene } from '~/features/rendering/renderScene'
 import { renderElement } from '~/features/rendering/renderElement'
 import { renderInteractiveScene } from '~/features/rendering/renderInteractive'
 import type { LinearEditorRenderState, MultiPointRenderState } from '~/features/rendering/renderInteractive'
-import type { ExcalidrawElement, ExcalidrawArrowElement, ExcalidrawTextElement } from '~/features/elements/types'
+import type { ExcalidrawElement, ExcalidrawLinearElement, ExcalidrawTextElement } from '~/features/elements/types'
 import type { Box, GlobalPoint } from '~/shared/math'
 import { useTheme, resolveColor } from '~/features/theme'
 
@@ -39,11 +39,11 @@ interface UseSceneRendererOptions {
   newElement: ShallowRef<ExcalidrawElement | null>
   selectionBox: ShallowRef<Box | null>
   // Linear editor state
-  editingLinearElement?: ShallowRef<ExcalidrawArrowElement | null>
+  editingLinearElement?: ShallowRef<ExcalidrawLinearElement | null>
   editingPointIndices?: ShallowRef<ReadonlySet<number>>
   editingHoveredMidpoint?: ShallowRef<number | null>
   // Multi-point creation state
-  multiElement?: ShallowRef<ExcalidrawArrowElement | null>
+  multiElement?: ShallowRef<ExcalidrawLinearElement | null>
   lastCursorPoint?: ShallowRef<GlobalPoint | null>
   // Binding highlights
   suggestedBindings?: ShallowRef<readonly ExcalidrawElement[]>
@@ -63,7 +63,7 @@ interface UseSceneRendererReturn {
 }
 
 function buildLinearEditorState(
-  editingElement: ShallowRef<ExcalidrawArrowElement | null> | undefined,
+  editingElement: ShallowRef<ExcalidrawLinearElement | null> | undefined,
   pointIndices: ShallowRef<ReadonlySet<number>> | undefined,
   hoveredMidpoint: ShallowRef<number | null> | undefined,
 ): LinearEditorRenderState | null {
@@ -78,7 +78,7 @@ function buildLinearEditorState(
 }
 
 function buildMultiPointState(
-  multiElement: ShallowRef<ExcalidrawArrowElement | null> | undefined,
+  multiElement: ShallowRef<ExcalidrawLinearElement | null> | undefined,
   lastCursorPoint: ShallowRef<GlobalPoint | null> | undefined,
 ): MultiPointRenderState | null {
   const el = multiElement?.value

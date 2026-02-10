@@ -1,4 +1,4 @@
-import type { ExcalidrawArrowElement } from '~/features/elements/types'
+import type { ExcalidrawLinearElement } from '~/features/elements/types'
 import type { GlobalPoint } from '~/shared/math'
 import type { Theme } from '~/features/theme/types'
 import { getPointPositions, getMidpointPositions } from './pointHandles'
@@ -16,7 +16,7 @@ import {
  */
 export function renderRubberBand(
   ctx: CanvasRenderingContext2D,
-  element: ExcalidrawArrowElement,
+  element: ExcalidrawLinearElement,
   cursorPoint: GlobalPoint,
   zoom: number,
   theme: Theme,
@@ -47,7 +47,7 @@ export function renderRubberBand(
  */
 export function renderPointHandles(
   ctx: CanvasRenderingContext2D,
-  element: ExcalidrawArrowElement,
+  element: ExcalidrawLinearElement,
   selectedIndices: ReadonlySet<number>,
   zoom: number,
   theme: Theme,
@@ -78,7 +78,7 @@ export function renderPointHandles(
  */
 export function renderMidpointIndicator(
   ctx: CanvasRenderingContext2D,
-  element: ExcalidrawArrowElement,
+  element: ExcalidrawLinearElement,
   hoveredSegmentIndex: number,
   zoom: number,
   theme: Theme,

@@ -1,6 +1,6 @@
 import type { RoughCanvas } from 'roughjs/bin/canvas'
 import type { ExcalidrawElement, ExcalidrawTextElement } from '~/features/elements/types'
-import { isArrowElement, isTextElement } from '~/features/elements/types'
+import { isArrowElement, isLinearElement, isTextElement } from '~/features/elements/types'
 import type { Theme } from '~/features/theme/types'
 import { resolveColor } from '~/features/theme/colors'
 import { isCodeElement, renderCodeElement } from '~/features/code'
@@ -9,7 +9,7 @@ import { renderArrowheads } from './arrowhead'
 import { getFontString, getLineHeightInPx } from './textMeasurement'
 
 function isZeroSizeShape(element: ExcalidrawElement): boolean {
-  return !isArrowElement(element) && element.width === 0 && element.height === 0
+  return !isLinearElement(element) && element.width === 0 && element.height === 0
 }
 
 export function renderElement(
@@ -24,7 +24,7 @@ export function renderElement(
     renderCodeElement(ctx, element, theme)
     return
   }
-  if (isArrowElement(element) && element.points.length < 2) return
+  if (isLinearElement(element) && element.points.length < 2) return
   if (isTextElement(element)) {
     if (!element.text) return
     renderTextElement(ctx, element, theme)

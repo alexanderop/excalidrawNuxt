@@ -1,8 +1,8 @@
 import { shallowRef } from 'vue'
 import type { Ref, ShallowRef } from 'vue'
 import { useEventListener } from '@vueuse/core'
-import type { ExcalidrawElement, ExcalidrawArrowElement } from '~/features/elements/types'
-import { isArrowElement } from '~/features/elements/types'
+import type { ExcalidrawElement, ExcalidrawArrowElement, ExcalidrawLinearElement } from '~/features/elements/types'
+import { isArrowElement, isLinearElement } from '~/features/elements/types'
 import { createElement } from '~/features/elements/createElement'
 import { mutateElement } from '~/features/elements/mutateElement'
 import { pointFrom, snapAngle } from '~/shared/math'
@@ -31,7 +31,7 @@ interface UseDrawingInteractionOptions {
   markInteractiveDirty: () => void
   newElement?: ShallowRef<ExcalidrawElement | null>
   /** If set, skip pointerdown when multi-point mode is active */
-  multiElement?: ShallowRef<ExcalidrawArrowElement | null>
+  multiElement?: ShallowRef<ExcalidrawLinearElement | null>
   elements: ShallowRef<readonly ExcalidrawElement[]>
   zoom: Ref<number>
   suggestedBindings: ShallowRef<readonly ExcalidrawElement[]>
@@ -169,7 +169,7 @@ export function useDrawingInteraction(options: UseDrawingInteractionOptions): Us
   }
 
   function isElementValid(el: ExcalidrawElement): boolean {
-    if (isArrowElement(el)) {
+    if (isLinearElement(el)) {
       return Math.hypot(el.width, el.height) >= MINIMUM_ARROW_SIZE
     }
     return el.width > 1 || el.height > 1

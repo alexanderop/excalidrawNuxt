@@ -1,7 +1,8 @@
 import { shallowRef, triggerRef } from 'vue'
 import type { Ref, ShallowRef } from 'vue'
 import { useEventListener } from '@vueuse/core'
-import type { ExcalidrawElement, ExcalidrawArrowElement } from '~/features/elements/types'
+import type { ExcalidrawElement, ExcalidrawArrowElement, ExcalidrawLinearElement } from '~/features/elements/types'
+import { isArrowElement } from '~/features/elements/types'
 import { mutateElement } from '~/features/elements/mutateElement'
 import type { GlobalPoint } from '~/shared/math'
 import {
@@ -51,10 +52,10 @@ interface UseLinearEditorOptions {
 }
 
 interface UseLinearEditorReturn {
-  editingElement: ShallowRef<ExcalidrawArrowElement | null>
+  editingElement: ShallowRef<ExcalidrawLinearElement | null>
   selectedPointIndices: ShallowRef<ReadonlySet<number>>
   hoveredMidpointIndex: ShallowRef<number | null>
-  enterEditor: (element: ExcalidrawArrowElement) => void
+  enterEditor: (element: ExcalidrawLinearElement) => void
   exitEditor: () => void
 }
 
@@ -82,13 +83,13 @@ export function useLinearEditor(options: UseLinearEditorOptions): UseLinearEdito
     suggestedBindings,
   } = options
 
-  const editingElement = shallowRef<ExcalidrawArrowElement | null>(null)
+  const editingElement = shallowRef<ExcalidrawLinearElement | null>(null)
   const selectedPointIndices = shallowRef<ReadonlySet<number>>(new Set())
   const hoveredMidpointIndex = shallowRef<number | null>(null)
 
   let interaction: EditorInteraction = { type: 'idle' }
 
-  function enterEditor(element: ExcalidrawArrowElement): void {
+  function enterEditor(element: ExcalidrawLinearElement): void {
     editingElement.value = element
     selectedPointIndices.value = new Set()
     hoveredMidpointIndex.value = null
@@ -106,7 +107,7 @@ export function useLinearEditor(options: UseLinearEditorOptions): UseLinearEdito
   }
 
   function applyPointMutation(
-    el: ExcalidrawArrowElement,
+    el: ExcalidrawLinearElement,
     indices: ReadonlySet<number>,
     dx: number,
     dy: number,
@@ -169,7 +170,7 @@ export function useLinearEditor(options: UseLinearEditorOptions): UseLinearEdito
     markInteractiveDirty()
   }
 
-  function handleMidpointClick(el: ExcalidrawArrowElement, midIdx: number, e: PointerEvent): void {
+  function handleMidpointClick(el: ExcalidrawLinearElement, midIdx: number, e: PointerEvent): void {
     const result = insertPointAtSegment(el.points, midIdx)
     const dims = getSizeFromPoints(result.points)
 
@@ -203,14 +204,16 @@ export function useLinearEditor(options: UseLinearEditorOptions): UseLinearEdito
       if (selectedPointIndices.value.size > 0) {
         applyPointMutation(el, selectedPointIndices.value, dx, dy)
 
-        // Show binding highlight when dragging an endpoint (first or last point)
-        const indices = selectedPointIndices.value
-        const isEndpoint = indices.has(0) || indices.has(el.points.length - 1)
-        if (isEndpoint) {
-          _excludeIds.clear()
-          _excludeIds.add(el.id)
-          const candidate = getHoveredElementForBinding(scene, elements.value, zoom.value, _excludeIds)
-          suggestedBindings.value = candidate ? [candidate.element] : []
+        // Show binding highlight when dragging an endpoint (arrows only — lines don't bind)
+        if (isArrowElement(el)) {
+          const indices = selectedPointIndices.value
+          const isEndpoint = indices.has(0) || indices.has(el.points.length - 1)
+          if (isEndpoint) {
+            _excludeIds.clear()
+            _excludeIds.add(el.id)
+            const candidate = getHoveredElementForBinding(scene, elements.value, zoom.value, _excludeIds)
+            suggestedBindings.value = candidate ? [candidate.element] : []
+          }
         }
       }
       return
@@ -232,21 +235,23 @@ export function useLinearEditor(options: UseLinearEditorOptions): UseLinearEdito
 
     canvasRef.value?.releasePointerCapture(e.pointerId)
 
-    // Commit bindings for dragged endpoints
-    const indices = selectedPointIndices.value
-    const scene = toScene(e.offsetX, e.offsetY)
-    _excludeIds.clear()
-    _excludeIds.add(el.id)
+    // Commit bindings for dragged endpoints (arrows only — lines don't bind)
+    if (isArrowElement(el)) {
+      const indices = selectedPointIndices.value
+      const scene = toScene(e.offsetX, e.offsetY)
+      _excludeIds.clear()
+      _excludeIds.add(el.id)
 
-    if (indices.has(0)) {
-      commitEndpointBinding(el, 'start', scene, elements.value, zoom.value, _excludeIds)
+      if (indices.has(0)) {
+        commitEndpointBinding(el, 'start', scene, elements.value, zoom.value, _excludeIds)
+      }
+
+      if (indices.has(el.points.length - 1)) {
+        commitEndpointBinding(el, 'end', scene, elements.value, zoom.value, _excludeIds)
+      }
+
+      suggestedBindings.value = []
     }
-
-    if (indices.has(el.points.length - 1)) {
-      commitEndpointBinding(el, 'end', scene, elements.value, zoom.value, _excludeIds)
-    }
-
-    suggestedBindings.value = []
     interaction = { type: 'idle' }
     markStaticDirty()
     markInteractiveDirty()

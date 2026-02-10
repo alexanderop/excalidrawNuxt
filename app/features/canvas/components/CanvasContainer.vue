@@ -205,7 +205,7 @@ const { selectionBox, cursorStyle } = useSelectionInteraction({
   isSelected,
   setTool,
   editingLinearElement,
-  onDoubleClickArrow: enterLinearEditor,
+  onDoubleClickLinear: enterLinearEditor,
   expandSelectionForGroups,
   onGroupAction: groupSelection,
   onUngroupAction: ungroupSelection,
