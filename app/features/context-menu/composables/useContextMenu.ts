@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue'
 import type { Ref, ComputedRef } from 'vue'
-import { useEventListener } from '@vueuse/core'
+import { useEventListener, onKeyStroke } from '@vueuse/core'
 import type { ContextMenuType, ContextMenuItem, ContextMenuContext } from '../types'
 import { isSeparator } from '../types'
 import { elementMenuItems, canvasMenuItems } from '../contextMenuItems'
@@ -48,12 +48,10 @@ export function useContextMenu(options: UseContextMenuOptions): UseContextMenuRe
   }
 
   // Close on Escape
-  useEventListener('keydown', (e: KeyboardEvent) => {
-    if (e.key === 'Escape') close()
-  })
+  onKeyStroke('Escape', close)
 
   // Close on scroll/wheel
-  useEventListener('wheel', () => close(), { passive: true })
+  useEventListener('wheel', close, { passive: true })
 
   return {
     isOpen,

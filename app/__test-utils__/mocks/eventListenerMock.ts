@@ -3,6 +3,12 @@ type EventHandler = (...args: unknown[]) => void
 interface EventHandlerMap {
   /** The mock useEventListener function to use in vi.mock */
   mockUseEventListener: (_target: unknown, event: string, handler: EventHandler) => void
+  /** The mock onKeyStroke function — registers a keydown handler that filters by key */
+  mockOnKeyStroke: (
+    key: string | string[],
+    handler: EventHandler,
+    options?: { eventName?: string; target?: unknown; dedupe?: boolean },
+  ) => void
   /** Fire a pointer event (pointerdown/pointermove/pointerup) */
   firePointer: (
     type: 'pointerdown' | 'pointermove' | 'pointerup',
@@ -24,6 +30,24 @@ export function createEventHandlerMap(
     const existing = handlers.get(event) ?? []
     existing.push(handler)
     handlers.set(event, existing)
+  }
+
+  function mockOnKeyStroke(
+    key: string | string[],
+    handler: EventHandler,
+    options?: { eventName?: string; target?: unknown; dedupe?: boolean },
+  ): void {
+    const eventName = options?.eventName ?? 'keydown'
+    const keys = Array.isArray(key) ? key : [key]
+
+    const wrappedHandler: EventHandler = (...args: unknown[]) => {
+      const e = args[0] as { key?: string }
+      if (e.key && keys.includes(e.key)) {
+        handler(...args)
+      }
+    }
+
+    mockUseEventListener(null, eventName, wrappedHandler)
   }
 
   function firePointer(
@@ -67,5 +91,5 @@ export function createEventHandlerMap(
     handlers.clear()
   }
 
-  return { mockUseEventListener, firePointer, fire, clear }
+  return { mockUseEventListener, mockOnKeyStroke, firePointer, fire, clear }
 }

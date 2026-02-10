@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, useTemplateRef } from 'vue'
-import { useEventListener } from '@vueuse/core'
+import { onClickOutside } from '@vueuse/core'
 import type { ContextMenuItem, ContextMenuItemBase, ContextMenuContext } from '../types'
 import { isSeparator } from '../types'
 
@@ -15,8 +15,6 @@ const emit = defineEmits<{
   close: []
 }>()
 
-defineExpose({})
-
 const menuRef = useTemplateRef<HTMLDivElement>('contextMenuEl')
 
 const positionStyle = computed(() => ({
@@ -30,9 +28,7 @@ function handleClick(item: ContextMenuItemBase): void {
 }
 
 // Click-away: close when clicking outside the menu
-useEventListener('pointerdown', (e: PointerEvent) => {
-  if (!isOpen) return
-  if (menuRef.value?.contains(e.target as Node)) return
+onClickOutside(menuRef, () => {
   emit('close')
 })
 </script>

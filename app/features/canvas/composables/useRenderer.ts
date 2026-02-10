@@ -1,6 +1,6 @@
-import { ref, watch, toRaw, onScopeDispose } from 'vue'
+import { ref, computed, watch, toRaw, onScopeDispose } from 'vue'
 import type { Ref, ShallowRef } from 'vue'
-import { useDevicePixelRatio, useDocumentVisibility } from '@vueuse/core'
+import { useDevicePixelRatio, useDocumentVisibility, whenever } from '@vueuse/core'
 
 interface CanvasLayer {
   ctx: ShallowRef<CanvasRenderingContext2D | null>
@@ -130,9 +130,8 @@ export function useRenderer(options: UseRendererOptions): UseRendererReturn {
   watch([width, height, scrollX, scrollY, zoom, bgColor], markAllDirty)
 
   // Resume rendering when tab becomes visible again
-  watch(visibility, (v) => {
-    if (v === 'visible') markAllDirty()
-  })
+  const isVisible = computed(() => visibility.value === 'visible')
+  whenever(isVisible, markAllDirty)
 
   onScopeDispose(() => {
     if (rafId !== null) cancelAnimationFrame(rafId)

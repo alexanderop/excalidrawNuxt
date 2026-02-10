@@ -1,5 +1,5 @@
-import { watch, onScopeDispose } from 'vue'
-import { useDocumentVisibility } from '@vueuse/core'
+import { computed, onScopeDispose } from 'vue'
+import { useDocumentVisibility, whenever } from '@vueuse/core'
 
 interface AnimationParams<S> {
   deltaTime: number
@@ -85,8 +85,8 @@ export function useAnimationController(
   }
 
   // Resume animations when tab becomes visible again
-  watch(visibility, (v) => {
-    if (v !== 'visible') return
+  const isVisible = computed(() => visibility.value === 'visible')
+  whenever(isVisible, () => {
     if (animations.size === 0) return
 
     // Reset lastTime so deltaTime doesn't include time spent hidden

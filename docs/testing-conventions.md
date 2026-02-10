@@ -438,6 +438,82 @@ await ui.grid.showOverlay(10000)  // custom duration (ms)
 
 `toPixels([col, row])` → `((col + 0.5) * cellWidth, (row + 0.5) * cellHeight)` — the center of the cell. Fractional cells work naturally: `[2.5, 3.5]` targets the boundary between cells.
 
+## Page Object Pattern (Browser Tests)
+
+For new browser tests, use `CanvasPage` instead of constructing `UI` + `render` + `waitForCanvasReady` manually. `CanvasPage.create()` handles rendering, seeding, and cleanup automatically.
+
+```ts
+import { CanvasPage } from '~/__test-utils__/browser'
+
+describe('my feature', () => {
+  it('draws a rectangle', async () => {
+    const page = await CanvasPage.create()
+
+    await page.canvas.createElementAtCells('rectangle', [2, 2], [5, 5])
+
+    page.scene.expectElementCount(1)
+    page.scene.expectElementType(0, 'rectangle')
+  })
+})
+```
+
+### Sub-objects
+
+| Object | Import | Purpose |
+|--------|--------|---------|
+| `page.toolbar` | `ToolbarPO` | Tool selection via keyboard shortcuts, aria-pressed assertions |
+| `page.canvas` | `CanvasPO` | Drawing, clicking, and element creation on the canvas grid |
+| `page.selection` | `SelectionPO` | Click/shift-click/box-select elements, assert selection state |
+| `page.scene` | `ScenePO` | Programmatic element setup, flush rendering, element queries |
+| `page.keyboard` | `Keyboard` | Raw keyboard input, undo/redo, modifier key contexts |
+
+### Key methods
+
+```ts
+// ToolbarPO
+await page.toolbar.select('rectangle')
+await page.toolbar.expectActive('selection')
+
+// CanvasPO — grid-based interactions
+await page.canvas.draw([1, 1], [4, 4])               // raw drag
+await page.canvas.click([3, 3])                        // click cell
+await page.canvas.clickCenter([1, 1], [4, 4])          // click region center
+const ref = await page.canvas.createElement('rectangle', [2, 2], [5, 5])  // tool + drag + live accessor
+
+// SelectionPO
+await page.selection.clickElement(el)
+await page.selection.shiftClickElement(el)
+await page.selection.boxSelect([0, 0], [8, 4])
+page.selection.setSelected(el1, el2)                   // programmatic
+page.selection.clear()
+page.selection.expectSelected(id1, id2)
+page.selection.expectNoneSelected()
+
+// ScenePO — programmatic scene setup
+const el = page.scene.addElement({ x: 50, width: 80 })
+const [a, b] = page.scene.addElements({ x: 0 }, { x: 100 })
+await page.scene.flush()                               // markStaticDirty + waitForPaint
+page.scene.expectElementCount(2)
+page.scene.expectElementType(0, 'rectangle')
+page.scene.activeTool                                  // read current tool
+```
+
+### Migration from `UI`
+
+| Before (`UI`) | After (`CanvasPage`) |
+|---------------|----------------------|
+| `render(CanvasContainer)` + `waitForCanvasReady()` + `new UI(screen)` | `CanvasPage.create()` |
+| `ui.clickTool('rectangle')` | `page.toolbar.select('rectangle')` |
+| `ui.expectToolActive('selection')` | `page.toolbar.expectActive('selection')` |
+| `ui.createElementAtCells('rect', [2,2], [5,5])` | `page.canvas.createElementAtCells('rect', [2,2], [5,5])` |
+| `ui.createElement('rect', [2,2], [5,5])` | `page.canvas.createElement('rect', [2,2], [5,5])` |
+| `ui.grid.drag(...)` | `page.canvas.draw(...)` or `page.selection.boxSelect(...)` |
+| `API.addElement(...)` + `API.h.markStaticDirty()` + `waitForPaint()` | `page.scene.addElement(...)` + `page.scene.flush()` |
+| `assertSelectedElements(id1, id2)` | `page.selection.expectSelected(id1, id2)` |
+| `API.clearSelection()` | `page.selection.clear()` |
+
+The `UI` class remains available for existing tests — no need to migrate all at once.
+
 ## ESLint Enforcement
 
 The `app/vitest-unit-flat-tests` config warns on `beforeEach`/`afterEach` in `*.unit.test.ts` files. Browser tests are unaffected. Severity is `warn` to allow escape hatches.

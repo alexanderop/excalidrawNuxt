@@ -1,5 +1,5 @@
 import { shallowRef } from 'vue'
-import { createGlobalState, createEventHook, useActiveElement, useEventListener } from '@vueuse/core'
+import { createGlobalState, createEventHook, useActiveElement, onKeyStroke } from '@vueuse/core'
 import type { ToolType } from './types'
 import { isTypingElement } from '~/shared/isTypingElement'
 
@@ -35,12 +35,12 @@ export const useToolStore = createGlobalState(() => {
 
   // Guard needed: createGlobalState runs in Node test environment where document is undefined
   if (typeof document !== 'undefined') {
-    useEventListener(document, 'keydown', (e: KeyboardEvent) => {
+    onKeyStroke(Object.keys(KEY_TO_TOOL), (e: KeyboardEvent) => {
       if (isTypingElement(activeElement.value)) return
       const tool = KEY_TO_TOOL[e.key]
       if (!tool) return
       setTool(tool)
-    })
+    }, { target: document })
   }
 
   function $reset(): void {

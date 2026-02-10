@@ -11,8 +11,8 @@ Generate visual regression browser tests that verify canvas rendering by simulat
 
 1. **Test like a user** — every test simulates what a real user would do: select a tool via keyboard shortcut, drag on the canvas to draw, click to select. Never manipulate internal state directly.
 2. **Grid coordinates** — use the `CanvasGrid` cell system for readable, maintainable positions instead of raw pixel values. The default grid is 16x9 on a 1280x720 canvas (80x80px cells).
-3. **Deterministic rendering** — RoughJS uses `Math.random()` for hand-drawn stroke variations. Every test must seed it deterministically so screenshots are pixel-identical across runs.
-4. **Wait for paint** — the canvas render pipeline is async (ResizeObserver -> watch -> RAF -> paint). Always wait for the canvas to be ready, and wait one extra frame after drawing before screenshotting.
+3. **Deterministic rendering** — RoughJS uses `Math.random()` for hand-drawn stroke variations. `CanvasPage.create()` seeds it deterministically so screenshots are pixel-identical across runs.
+4. **Wait for paint** — the canvas render pipeline is async (ResizeObserver -> watch -> RAF -> paint). `CanvasPage.create()` waits for canvas ready. Use `waitForPaint()` after drawing before screenshotting.
 
 ## File Placement
 
@@ -29,100 +29,109 @@ app/features/{feature}/
 ## Test Template
 
 ```typescript
-import { render } from 'vitest-browser-vue'
-import { page, commands, userEvent } from 'vitest/browser'
-import CanvasContainer from '~/features/canvas/components/CanvasContainer.vue'
-import { reseed, restoreSeed } from '~/__test-utils__/deterministicSeed'
-import { UI } from '~/__test-utils__/browser'
-
-const CANVAS_SELECTOR = '[data-testid="interactive-canvas"]'
-
-async function waitForCanvasReady(): Promise<void> {
-  await expect.poll(() => {
-    // eslint-disable-next-line no-restricted-syntax -- need raw DOM access for canvas.width polling
-    const canvas = document.querySelector<HTMLCanvasElement>(CANVAS_SELECTOR)
-    return canvas?.width ?? 0
-  }, { timeout: 5000 }).toBeGreaterThan(0)
-  await new Promise<void>(r => requestAnimationFrame(() => r()))
-}
-
-/** Wait one frame for newly drawn content to paint. */
-async function waitForPaint(): Promise<void> {
-  await new Promise<void>(r => requestAnimationFrame(() => r()))
-}
+import { page as vitestPage } from 'vitest/browser'
+import { CanvasPage } from '~/__test-utils__/browser'
+import { waitForPaint } from '~/__test-utils__/browser/waiters'
 
 describe('{feature name} rendering', () => {
-  beforeEach(() => reseed())
-  afterEach(() => restoreSeed())
-
   it('{describes what the user sees}', async () => {
-    const screen = render(CanvasContainer)
-    await waitForCanvasReady()
-    const ui = new UI(screen)
+    const page = await CanvasPage.create()
 
     // Simulate user actions using grid cells
-    await ui.createElementAtCells('rectangle', [2, 2], [6, 5])
+    await page.canvas.createElementAtCells('rectangle', [2, 2], [6, 5])
     await waitForPaint()
 
-    await expect(page.getByTestId('canvas-container')).toMatchScreenshot('{descriptive-name}')
+    await expect(vitestPage.getByTestId('canvas-container')).toMatchScreenshot('{descriptive-name}')
   })
 })
 ```
 
+`CanvasPage.create()` handles everything: `reseed()` → `render(CanvasContainer)` → `waitForCanvasReady()` → cleanup via `onTestFinished`. No `beforeEach`/`afterEach` needed.
+
 ## Available User Actions
 
-### Drawing elements (via `UI` helper)
+### Drawing elements (via `CanvasPage`)
 
 ```typescript
-const ui = new UI(screen)
+const page = await CanvasPage.create()
 
 // Draw using grid cells (preferred — readable and maintainable)
-await ui.createElementAtCells('rectangle', [1, 1], [4, 3])
-await ui.createElementAtCells('diamond', [5, 1], [8, 3])
-await ui.createElementAtCells('ellipse', [1, 4], [4, 6])
-await ui.createElementAtCells('arrow', [5, 5], [8, 5])
+await page.canvas.createElementAtCells('rectangle', [1, 1], [4, 3])
+await page.canvas.createElementAtCells('diamond', [5, 1], [8, 3])
+await page.canvas.createElementAtCells('ellipse', [1, 4], [4, 6])
+await page.canvas.createElementAtCells('arrow', [5, 5], [8, 5])
 
-// Draw using raw pixel coords (only when precise positioning matters)
-await ui.createElement('rectangle', 100, 100, 300, 250)
+// Draw and get a live accessor to the created element
+const { id, get } = await page.canvas.createElement('rectangle', [2, 2], [5, 5])
+
+// Draw using raw pixel coords (only when precise positioning matters for screenshots)
+await page.canvas.pointer.drag(100, 100, 300, 250)
 ```
 
-### Tool selection (keyboard shortcuts)
+### Tool selection
 
 ```typescript
-await userEvent.keyboard('1')  // Selection tool
-await userEvent.keyboard('2')  // Rectangle
-await userEvent.keyboard('3')  // Diamond
-await userEvent.keyboard('4')  // Ellipse
-await userEvent.keyboard('a')  // Arrow
-
-// Or via UI helper
-await ui.clickTool('rectangle')
+await page.toolbar.select('rectangle')   // shortcut '2'
+await page.toolbar.select('diamond')     // shortcut '3'
+await page.toolbar.select('ellipse')     // shortcut '4'
+await page.toolbar.select('arrow')       // shortcut 'a'
+await page.toolbar.select('line')        // shortcut 'l'
+await page.toolbar.select('text')        // shortcut 't'
+await page.toolbar.select('code')        // shortcut 'c'
+await page.toolbar.select('selection')   // shortcut '1'
+await page.toolbar.select('hand')        // shortcut 'h'
 ```
 
 ### Clicking and dragging on canvas
 
 ```typescript
 // Grid-based (preferred)
-await ui.grid.click([3, 3])
-await ui.grid.click([3, 3], { shiftKey: true })  // with modifier
-await ui.grid.drag([1, 1], [4, 4])
+await page.canvas.click([3, 3])
+await page.canvas.click([3, 3], { shiftKey: true })  // with modifier
+await page.canvas.draw([1, 1], [4, 4])                // raw drag between cells
+await page.canvas.clickCenter([2, 2], [5, 5])          // click center of region
+await page.canvas.dblClick([3, 3])
 
-// Raw commands (when needed)
-await commands.canvasClick(CANVAS_SELECTOR, 200, 150)
-await commands.canvasDrag(CANVAS_SELECTOR, 100, 100, 300, 250)
+// Raw pixel access (when needed for precise screenshot positions)
+await page.canvas.pointer.clickAt(200, 150)
+await page.canvas.pointer.drag(100, 100, 300, 250)
+```
+
+### Selection
+
+```typescript
+await page.selection.clickElement(element)
+await page.selection.shiftClickElement(element)
+await page.selection.boxSelect([0, 0], [8, 4])
+page.selection.clear()
+page.selection.expectSelected(id1, id2)
+page.selection.expectNoneSelected()
+```
+
+### Scene (programmatic setup)
+
+```typescript
+const el = page.scene.addElement({ x: 50, width: 80 })
+await page.scene.flush()   // markStaticDirty + waitForPaint
+page.scene.expectElementCount(2)
+page.scene.expectElementType(0, 'rectangle')
 ```
 
 ### Keyboard input
 
 ```typescript
-await ui.keyboard.press('Delete')
-await ui.keyboard.press('{Meta>}g{/Meta}')  // Cmd+G
+await page.keyboard.press('{Delete}')
+await page.keyboard.withModifierKeys({ ctrlKey: true }, async () => {
+  await page.keyboard.press('g')  // Ctrl+G (group)
+})
+await page.keyboard.undo()   // Ctrl+Z
+await page.keyboard.redo()   // Ctrl+Shift+Z
 ```
 
 ### Tool state assertions
 
 ```typescript
-await ui.expectToolActive('selection')  // checks aria-pressed="true"
+await page.toolbar.expectActive('selection')  // checks aria-pressed="true"
 ```
 
 ## Grid Coordinate System
@@ -139,8 +148,8 @@ Use grid cells for element placement to make tests self-documenting:
 
 ```typescript
 // Clear layout: two shapes side by side
-await ui.createElementAtCells('rectangle', [1, 1], [4, 3])  // left shape
-await ui.createElementAtCells('diamond', [5, 1], [8, 3])    // right shape
+await page.canvas.createElementAtCells('rectangle', [1, 1], [4, 3])  // left shape
+await page.canvas.createElementAtCells('diamond', [5, 1], [8, 3])    // right shape
 ```
 
 ### Debug overlay
@@ -148,16 +157,16 @@ await ui.createElementAtCells('diamond', [5, 1], [8, 3])    // right shape
 When debugging, inject a visible grid:
 
 ```typescript
-await ui.grid.showOverlay(10000) // shows red grid lines for 10 seconds
+await page.canvas.grid.showOverlay(10000) // shows red grid lines for 10 seconds
 ```
 
 ## Critical Rules
 
-1. **Always `reseed()` / `restoreSeed()`** in beforeEach/afterEach — without this, RoughJS randomness makes screenshots flaky.
-2. **Always `waitForCanvasReady()`** after `render(CanvasContainer)` — the canvas needs time to bootstrap.
-3. **Always `waitForPaint()`** (one RAF) after drawing before taking a screenshot — the render pipeline is async.
-4. **Never use `page.mouse`** — iframe coordinate translation causes silent mismatches. Use `commands.canvasDrag` / `commands.canvasClick` which dispatch PointerEvents directly inside the iframe.
-5. **Screenshot the container** (`page.getByTestId('canvas-container')`), not the canvas element — this includes the toolbar for full context.
+1. **Use `CanvasPage.create()`** — it handles seeding, rendering, and cleanup. No manual `reseed()`/`restoreSeed()` or `beforeEach`/`afterEach` needed.
+2. **Always `waitForPaint()`** (one RAF) after drawing before taking a screenshot — the render pipeline is async.
+3. **Never use `page.mouse`** — iframe coordinate translation causes silent mismatches. Use `page.canvas.pointer` or `page.canvas.grid` which dispatch PointerEvents directly inside the iframe.
+4. **Screenshot the container** (`vitestPage.getByTestId('canvas-container')`), not the canvas element — this includes the toolbar for full context.
+5. **Import `page` from vitest as `vitestPage`** to avoid naming conflict with the `CanvasPage` variable.
 6. **Use descriptive kebab-case names** for `toMatchScreenshot('name')` — the name becomes part of the baseline filename.
 7. **Test names describe what the user sees** — "renders grouped elements with selection outline", not "tests group rendering function".
 
@@ -179,47 +188,29 @@ bun test:browser -- --update              # update all baselines
 If asked to "add a screenshot test for grouping", produce something like:
 
 ```typescript
-import { render } from 'vitest-browser-vue'
-import { page, userEvent } from 'vitest/browser'
-import CanvasContainer from '~/features/canvas/components/CanvasContainer.vue'
-import { reseed, restoreSeed } from '~/__test-utils__/deterministicSeed'
-import { UI } from '~/__test-utils__/browser'
-
-async function waitForCanvasReady(): Promise<void> {
-  await expect.poll(() => {
-    // eslint-disable-next-line no-restricted-syntax -- need raw DOM access for canvas.width polling
-    const canvas = document.querySelector<HTMLCanvasElement>('[data-testid="interactive-canvas"]')
-    return canvas?.width ?? 0
-  }, { timeout: 5000 }).toBeGreaterThan(0)
-  await new Promise<void>(r => requestAnimationFrame(() => r()))
-}
-
-async function waitForPaint(): Promise<void> {
-  await new Promise<void>(r => requestAnimationFrame(() => r()))
-}
+import { page as vitestPage } from 'vitest/browser'
+import { CanvasPage } from '~/__test-utils__/browser'
+import { waitForPaint } from '~/__test-utils__/browser/waiters'
 
 describe('grouping rendering', () => {
-  beforeEach(() => reseed())
-  afterEach(() => restoreSeed())
-
   it('renders two grouped elements with shared selection outline', async () => {
-    const screen = render(CanvasContainer)
-    await waitForCanvasReady()
-    const ui = new UI(screen)
+    const page = await CanvasPage.create()
 
     // User draws two shapes
-    await ui.createElementAtCells('rectangle', [2, 2], [5, 4])
-    await ui.createElementAtCells('ellipse', [6, 2], [9, 4])
+    await page.canvas.createElementAtCells('rectangle', [2, 2], [5, 4])
+    await page.canvas.createElementAtCells('ellipse', [6, 2], [9, 4])
 
     // User selects both (click first, shift-click second)
-    await ui.grid.clickCenter([2, 2], [5, 4])
-    await ui.grid.clickCenter([6, 2], [9, 4], { shiftKey: true })
+    await page.canvas.clickCenter([2, 2], [5, 4])
+    await page.canvas.clickCenter([6, 2], [9, 4], { shiftKey: true })
 
-    // User groups them with Cmd+G
-    await ui.keyboard.press('{Meta>}g{/Meta}')
+    // User groups them with Ctrl+G
+    await page.keyboard.withModifierKeys({ ctrlKey: true }, async () => {
+      await page.keyboard.press('g')
+    })
     await waitForPaint()
 
-    await expect(page.getByTestId('canvas-container')).toMatchScreenshot('grouped-elements-selected')
+    await expect(vitestPage.getByTestId('canvas-container')).toMatchScreenshot('grouped-elements-selected')
   })
 })
 ```

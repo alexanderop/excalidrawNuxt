@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue'
 import type { ComputedRef, Ref, ShallowRef } from 'vue'
-import { useEventListener } from '@vueuse/core'
+import { useEventListener, onKeyStroke } from '@vueuse/core'
 import { pointFrom } from '~/shared/math'
 import type { GlobalPoint } from '~/shared/math'
 import type { ToolType } from '~/features/tools/types'
@@ -44,19 +44,16 @@ export function usePanning({ canvasRef, panBy, zoomBy, activeTool }: UsePanningO
   }, { passive: false })
 
   // Space key: toggle grab cursor
-  useEventListener(document, 'keydown', (e: KeyboardEvent) => {
-    if (e.code !== 'Space') return
-    if (spaceHeld.value) return
+  onKeyStroke(' ', (e: KeyboardEvent) => {
     if (e.target instanceof HTMLElement && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return
     e.preventDefault()
     spaceHeld.value = true
-  })
+  }, { eventName: 'keydown', target: document, dedupe: true })
 
-  useEventListener(document, 'keyup', (e: KeyboardEvent) => {
-    if (e.code !== 'Space') return
+  onKeyStroke(' ', () => {
     spaceHeld.value = false
     isPanning.value = false
-  })
+  }, { eventName: 'keyup', target: document })
 
   // Pointer drag while space held or hand tool: pan the canvas
   useEventListener(canvasRef, 'pointerdown', (e: PointerEvent) => {

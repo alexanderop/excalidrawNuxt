@@ -1,5 +1,6 @@
 import { shallowRef } from 'vue'
 import type { ShallowRef } from 'vue'
+import { createGlobalState } from '@vueuse/core'
 import type { ExcalidrawElement, ElementsMap } from './types'
 
 interface UseElementsReturn {
@@ -10,7 +11,7 @@ interface UseElementsReturn {
   getElementById: (id: string) => ExcalidrawElement | undefined
 }
 
-export function useElements(): UseElementsReturn {
+export const useElements = createGlobalState((): UseElementsReturn => {
   const elements = shallowRef<readonly ExcalidrawElement[]>([])
   const elementMap = new Map<string, ExcalidrawElement>()
 
@@ -38,4 +39,4 @@ export function useElements(): UseElementsReturn {
     replaceElements,
     getElementById,
   }
-}
+})

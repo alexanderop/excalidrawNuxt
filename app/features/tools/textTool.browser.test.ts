@@ -1,41 +1,20 @@
-import { render } from 'vitest-browser-vue'
-import { page, commands, userEvent } from 'vitest/browser'
-import CanvasContainer from '~/features/canvas/components/CanvasContainer.vue'
-import { reseed, restoreSeed } from '~/__test-utils__/deterministicSeed'
-
-const CANVAS_SELECTOR = '[data-testid="interactive-canvas"]'
-
-async function waitForCanvasReady(): Promise<void> {
-  await expect.poll(() => {
-    // eslint-disable-next-line no-restricted-syntax -- need raw DOM access for canvas.width polling
-    const canvas = document.querySelector<HTMLCanvasElement>(CANVAS_SELECTOR)
-    return canvas?.width ?? 0
-  }, { timeout: 5000 }).toBeGreaterThan(0)
-  await new Promise<void>(r => requestAnimationFrame(() => r()))
-}
-
-async function waitForPaint(): Promise<void> {
-  await new Promise<void>(r => requestAnimationFrame(() => r()))
-}
+import { page, userEvent } from 'vitest/browser'
+import { CanvasPage } from '~/__test-utils__/browser'
+import { waitForPaint } from '~/__test-utils__/browser/waiters'
 
 describe('text tool interaction', () => {
-  beforeEach(() => reseed())
-  afterEach(() => restoreSeed())
-
   it('opens editor on single click with text tool (like Excalidraw)', async () => {
-    const screen = render(CanvasContainer)
-    await waitForCanvasReady()
+    const cp = await CanvasPage.create()
 
     // Press 't' to activate text tool
-    await userEvent.keyboard('t')
-    const textBtn = screen.getByRole('button', { name: 'Text' })
-    await expect.element(textBtn).toHaveAttribute('aria-pressed', 'true')
+    await cp.toolbar.select('text')
+    await cp.toolbar.expectActive('text')
 
     // Single click on canvas — editor should open immediately (no double-click needed)
-    await commands.canvasClick(CANVAS_SELECTOR, 400, 300)
+    await cp.canvas.pointer.clickAt(400, 300)
 
     // A textarea should now be visible — this is the inline text editor
-    const textarea = screen.getByRole('textbox')
+    const textarea = cp.screen.getByRole('textbox')
     await expect.element(textarea).toBeVisible()
 
     // Type text into the editor
@@ -56,28 +35,26 @@ describe('text tool interaction', () => {
     await expect(page.getByTestId('canvas-container')).toMatchScreenshot('text-single-click-hello-world')
   })
 
+  // eslint-disable-next-line vitest/expect-expect -- assertion delegated to page.toolbar.expectActive
   it('switches to selection tool after opening text editor', async () => {
-    const screen = render(CanvasContainer)
-    await waitForCanvasReady()
+    const cp = await CanvasPage.create()
 
     // Activate text tool and click canvas
-    await userEvent.keyboard('t')
-    await commands.canvasClick(CANVAS_SELECTOR, 400, 300)
+    await cp.toolbar.select('text')
+    await cp.canvas.pointer.clickAt(400, 300)
 
     // Tool should have switched to selection while editor is open
-    const selectionBtn = screen.getByRole('button', { name: 'Selection' })
-    await expect.element(selectionBtn).toHaveAttribute('aria-pressed', 'true')
+    await cp.toolbar.expectActive('selection')
   })
 
   it('textarea grows in width as user types long text', async () => {
-    const screen = render(CanvasContainer)
-    await waitForCanvasReady()
+    const cp = await CanvasPage.create()
 
     // Activate text tool and click to open editor
-    await userEvent.keyboard('t')
-    await commands.canvasClick(CANVAS_SELECTOR, 200, 300)
+    await cp.toolbar.select('text')
+    await cp.canvas.pointer.clickAt(200, 300)
 
-    const textarea = screen.getByRole('textbox')
+    const textarea = cp.screen.getByRole('textbox')
     await expect.element(textarea).toBeVisible()
 
     // Type character by character (realistic typing, not fill) to test dynamic resize
@@ -104,15 +81,14 @@ describe('text tool interaction', () => {
   })
 
   it('deletes empty text element on submit', async () => {
-    const screen = render(CanvasContainer)
-    await waitForCanvasReady()
+    const cp = await CanvasPage.create()
 
     // Create text editor with single click
-    await userEvent.keyboard('t')
-    await commands.canvasClick(CANVAS_SELECTOR, 400, 300)
+    await cp.toolbar.select('text')
+    await cp.canvas.pointer.clickAt(400, 300)
 
     // Editor opens
-    const textarea = screen.getByRole('textbox')
+    const textarea = cp.screen.getByRole('textbox')
     await expect.element(textarea).toBeVisible()
 
     // Submit without typing anything — element should be deleted

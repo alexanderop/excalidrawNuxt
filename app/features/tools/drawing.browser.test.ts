@@ -1,102 +1,82 @@
-import { render } from 'vitest-browser-vue'
-import CanvasContainer from '~/features/canvas/components/CanvasContainer.vue'
-import { API, UI, waitForCanvasReady, waitForPaint } from '~/__test-utils__/browser'
-import { reseed, restoreSeed } from '~/__test-utils__/deterministicSeed'
+/* eslint-disable vitest/expect-expect -- page object methods wrap expect() */
+import { CanvasPage } from '~/__test-utils__/browser'
+import { waitForPaint } from '~/__test-utils__/browser/waiters'
 
 describe('drawing interaction', () => {
-  beforeEach(() => reseed())
-  afterEach(() => restoreSeed())
-
   it('creates a rectangle on drag', async () => {
-    const screen = render(CanvasContainer)
-    await waitForCanvasReady()
-    const ui = new UI(screen)
+    const page = await CanvasPage.create()
 
-    await ui.createElementAtCells('rectangle', [2, 2], [5, 5])
+    await page.canvas.createElementAtCells('rectangle', [2, 2], [5, 5])
 
-    expect(API.elements).toHaveLength(1)
-    expect(API.elements[0]!.type).toBe('rectangle')
-    expect(API.elements[0]!.width).toBeGreaterThan(0)
-    expect(API.elements[0]!.height).toBeGreaterThan(0)
-    expect(API.activeTool).toBe('selection')
+    page.scene.expectElementCount(1)
+    page.scene.expectElementType(0, 'rectangle')
+    expect(page.scene.elements[0]!.width).toBeGreaterThan(0)
+    expect(page.scene.elements[0]!.height).toBeGreaterThan(0)
+    expect(page.scene.activeTool).toBe('selection')
   })
 
   it('creates an ellipse on drag', async () => {
-    const screen = render(CanvasContainer)
-    await waitForCanvasReady()
-    const ui = new UI(screen)
+    const page = await CanvasPage.create()
 
-    await ui.createElementAtCells('ellipse', [3, 1], [7, 4])
+    await page.canvas.createElementAtCells('ellipse', [3, 1], [7, 4])
 
-    expect(API.elements).toHaveLength(1)
-    expect(API.elements[0]!.type).toBe('ellipse')
-    expect(API.activeTool).toBe('selection')
+    page.scene.expectElementCount(1)
+    page.scene.expectElementType(0, 'ellipse')
+    expect(page.scene.activeTool).toBe('selection')
   })
 
   it('creates a diamond on drag', async () => {
-    const screen = render(CanvasContainer)
-    await waitForCanvasReady()
-    const ui = new UI(screen)
+    const page = await CanvasPage.create()
 
-    await ui.createElementAtCells('diamond', [1, 1], [4, 4])
+    await page.canvas.createElementAtCells('diamond', [1, 1], [4, 4])
 
-    expect(API.elements).toHaveLength(1)
-    expect(API.elements[0]!.type).toBe('diamond')
-    expect(API.activeTool).toBe('selection')
+    page.scene.expectElementCount(1)
+    page.scene.expectElementType(0, 'diamond')
+    expect(page.scene.activeTool).toBe('selection')
   })
 
   it('creates an arrow on drag', async () => {
-    const screen = render(CanvasContainer)
-    await waitForCanvasReady()
-    const ui = new UI(screen)
+    const page = await CanvasPage.create()
 
-    await ui.createElementAtCells('arrow', [1, 1], [8, 4])
+    await page.canvas.createElementAtCells('arrow', [1, 1], [8, 4])
 
-    expect(API.elements).toHaveLength(1)
-    expect(API.elements[0]!.type).toBe('arrow')
-    expect(API.activeTool).toBe('selection')
+    page.scene.expectElementCount(1)
+    page.scene.expectElementType(0, 'arrow')
+    expect(page.scene.activeTool).toBe('selection')
   })
 
   it('switches to selection tool after drawing', async () => {
-    const screen = render(CanvasContainer)
-    await waitForCanvasReady()
-    const ui = new UI(screen)
+    const page = await CanvasPage.create()
 
-    await ui.createElementAtCells('rectangle', [2, 2], [5, 5])
+    await page.canvas.createElementAtCells('rectangle', [2, 2], [5, 5])
 
-    expect(API.activeTool).toBe('selection')
+    expect(page.scene.activeTool).toBe('selection')
   })
 
   it('auto-selects the drawn element', async () => {
-    const screen = render(CanvasContainer)
-    await waitForCanvasReady()
-    const ui = new UI(screen)
+    const page = await CanvasPage.create()
 
-    await ui.createElementAtCells('rectangle', [2, 2], [5, 5])
+    await page.canvas.createElementAtCells('rectangle', [2, 2], [5, 5])
 
-    const drawn = API.elements[0]!
-    expect(API.getSelectedElements().map(e => e.id)).toEqual([drawn.id])
+    const drawn = page.scene.elements[0]!
+    page.selection.expectSelected(drawn.id)
   })
 
   it('draws multiple shapes in sequence', async () => {
-    const screen = render(CanvasContainer)
-    await waitForCanvasReady()
-    const ui = new UI(screen)
+    const page = await CanvasPage.create()
 
-    await ui.createElementAtCells('rectangle', [1, 1], [3, 3])
-    await ui.createElementAtCells('ellipse', [5, 1], [8, 4])
+    await page.canvas.createElementAtCells('rectangle', [1, 1], [3, 3])
+    await page.canvas.createElementAtCells('ellipse', [5, 1], [8, 4])
 
-    expect(API.elements).toHaveLength(2)
-    expect(API.elements[0]!.type).toBe('rectangle')
-    expect(API.elements[1]!.type).toBe('ellipse')
+    page.scene.expectElementCount(2)
+    page.scene.expectElementType(0, 'rectangle')
+    page.scene.expectElementType(1, 'ellipse')
   })
 
   it('createElement returns a live accessor', async () => {
-    const screen = render(CanvasContainer)
-    await waitForCanvasReady()
-    const ui = new UI(screen)
+    const page = await CanvasPage.create()
 
-    const ref = await ui.createElement('rectangle', [2, 2], [5, 5])
+    const ref = await page.canvas.createElement('rectangle', [2, 2], [5, 5])
 
     expect(ref.id).toBeTruthy()
     const el = ref.get()
@@ -105,14 +85,12 @@ describe('drawing interaction', () => {
   })
 
   it('element has positive position and dimensions', async () => {
-    const screen = render(CanvasContainer)
-    await waitForCanvasReady()
-    const ui = new UI(screen)
+    const page = await CanvasPage.create()
 
-    await ui.createElementAtCells('rectangle', [2, 2], [5, 5])
+    await page.canvas.createElementAtCells('rectangle', [2, 2], [5, 5])
     await waitForPaint()
 
-    const el = API.elements[0]!
+    const el = page.scene.elements[0]!
     expect(el.x).toBeGreaterThan(0)
     expect(el.y).toBeGreaterThan(0)
     expect(el.width).toBeGreaterThan(0)

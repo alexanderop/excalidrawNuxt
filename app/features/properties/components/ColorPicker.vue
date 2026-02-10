@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, useTemplateRef } from 'vue'
-import { onClickOutside, useEventListener } from '@vueuse/core'
+import { onClickOutside, useEventListener, whenever } from '@vueuse/core'
 import { COLOR_PALETTE, COLOR_NAMES, getTopPickColors, isStandardColor } from '../palette'
 import type { ColorName } from '../palette'
 import { useStyleDefaults } from '../composables/useStyleDefaults'
@@ -51,10 +51,9 @@ watch(
 )
 
 // Focus hex input when picker opens
-watch(
+whenever(
   () => isOpen,
-  async (open) => {
-    if (!open) return
+  async () => {
     await nextTick()
     hexInputRef.value?.focus()
   },

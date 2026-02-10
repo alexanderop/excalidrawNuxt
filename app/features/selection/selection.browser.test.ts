@@ -1,105 +1,83 @@
 /* eslint-disable vitest/expect-expect -- assertSelectedElements wraps expect() */
-import { render } from 'vitest-browser-vue'
-import CanvasContainer from '~/features/canvas/components/CanvasContainer.vue'
-import { API, UI, waitForCanvasReady, waitForPaint } from '~/__test-utils__/browser'
-import { assertSelectedElements } from '~/__test-utils__/matchers/assertSelectedElements'
-import { reseed, restoreSeed } from '~/__test-utils__/deterministicSeed'
+import { CanvasPage } from '~/__test-utils__/browser'
+import { waitForPaint } from '~/__test-utils__/browser/waiters'
 
 describe('selection', () => {
-  beforeEach(() => reseed())
-  afterEach(() => restoreSeed())
-
   it('selects element by clicking on it', async () => {
-    const screen = render(CanvasContainer)
-    await waitForCanvasReady()
-    const ui = new UI(screen)
+    const page = await CanvasPage.create()
 
-    const rect = await ui.createElement('rectangle', [2, 2], [5, 5])
-    API.clearSelection()
+    const rect = await page.canvas.createElement('rectangle', [2, 2], [5, 5])
+    page.selection.clear()
     await waitForPaint()
 
-    // Click on the rectangle center
-    await ui.grid.clickCenter([2, 2], [5, 5])
+    await page.canvas.clickCenter([2, 2], [5, 5])
 
-    assertSelectedElements(rect.id)
+    page.selection.expectSelected(rect.id)
   })
 
   it('adds to selection with shift-click', async () => {
-    const screen = render(CanvasContainer)
-    await waitForCanvasReady()
-    const ui = new UI(screen)
+    const page = await CanvasPage.create()
 
-    const r1 = await ui.createElement('rectangle', [1, 1], [3, 3])
-    const r2 = await ui.createElement('ellipse', [5, 1], [7, 3])
-    API.clearSelection()
+    const r1 = await page.canvas.createElement('rectangle', [1, 1], [3, 3])
+    const r2 = await page.canvas.createElement('ellipse', [5, 1], [7, 3])
+    page.selection.clear()
     await waitForPaint()
 
     // Click first element
-    await ui.grid.clickCenter([1, 1], [3, 3])
-    assertSelectedElements(r1.id)
+    await page.canvas.clickCenter([1, 1], [3, 3])
+    page.selection.expectSelected(r1.id)
 
     // Shift-click second element
-    await ui.grid.clickCenter([5, 1], [7, 3], { shiftKey: true })
-    assertSelectedElements(r1.id, r2.id)
+    await page.canvas.clickCenter([5, 1], [7, 3], { shiftKey: true })
+    page.selection.expectSelected(r1.id, r2.id)
   })
 
   it('box-selects multiple elements', async () => {
-    const screen = render(CanvasContainer)
-    await waitForCanvasReady()
-    const ui = new UI(screen)
+    const page = await CanvasPage.create()
 
-    // Draw two elements by interacting with the canvas
-    const r1 = await ui.createElement('rectangle', [1, 1], [3, 3])
-    const r2 = await ui.createElement('ellipse', [5, 1], [7, 3])
-    API.clearSelection()
+    const r1 = await page.canvas.createElement('rectangle', [1, 1], [3, 3])
+    const r2 = await page.canvas.createElement('ellipse', [5, 1], [7, 3])
+    page.selection.clear()
     await waitForPaint()
 
     // Drag selection box from empty space around both
-    await ui.grid.drag([0, 0], [8, 4])
+    await page.selection.boxSelect([0, 0], [8, 4])
     await waitForPaint()
 
-    assertSelectedElements(r1.id, r2.id)
+    page.selection.expectSelected(r1.id, r2.id)
   })
 
   it('deselects on empty canvas click', async () => {
-    const screen = render(CanvasContainer)
-    await waitForCanvasReady()
-    const ui = new UI(screen)
+    const page = await CanvasPage.create()
 
-    await ui.createElement('rectangle', [2, 2], [4, 4])
-    expect(API.getSelectedElements()).toHaveLength(1)
+    await page.canvas.createElement('rectangle', [2, 2], [4, 4])
 
     // Click on empty space far from the rectangle
-    await ui.grid.click([10, 8])
+    await page.canvas.click([10, 8])
 
-    assertSelectedElements() // nothing selected
+    page.selection.expectNoneSelected()
   })
 
   it('clearSelection empties selection', async () => {
-    const screen = render(CanvasContainer)
-    await waitForCanvasReady()
-    const ui = new UI(screen)
+    const page = await CanvasPage.create()
 
-    await ui.createElement('rectangle', [2, 2], [5, 5])
-    expect(API.getSelectedElements()).toHaveLength(1)
+    await page.canvas.createElement('rectangle', [2, 2], [5, 5])
 
-    API.clearSelection()
-    assertSelectedElements()
+    page.selection.clear()
+    page.selection.expectNoneSelected()
   })
 
   it('programmatic setSelectedElements works', async () => {
-    render(CanvasContainer)
-    await waitForCanvasReady()
+    const page = await CanvasPage.create()
 
-    const r1 = API.addElement({ x: 50, y: 50, width: 60, height: 60 })
-    const r2 = API.addElement({ x: 200, y: 50, width: 60, height: 60 })
-    API.h.markStaticDirty()
-    await waitForPaint()
+    const r1 = page.scene.addElement({ x: 50, y: 50, width: 60, height: 60 })
+    const r2 = page.scene.addElement({ x: 200, y: 50, width: 60, height: 60 })
+    await page.scene.flush()
 
-    API.setSelectedElements([r1, r2])
-    assertSelectedElements(r1.id, r2.id)
+    page.selection.setSelected(r1, r2)
+    page.selection.expectSelected(r1.id, r2.id)
 
-    API.setSelectedElements([r2])
-    assertSelectedElements(r2.id)
+    page.selection.setSelected(r2)
+    page.selection.expectSelected(r2.id)
   })
 })

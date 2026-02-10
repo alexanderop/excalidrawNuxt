@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, useTemplateRef } from 'vue'
-import { onClickOutside } from '@vueuse/core'
+import { computed, useTemplateRef } from 'vue'
+import { onClickOutside, useToggle } from '@vueuse/core'
 
 const { modelValue } = defineProps<{
   modelValue: number | 'mixed'
@@ -10,11 +10,11 @@ const emit = defineEmits<{
   'update:modelValue': [value: number]
 }>()
 
-const isOpen = ref(false)
+const [isOpen, toggleOpen] = useToggle(false)
 const dropdownRef = useTemplateRef<HTMLElement>('dropdownEl')
 
 onClickOutside(dropdownRef, () => {
-  isOpen.value = false
+  toggleOpen(false)
 })
 
 const fontOptions = [
@@ -31,7 +31,7 @@ const currentLabel = computed((): string => {
 
 function select(value: number): void {
   emit('update:modelValue', value)
-  isOpen.value = false
+  toggleOpen(false)
 }
 </script>
 
@@ -39,13 +39,13 @@ function select(value: number): void {
   <div
     ref="dropdownEl"
     class="relative"
-    @keydown.escape="isOpen = false"
+    @keydown.escape="toggleOpen(false)"
   >
     <button
       aria-haspopup="listbox"
       :aria-expanded="isOpen"
       class="flex h-7 items-center gap-1 rounded px-1.5 text-xs transition-colors text-foreground/70 hover:bg-muted/20 hover:text-foreground"
-      @click="isOpen = !isOpen"
+      @click="toggleOpen()"
     >
       <span>{{ currentLabel }}</span>
       <svg

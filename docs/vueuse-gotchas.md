@@ -91,3 +91,38 @@ The `API` object provides programmatic access to app state via `globalThis.__h` 
 await ctx.page.mouse.move(pageX, pageY)
 await ctx.page.mouse.down()
 ```
+
+## Mocking @vueuse/core in Unit Tests with createGlobalState
+
+When a composable (e.g. `useElements`) is wrapped with `createGlobalState`, all transitive importers pull in `createGlobalState` from `@vueuse/core`. If a test mocks `@vueuse/core` with only the functions it directly uses, the transitive dependency breaks.
+
+**Symptom:** `TypeError: createGlobalState is not a function` in tests that don't directly import it.
+
+**Solution:** Use the `importOriginal` pattern so the mock inherits all real exports:
+
+```ts
+vi.mock('@vueuse/core', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@vueuse/core')>()
+  return { ...actual, useEventListener: mockUseEventListener }
+})
+```
+
+Also, `createGlobalState` singletons persist across tests. Add a `beforeEach` to reset:
+
+```ts
+// eslint-disable-next-line vitest/no-hooks -- createGlobalState singleton needs reset between tests
+beforeEach(() => { useElements().replaceElements([]) })
+```
+
+## onKeyStroke Test Mocking
+
+When composables use `onKeyStroke` from VueUse, tests need a mock that filters by key. The shared test utility `createEventHandlerMap` in `app/__test-utils__/mocks/eventListenerMock.ts` exports `mockOnKeyStroke` for this purpose. Register it in the `@vueuse/core` mock alongside `useEventListener`:
+
+```ts
+vi.mock('@vueuse/core', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@vueuse/core')>()
+  return { ...actual, useEventListener: mockUseEventListener, onKeyStroke: mockOnKeyStroke }
+})
+```
+
+If tests use `vi.hoisted` to create their own mock map, define `mockOnKeyStroke` there too (wraps handler with key filtering, delegates to the event handler map).

@@ -1,21 +1,20 @@
-import { render } from 'vitest-browser-vue'
-import CanvasContainer from './CanvasContainer.vue'
+import { CanvasPage } from '~/__test-utils__/browser'
 
 describe('CanvasContainer', () => {
   it('renders the interactive canvas', async () => {
-    const screen = render(CanvasContainer)
-    const canvas = screen.getByTestId('interactive-canvas')
+    const page = await CanvasPage.create()
+    const canvas = page.screen.getByTestId('interactive-canvas')
     await expect.element(canvas).toBeVisible()
   })
 
   it('renders the drawing toolbar with expected tool buttons', async () => {
-    const screen = render(CanvasContainer)
-    const handBtn = screen.getByRole('button', { name: 'Hand' })
-    const selectionBtn = screen.getByRole('button', { name: 'Selection' })
-    const rectangleBtn = screen.getByRole('button', { name: 'Rectangle' })
-    const diamondBtn = screen.getByRole('button', { name: 'Diamond' })
-    const ellipseBtn = screen.getByRole('button', { name: 'Ellipse' })
-    const arrowBtn = screen.getByRole('button', { name: /^Arrow$/ })
+    const page = await CanvasPage.create()
+    const handBtn = page.screen.getByRole('button', { name: 'Hand' })
+    const selectionBtn = page.screen.getByRole('button', { name: 'Selection' })
+    const rectangleBtn = page.screen.getByRole('button', { name: 'Rectangle' })
+    const diamondBtn = page.screen.getByRole('button', { name: 'Diamond' })
+    const ellipseBtn = page.screen.getByRole('button', { name: 'Ellipse' })
+    const arrowBtn = page.screen.getByRole('button', { name: /^Arrow$/ })
     await expect.element(handBtn).toBeVisible()
     await expect.element(selectionBtn).toBeVisible()
     await expect.element(rectangleBtn).toBeVisible()
@@ -24,9 +23,9 @@ describe('CanvasContainer', () => {
     await expect.element(arrowBtn).toBeVisible()
   })
 
+  // eslint-disable-next-line vitest/expect-expect -- assertion delegated to page.toolbar.expectActive
   it('defaults to selection tool being active', async () => {
-    const screen = render(CanvasContainer)
-    const selectionBtn = screen.getByRole('button', { name: 'Selection' })
-    await expect.element(selectionBtn).toHaveAttribute('aria-pressed', 'true')
+    const page = await CanvasPage.create()
+    await page.toolbar.expectActive('selection')
   })
 })

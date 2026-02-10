@@ -1,41 +1,20 @@
-import { render } from 'vitest-browser-vue'
-import { page, commands, userEvent } from 'vitest/browser'
-import CanvasContainer from '~/features/canvas/components/CanvasContainer.vue'
-import { reseed, restoreSeed } from '~/__test-utils__/deterministicSeed'
-
-const CANVAS_SELECTOR = '[data-testid="interactive-canvas"]'
-
-async function waitForCanvasReady(): Promise<void> {
-  await expect.poll(() => {
-    // eslint-disable-next-line no-restricted-syntax -- need raw DOM access for canvas.width polling
-    const canvas = document.querySelector<HTMLCanvasElement>(CANVAS_SELECTOR)
-    return canvas?.width ?? 0
-  }, { timeout: 5000 }).toBeGreaterThan(0)
-  await new Promise<void>(r => requestAnimationFrame(() => r()))
-}
-
-async function waitForPaint(): Promise<void> {
-  await new Promise<void>(r => requestAnimationFrame(() => r()))
-}
+import { page, userEvent } from 'vitest/browser'
+import { CanvasPage } from '~/__test-utils__/browser'
+import { waitForPaint } from '~/__test-utils__/browser/waiters'
 
 describe('code tool rendering', () => {
-  beforeEach(() => reseed())
-  afterEach(() => restoreSeed())
-
   it('renders a code element with syntax-highlighted TypeScript', async () => {
-    const screen = render(CanvasContainer)
-    await waitForCanvasReady()
+    const cp = await CanvasPage.create()
 
     // Activate code tool with 'c' shortcut
-    await userEvent.keyboard('c')
-    const codeBtn = screen.getByRole('button', { name: 'Code' })
-    await expect.element(codeBtn).toHaveAttribute('aria-pressed', 'true')
+    await cp.toolbar.select('code')
+    await cp.toolbar.expectActive('code')
 
     // Click on canvas to create a code element — opens inline editor
-    await commands.canvasClick(CANVAS_SELECTOR, 200, 200)
+    await cp.canvas.pointer.clickAt(200, 200)
 
     // Editor should open with a textarea
-    const textarea = screen.getByRole('textbox')
+    const textarea = cp.screen.getByRole('textbox')
     await expect.element(textarea).toBeVisible()
 
     // Type TypeScript code into the editor

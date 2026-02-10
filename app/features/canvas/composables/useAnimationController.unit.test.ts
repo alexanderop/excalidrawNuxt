@@ -1,4 +1,5 @@
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+import type { WatchSource } from 'vue'
 import { withSetup } from '~/__test-utils__/withSetup'
 import { useAnimationController } from './useAnimationController'
 
@@ -6,6 +7,9 @@ const visibilityRef = ref<DocumentVisibilityState>('visible')
 
 vi.mock('@vueuse/core', () => ({
   useDocumentVisibility: () => visibilityRef,
+  whenever: (source: WatchSource<unknown>, cb: () => void) => {
+    watch(source, (v) => { if (v) cb() })
+  },
 }))
 
 describe('useAnimationController', () => {

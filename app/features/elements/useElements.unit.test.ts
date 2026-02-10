@@ -3,6 +3,9 @@ import { useElements } from './useElements'
 import { createTestElement } from '~/__test-utils__/factories/element'
 
 describe('useElements', () => {
+  // eslint-disable-next-line vitest/no-hooks -- createGlobalState singleton needs reset between tests
+  beforeEach(() => { useElements().replaceElements([]) })
+
   it('starts with an empty array', () => {
     using els = withSetup(() => useElements())
     expect(els.elements.value).toEqual([])

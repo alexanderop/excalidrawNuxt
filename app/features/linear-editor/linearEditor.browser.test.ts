@@ -1,30 +1,22 @@
-import { render } from 'vitest-browser-vue'
 import { commands, userEvent } from 'vitest/browser'
-import CanvasContainer from '~/features/canvas/components/CanvasContainer.vue'
-import { API, UI, waitForCanvasReady, waitForPaint } from '~/__test-utils__/browser'
-import { reseed, restoreSeed } from '~/__test-utils__/deterministicSeed'
+import { API, CanvasPage, waitForPaint } from '~/__test-utils__/browser'
 import { isArrowElement } from '~/features/elements/types'
 
 const SEL = '[data-testid="interactive-canvas"]'
 
 describe('linear editor (point editing)', () => {
-  beforeEach(() => reseed())
-  afterEach(() => restoreSeed())
-
   it('enters editor on double-click of arrow', async () => {
-    const screen = render(CanvasContainer)
-    await waitForCanvasReady()
-    const ui = new UI(screen)
+    const page = await CanvasPage.create()
 
     // Draw an arrow
-    await ui.createElementAtCells('arrow', [2, 2], [8, 5])
+    await page.canvas.createElementAtCells('arrow', [2, 2], [8, 5])
     await waitForPaint()
 
-    const arrow = API.elements.find(e => isArrowElement(e))
+    const arrow = page.scene.elements.find(e => isArrowElement(e))
     expect(arrow).toBeDefined()
 
     // Ensure selection tool is active
-    await ui.clickTool('selection')
+    await page.toolbar.select('selection')
 
     // Double-click on the arrow center to enter editor
     const cx = arrow!.x + arrow!.width / 2
@@ -37,19 +29,17 @@ describe('linear editor (point editing)', () => {
   })
 
   it('exits editor on Escape', async () => {
-    const screen = render(CanvasContainer)
-    await waitForCanvasReady()
-    const ui = new UI(screen)
+    const page = await CanvasPage.create()
 
     // Draw an arrow
-    await ui.createElementAtCells('arrow', [2, 2], [8, 5])
+    await page.canvas.createElementAtCells('arrow', [2, 2], [8, 5])
     await waitForPaint()
 
-    const arrow = API.elements.find(e => isArrowElement(e))
+    const arrow = page.scene.elements.find(e => isArrowElement(e))
     expect(arrow).toBeDefined()
 
     // Enter editor via double-click
-    await ui.clickTool('selection')
+    await page.toolbar.select('selection')
     const cx = arrow!.x + arrow!.width / 2
     const cy = arrow!.y + arrow!.height / 2
     await commands.canvasDblClick(SEL, cx, cy)
@@ -60,18 +50,16 @@ describe('linear editor (point editing)', () => {
     await waitForPaint()
 
     // Selection tool should still be active, no editing element
-    expect(API.activeTool).toBe('selection')
+    expect(page.scene.activeTool).toBe('selection')
   })
 
   it('arrow has points that can be verified via API', async () => {
-    const screen = render(CanvasContainer)
-    await waitForCanvasReady()
-    const ui = new UI(screen)
+    const page = await CanvasPage.create()
 
-    await ui.createElementAtCells('arrow', [2, 2], [8, 5])
+    await page.canvas.createElementAtCells('arrow', [2, 2], [8, 5])
     await waitForPaint()
 
-    const arrow = API.elements.find(e => isArrowElement(e))
+    const arrow = page.scene.elements.find(e => isArrowElement(e))
     expect(arrow).toBeDefined()
     expect(isArrowElement(arrow!)).toBe(true)
 

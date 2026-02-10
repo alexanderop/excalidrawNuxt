@@ -1,6 +1,6 @@
 import { shallowRef, triggerRef } from 'vue'
 import type { Ref, ShallowRef } from 'vue'
-import { useEventListener } from '@vueuse/core'
+import { useEventListener, onKeyStroke } from '@vueuse/core'
 import type { ExcalidrawElement, ExcalidrawArrowElement, ExcalidrawLinearElement } from '~/features/elements/types'
 import { isArrowElement } from '~/features/elements/types'
 import { mutateElement } from '~/features/elements/mutateElement'
@@ -257,36 +257,33 @@ export function useLinearEditor(options: UseLinearEditorOptions): UseLinearEdito
     markInteractiveDirty()
   })
 
-  useEventListener(document, 'keydown', (e: KeyboardEvent) => {
+  onKeyStroke('Escape', (e) => {
+    if (!editingElement.value) return
+    e.preventDefault()
+    exitEditor()
+  }, { target: document })
+
+  onKeyStroke(['Delete', 'Backspace'], (e) => {
     const el = editingElement.value
     if (!el) return
+    if (selectedPointIndices.value.size === 0) return
 
-    if (e.key === 'Escape') {
-      e.preventDefault()
-      exitEditor()
-      return
-    }
+    const newPoints = removePoints(el.points, selectedPointIndices.value)
+    if (!newPoints) return
 
-    if (e.key === 'Delete' || e.key === 'Backspace') {
-      if (selectedPointIndices.value.size === 0) return
+    e.preventDefault()
+    const dims = getSizeFromPoints(newPoints)
+    mutateElement(el, {
+      points: newPoints,
+      width: dims.width,
+      height: dims.height,
+    })
 
-      const newPoints = removePoints(el.points, selectedPointIndices.value)
-      if (!newPoints) return
-
-      e.preventDefault()
-      const dims = getSizeFromPoints(newPoints)
-      mutateElement(el, {
-        points: newPoints,
-        width: dims.width,
-        height: dims.height,
-      })
-
-      triggerRef(editingElement)
-      selectedPointIndices.value = new Set()
-      markStaticDirty()
-      markInteractiveDirty()
-    }
-  })
+    triggerRef(editingElement)
+    selectedPointIndices.value = new Set()
+    markStaticDirty()
+    markInteractiveDirty()
+  }, { target: document })
 
   return {
     editingElement,

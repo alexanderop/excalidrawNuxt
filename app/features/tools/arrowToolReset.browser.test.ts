@@ -1,38 +1,32 @@
-import { render } from 'vitest-browser-vue'
-import { commands, userEvent } from 'vitest/browser'
-import CanvasContainer from '~/features/canvas/components/CanvasContainer.vue'
-
-const CANVAS_SELECTOR = '[data-testid="interactive-canvas"]'
+import { CanvasPage } from '~/__test-utils__/browser'
 
 describe('drawing tool resets to selection after use', () => {
   it('switches back to selection after drawing an arrow', async () => {
-    const screen = render(CanvasContainer)
+    const page = await CanvasPage.create()
 
-    await userEvent.keyboard('a')
+    await page.toolbar.select('arrow')
 
-    const arrowBtn = screen.getByRole('button', { name: /^Arrow$/ })
+    const arrowBtn = page.screen.getByRole('button', { name: /^Arrow$/ })
     await expect.element(arrowBtn).toHaveAttribute('aria-pressed', 'true')
 
-    // Realistic drag via Playwright's Mouse API (real CDP events)
-    await commands.canvasDrag(CANVAS_SELECTOR, 100, 100, 250, 180)
+    // Realistic drag via pointer (real CDP events)
+    await page.canvas.pointer.drag(100, 100, 250, 180)
 
-    const selectionBtn = screen.getByRole('button', { name: 'Selection' })
-    await expect.element(selectionBtn).toHaveAttribute('aria-pressed', 'true')
+    await page.toolbar.expectActive('selection')
     await expect.element(arrowBtn).toHaveAttribute('aria-pressed', 'false')
   })
 
   it('switches back to selection after drawing a rectangle', async () => {
-    const screen = render(CanvasContainer)
+    const page = await CanvasPage.create()
 
-    await userEvent.keyboard('r')
+    await page.toolbar.select('rectangle')
 
-    const rectBtn = screen.getByRole('button', { name: 'Rectangle' })
+    const rectBtn = page.screen.getByRole('button', { name: 'Rectangle' })
     await expect.element(rectBtn).toHaveAttribute('aria-pressed', 'true')
 
-    await commands.canvasDrag(CANVAS_SELECTOR, 100, 100, 250, 180)
+    await page.canvas.pointer.drag(100, 100, 250, 180)
 
-    const selectionBtn = screen.getByRole('button', { name: 'Selection' })
-    await expect.element(selectionBtn).toHaveAttribute('aria-pressed', 'true')
+    await page.toolbar.expectActive('selection')
     await expect.element(rectBtn).toHaveAttribute('aria-pressed', 'false')
   })
 })

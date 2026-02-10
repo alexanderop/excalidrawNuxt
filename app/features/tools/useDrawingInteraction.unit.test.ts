@@ -20,9 +20,10 @@ const { handlers, mockUseEventListener } = vi.hoisted(() => {
 })
 const { firePointer, clear } = createEventHandlerMap(handlers)
 
-vi.mock('@vueuse/core', () => ({
-  useEventListener: mockUseEventListener,
-}))
+vi.mock('@vueuse/core', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@vueuse/core')>()
+  return { ...actual, useEventListener: mockUseEventListener }
+})
 
 function createSetup() {
   const canvasRef = shallowRef<HTMLCanvasElement | null>(createCanvasStub())

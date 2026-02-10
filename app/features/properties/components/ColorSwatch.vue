@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, useTemplateRef } from 'vue'
-import { useEventListener } from '@vueuse/core'
+import { useElementBounding, useWindowSize } from '@vueuse/core'
 import ColorPicker from './ColorPicker.vue'
 
 const { color, label } = defineProps<{
@@ -14,7 +14,9 @@ const emit = defineEmits<{
 
 const isPickerOpen = ref(false)
 const swatchEl = useTemplateRef<HTMLElement>('swatchEl')
-const pickerPosition = ref({ top: 0, left: 0 })
+
+const { top: rectTop, right: rectRight, left: rectLeft, bottom: rectBottom } = useElementBounding(swatchEl)
+const { width: windowWidth, height: windowHeight } = useWindowSize()
 
 const isTransparent = computed(() => color === 'transparent')
 const isMixed = computed(() => color === 'mixed')
@@ -24,54 +26,39 @@ const swatchStyle = computed(() => {
   return { backgroundColor: color }
 })
 
-function togglePicker(): void {
-  if (isPickerOpen.value) {
-    isPickerOpen.value = false
-    return
-  }
-  updatePickerPosition()
-  isPickerOpen.value = true
-}
-
-function updatePickerPosition(): void {
-  if (!swatchEl.value) return
-  const rect = swatchEl.value.getBoundingClientRect()
+const pickerPosition = computed(() => {
   const pickerWidth = 256 // w-64 = 16rem = 256px
   const pickerHeight = 300 // approximate
 
   // Primary: open to the right of the swatch
-  let left = rect.right + 8
-  let top = rect.top
+  let left = rectRight.value + 8
+  let top = rectTop.value
 
   // Fallback: if would overflow right edge, open below instead
-  if (left + pickerWidth > window.innerWidth) {
-    left = rect.left
-    top = rect.bottom + 6
+  if (left + pickerWidth > windowWidth.value) {
+    left = rectLeft.value
+    top = rectBottom.value + 6
   }
 
   // Clamp vertically to stay on screen
-  if (top + pickerHeight > window.innerHeight) {
-    top = window.innerHeight - pickerHeight - 8
+  if (top + pickerHeight > windowHeight.value) {
+    top = windowHeight.value - pickerHeight - 8
   }
   if (top < 8) {
     top = 8
   }
 
   // Clamp horizontally
-  if (left + pickerWidth > window.innerWidth) {
-    left = window.innerWidth - pickerWidth - 8
+  if (left + pickerWidth > windowWidth.value) {
+    left = windowWidth.value - pickerWidth - 8
   }
 
-  pickerPosition.value = { top, left }
-}
-
-// Recalculate position on scroll/resize while open
-useEventListener(globalThis, 'resize', () => {
-  if (isPickerOpen.value) updatePickerPosition()
+  return { top, left }
 })
-useEventListener(globalThis, 'scroll', () => {
-  if (isPickerOpen.value) updatePickerPosition()
-}, { capture: true })
+
+function togglePicker(): void {
+  isPickerOpen.value = !isPickerOpen.value
+}
 </script>
 
 <template>

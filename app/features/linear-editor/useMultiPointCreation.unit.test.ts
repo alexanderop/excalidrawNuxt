@@ -9,23 +9,37 @@ import type { ExcalidrawElement } from '~/features/elements/types'
 import { useMultiPointCreation } from './useMultiPointCreation'
 
 type EventHandler = (...args: unknown[]) => void
-const { handlers, mockUseEventListener } = vi.hoisted(() => {
+const { handlers, mockUseEventListener, mockOnKeyStroke } = vi.hoisted(() => {
   const handlers = new Map<string, EventHandler[]>()
   const mockUseEventListener = (_target: unknown, event: string, handler: EventHandler): void => {
     const existing = handlers.get(event) ?? []
     existing.push(handler)
     handlers.set(event, existing)
   }
-  return { handlers, mockUseEventListener }
+  const mockOnKeyStroke = (
+    key: string | string[],
+    handler: EventHandler,
+    options?: { eventName?: string; target?: unknown; dedupe?: boolean },
+  ): void => {
+    const eventName = options?.eventName ?? 'keydown'
+    const keys = Array.isArray(key) ? key : [key]
+    const wrappedHandler: EventHandler = (...args: unknown[]) => {
+      const e = args[0] as { key?: string }
+      if (e.key && keys.includes(e.key)) handler(...args)
+    }
+    mockUseEventListener(null, eventName, wrappedHandler)
+  }
+  return { handlers, mockUseEventListener, mockOnKeyStroke }
 })
 const { fire, clear } = createEventHandlerMap(handlers)
 
 // Stub document for SSR guard in composables
 vi.stubGlobal('document', {})
 
-vi.mock('@vueuse/core', () => ({
-  useEventListener: mockUseEventListener,
-}))
+vi.mock('@vueuse/core', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@vueuse/core')>()
+  return { ...actual, useEventListener: mockUseEventListener, onKeyStroke: mockOnKeyStroke }
+})
 
 function createSetup() {
   return {

@@ -1,112 +1,106 @@
-import { render } from 'vitest-browser-vue'
-import { commands, userEvent } from 'vitest/browser'
-import CanvasContainer from '~/features/canvas/components/CanvasContainer.vue'
-
-const CANVAS_SELECTOR = '[data-testid="interactive-canvas"]'
+import { CanvasPage } from '~/__test-utils__/browser'
 
 describe('user drawing workflows', () => {
   it('draws a rectangle via toolbar keyboard shortcut', async () => {
-    const screen = render(CanvasContainer)
+    const page = await CanvasPage.create()
 
     // Press '2' to select rectangle tool
-    await userEvent.keyboard('2')
-    const rectBtn = screen.getByRole('button', { name: 'Rectangle' })
-    await expect.element(rectBtn).toHaveAttribute('aria-pressed', 'true')
+    await page.toolbar.select('rectangle')
+    await page.toolbar.expectActive('rectangle')
 
     // Draw the rectangle
-    await commands.canvasDrag(CANVAS_SELECTOR, 100, 100, 300, 250)
+    await page.canvas.pointer.drag(100, 100, 300, 250)
 
     // Tool should reset to selection after drawing
-    const selectionBtn = screen.getByRole('button', { name: 'Selection' })
-    await expect.element(selectionBtn).toHaveAttribute('aria-pressed', 'true')
+    await page.toolbar.expectActive('selection')
+    const rectBtn = page.screen.getByRole('button', { name: 'Rectangle' })
     await expect.element(rectBtn).toHaveAttribute('aria-pressed', 'false')
   })
 
+  // eslint-disable-next-line vitest/expect-expect -- assertion delegated to page.toolbar.expectActive
   it('draws and selects an element by clicking on it', async () => {
-    const screen = render(CanvasContainer)
+    const page = await CanvasPage.create()
 
     // Draw a rectangle at known position
-    await userEvent.keyboard('2')
-    await commands.canvasDrag(CANVAS_SELECTOR, 100, 100, 300, 250)
+    await page.toolbar.select('rectangle')
+    await page.canvas.pointer.drag(100, 100, 300, 250)
 
     // Tool resets to selection, element is auto-selected after draw
-    const selectionBtn = screen.getByRole('button', { name: 'Selection' })
-    await expect.element(selectionBtn).toHaveAttribute('aria-pressed', 'true')
+    await page.toolbar.expectActive('selection')
 
     // Click on the rectangle to select it (center of the drawn area)
-    await commands.canvasClick(CANVAS_SELECTOR, 200, 175)
+    await page.canvas.pointer.clickAt(200, 175)
 
     // The selection tool should still be active
-    await expect.element(selectionBtn).toHaveAttribute('aria-pressed', 'true')
+    await page.toolbar.expectActive('selection')
   })
 
   it('switches between tools via keyboard shortcuts', async () => {
-    const screen = render(CanvasContainer)
+    const page = await CanvasPage.create()
 
     // Start with selection tool
-    const selectionBtn = screen.getByRole('button', { name: 'Selection' })
-    await expect.element(selectionBtn).toHaveAttribute('aria-pressed', 'true')
+    await page.toolbar.expectActive('selection')
 
     // Switch to rectangle (2)
-    await userEvent.keyboard('2')
-    const rectBtn = screen.getByRole('button', { name: 'Rectangle' })
-    await expect.element(rectBtn).toHaveAttribute('aria-pressed', 'true')
+    await page.toolbar.select('rectangle')
+    await page.toolbar.expectActive('rectangle')
+    const selectionBtn = page.screen.getByRole('button', { name: 'Selection' })
     await expect.element(selectionBtn).toHaveAttribute('aria-pressed', 'false')
 
     // Switch to diamond (3)
-    await userEvent.keyboard('3')
-    const diamondBtn = screen.getByRole('button', { name: 'Diamond' })
-    await expect.element(diamondBtn).toHaveAttribute('aria-pressed', 'true')
+    await page.toolbar.select('diamond')
+    await page.toolbar.expectActive('diamond')
+    const rectBtn = page.screen.getByRole('button', { name: 'Rectangle' })
     await expect.element(rectBtn).toHaveAttribute('aria-pressed', 'false')
 
     // Switch to ellipse (4)
-    await userEvent.keyboard('4')
-    const ellipseBtn = screen.getByRole('button', { name: 'Ellipse' })
-    await expect.element(ellipseBtn).toHaveAttribute('aria-pressed', 'true')
+    await page.toolbar.select('ellipse')
+    await page.toolbar.expectActive('ellipse')
+    const diamondBtn = page.screen.getByRole('button', { name: 'Diamond' })
     await expect.element(diamondBtn).toHaveAttribute('aria-pressed', 'false')
 
     // Switch to arrow (a)
-    await userEvent.keyboard('a')
-    const arrowBtn = screen.getByRole('button', { name: /^Arrow$/ })
-    await expect.element(arrowBtn).toHaveAttribute('aria-pressed', 'true')
+    await page.toolbar.select('arrow')
+    await page.toolbar.expectActive('arrow')
+    const ellipseBtn = page.screen.getByRole('button', { name: 'Ellipse' })
     await expect.element(ellipseBtn).toHaveAttribute('aria-pressed', 'false')
 
     // Back to selection (1)
-    await userEvent.keyboard('1')
-    await expect.element(selectionBtn).toHaveAttribute('aria-pressed', 'true')
+    await page.toolbar.select('selection')
+    await page.toolbar.expectActive('selection')
+    const arrowBtn = page.screen.getByRole('button', { name: /^Arrow$/ })
     await expect.element(arrowBtn).toHaveAttribute('aria-pressed', 'false')
   })
 
+  // eslint-disable-next-line vitest/expect-expect -- assertion delegated to page.toolbar.expectActive
   it('draws multiple shapes in sequence', async () => {
-    const screen = render(CanvasContainer)
+    const page = await CanvasPage.create()
 
     // Draw a rectangle
-    await userEvent.keyboard('2')
-    await commands.canvasDrag(CANVAS_SELECTOR, 50, 50, 150, 150)
+    await page.toolbar.select('rectangle')
+    await page.canvas.pointer.drag(50, 50, 150, 150)
 
     // Tool resets to selection — switch to ellipse for second shape
-    await userEvent.keyboard('4')
-    await commands.canvasDrag(CANVAS_SELECTOR, 200, 200, 350, 300)
+    await page.toolbar.select('ellipse')
+    await page.canvas.pointer.drag(200, 200, 350, 300)
 
     // Tool resets to selection again
-    const selectionBtn = screen.getByRole('button', { name: 'Selection' })
-    await expect.element(selectionBtn).toHaveAttribute('aria-pressed', 'true')
+    await page.toolbar.expectActive('selection')
   })
 
   it('draws an arrow between two positions', async () => {
-    const screen = render(CanvasContainer)
+    const page = await CanvasPage.create()
 
     // Select arrow tool
-    await userEvent.keyboard('a')
-    const arrowBtn = screen.getByRole('button', { name: /^Arrow$/ })
-    await expect.element(arrowBtn).toHaveAttribute('aria-pressed', 'true')
+    await page.toolbar.select('arrow')
+    await page.toolbar.expectActive('arrow')
 
     // Draw the arrow
-    await commands.canvasDrag(CANVAS_SELECTOR, 100, 100, 400, 300)
+    await page.canvas.pointer.drag(100, 100, 400, 300)
 
     // Tool resets to selection
-    const selectionBtn = screen.getByRole('button', { name: 'Selection' })
-    await expect.element(selectionBtn).toHaveAttribute('aria-pressed', 'true')
+    await page.toolbar.expectActive('selection')
+    const arrowBtn = page.screen.getByRole('button', { name: /^Arrow$/ })
     await expect.element(arrowBtn).toHaveAttribute('aria-pressed', 'false')
   })
 })

@@ -1,30 +1,24 @@
-import { render } from 'vitest-browser-vue'
 import { commands, userEvent } from 'vitest/browser'
-import CanvasContainer from '~/features/canvas/components/CanvasContainer.vue'
-import { reseed, restoreSeed } from '~/__test-utils__/deterministicSeed'
-import { waitForCanvasReady, waitForPaint } from '~/__test-utils__/browser'
+import { CanvasPage } from '~/__test-utils__/browser'
+import { waitForPaint } from '~/__test-utils__/browser/waiters'
 
 const SEL = '[data-testid="interactive-canvas"]'
 
 describe('bound text on shapes', () => {
-  beforeEach(() => reseed())
-  afterEach(() => restoreSeed())
-
   it('double-click on rectangle creates bound text', async () => {
-    const screen = render(CanvasContainer)
-    await waitForCanvasReady()
+    const cp = await CanvasPage.create()
 
     // Draw rectangle from (80, 80) to (250, 200)
-    await userEvent.keyboard('2')
-    await commands.canvasDrag(SEL, 80, 80, 250, 200)
+    await cp.toolbar.select('rectangle')
+    await cp.canvas.pointer.drag(80, 80, 250, 200)
     await waitForPaint()
 
     // Double-click at center of rectangle: (165, 140)
-    await userEvent.keyboard('1')
+    await cp.toolbar.select('selection')
     await commands.canvasDblClick(SEL, 165, 140)
 
     // Verify text editor opened
-    const textarea = screen.getByRole('textbox')
+    const textarea = cp.screen.getByRole('textbox')
     await expect.element(textarea).toBeVisible()
 
     await userEvent.keyboard('{Escape}')
