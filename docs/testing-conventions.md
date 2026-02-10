@@ -19,7 +19,7 @@ Three config files form a workspace:
 
 Key settings in **unit config**: `globals: true`, `environment: 'node'`, alias `~` → `app/`.
 
-Key settings in **browser config**: `@vitejs/plugin-vue` + `@tailwindcss/vite` plugins, `setupFiles: ['app/__test-utils__/setup-browser.ts']`, custom `canvasDrag` command registered via `browser.commands`.
+Key settings in **browser config**: `@vitejs/plugin-vue` + `@tailwindcss/vite` plugins, `setupFiles: ['app/__test-utils__/setup-browser.ts']`, custom browser commands: `canvasDrag`, `canvasClick`, `canvasDblClick`, `showGridOverlay`.
 
 ## `withSetup` API
 
@@ -155,7 +155,8 @@ Browser tests use Vitest browser mode with Playwright. Key imports:
 
 ```ts
 import { render } from 'vitest-browser-vue'
-import { commands, userEvent } from '@vitest/browser/context'
+import { commands } from 'vitest/browser'
+import { userEvent } from 'vitest/browser'
 ```
 
 ### Rendering
@@ -166,11 +167,140 @@ Use `render()` from `vitest-browser-vue` to mount components:
 const screen = render(CanvasContainer)
 ```
 
+### Test Hook (`globalThis.__h`)
+
+`CanvasContainer.vue` exposes a global `__h` object (Excalidraw's `window.h` pattern). This lets tests directly read and manipulate reactive state without DOM scraping.
+
+**Type definition**: `app/__test-utils__/testHook.ts` defines the `TestHook` interface:
+
+```ts
+import { getH } from '~/__test-utils__/testHook'
+
+const h = getH() // throws if CanvasContainer not mounted
+h.elements.value  // current elements array
+h.selectedIds.value // selected element IDs
+h.activeTool.value // current tool
+h.scrollX.value // viewport scroll
+```
+
+### API Class (`app/__test-utils__/browser/api.ts`)
+
+Wraps the test hook in a clean interface for browser tests:
+
+```ts
+import { API } from '~/__test-utils__/browser'
+
+API.elements                          // readonly ExcalidrawElement[]
+API.getSelectedElements()             // selected elements
+API.getSelectedElement()              // exactly one selected, or throws
+API.setElements(elements)             // replace all elements
+API.setSelectedElements(elements)     // programmatic selection
+API.clearSelection()                  // clear selection
+API.addElement({ x: 100, width: 80 }) // create + add to scene
+API.getElementByID(id)                // find element by id
+API.activeTool                        // current tool type
+API.setTool('rectangle')              // switch tool
+API.scrollX / API.scrollY / API.zoom  // viewport state
+```
+
 ### User Interaction
 
 - **Keyboard**: `await userEvent.keyboard('r')` (triggers key press)
 - **Canvas drags**: `await commands.canvasDrag(CANVAS_SELECTOR, startX, startY, endX, endY)` (dispatches PointerEvents inside iframe — never use `page.mouse`)
 - **Assertions**: `await expect.element(btn).toHaveAttribute('aria-pressed', 'true')`
+
+### Browser Helper Classes
+
+All browser helpers are re-exported from `~/__test-utils__/browser`:
+
+```ts
+import { UI, Pointer, Keyboard, CanvasGrid, API, checkpoint, waitForCanvasReady, waitForPaint } from '~/__test-utils__/browser'
+```
+
+#### Pointer (`app/__test-utils__/browser/Pointer.ts`)
+
+```ts
+const pointer = new Pointer()
+await pointer.clickAt(x, y, { shiftKey: true })   // click with modifiers
+await pointer.drag(sx, sy, ex, ey, { steps: 5 })  // drag
+await pointer.dragBy(dx, dy)                       // drag relative to current position
+await pointer.clickOn(element)                     // click element center
+await pointer.select([el1, el2])                   // click first, shift-click rest
+await pointer.withModifiers({ shiftKey: true }, async () => {
+  await pointer.clickAt(x, y)  // modifier applied automatically
+})
+```
+
+#### Keyboard (`app/__test-utils__/browser/Keyboard.ts`)
+
+```ts
+const keyboard = new Keyboard()
+await keyboard.press('r')                          // single key press
+await keyboard.undo()                              // Ctrl+Z
+await keyboard.redo()                              // Ctrl+Shift+Z
+await keyboard.withModifierKeys({ ctrlKey: true }, async () => {
+  await keyboard.press('g')                        // Ctrl+G (group)
+})
+```
+
+#### UI (`app/__test-utils__/browser/UI.ts`)
+
+```ts
+const screen = render(CanvasContainer)
+const ui = new UI(screen)
+
+await ui.clickTool('rectangle')                    // keyboard shortcut
+await ui.createElementRaw('rectangle', x1, y1, x2, y2) // raw pixel drag
+await ui.createElementAtCells('rectangle', [2,2], [5,5]) // grid drag
+const { id, get } = await ui.createElement('rectangle', [2,2], [5,5]) // returns live accessor
+await ui.selectElement(element)                    // click on element
+await ui.group()                                   // Ctrl+G
+await ui.ungroup()                                 // Ctrl+Shift+G
+await ui.deleteSelected()                          // Delete key
+await ui.expectToolActive('selection')             // assert aria-pressed
+```
+
+Tool shortcuts: `selection='1'`, `rectangle='2'`, `diamond='3'`, `ellipse='4'`, `arrow='a'`, `line='l'`, `text='t'`.
+
+### Waiters (`app/__test-utils__/browser/waiters.ts`)
+
+```ts
+import { waitForCanvasReady, waitForPaint } from '~/__test-utils__/browser'
+
+await waitForCanvasReady()  // polls canvas.style.width until set by bootstrapCanvas
+await waitForPaint()        // waits one animation frame
+```
+
+### Custom Matchers (`app/__test-utils__/matchers/`)
+
+```ts
+import { assertSelectedElements } from '~/__test-utils__/matchers/assertSelectedElements'
+import { assertElements } from '~/__test-utils__/matchers/assertElements'
+import '~/__test-utils__/matchers/toCloselyEqualPoints'
+
+// Assert selected element IDs (order-independent)
+assertSelectedElements(id1, id2)
+
+// Assert element order, properties, and selection in one call
+assertElements(API.elements, [
+  { id: rect.id, type: 'rectangle', selected: true },
+  { id: arrow.id, type: 'arrow' },
+])
+
+// Assert floating-point coordinate equality with precision
+expect(points).toCloselyEqualPoints([[87.5, 87.5]], 2)
+```
+
+### Checkpoint Snapshots (`app/__test-utils__/browser/checkpoint.ts`)
+
+Captures element count, each element, active tool, and selected IDs as named snapshots:
+
+```ts
+import { checkpoint } from '~/__test-utils__/browser'
+
+await ui.createElementAtCells('rectangle', [1,1], [4,4])
+checkpoint('after rectangle')  // creates named snapshots
+```
 
 ### Common Constants
 
@@ -190,25 +320,29 @@ The browser setup file (`app/__test-utils__/setup-browser.ts`) adds:
 
 ```ts
 const style = document.createElement('style')
-style.textContent = 'body > div { height: 100%; width: 100%; }'
-document.head.appendChild(style)
+style.textContent = [
+  'html, body { height: 100%; width: 100%; margin: 0; padding: 0; overflow: hidden; }',
+  'body > div { height: 100%; width: 100%; }',
+].join('\n')
+document.head.append(style)
 ```
 
 #### 2. Wait for Render Pipeline
 
-The canvas rendering pipeline is async: `ResizeObserver → useElementSize ref update → watch → markAllDirty → scheduleRender → RAF → bootstrapCanvas + paint`. Poll until the canvas has non-zero dimensions:
+The canvas rendering pipeline is async: `ResizeObserver → useElementSize ref update → watch → markAllDirty → scheduleRender → RAF → bootstrapCanvas + paint`. Poll until `bootstrapCanvas` has set `canvas.style.width`:
 
 ```ts
-async function waitForCanvasReady(): Promise<void> {
-  await expect.poll(() => {
-    const canvas = document.querySelector(CANVAS_SELECTOR) as HTMLCanvasElement | null
-    return canvas?.width ?? 0
-  }, { timeout: 5000 }).toBeGreaterThan(0)
-  await new Promise<void>(r => requestAnimationFrame(() => r()))
-}
+import { waitForCanvasReady } from '~/__test-utils__/browser'
+
+// Checks canvas.style.width (not canvas.width, which defaults to 300)
+await waitForCanvasReady()
 ```
 
-#### 3. Deterministic RoughJS Rendering
+#### 3. Float Snapshot Serializer
+
+The browser setup file also registers a snapshot serializer that rounds non-integer floats to 5 decimal places, preventing flaky snapshots from IEEE 754 differences.
+
+#### 4. Deterministic RoughJS Rendering
 
 RoughJS uses `Math.random()` for hand-drawn stroke variations. Seed it deterministically so screenshots are pixel-identical across runs:
 
@@ -314,3 +448,4 @@ The `app/vitest-unit-flat-tests` config warns on `beforeEach`/`afterEach` in `*.
 |------|--------|---------|
 | `vitest/no-hooks` | Shared mock state reset | Event handler map clearing, RAF mock setup |
 | `vitest/no-conditional-in-test` | Type narrowing after `createElement` | `if (el.type !== 'arrow') throw` |
+| `vitest/expect-expect` | Assertion in helper function | `assertSelectedElements()` wraps `expect()` |

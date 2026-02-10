@@ -8,13 +8,13 @@
 
 ## Current State Summary
 
-We have a **production-ready straight-line arrow system** with single-segment drag creation, multi-point click-to-place creation, binding to shapes, interactive linear editing, and hit testing. The major gaps are curved arrows, elbow arrows, advanced arrowheads, stroke styles, and binding modes.
+We have a **production-ready straight-line arrow and line system** with single-segment drag creation, multi-point click-to-place creation, binding to shapes, interactive linear editing (point handles, midpoint insertion, point deletion), hit testing, grouping, and bound text. Types come from the official `@excalidraw/element/types` package and include all fields needed for future features (roundness, elbowed, strokeStyle, all 12 Arrowhead types). The major gaps are **rendering** curved arrows, elbow arrow routing, advanced arrowhead rendering (only 2 of 12 rendered), stroke style rendering, and binding modes.
 
 ```mermaid
 pie title Arrow Feature Coverage
-    "Implemented" : 55
-    "Partial" : 15
-    "Not Started" : 30
+    "Implemented" : 65
+    "Partial" : 10
+    "Not Started" : 25
 ```
 
 ---
@@ -22,114 +22,59 @@ pie title Arrow Feature Coverage
 ## Phase 1 — Data Model Gaps
 
 > Fill in missing type properties so all downstream features can reference them.
+>
+> **Updated 2026-02:** All element types are re-exported from the official `@excalidraw/element/types` package. Many "missing" properties already exist on the official types. The tasks below are updated to reflect reality.
 
-### 1.1 Add `roundness` property `TODO`
+### 1.1 Add `roundness` property `DONE` (via official types)
 
-**Why:** Determines whether an arrow uses straight segments or Catmull-Rom curves. Without this, curved arrows cannot exist.
+**Status:** The `roundness` field already exists on `_ExcalidrawElementBase` in `@excalidraw/element/types`. Our `createElement.ts` defaults it to `null`. No custom type needed.
 
-**Files:**
-- `app/features/elements/types.ts` — add `roundness` to `ExcalidrawElementBase`
-- `app/features/elements/createElement.ts` — default to `null` (sharp)
-- `app/__test-utils__/factories/element.ts` — add `roundness` to factory
+**Remaining work:**
+- [x] `roundness` field exists on element type (from official package)
+- [x] Default `roundness: null` in `createElement` (already there)
+- [ ] Add `PROPORTIONAL_RADIUS = 2` and `DEFAULT_ROUNDNESS_VALUE = 0.25` constants (only needed when implementing curved arrows)
 
-```typescript
-// types.ts
-roundness: null | {
-  type: 2  // PROPORTIONAL_RADIUS (only type used for arrows)
-  value?: number  // curvature proportion, default 0.25
-}
-```
+### 1.2 Add `elbowed` property `DONE` (via official types + createElement)
 
-**Tasks:**
-- [ ] Add `Roundness` type and `roundness` field to `ExcalidrawElementBase`
-- [ ] Default `roundness: null` in `createElement`
-- [ ] Add `PROPORTIONAL_RADIUS = 2` and `DEFAULT_ROUNDNESS_VALUE = 0.25` to `elements/constants.ts`
-- [ ] Update element factory in test utils
+**Status:** The `elbowed` field exists on `ExcalidrawArrowElement` in `@excalidraw/element/types`. Our `createElement.ts` sets `elbowed: false` for arrows. Type guards `isElbowArrow()` and `isLineElement()` are re-exported from the official package in `elements/types.ts`.
 
-### 1.2 Add `elbowed` property `TODO`
+**Remaining work:**
+- [x] `elbowed: boolean` on arrow type (from official package)
+- [x] Default `elbowed: false` in `createElement`
+- [x] `isElbowArrow()` type guard (re-exported from `@excalidraw/element`)
 
-**Why:** Flags elbow arrows which use A* pathfinding instead of direct line segments.
+### 1.3 Add `strokeStyle` property `DONE` (via official types + createElement)
 
-**Files:**
-- `app/features/elements/types.ts` — add to `ExcalidrawArrowElement`
-- `app/features/elements/createElement.ts` — default to `false`
+**Status:** The `strokeStyle` field already exists on `_ExcalidrawElementBase` in `@excalidraw/element/types` and the `StrokeStyle` type is re-exported. Our `createElement.ts` defaults it to `'solid'`.
 
-```typescript
-// types.ts — ExcalidrawArrowElement
-elbowed: boolean
-```
+**Remaining work:**
+- [x] `StrokeStyle` type and `strokeStyle` field on element (from official package)
+- [x] Default `strokeStyle: 'solid'` in `createElement`
+- [ ] Add dash array constants for RoughJS rendering (only needed when implementing stroke style rendering)
 
-**Tasks:**
-- [ ] Add `elbowed: boolean` to `ExcalidrawArrowElement`
-- [ ] Default `elbowed: false` in `createElement`
-- [ ] Add type guards: `isElbowArrow()`, `isSharpArrow()`, `isCurvedArrow()`
+### 1.4 Expand arrowhead types `DONE` (via official types)
 
-### 1.3 Add `strokeStyle` property `TODO`
+**Status:** The official `Arrowhead` type in `@excalidraw/element/types` already includes all 12 types: `'arrow' | 'bar' | 'dot' | 'circle' | 'circle_outline' | 'triangle' | 'triangle_outline' | 'diamond' | 'diamond_outline' | 'crowfoot_one' | 'crowfoot_many' | 'crowfoot_one_or_many'`. Re-exported as `Arrowhead` in our `elements/types.ts`.
 
-**Why:** Enables dashed and dotted arrows (currently all arrows are solid).
-
-**Files:**
-- `app/features/elements/types.ts` — add to `ExcalidrawElementBase`
-- `app/features/elements/constants.ts` — dash array values
-- `app/features/elements/createElement.ts` — default to `'solid'`
-
-```typescript
-// types.ts
-strokeStyle: 'solid' | 'dashed' | 'dotted'
-```
-
-**Tasks:**
-- [ ] Add `StrokeStyle` type and `strokeStyle` field to `ExcalidrawElementBase`
-- [ ] Default `strokeStyle: 'solid'` in `createElement`
-- [ ] Add dash array constants: `DASH_ARRAY_DASHED = [8, sw + 8]`, `DASH_ARRAY_DOTTED = [1.5, sw + 6]`
-
-### 1.4 Expand arrowhead types `TODO`
-
-**Why:** Only `'arrow' | 'triangle' | 'none'` exist. Excalidraw has 12+ types.
-
-**Files:**
-- `app/features/elements/types.ts` — expand `ArrowheadType` union
-
-```typescript
-// Phased approach:
-// Phase 1 (minimum viable)
-type ArrowheadType = 'arrow' | 'triangle' | 'bar' | 'circle' | 'diamond' | 'none'
-
-// Phase 2 (outline variants)
-// Add: 'triangle_outline' | 'circle_outline' | 'diamond_outline'
-
-// Phase 3 (ER diagrams)
-// Add: 'crowfoot_one' | 'crowfoot_many' | 'crowfoot_one_or_many'
-```
-
-**Tasks:**
-- [ ] Expand `ArrowheadType` with `bar`, `circle`, `diamond`
+**Remaining work:**
+- [x] Full `Arrowhead` type available (from official package)
 - [ ] Add arrowhead size/angle constants per type (see tech spec Section 6)
-- [ ] Later: add outline variants and crowfoot types
+- [ ] Implement **rendering** for each arrowhead type (currently only `arrow` and `triangle` are rendered in `rendering/arrowhead.ts`)
 
-### 1.5 Add binding mode `TODO`
+### 1.5 Add binding mode `TODO` (NOT in official types)
 
-**Why:** `FixedPointBinding.mode` controls whether the arrow stops at the edge (`orbit`) or extends inside (`inside`).
+**Why:** The Excalidraw source code uses `mode: 'inside' | 'orbit' | 'skip'` on bindings internally, but this is **NOT exposed in the official `@excalidraw/element/types` npm package**. The official `FixedPointBinding` type only has `elementId`, `focus`, `gap`, and `fixedPoint`.
 
-**Files:**
-- `app/features/elements/types.ts` — add `mode` to `FixedPointBinding`
-- `app/features/binding/proximity.ts` — respect mode in edge calculation
+**Decision needed:** Either:
+- (a) Extend the official `FixedPointBinding` with a custom `mode` field via module augmentation
+- (b) Add a separate mapping from binding → mode stored elsewhere
+- (c) Defer until the official package adds the `mode` field
 
-```typescript
-// types.ts
-type BindMode = 'orbit' | 'inside'
-
-interface FixedPointBinding {
-  elementId: string
-  fixedPoint: [number, number]
-  mode: BindMode  // NEW
-}
-```
+**Note:** Our current `FixedPointBinding` usage from the official package has `elementId`, `focus`, `gap`, `fixedPoint`. Our `bindUnbind.ts` creates bindings without a `mode` field, which is correct for the current official type.
 
 **Tasks:**
-- [ ] Add `BindMode` type and `mode` field to `FixedPointBinding`
-- [ ] Default binding mode to `'orbit'` in `bindArrowToElement()`
-- [ ] Update `getPointFromFixedPoint()` to respect mode (orbit = stop at edge, inside = go to fixedPoint)
+- [ ] Decide on approach for binding modes
+- [ ] Implement orbit/inside behavior in `getPointFromFixedPoint()`
 - [ ] Set `'inside'` when creating arrow from inside a shape (Alt key)
 
 ---
@@ -654,7 +599,8 @@ These features are fully implemented and match the spec:
 
 | Feature | Status | Key Files |
 |---------|--------|-----------|
-| Arrow data model (basic) | `DONE` | `elements/types.ts`, `createElement.ts` |
+| Arrow data model (basic) | `DONE` | `elements/types.ts` (re-export from `@excalidraw/element/types`), `createElement.ts` |
+| Line element type | `DONE` | `elements/types.ts`, `createElement.ts` (type `'line'`, `endArrowhead: null`) |
 | Single-segment creation (drag) | `DONE` | `tools/useDrawingInteraction.ts` |
 | Multi-point creation (click-click) | `DONE` | `linear-editor/useMultiPointCreation.ts` |
 | Linear editor (point manipulation) | `DONE` | `linear-editor/useLinearEditor.ts` |
@@ -664,6 +610,7 @@ These features are fully implemented and match the spec:
 | Bind/unbind lifecycle | `DONE` | `binding/bindUnbind.ts` |
 | Binding maintenance on move | `DONE` | `binding/updateBoundPoints.ts` |
 | Binding highlight rendering | `DONE` | `binding/renderBindingHighlight.ts` |
+| Bound text for shapes | `DONE` | `binding/boundText.ts`, `tools/useTextInteraction.ts` |
 | Hit testing (straight segments) | `DONE` | `selection/hitTest.ts` |
 | Selection border + handles | `DONE` | `rendering/renderInteractive.ts` |
 | RoughJS shape generation (straight) | `DONE` | `rendering/shapeGenerator.ts` |
@@ -672,6 +619,12 @@ These features are fully implemented and match the spec:
 | Keyboard shortcuts (A, 5) | `DONE` | `tools/useTool.ts` |
 | Point normalization (first=[0,0]) | `DONE` | `linear-editor/pointHandles.ts` |
 | Version-based shape cache | `DONE` | `rendering/shapeGenerator.ts` |
+| Grouping support | `DONE` | `groups/groupUtils.ts`, `groups/composables/useGroups.ts` |
+| Data model: `roundness` | `DONE` | Official `@excalidraw/element/types`, `createElement.ts` defaults `null` |
+| Data model: `elbowed` | `DONE` | Official `@excalidraw/element/types`, `createElement.ts` defaults `false` |
+| Data model: `strokeStyle` | `DONE` | Official `@excalidraw/element/types`, `createElement.ts` defaults `'solid'` |
+| Data model: `Arrowhead` (all 12 types) | `DONE` | Official `@excalidraw/element/types` (rendering only supports 2) |
+| Binding in linear editor | `DONE` | `linear-editor/useLinearEditor.ts` (endpoint drag rebinds, arrows only) |
 
 ---
 

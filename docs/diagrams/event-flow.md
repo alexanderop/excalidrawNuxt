@@ -51,6 +51,14 @@ flowchart TB
         L_KD[keydown: Escape exit / Delete points]
     end
 
+    subgraph "useTextInteraction"
+        T_PD[pointerdown: create/edit text element]
+    end
+
+    subgraph "useCodeInteraction"
+        C_PD[pointerdown: create/edit code element]
+    end
+
     DOC --> P_KD
     DOC --> P_KU
     DOC --> S_KD
@@ -74,6 +82,8 @@ flowchart TB
     CVS --> L_PD
     CVS --> L_PM
     CVS --> L_PU
+    CVS --> T_PD
+    CVS --> C_PD
 ```
 
 ## Pointer Capture Lifecycle
@@ -193,4 +203,6 @@ flowchart TD
 | `useSelectionInteraction` | `pointerdown`, `pointermove`, `pointerup`, `dblclick` | `keydown` (Delete, Escape, Ctrl+A, Ctrl+G, Ctrl+Shift+G, arrows) | selection state, `selectionBox`, `cursorStyle`, element mutations, group actions |
 | `useMultiPointCreation` | `pointerdown`, `pointermove`, `dblclick` | `keydown` (Escape, Enter) | `multiElement`, `lastCursorPoint`, `suggestedBindings` |
 | `useLinearEditor` | `pointerdown`, `pointermove`, `pointerup` | `keydown` (Escape, Delete/Backspace) | `editingElement`, `selectedPointIndices`, `hoveredMidpointIndex`, `suggestedBindings` |
+| `useTextInteraction` | `pointerdown` | -- | `editingTextElement`, element mutations, text editor DOM |
+| `useCodeInteraction` | `pointerdown` | -- | `editingCodeElement`, element mutations, code editor DOM |
 | `useTheme` | -- | `keydown` (Alt+Shift+D) | `theme` (light/dark), document root class toggle |

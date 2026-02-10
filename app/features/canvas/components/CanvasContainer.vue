@@ -197,7 +197,6 @@ const { selectionBox, cursorStyle } = useSelectionInteraction({
   isPanning,
   selectedElements: () => selectedElements.value,
   select,
-  addToSelection,
   toggleSelection,
   clearSelection,
   replaceSelection,
@@ -237,6 +236,18 @@ const { markStaticDirty, markNewElementDirty, markInteractiveDirty } = useSceneR
 
 // Bind real renderer callbacks to deferred dirty flags
 dirty.bind({ markStaticDirty, markInteractiveDirty, markNewElementDirty })
+
+// Test hook — expose reactive state for browser tests (Excalidraw's window.h pattern).
+// Always available (SSR disabled, zero overhead — just window property assignments).
+;(globalThis as unknown as Record<string, unknown>).__h = {
+  elements, elementMap, addElement, replaceElements, getElementById,
+  selectedIds, selectedElements, select, addToSelection,
+  clearSelection, replaceSelection, isSelected,
+  activeTool, setTool,
+  scrollX, scrollY, zoom, panBy, zoomBy, toScene,
+  newElement, multiElement, editingTextElement,
+  markStaticDirty, markInteractiveDirty,
+}
 
 const combinedCursorClass = computed(() => {
   // Panning cursor takes priority over selection cursor

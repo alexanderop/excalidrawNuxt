@@ -10,7 +10,9 @@
 | Composables | VueUse | Events, RAF, element size, magic keys |
 | IDs | nanoid | Element ID generation |
 | Dark mode colors | tinycolor2 | Color parsing + invert/hue-rotate for dark mode |
-| Testing | Vitest (node + browser) | Unit and browser integration tests |
+| Syntax highlighting | Shiki | Code element token highlighting (lazy-loaded) |
+| Excalidraw types | @excalidraw/element, @excalidraw/math, @excalidraw/common | Official type definitions, math primitives, shared utilities |
+| Testing | Vitest (node + browser) + Playwright | Unit and browser integration tests |
 | Package manager | Bun | Fast installs, scripts via `bun run` |
 | Linting | Oxlint + ESLint | Dual linter: oxlint (fast) then ESLint |
-| Math | shared/math.ts | Point/vector utilities |
+| Math | shared/math.ts | Point/vector utilities (re-exports from @excalidraw/math) |

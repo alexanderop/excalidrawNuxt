@@ -44,6 +44,8 @@ sequenceDiagram
     participant Panning as usePanning
     participant MultiPt as useMultiPointCreation
     participant LinEdit as useLinearEditor
+    participant TextInt as useTextInteraction
+    participant CodeInt as useCodeInteraction
     participant Drawing as useDrawingInteraction
     participant SelInt as useSelectionInteraction
     participant SceneR as useSceneRenderer
@@ -92,7 +94,15 @@ sequenceDiagram
     Note over LinEdit: Receives noop dirty wrappers
     LinEdit-->>Component: editingElement, selectedPointIndices, hoveredMidpointIndex, ...
 
-    Note over Component: onBeforeToolChange callback registered (finalizes multi-point + linear editor)
+    Component->>TextInt: useTextInteraction(canvasRef, textEditorContainerRef, activeTool, ...)
+    Note over TextInt: Text element editing lifecycle
+    TextInt-->>Component: editingTextElement, submitTextEditor
+
+    Component->>CodeInt: useCodeInteraction(canvasRef, textEditorContainerRef, activeTool, ...)
+    Note over CodeInt: Code element editing with Shiki highlighting
+    CodeInt-->>Component: editingCodeElement, submitCodeEditor
+
+    Note over Component: onBeforeToolChange callback registered (finalizes multi-point + linear editor + text + code)
 
     Component->>Drawing: useDrawingInteraction(shared + dirty.mark*)
     Note over Drawing: Receives noop dirty wrappers
@@ -102,7 +112,7 @@ sequenceDiagram
     Note over SelInt: Receives noop dirty wrappers + expandSelectionForGroups + group/ungroup actions
     SelInt-->>Component: selectionBox, cursorStyle
 
-    Component->>SceneR: useSceneRenderer(layers, viewport, elements, newElement, selectionBox, selectedGroupIds, ...)
+    Component->>SceneR: useSceneRenderer(layers, viewport, elements, newElement, selectionBox, selectedGroupIds, editingTextElement, editingCodeElement, ...)
     SceneR->>SceneR: useTheme() for theme ref + bgColor computed
     SceneR->>Renderer: useRenderer(layers, viewport, renderCallbacks)
     Note over Renderer: Creates RAF loop<br/>staticDirty = true (initial)<br/>watch([width, height, scroll*, zoom, bgColor]) -> markAllDirty
@@ -144,6 +154,7 @@ sequenceDiagram
 | **setup() - canvas layers** | `useCanvasLayers(canvasRefs)` | Returns `null` shallowRefs; registers internal `onMounted` hook |
 | **setup() - dirty flags** | `createDirtyFlags()` | Returns stable noop wrappers; breaks circular dependency |
 | **setup() - groups** | `useGroups(elements, selectedIds, ..., dirty.mark*)` | Group/ungroup operations; receives noop dirty wrappers |
+| **setup() - text/code** | `useTextInteraction`, `useCodeInteraction` | Text and code element editing; receive canvasRef, textEditorContainerRef, dirty wrappers |
 | **setup() - interactions** | `usePanning`, `useMultiPointCreation`, `useLinearEditor`, `useDrawingInteraction`, `useSelectionInteraction` | All receive noop dirty wrappers via `shared` object. Selection interaction receives group callbacks. |
 | **setup() - renderer** | `useSceneRenderer` calls `useRenderer` + `useAnimationController` | Creates RAF loop, returns real `mark*Dirty` functions + animation controller |
 | **setup() - bind** | `dirty.bind(realCallbacks)` | Swaps noops for real callbacks; all composables now trigger real repaints |

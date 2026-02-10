@@ -43,7 +43,6 @@ interface UseSelectionInteractionOptions {
   elements: ShallowRef<readonly ExcalidrawElement[]>
   selectedElements: () => readonly ExcalidrawElement[]
   select: (id: string) => void
-  addToSelection: (id: string) => void
   toggleSelection: (id: string) => void
   clearSelection: (this: void) => void
   replaceSelection: (ids: Set<string>) => void

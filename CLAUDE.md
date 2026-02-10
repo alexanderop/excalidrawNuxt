@@ -43,12 +43,12 @@ The original Excalidraw source code lives in `excalidraw/` (git-ignored, not par
 ## Structure
 
 - `app/` - Vue application
-  - `features/` - Domain features (binding, canvas, elements, groups, linear-editor, rendering, selection, theme, tools) — isolated by lint rules
+  - `features/` - Domain features (binding, canvas, code, elements, groups, linear-editor, rendering, selection, theme, tools) — isolated by lint rules
   - `shared/` - Shared components and composables used across features
   - `pages/` - Top-level page orchestrators
   - `utils/` - Pure utilities (e.g. `tryCatch.ts`)
   - `assets/` - CSS and static assets
-  - `__test-utils__/` - Test helpers (withSetup, custom commands)
+  - `__test-utils__/` - Test helpers (withSetup, custom commands, browser helpers, factories, mocks, matchers, serializers)
 - `excalidraw/` - Excalidraw source (reference only, git-ignored)
 - `public/` - Static assets
 - `nuxt.config.ts` - Nuxt configuration
@@ -56,7 +56,7 @@ The original Excalidraw source code lives in `excalidraw/` (git-ignored, not par
 
 ## Canvas Testing
 
-Browser tests (`*.browser.test.ts`) test canvas interactions via Vitest browser mode + Playwright. **Never use `page.mouse`** for canvas events — iframe coordinate mismatches cause silent failures. Use the `canvasDrag` custom command which dispatches `PointerEvent`s directly inside the iframe via `frame.evaluate`. See `app/__test-utils__/commands/canvasDrag.ts`.
+Browser tests (`*.browser.test.ts`) test canvas interactions via Vitest browser mode + Playwright. **Never use `page.mouse`** for canvas events — iframe coordinate mismatches cause silent failures. Use the custom commands (`canvasDrag`, `canvasClick`, `canvasDblClick`) which dispatch `PointerEvent`s directly inside the iframe via `frame.evaluate`. See `app/__test-utils__/commands/`. Browser tests also have high-level helpers in `app/__test-utils__/browser/` (`Pointer`, `Keyboard`, `UI`, `CanvasGrid`, etc.).
 
 ## Docs = Memory
 
@@ -80,6 +80,7 @@ Browser tests (`*.browser.test.ts`) test canvas interactions via Vitest browser 
 - `docs/SYSTEM_KNOWLEDGE_MAP.md` - Architecture overview, data flow diagrams
 - `docs/diagrams/` - Mermaid diagrams (architecture, canvas, coordinate system, event flow, render pipeline, selection state machine, etc.)
 - `docs/reference/` - Architectural decisions, element types, technology stack
+- `docs/excalidraw-state-and-persistence.md` - How Excalidraw manages state, persistence, history/undo, and collaboration
 
 ### Gotchas & Pitfalls
 - `docs/excalidraw-gotchas.md` - Excalidraw integration pitfalls and patterns
@@ -96,6 +97,9 @@ Browser tests (`*.browser.test.ts`) test canvas interactions via Vitest browser 
 - `docs/testing-conventions.md` - Flat test philosophy, withSetup API, when hooks are OK
 - `docs/vitest-mocking.md` - Mock functions, modules, timers, and dates with vi utilities
 - `docs/vi-utilities.md` - vi helper for mocking, timers, utilities (vi.fn, vi.spyOn, vi.mock, fake timers, etc.)
+- `docs/our-testing-strategy.md` - Our project testing strategy
+- `docs/excalidraw-testing-strategy.md` - Excalidraw testing strategy reference
+- `docs/testing-refactor-plan.md` - Testing infrastructure refactor plan
 
 ### Linting
 - `docs/linting-setup.md` - Dual linter setup, banned patterns, component naming rules, cross-feature isolation
@@ -105,4 +109,5 @@ Browser tests (`*.browser.test.ts`) test canvas interactions via Vitest browser 
 - `docs/arrow-tech-spec.md` - Arrow technical specification (reverse-engineered from Excalidraw)
 - `docs/arrow-parity-spec.md` - Arrow UX parity with Excalidraw
 - `docs/dark-mode-tech-spec.md` - Dark mode technical specification
+- `docs/bound-text-debug-notes.md` - Bound text feature implementation notes and gotchas
 - `docs/specs/` - Feature specs (arrow implementation plan, grouping feature)

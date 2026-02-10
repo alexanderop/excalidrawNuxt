@@ -63,14 +63,17 @@ The `vue/multi-word-component-names` rule checks the **filename**, not `defineOp
 Features in `app/features/` are independent modules. ESLint enforces that no feature imports from another feature via `import-x/no-restricted-paths` zones.
 
 **Current features with isolation zones:**
-- `groups`, `linear-editor`, `rendering`, `selection`, `tools`
+- `code`, `groups`, `linear-editor`, `rendering`, `selection`, `tools`
 
 **Features on disk without isolation zones (not yet enforced):**
 - `binding`, `canvas`, `elements`, `theme`
 
-Each zone allows imports from its own directory **and from `theme`** (shared exception):
+Each zone allows imports from its own directory **and from `theme`** (shared exception). Some features have additional exceptions:
 ```typescript
 { target: './app/features/groups', from: './app/features', except: ['./groups', './theme'] },
+{ target: './app/features/code', from: './app/features', except: ['./code', './theme', './elements', './selection', './tools'] },
+{ target: './app/features/rendering', from: './app/features', except: ['./rendering', './theme', './code'] },
+{ target: './app/features/tools', from: './app/features', except: ['./tools', './theme', './code'] },
 ```
 
 **Adding a new feature:** Add a matching zone in `eslint.config.ts` under the "Cross-feature isolation" comment:
@@ -84,7 +87,7 @@ Features can import from shared code (`app/shared/`, `app/utils/`, etc.) and fro
 
 | Pattern | Alternative |
 |---------|-------------|
-| `as Type` assertions | Type guards or proper typing |
+| `as Type` assertions | Type guards or proper typing (convention, not lint-enforced) |
 | `enum` declarations | Literal unions or `as const` objects |
 | `else` / `else if` | Early returns |
 | Native `try/catch` | `tryCatch()` from `~/utils/tryCatch` |
@@ -103,11 +106,11 @@ Features can import from shared code (`app/shared/`, `app/utils/`, etc.) and fro
 The flat config in `eslint.config.ts` is organized into named sections:
 
 1. **`app/vue-component-rules`** — PascalCase templates, dead code detection, max-template-depth (8), max-props (6), Vue 3.5+ APIs (`define-props-destructuring`, `prefer-use-template-ref`)
-2. **`app/typescript-style`** — Complexity (max 10), no nested ternaries, no `as` assertions, banned syntax (enums, else, try/catch, hardcoded routes)
+2. **`app/typescript-style`** — Complexity (max 10), no nested ternaries, banned syntax (enums, else, try/catch, hardcoded routes)
 3. **`app/import-boundaries`** — Feature isolation zones, shared code cannot import from features/pages
 4. **`app/vitest-rules`** — `it()` not `test()`, hooks on top, max 2 nested describes, prefer Vitest locators over `querySelector`
 5. **`app/vitest-unit-flat-tests`** — Warns on `beforeEach`/`afterEach` in `*.unit.test.ts` (allows `beforeAll`/`afterAll`)
-6. **`app/unicorn-overrides`** — Enables `better-regex`, `custom-error-definition`; disables `no-null`, `filename-case`, `prevent-abbreviations`
+6. **`app/unicorn-overrides`** — Enables `better-regex`, `custom-error-definition`, `consistent-destructuring`; disables `no-null`, `filename-case`, `prevent-abbreviations`, `no-array-callback-reference`, `no-await-expression-member`, `no-array-reduce`, `no-useless-undefined`
 
 ## Pre-commit Hooks
 

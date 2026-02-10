@@ -21,42 +21,39 @@ graph TD
 
 Everything lives under `app/`. Don't put pages, components, or composables at the project root.
 
-## Auto-Imports: Values vs Types in `features/`
+## Auto-Imports Are DISABLED
 
-Nuxt auto-imports **values** (`ref`, `computed`, `shallowRef`, `watch`, `toRaw`, `markRaw`, `onMounted`) globally — they work in `app/features/**/*.ts` and `.vue` files without imports.
-
-However, **type-only references** like `Ref`, `ShallowRef`, `ComputedRef` used in function signatures need explicit imports in `.ts` files inside `features/`:
+`nuxt.config.ts` sets `imports: { autoImport: false }`. **All imports must be explicit** — no Vue APIs, no composables, no utilities are auto-imported.
 
 ```ts
-// ✅ In features/*.ts — import types explicitly
+// ✅ Every file must import what it uses
+import { shallowRef, triggerRef } from 'vue'
 import type { Ref, ShallowRef } from 'vue'
 
-export function useFoo(bar: Ref<number>, baz: ShallowRef<string | null>) {
-  const x = ref(0)      // ← value auto-imported, works fine
-  const y = shallowRef() // ← value auto-imported, works fine
+export function useFoo(bar: Ref<number>) {
+  const x = shallowRef(null)
+  return x
 }
 ```
 
 ```ts
-// ❌ This fails typecheck in features/*.ts
-export function useFoo(bar: ShallowRef<number>) { } // ShallowRef not found
+// ❌ This fails — nothing is auto-imported
+export function useFoo() {
+  const x = ref(0)  // Error: ref is not defined
+}
 ```
 
-In `.vue` files the same applies — if you use `ShallowRef` or `Ref` as a type annotation, import it.
+This applies equally to `.ts` and `.vue` files. The rationale is explicit dependency tracking and avoiding "magic" imports.
 
 ## `compatibilityDate` Is Required in Nuxt 4
 
 The `nuxt.config.ts` must include `compatibilityDate`. This locks behavior to a specific date so Nuxt can introduce breaking changes in minor versions without affecting existing projects.
 
-## Client-Only Components: Use `.client.vue` Suffix
+## SSR Is Disabled: No `.client.vue` Needed
 
-```mermaid
-flowchart LR
-    A[Component.vue] -->|SSR + Client| B[Renders everywhere]
-    C[Component.client.vue] -->|Client only| D[Skipped during SSR]
-```
+`nuxt.config.ts` sets `ssr: false`, so all components run client-side only. The `.client.vue` suffix convention and `<ClientOnly>` wrappers are unnecessary in this project.
 
-Components that need browser APIs (canvas, window, document) use the `.client.vue` convention.
+However, composables that access `document` or `window` at the module level still need guards for **Vitest unit tests running in Node mode** (see VueUse gotchas).
 
 ## `useHead` Replaces Manual `<head>` Tags
 

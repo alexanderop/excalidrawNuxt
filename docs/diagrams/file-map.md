@@ -46,6 +46,7 @@ graph LR
             RS[renderScene.ts]
             RI[renderInteractive.ts]
             AH[arrowhead.ts]
+            TM[textMeasurement.ts]
             RDIX[index.ts]
         end
         subgraph "features/selection/"
@@ -65,6 +66,7 @@ graph LR
             TT[types.ts]
             UT2[useTool.ts]
             UDI[useDrawingInteraction.ts]
+            UTI[useTextInteraction.ts]
             TLIX[index.ts]
             subgraph "tools/components/"
                 DT[DrawingToolbar.vue]
@@ -86,8 +88,19 @@ graph LR
             BP[proximity.ts]
             BBU[bindUnbind.ts]
             BUBP[updateBoundPoints.ts]
+            BBTX[boundText.ts]
             BRH[renderBindingHighlight.ts]
             BIX[index.ts]
+        end
+        subgraph "features/code/"
+            CDT[types.ts]
+            CDC[constants.ts]
+            CDMC[measureCode.ts]
+            CDBED[buildEditorDom.ts]
+            CDRCE[renderCodeElement.ts]
+            CDUCI[useCodeInteraction.ts]
+            CDUSH[useShikiHighlighter.ts]
+            CDIX[index.ts]
         end
         subgraph "features/theme/"
             THT[types.ts]
@@ -106,6 +119,7 @@ graph LR
         subgraph "shared/"
             MT[math.ts]
             RN[random.ts]
+            ITE[isTypingElement.ts]
         end
         subgraph "utils/"
             TC[tryCatch.ts]
@@ -113,13 +127,42 @@ graph LR
         subgraph "__test-utils__/"
             WS[withSetup.ts]
             SBR[setup-browser.ts]
+            THOOK[testHook.ts]
+            DSEED[deterministicSeed.ts]
+            subgraph "browser/"
+                BAPI[api.ts]
+                BCHK[checkpoint.ts]
+                BWAIT[waiters.ts]
+                BKB[Keyboard.ts]
+                BPTR[Pointer.ts]
+                BUI[UI.ts]
+                BCG[CanvasGrid.ts]
+                BIDX[index.ts]
+            end
             subgraph "commands/"
                 CD[canvasDrag.ts]
+                CCK[canvasClick.ts]
+                CDBL[canvasDblClick.ts]
+                SGO[showGridOverlay.ts]
             end
             subgraph "factories/"
                 VPF[viewport.ts]
                 PTF[point.ts]
                 ELF[element.ts]
+            end
+            subgraph "matchers/"
+                MAE[assertElements.ts]
+                MASE[assertSelectedElements.ts]
+                MCEP[toCloselyEqualPoints.ts]
+            end
+            subgraph "mocks/"
+                MCM[canvasContextMock.ts]
+                MCS[canvasStub.ts]
+                MEL[eventListenerMock.ts]
+            end
+            subgraph "serializers/"
+                SES[elementSerializer.ts]
+                SFS[floatSerializer.ts]
             end
         end
     end
@@ -129,6 +172,10 @@ graph LR
         EG[excalidraw-gotchas.md]
         NG[nuxt-gotchas.md]
         LS[linting-setup.md]
+        BTDN[bound-text-debug-notes.md]
+        ETS[excalidraw-testing-strategy.md]
+        OTS[our-testing-strategy.md]
+        TRP[testing-refactor-plan.md]
         subgraph "docs/diagrams/"
             DG_AO[architecture-overview.md]
             DG_FM[file-map.md]

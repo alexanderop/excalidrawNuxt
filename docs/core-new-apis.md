@@ -17,7 +17,7 @@ data.value.items.push('new')  // Does NOT trigger reactivity
 data.value = { items: ['new'] }  // Triggers reactivity
 ```
 
-**Prefer `shallowRef`** for large data structures or when deep reactivity is unnecessary.
+**Prefer `shallowRef`** for large data structures or when deep reactivity is unnecessary. In our codebase, `shallowRef` is the default for all non-primitive state — elements arrays, selection sets, DOM contexts, new-element refs, etc. Only use `ref` when you genuinely need deep tracking (rare).
 
 ### computed
 
@@ -49,6 +49,24 @@ readonlyState.count++  // Warning, mutation blocked
 ```
 
 Note: `reactive()` loses reactivity on destructuring. Use `ref()` or `toRefs()`.
+
+### markRaw & toRaw
+
+Prevent Vue from making objects reactive. Essential for non-serializable DOM objects.
+
+```ts
+import { markRaw, toRaw, shallowRef } from 'vue'
+
+// markRaw — wrap before assigning to reactive state
+const ctx = canvas.getContext('2d')
+ctxRef.value = markRaw(ctx)  // Vue won't proxy this
+
+// toRaw — unwrap when passing to external APIs
+const rawCtx = toRaw(layer.ctx.value)
+rawCtx.fillRect(0, 0, w, h)
+```
+
+**In our codebase:** `useCanvasLayers` uses `markRaw` on `CanvasRenderingContext2D` and `RoughCanvas` instances. `useRenderer` uses `toRaw` when reading them back for rendering.
 
 ## Watchers
 
@@ -176,9 +194,41 @@ scope.run(() => {
 scope.stop()
 ```
 
+### onScopeDispose
+
+Cleanup callback tied to the current effect scope. Works in composables even when not inside a component (unlike `onUnmounted`). Preferred for composables that schedule rAF or timers.
+
+```ts
+import { onScopeDispose } from 'vue'
+
+export function useRenderer(options: UseRendererOptions) {
+  let rafId: number | null = null
+  // ...schedule rAF...
+
+  onScopeDispose(() => {
+    if (rafId !== null) cancelAnimationFrame(rafId)
+  })
+}
+```
+
+**In our codebase:** `useRenderer` and `useAnimationController` both use `onScopeDispose` to cancel animation frames on cleanup.
+
 ## Composables
 
 Composables are functions that encapsulate stateful logic using Composition API.
+
+### useTemplateRef (Vue 3.5+)
+
+Type-safe template refs without name collisions. Replaces the `const el = ref<HTMLElement | null>(null)` pattern.
+
+```ts
+import { useTemplateRef } from 'vue'
+
+const canvasRef = useTemplateRef<HTMLCanvasElement>('interactiveCanvas')
+// In template: <canvas ref="interactiveCanvas" />
+```
+
+**In our codebase:** `CanvasContainer.vue` uses `useTemplateRef` for all 5 template refs (container, 3 canvases, text editor container).
 
 ### Naming Convention
 
@@ -252,33 +302,36 @@ return reactive({ x, y })
 
 ### Breaking Circular Dependencies
 
-When composable A needs to read data that composable B writes, but B requires functions from A:
+When composable A needs to read data that composable B writes, but B requires functions from A.
+
+**Approach 1: Pre-create shared refs in the parent (Controller Component)**
 
 ```ts
-// Problem: Renderer reads newElement, but drawing interaction
-// needs markDirty() from renderer — circular dependency
+// In CanvasContainer.vue — parent owns shared state:
+const suggestedBindings = shallowRef<readonly ExcalidrawElement[]>([])
+const shared = { canvasRef, toScene, zoom, elements, suggestedBindings, ... }
 
-// Solution: Pre-create shared refs in the parent, inject into both
-
-// In component:
-const newElement = shallowRef<Element | null>(null)
-
-const { markDirty } = useRenderer({ newElement }) // reads
-useDrawing({ newElement, markDirty })             // writes
-
-// In composable — accept optional ref for backward compatibility:
-interface UseDrawingOptions {
-  newElement?: ShallowRef<Element | null>
-  // ...
-}
-
-export function useDrawing(options: UseDrawingOptions) {
-  const newElement = options.newElement ?? shallowRef<Element | null>(null)
-  // ...
-}
+const { multiElement } = useMultiPointCreation({ ...shared, ... })
+const { newElement } = useDrawingInteraction({ ...shared, multiElement, ... })
 ```
 
-The parent component becomes a **Controller Component** that owns shared state and orchestrates composables.
+**Approach 2: Deferred binding for truly circular deps**
+
+When composables need each other's outputs (e.g., tools need `markStaticDirty` from renderer, but renderer needs `newElement` from tools):
+
+```ts
+// createDirtyFlags() returns no-op stubs that get late-bound:
+const dirty = createDirtyFlags()
+
+// Pass stubs to composables created before the renderer:
+const { newElement } = useDrawingInteraction({ markStaticDirty: dirty.markStaticDirty, ... })
+
+// Renderer is created last, then bound:
+const { markStaticDirty } = useSceneRenderer({ newElement, ... })
+dirty.bind({ markStaticDirty, ... })  // Stubs now forward to real fns
+```
+
+The parent component (`CanvasContainer.vue`) is the **Controller Component** that owns all shared state and orchestrates 10+ composables via these two techniques.
 
 <!--
 Source references:

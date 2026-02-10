@@ -58,8 +58,8 @@ export function hitTestMidpoints(
   const midpoints = getMidpointPositions(element)
   const threshold = MIDPOINT_HIT_THRESHOLD / zoom
 
-  for (const [i, midpoint_] of midpoints.entries()) {
-    if (pointDistance(scenePoint, midpoint_) <= threshold) return i
+  for (const [i, midpoint] of midpoints.entries()) {
+    if (pointDistance(scenePoint, midpoint) <= threshold) return i
   }
   return -1
 }
@@ -168,5 +168,4 @@ export function movePoints(
   return normalizePoints(elementX, elementY, newPoints)
 }
 
-// Re-export getSizeFromPoints for consumers that previously used computeDimensionsFromPoints
 export { getSizeFromPoints } from '@excalidraw/common'

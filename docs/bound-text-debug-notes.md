@@ -77,9 +77,8 @@ Run `bun dev`, draw a rectangle, double-click it, type text, press Escape. Verif
 | `app/features/selection/composables/useSelectionInteraction.ts` | Cascading updates + keydown guard (done) |
 | `app/features/canvas/components/CanvasContainer.vue` | Wired new options (done) |
 
-## Debug Logs to Remove
+## Debug Logs — DONE (Removed)
 
-Before committing, remove these temporary console.logs:
-- `useTextInteraction.ts`: `[DBG dblclick]` log in dblclick handler
-- `useTextInteraction.ts`: `[DBG submit]` log in submitAndClose
-- `boundText.browser.test.ts`: `[DBG canvas]` dimension log
+All temporary `[DBG ...]` console.logs have been cleaned up. No debug logs remain in:
+- `useTextInteraction.ts`
+- `boundText.browser.test.ts`

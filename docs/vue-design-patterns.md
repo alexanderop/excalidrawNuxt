@@ -16,7 +16,7 @@ export function useSettings() {
 }
 ```
 
-**When:** Shared state across features without Pinia. Already used for `useElementsStore`, `useSelectionStore`.
+**When:** Shared state across features without Pinia. Used for `useElements`, `useSelection`, `useViewport`. For truly global singletons, prefer `createGlobalState` from VueUse (see pattern below).
 
 ## 2. Thin Composables
 
@@ -50,7 +50,7 @@ defineEmits<{ select: [] }>()
 </template>
 ```
 
-**When:** Any leaf UI component. Pair with Controller Components (#8) for orchestration.
+**When:** Any leaf UI component. Pair with Controller Components (#8) for orchestration. Example: `DrawingToolbar.vue` renders tool buttons and emits clicks — zero business logic.
 
 ## 4. Extract Conditional
 
@@ -124,7 +124,7 @@ Use `<component :is>` with a computed to dynamically select components at runtim
 <component :is="activeRenderer" v-bind="elementProps" />
 ```
 
-**When:** Rendering varies by type (element renderers, tool panels, form field types). Already used in our rendering pipeline.
+**When:** Rendering varies by type (element renderers, tool panels, form field types). Not currently used — our rendering pipeline uses pure canvas functions (`renderElement`, `renderScene`) rather than Vue dynamic components.
 
 ## 10. Hidden Components
 
@@ -161,18 +161,99 @@ flowchart TD
     A -->|Both| D[Controller + Humble Components]
     C -->|Has pure logic| E[Thin Composable]
     C -->|Only reactive state| F[Data Store Pattern]
+    C -->|Shared singleton| G2[createGlobalState]
     B -->|Has v-for| G[List Component]
     B -->|Has v-if/v-else| H[Extract Conditional]
-    D -->|Dynamic type switching| I[Strategy Pattern]
+    D -->|Circular init order| I2[Deferred Binding / Options Object]
 ```
+
+## Codebase-Specific Patterns
+
+### 13. Options Object Pattern
+
+Every composable accepts a single options object with typed interface. Enables spreading shared context across multiple composables.
+
+```ts
+interface UsePanningOptions {
+  canvasRef: Readonly<Ref<HTMLCanvasElement | null>>
+  panBy: (dx: number, dy: number) => void
+  zoomBy: (delta: number, center?: GlobalPoint) => void
+  activeTool: ShallowRef<ToolType>
+}
+
+export function usePanning(options: UsePanningOptions): UsePanningReturn { ... }
+```
+
+In `CanvasContainer.vue`, shared deps are spread into multiple composables:
+```ts
+const shared = { canvasRef, toScene, zoom, elements, suggestedBindings, markStaticDirty, markInteractiveDirty }
+const { ... } = useMultiPointCreation({ ...shared, onFinalize() { setTool('selection') } })
+const { ... } = useLinearEditor({ ...shared, select })
+```
+
+**When:** Always — our convention for composable APIs.
+
+### 14. Global Singleton via `createGlobalState`
+
+VueUse's `createGlobalState` wraps a composable so the first call initializes state and subsequent calls return the same instance. Used instead of module-level `reactive()` for singletons that need VueUse utilities internally.
+
+```ts
+export const useToolStore = createGlobalState(() => {
+  const activeTool = shallowRef<ToolType>('selection')
+  // ...keyboard shortcuts via useEventListener
+  return { activeTool, setTool, onBeforeToolChange, $reset }
+})
+```
+
+**Where:** `useToolStore`, `useTheme`, `useShikiHighlighter`.
+
+### 15. Deferred Binding Pattern
+
+When composables have circular initialization order (A needs B's output, B needs A's output), create a proxy object with no-op stubs that gets "bound" to real implementations later.
+
+```ts
+export function createDirtyFlags(): DirtyFlags {
+  let _static = noop
+  return {
+    markStaticDirty: () => _static(),
+    bind(impl) { _static = impl.markStaticDirty },
+  }
+}
+
+// In CanvasContainer.vue:
+const dirty = createDirtyFlags()
+// ...pass dirty.markStaticDirty to composables created before renderer...
+const { markStaticDirty } = useSceneRenderer(...)
+dirty.bind({ markStaticDirty, ... })  // Late-bind real fns
+```
+
+**Where:** `createDirtyFlags` in `app/features/canvas/composables/`.
+
+### 16. Event Hook Pattern
+
+VueUse's `createEventHook` provides pub/sub within composables. Used for lifecycle signals that cross composable boundaries.
+
+```ts
+const { on: onBeforeToolChange, trigger: triggerBeforeChange } = createEventHook<void>()
+// Consumer subscribes:
+onBeforeToolChange(() => { /* finalize in-progress operations */ })
+```
+
+**Where:** `useToolStore.onBeforeToolChange` — subscribed in `CanvasContainer.vue` to finalize multi-point, linear editor, and text editing before tool switch.
+
+---
 
 ## Mapping to Our Codebase
 
 | Pattern | Where we use it |
 |---|---|
-| Data Store | `useElementsStore`, `useSelectionStore`, `useCanvasStore` |
-| Thin Composable | Pure math in `app/shared/math/`, composables wrap them |
-| Humble Component | Toolbar buttons, property panels |
-| Controller Component | `app/pages/index.vue`, feature root components |
-| Strategy Pattern | Element renderers (`<component :is>` in render pipeline) |
-| Extract Composable | Every `use*.ts` in `features/*/composables/` |
+| Data Store | `useElements`, `useSelection`, `useViewport`, `useGroups` |
+| Thin Composable | Pure math in `app/shared/math.ts`, coord transforms in `canvas/coords.ts`, composables wrap them |
+| Humble Component | `DrawingToolbar.vue` |
+| Controller Component | `CanvasContainer.vue` (orchestrates 10+ composables) |
+| Strategy Pattern | Not currently used (rendering is via pure canvas functions) |
+| Extract Composable | Every `use*.ts` in `features/*/composables/` and `features/*/` |
+| Options Object | All composables: `useRenderer`, `usePanning`, `useDrawingInteraction`, etc. |
+| Global Singleton | `useToolStore`, `useTheme`, `useShikiHighlighter` (via `createGlobalState`) |
+| Deferred Binding | `createDirtyFlags` in canvas composables |
+| Event Hook | `onBeforeToolChange` in `useToolStore` |

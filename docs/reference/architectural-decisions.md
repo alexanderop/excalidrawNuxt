@@ -22,3 +22,6 @@
 | Theme persistence | `useLocalStorage` via VueUse + `createGlobalState` | Browser-only, not exported, each user sees preferred theme |
 | Groups | Flat `groupIds` array on elements, no tree entity | Excalidraw-compatible model; groups are shared IDs, not separate objects |
 | Binding | `FixedPointBinding` with ratio-based coordinates | Arrows attach to shape surface via `[0-1, 0-1]` fixed point, survives resize/move |
+| Line tool | Same linear model as arrow, no arrowheads/bindings | `LinearToolType = 'arrow' \| 'line'` — reuses multi-point creation and linear editor |
+| Code element | Rectangle + `customData` (not a new element type) | Syntax highlighting via Shiki, macOS-style code block rendered on canvas |
+| Excalidraw types | Re-export from `@excalidraw/element` package | Upstream compatibility; `SupportedElement` narrows to our supported subset |

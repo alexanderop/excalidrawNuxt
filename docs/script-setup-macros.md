@@ -112,9 +112,11 @@ defineExpose({
 })
 ```
 
+**Empty expose for browser tests:** In our codebase, `defineExpose({})` with an empty object is used on `CanvasContainer.vue` and `DrawingToolbar.vue`. This makes the component instance accessible to Vitest browser tests while exposing nothing useful — needed for test framework component mounting.
+
 Parent access:
 ```ts
-const childRef = ref<{ count: number; reset: () => void }>()
+const childRef = useTemplateRef<{ count: number; reset: () => void }>('child')
 childRef.value?.reset()
 ```
 
@@ -163,6 +165,29 @@ defineProps<{
 }>()
 </script>
 ```
+
+## useTemplateRef (Vue 3.5+)
+
+Type-safe template refs. Replaces the old `const el = ref<HTMLElement>(null)` pattern where the variable name had to match the template `ref` attribute.
+
+```ts
+import { useTemplateRef } from 'vue'
+
+const canvasRef = useTemplateRef<HTMLCanvasElement>('interactiveCanvas')
+// In template: <canvas ref="interactiveCanvas" />
+```
+
+**In our codebase:** `CanvasContainer.vue` uses `useTemplateRef` for all template refs:
+```ts
+const containerRef = useTemplateRef<HTMLDivElement>('container')
+const staticCanvasRef = useTemplateRef<HTMLCanvasElement>('staticCanvas')
+const interactiveCanvasRef = useTemplateRef<HTMLCanvasElement>('interactiveCanvas')
+```
+
+Advantages over the old `ref()` pattern:
+- Variable name and template `ref` attribute are decoupled
+- Explicit intent — clearly a template ref, not reactive state
+- Better TypeScript inference
 
 ## Local Custom Directives
 

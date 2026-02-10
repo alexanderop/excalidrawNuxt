@@ -7,56 +7,60 @@
 
 ## Current State (what we have)
 
+> **Note:** Element types are re-exported from `@excalidraw/element/types` (official package), not custom-defined. Properties like `elbowed`, `strokeStyle`, `roundness`, `groupIds` already exist on the official types. Our `createElement.ts` sets sensible defaults.
+
 | Feature | Status | File(s) |
 |---------|--------|---------|
-| Arrow element type (`type: "arrow"`) | Done | `elements/types.ts` |
+| Arrow element type (`type: "arrow"`) | Done | `elements/types.ts` (re-export from `@excalidraw/element/types`) |
+| Line element type (`type: "line"`) | Done | `elements/types.ts`, `elements/createElement.ts` |
 | Point array (local coords, first=[0,0]) | Done | `elements/types.ts`, `linear-editor/pointHandles.ts` |
 | Arrow creation (click-drag) | Done | `tools/useDrawingInteraction.ts` |
+| Line creation (click-drag + multi-point) | Done | `tools/useDrawingInteraction.ts` (shares arrow infra) |
 | Multi-point creation (click-to-place) | Done | `linear-editor/useMultiPointCreation.ts` |
-| Shift-constrained angle snap (15deg) | Done | `tools/useDrawingInteraction.ts:74`, `shared/math.ts` |
-| Finalize via Escape/Enter/dblclick | Done | `linear-editor/useMultiPointCreation.ts:97-110` |
+| Shift-constrained angle snap (15deg) | Done | `tools/useDrawingInteraction.ts`, `shared/math.ts` |
+| Finalize via Escape/Enter/dblclick | Done | `linear-editor/useMultiPointCreation.ts` |
 | Linear editor (double-click to edit) | Done | `linear-editor/useLinearEditor.ts` |
 | Point handles (select, drag, Shift-multi) | Done | `linear-editor/useLinearEditor.ts` |
 | Midpoint insertion (hover + click) | Done | `linear-editor/pointHandles.ts` |
-| Point deletion (Delete/Backspace) | Done | `linear-editor/useLinearEditor.ts:209` |
+| Point deletion (Delete/Backspace) | Done | `linear-editor/useLinearEditor.ts` |
 | Arrowhead rendering (arrow, triangle) | Partial | `rendering/arrowhead.ts` |
 | Rubber-band preview (multi-point) | Done | `linear-editor/renderLinearEditor.ts` |
 | Selection border for arrows | Done | `rendering/renderInteractive.ts` |
-| Hit testing (segment distance) | Done | `selection/hitTest.ts:123` |
+| Hit testing (segment distance) | Done | `selection/hitTest.ts` |
 | 3-layer canvas (static/newElement/interactive) | Done | `canvas/composables/useCanvasLayers.ts` |
 | Roughjs rendering | Done | `rendering/shapeGenerator.ts` |
 | Binding system (arrows attach to shapes) | Done | `binding/proximity.ts`, `binding/bindUnbind.ts`, `binding/updateBoundPoints.ts` |
 | Bound element back-references | Done | `elements/types.ts` (`boundElements`), `binding/bindUnbind.ts` |
 | Suggested binding highlight | Done | `binding/renderBindingHighlight.ts` |
 | Minimum arrow size threshold (20px) | Done | `binding/constants.ts` (`MINIMUM_ARROW_SIZE`) |
+| Bound text for shapes | Done | `binding/boundText.ts`, `tools/useTextInteraction.ts` |
 | Dark mode for canvas + overlays | Done | `theme/colors.ts`, `theme/useTheme.ts` |
 | Grouping support (`groupIds`) | Done | `groups/groupUtils.ts`, `groups/composables/useGroups.ts` |
+| Binding in linear editor (endpoint drag) | Done | `linear-editor/useLinearEditor.ts` (arrows only, not lines) |
 
 ## Gap Analysis (what's missing)
 
-> **Note (updated):** Binding system (P0 items 1-4) is now **DONE**. The `BindMode` field (`'inside' | 'orbit' | 'skip'`) is NOT yet implemented — current `FixedPointBinding` has only `elementId` + `fixedPoint`. See `arrow-implementation-plan.md` Phase 5 for binding mode plans.
+> **Note (updated 2026-02):** Binding system (P0 items 1-4) is now **DONE**. The `BindMode` concept (`'inside' | 'orbit' | 'skip'`) exists in Excalidraw's internal source but is **NOT exposed in the official `@excalidraw/element/types` npm package**. Our `FixedPointBinding` from the official package has `elementId`, `focus`, `gap`, and `fixedPoint` (no `mode` field). Binding modes are deferred until the official package adds support or we decide to extend the type ourselves. See `arrow-implementation-plan.md` Phase 1.5 for details.
 
 ### P0 — Core Arrow Behavior — DONE
 
 #### 1. Binding System (arrows attach to shapes) — DONE
 **Implemented in:** `features/binding/` — proximity detection, bind/unbind, update on move, suggested binding highlight.
 
-**Actual data model (no `mode` field yet):**
+**Actual data model (from `@excalidraw/element/types`):**
 ```ts
-// elements/types.ts
-interface FixedPointBinding {
-  readonly elementId: string
-  readonly fixedPoint: readonly [number, number]  // 0-1 ratio on shape bbox
-}
+// All types re-exported from @excalidraw/element/types — not custom-defined
 
-interface ExcalidrawArrowElement extends ExcalidrawElementBase {
-  readonly type: 'arrow'
-  points: readonly Point[]
-  startArrowhead: ArrowheadType | null
-  endArrowhead: ArrowheadType
-  startBinding: FixedPointBinding | null  // NEW
-  endBinding: FixedPointBinding | null    // NEW
-}
+// FixedPointBinding extends PointBinding with fixedPoint:
+type PointBinding = { elementId: string; focus: number; gap: number }
+type FixedPointBinding = PointBinding & { fixedPoint: [number, number] }
+
+// ExcalidrawArrowElement (simplified for illustration):
+// - startBinding/endBinding: PointBinding | null (FixedPointBinding for elbow)
+// - startArrowhead/endArrowhead: Arrowhead | null
+// - elbowed: boolean
+// - points: readonly LocalPoint[]
+// See official @excalidraw/element/types for full definition
 ```
 
 **Implemented behavior:**
@@ -65,7 +69,9 @@ interface ExcalidrawArrowElement extends ExcalidrawElementBase {
 - Bidirectional references: arrow stores `startBinding`/`endBinding`, shape stores `boundElements[]`
 - On shape move/resize: `updateBoundArrowEndpoints()` in `binding/updateBoundPoints.ts`
 - On arrow finalize: `bindArrowToElement()` in `binding/bindUnbind.ts`
-- **NOT yet implemented:** orbit/inside/skip binding modes, Alt/Ctrl modifiers
+- Binding in linear editor: endpoint drag rebinds (arrows only, lines skip binding)
+- Bound text: `bindTextToContainer()`, `unbindTextFromContainer()`, etc. in `binding/boundText.ts`
+- **NOT yet implemented:** orbit/inside/skip binding modes (not in official types), Alt/Ctrl modifiers, zoom-adjusted binding distance
 
 **Implemented files:**
 - `features/binding/types.ts` — `BindableElement`, `BindingEndpoint`, `isBindableElement()`
@@ -74,6 +80,7 @@ interface ExcalidrawArrowElement extends ExcalidrawElementBase {
 - `features/binding/bindUnbind.ts` — bind/unbind lifecycle
 - `features/binding/updateBoundPoints.ts` — recalculate arrow endpoints on shape move
 - `features/binding/renderBindingHighlight.ts` — suggested binding highlight
+- `features/binding/boundText.ts` — bound text lifecycle (bind, unbind, delete, reposition)
 
 #### 2. Bound Element Back-References — DONE
 Implemented in `ExcalidrawElementBase.boundElements: readonly BoundElement[]`. Managed by `bindUnbind.ts`.
@@ -94,15 +101,14 @@ Implemented via `renderSuggestedBinding()` in `binding/renderBindingHighlight.ts
 - Round (default): `roundness: { type: 2 }, elbowed: false` — bezier curves
 - Elbow: `roundness: null, elbowed: true` — orthogonal A* routing
 
+> **Data model note (updated):** The official `@excalidraw/element/types` already includes `roundness`, `elbowed`, and `strokeStyle` on the element types. Our `createElement.ts` already sets `elbowed: false`, `roundness: null`, and `strokeStyle: 'solid'` as defaults. No custom `ArrowSubtype` type is needed -- the subtype is determined by the combination of `roundness` and `elbowed` fields, matching Excalidraw's approach. The tool cycling logic and rendering changes are what remain TODO.
+
 **Data model changes:**
 ```ts
-// elements/types.ts
-type ArrowSubtype = 'sharp' | 'round' | 'elbow'
-
-interface ExcalidrawArrowElement extends ExcalidrawElementBase {
-  // ... existing
-  arrowSubtype: ArrowSubtype  // NEW — default: 'round'
-}
+// NO new type needed -- use existing fields from @excalidraw/element/types:
+// roundness: null | { type: 2; value?: number }  -- already on element
+// elbowed: boolean  -- already on arrow element
+// strokeStyle: 'solid' | 'dashed' | 'dotted'  -- already on element
 ```
 
 **Tool cycling:** Modify `useTool.ts` so pressing `A` when already on `arrow` tool cycles subtypes:
@@ -287,28 +293,58 @@ BASE_PADDING = 40                 // px — elbow arrow obstacle padding
 
 ---
 
-## File Structure (new files)
+## File Structure
+
+### Existing (implemented)
 
 ```
 app/features/
 ├── binding/
-│   ├── index.ts
-│   ├── types.ts                    # FixedPointBinding, BindMode, BindingStrategy
-│   ├── constants.ts                # BASE_BINDING_GAP, distances, thresholds
-│   ├── proximity.ts                # getHoveredElementForBinding, distanceToElement
-│   ├── bindingStrategy.ts          # Strategy pattern for bind/unbind decisions
-│   ├── updateBoundPoints.ts        # Recalculate arrow endpoints on shape move
-│   ├── useBinding.ts               # Main composable — wires into creation/editing
-│   ├── useFocusPoint.ts            # Focus point drag interaction
-│   ├── renderBindingIndicator.ts   # Blue highlight on binding target
-│   └── renderFocusPoint.ts         # Focus point dot rendering
-├── elbow-arrow/
-│   ├── index.ts
-│   ├── types.ts                    # FixedSegment, ElbowArrowData, Grid, Node
-│   ├── elbowRouter.ts             # A* routing algorithm
-│   ├── grid.ts                     # Dynamic grid from AABBs
-│   └── fixedSegments.ts           # User segment override logic
+│   ├── index.ts                        # Barrel exports
+│   ├── types.ts                        # BindableElement, BindingEndpoint, isBindableElement()
+│   ├── constants.ts                    # BASE_BINDING_GAP, BASE_BINDING_DISTANCE, MINIMUM_ARROW_SIZE, colors
+│   ├── proximity.ts                    # getHoveredElementForBinding, distanceToShapeEdge, computeFixedPoint, getPointFromFixedPoint
+│   ├── bindUnbind.ts                   # bindArrowToElement, unbindArrowEndpoint, unbindAllArrowsFromShape, unbindArrow, findBindableElement
+│   ├── updateBoundPoints.ts            # updateBoundArrowEndpoints, updateArrowEndpoint, updateArrowBindings
+│   ├── renderBindingHighlight.ts       # renderSuggestedBinding (themed highlight)
+│   ├── boundText.ts                    # bindTextToContainer, unbindTextFromContainer, deleteBoundTextForContainer, updateBoundTextAfterContainerChange
+│   ├── bindUnbind.unit.test.ts
+│   ├── updateBoundPoints.unit.test.ts
+│   └── proximity.unit.test.ts
+├── linear-editor/
+│   ├── index.ts                        # Barrel exports
+│   ├── types.ts                        # MultiPointCreationState, LinearEditorState
+│   ├── constants.ts                    # Handle sizes, hit thresholds, theme colors
+│   ├── pointHandles.ts                 # Point positions, hit testing, insert/remove/normalize/move points
+│   ├── useMultiPointCreation.ts        # Click-to-place multi-point creation composable
+│   ├── useLinearEditor.ts              # Double-click-to-edit linear editor composable
+│   ├── renderLinearEditor.ts           # Rubber band, point handles, midpoint indicators
+│   ├── pointHandles.unit.test.ts
+│   ├── useLinearEditor.unit.test.ts
+│   ├── useMultiPointCreation.unit.test.ts
+│   ├── linearEditor.browser.test.ts
+│   └── multiPoint.browser.test.ts
+└── groups/
+    ├── index.ts
+    ├── types.ts                        # GroupId re-export
+    ├── groupUtils.ts                   # Group manipulation + re-exports from @excalidraw/element
+    ├── groupUtils.unit.test.ts
+    └── composables/
+        └── useGroups.ts                # Group/ungroup composable
+```
+
+### Planned (not yet implemented)
+
+```
+app/features/
+├── binding/
+│   ├── useFocusPoint.ts            # Focus point drag interaction (P2)
+│   └── renderFocusPoint.ts         # Focus point dot rendering (P2)
+├── elbow/                          # (NOT elbow-arrow/ — renamed)
+│   ├── grid.ts                     # Dynamic grid from AABBs (P3)
+│   ├── astar.ts                    # A* routing algorithm (P3)
+│   └── fixedSegments.ts           # User segment override logic (P3)
 └── tools/
     └── components/
-        └── ArrowheadPicker.vue     # Arrowhead selection UI
+        └── ArrowheadPicker.vue     # Arrowhead selection UI (P1)
 ```

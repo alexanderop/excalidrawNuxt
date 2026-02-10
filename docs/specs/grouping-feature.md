@@ -1,6 +1,8 @@
 # Grouping Feature Spec
 
 > Status: **V1 Implemented** — flat groupIds model, no nested groups.
+>
+> **Updated 2026-02:** All implementation phases complete. Types re-exported from `@excalidraw/element/types`. Some Excalidraw upstream utilities (`isElementInGroup`, `getElementsInGroup`, `elementsAreInSameGroup`) are re-exported directly from `@excalidraw/element`.
 
 ## Overview
 
@@ -21,124 +23,116 @@ Key design decisions from Excalidraw:
 
 ## Data Model Changes
 
-### 1. Add `groupIds` to `ExcalidrawElementBase`
+### 1. `groupIds` on `ExcalidrawElementBase` — `DONE`
+
+`GroupId` and `groupIds` come from the official `@excalidraw/element/types` package. Re-exported in `app/features/elements/types.ts`. Re-exported again as convenience in `app/features/groups/types.ts`.
 
 ```typescript
 // app/features/elements/types.ts
-
-export type GroupId = string
-
-export interface ExcalidrawElementBase {
-  // ... existing fields ...
-  readonly groupIds: readonly GroupId[]  // NEW — empty array = ungrouped
-}
+export type { GroupId } from '@excalidraw/element/types'
+// groupIds: readonly GroupId[] — already on _ExcalidrawElementBase
 ```
 
-### 2. Update `createElement`
+### 2. `createElement` defaults — `DONE`
 
 ```typescript
 // app/features/elements/createElement.ts
 const base = {
   // ... existing fields ...
-  groupIds: [],  // NEW — default to no groups
+  groupIds: [] as readonly string[],  // DONE — default to no groups
   ...overrides,
 }
 ```
 
-### 3. Add group-related app state
+### 3. Group-related app state — `DONE`
+
+Implemented in `useGroups` composable (`app/features/groups/composables/useGroups.ts`):
 
 ```typescript
-// In useSelection or a new useGroups composable
-selectedGroupIds: Record<GroupId, boolean>  // which groups are selected as units
-editingGroupId: GroupId | null              // group being "drilled into"
+// Actual implementation uses ReadonlySet<GroupId> not Record<GroupId, boolean>
+selectedGroupIds: ShallowRef<ReadonlySet<GroupId>>
+// Note: editingGroupId is NOT yet implemented (deferred — no nested group editing)
 ```
 
 ## New Feature: `app/features/groups/`
 
-### Directory Structure
+### Directory Structure — `DONE`
 
 ```
 app/features/groups/
-├── types.ts              # GroupId type (re-exported from elements/types)
-├── groupUtils.ts         # Pure functions for group manipulation
-├── composables/
-│   └── useGroups.ts      # Composable wiring group/ungroup to state
-└── groupUtils.unit.test.ts
+├── types.ts                  # GroupId re-export from elements/types
+├── index.ts                  # Barrel exports (not in original spec)
+├── groupUtils.ts             # Pure functions + re-exports from @excalidraw/element
+├── groupUtils.unit.test.ts   # Unit tests
+└── composables/
+    └── useGroups.ts          # Composable wiring group/ungroup to state
 ```
 
-### `groupUtils.ts` — Pure Functions
+### `groupUtils.ts` — Pure Functions — `DONE`
 
-These mirror Excalidraw's `groups.ts` logic, adapted to our patterns:
+Actual implementation. Note: some functions re-exported from `@excalidraw/element`, others are custom:
 
 ```typescript
-// Get the outermost group for an element (last in array)
+// Re-exported from @excalidraw/element (upstream utilities):
+export { isElementInGroup, getElementsInGroup, elementsAreInSameGroup } from '@excalidraw/element'
+
+// Custom implementations:
 function getOutermostGroupId(element: ExcalidrawElement): GroupId | null
-
-// Get all elements sharing a group ID
-function getElementsInGroup(
-  elements: readonly ExcalidrawElement[],
-  groupId: GroupId,
-): ExcalidrawElement[]
-
-// Add a group ID to an element's groupIds array
-// Inserts relative to editingGroupId position (for nested groups)
-function addToGroup(
-  existingGroupIds: readonly GroupId[],
-  newGroupId: GroupId,
-  editingGroupId: GroupId | null,
-): readonly GroupId[]
-
-// Remove specific group IDs from an element
-function removeFromGroups(
-  groupIds: readonly GroupId[],
-  groupIdsToRemove: Record<GroupId, boolean>,
-): readonly GroupId[]
-
-// Given selected element IDs, expand selection to include all group members
-// Returns { selectedElementIds, selectedGroupIds }
-function selectGroupsForSelectedElements(
+// Note: simplified from spec — no editingGroupId parameter (nested groups deferred)
+function addToGroup(prevGroupIds: readonly GroupId[], newGroupId: GroupId): readonly GroupId[]
+// Note: uses ReadonlySet instead of Record<GroupId, boolean>
+function removeFromGroups(groupIds: readonly GroupId[], groupIdsToRemove: ReadonlySet<GroupId>): readonly GroupId[]
+// Note: renamed from selectGroupsForSelectedElements; returns ReadonlySet not Record
+function expandSelectionToGroups(
   elements: readonly ExcalidrawElement[],
   selectedElementIds: ReadonlySet<string>,
-  editingGroupId: GroupId | null,
-): {
-  selectedElementIds: Set<string>
-  selectedGroupIds: Record<GroupId, boolean>
-}
-
-// Check if element is selected because its group is selected (not individually)
-function isSelectedViaGroup(
-  element: ExcalidrawElement,
-  selectedGroupIds: Record<GroupId, boolean>,
-): boolean
-
-// Get selected group IDs as an array
-function getSelectedGroupIds(
-  selectedGroupIds: Record<GroupId, boolean>,
-): GroupId[]
+): GroupExpansionResult  // { elementIds: ReadonlySet<string>; groupIds: ReadonlySet<GroupId> }
+// Note: uses ReadonlySet instead of Record<GroupId, boolean>
+function isSelectedViaGroup(element: ExcalidrawElement, selectedGroupIds: ReadonlySet<GroupId>): boolean
+function reorderElementsForGroup(elements: readonly ExcalidrawElement[], groupElementIds: ReadonlySet<string>): readonly ExcalidrawElement[]
+function cleanupAfterDelete(elements: readonly ExcalidrawElement[], deletedIds: ReadonlySet<string>): void
 ```
 
-### `useGroups.ts` — Composable
+**Differences from original spec:**
+- Uses `ReadonlySet<GroupId>` instead of `Record<GroupId, boolean>` for type safety
+- `addToGroup` does not take `editingGroupId` (nested groups deferred)
+- Added `cleanupAfterDelete` — auto-ungroups when a group has <2 members
+- Added `reorderElementsForGroup` — z-order reordering on group creation
+- `getSelectedGroupIds` not needed (sets have `.values()` iteration)
+
+### `useGroups.ts` — Composable — `DONE`
+
+Actual interface (differs from original spec):
 
 ```typescript
-function useGroups(
-  elements: ShallowRef<readonly ExcalidrawElement[]>,
-  selection: UseSelectionReturn,  // existing selection composable
-): {
-  // State
-  selectedGroupIds: ShallowRef<Record<GroupId, boolean>>
-  editingGroupId: ShallowRef<GroupId | null>
+function useGroups(options: UseGroupsOptions): UseGroupsReturn
 
-  // Actions
+interface UseGroupsOptions {
+  elements: ShallowRef<readonly ExcalidrawElement[]>
+  selectedIds: ShallowRef<ReadonlySet<string>>
+  selectedElements: () => readonly ExcalidrawElement[]
+  replaceSelection: (ids: Set<string>) => void
+  replaceElements: (elements: readonly ExcalidrawElement[]) => void
+  markStaticDirty: () => void
+  markInteractiveDirty: () => void
+}
+
+interface UseGroupsReturn {
+  selectedGroupIds: ShallowRef<ReadonlySet<GroupId>>  // ReadonlySet, not Record
   groupSelection: () => void       // Cmd+G
   ungroupSelection: () => void     // Cmd+Shift+G
-  enterGroupEditing: (element: ExcalidrawElement) => void  // double-click
-  exitGroupEditing: () => void     // click outside group
-
-  // Queries
   isSelectedViaGroup: (element: ExcalidrawElement) => boolean
-  getGroupElements: (groupId: GroupId) => ExcalidrawElement[]
+  expandSelectionForGroups: () => void  // expands selection to include all group members
 }
 ```
+
+**Differences from original spec:**
+- Takes an options object instead of positional args
+- Uses `ReadonlySet<GroupId>` instead of `Record<GroupId, boolean>`
+- No `editingGroupId` (nested group editing deferred)
+- No `enterGroupEditing`/`exitGroupEditing` (deferred)
+- No `getGroupElements` (use `getElementsInGroup` from groupUtils directly)
+- Added `expandSelectionForGroups` for explicit group expansion
 
 ## Selection Changes
 
@@ -277,25 +271,30 @@ element.groupIds = ["inner-group", "outer-group"]
 
 ```mermaid
 flowchart LR
-    A[1. Data model] --> B[2. groupUtils]
-    B --> C[3. useGroups composable]
-    C --> D[4. Selection integration]
-    D --> E[5. Keyboard shortcuts]
-    E --> F[6. Rendering]
-    F --> G[7. Z-order]
-    G --> H[8. Delete cleanup]
+    A["1. Data model ✓"] --> B["2. groupUtils ✓"]
+    B --> C["3. useGroups composable ✓"]
+    C --> D["4. Selection integration ✓"]
+    D --> E["5. Keyboard shortcuts ✓"]
+    E --> F["6. Rendering (partial)"]
+    F --> G["7. Z-order ✓"]
+    G --> H["8. Delete cleanup ✓"]
 ```
 
-| Phase | Files to change | Complexity |
-|-------|----------------|------------|
-| 1. Data model | `elements/types.ts`, `elements/createElement.ts` | Low |
-| 2. Group utils | New `groups/groupUtils.ts` + tests | Medium |
-| 3. useGroups | New `groups/composables/useGroups.ts` | Medium |
-| 4. Selection integration | `useSelectionInteraction.ts`, `useSelection.ts` | High |
-| 5. Keyboard shortcuts | Keyboard handler integration | Low |
-| 6. Rendering | `renderElement.ts` or selection renderer | Medium |
-| 7. Z-order reordering | `useElements.ts` or group action | Medium |
-| 8. Delete cleanup | Delete handler | Low |
+| Phase | Status | Files |
+|-------|--------|-------|
+| 1. Data model | DONE | `elements/types.ts` (re-export), `elements/createElement.ts` |
+| 2. Group utils | DONE | `groups/groupUtils.ts` + `groupUtils.unit.test.ts` |
+| 3. useGroups | DONE | `groups/composables/useGroups.ts` |
+| 4. Selection integration | DONE | `useSelectionInteraction.ts` calls `expandSelectionForGroups()` |
+| 5. Keyboard shortcuts | DONE | Cmd+G / Cmd+Shift+G wired in |
+| 6. Rendering | PARTIAL | Group bounding box rendering not yet implemented (individual elements render, no group-level dashed border) |
+| 7. Z-order reordering | DONE | `reorderElementsForGroup()` in groupUtils |
+| 8. Delete cleanup | DONE | `cleanupAfterDelete()` auto-ungroups orphaned groups |
+
+### Still TODO
+- Group bounding box rendering (dashed border around grouped elements when selected as group)
+- `editingGroupId` / nested group editing (double-click to drill into group)
+- Escape to exit group editing mode
 
 ## Testing Strategy
 

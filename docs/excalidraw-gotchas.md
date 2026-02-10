@@ -2,72 +2,19 @@
 
 > **This file is agent memory.** Update it when you discover new pitfalls. Use Mermaid for complex explanations.
 
-## React-in-Vue: Don't Import Excalidraw Directly in Vue Templates
+## No React Bridge: Native Canvas Rendering
 
-Excalidraw is a React component. You cannot use `<Excalidraw />` directly in a Vue `<template>`.
+This project does NOT use the Excalidraw React component. Instead, it renders directly to `<canvas>` using RoughJS and its own Vue composables. There is no `createRoot`, no React DOM, and no `<ClientOnly>` wrappers needed.
 
-```mermaid
-flowchart LR
-    A["❌ &lt;Excalidraw /&gt; in Vue template"] -->|crashes| B[Runtime Error]
-    C["✅ createRoot → render(&lt;Excalidraw /&gt;)"] -->|works| D[Canvas Renders]
-```
+The `@excalidraw/excalidraw` package is NOT a dependency. Only `@excalidraw/common` is used (for `randomInteger`, `reseed`, and shared constants). The `excalidraw/` directory at the project root contains the original Excalidraw source code for **reference only** (git-ignored).
 
-```ts
-// ✅ Bridge pattern
-import { createRoot } from 'react-dom/client'
-import { Excalidraw } from '@excalidraw/excalidraw'
-```
+## SSR Is Disabled Globally
 
-## Client-Side Only: Excalidraw Needs the Browser
+`nuxt.config.ts` sets `ssr: false`. All code runs client-side only. No need for `ClientOnly` wrappers or `.client.vue` suffixes. However, composables using `document` or `window` at module scope must still guard access for Vitest unit tests running in Node mode (see VueUse gotchas).
 
-Excalidraw uses canvas APIs and window/document. It will crash during SSR.
+## Theme: CSS Filter Algorithm (Not Separate Palette)
 
-```vue
-<!-- ✅ Always wrap in ClientOnly -->
-<ClientOnly>
-  <ExcalidrawWrapper />
-</ClientOnly>
-```
-
-Or name the component file with `.client.vue` suffix to auto-skip SSR.
-
-## Excalidraw API Reference Must Be Current
-
-The Excalidraw API changes between versions. Don't rely on training data for API shapes. Fetch the latest docs from `https://docs.excalidraw.com` when working on Excalidraw features.
-
-## ExcalidrawAPI Instance: Don't Store in Reactive State
-
-The API instance has internal methods. Deep reactivity tracking breaks performance.
-
-```ts
-// ❌ Causes performance issues
-const api = ref(null)
-
-// ✅ Use shallowRef or a plain variable
-const api = shallowRef(null)
-```
-
-## Scene Data Serialization
-
-```mermaid
-flowchart LR
-    A[getSceneElements] -->|may have circular refs| B{Serialization}
-    B -->|"❌ JSON.stringify"| C[Throws Error]
-    B -->|"✅ serializeAsJSON()"| D[Safe JSON]
-```
-
-Use the built-in `serializeAsJSON` utility for safe persistence.
-
-## Theme Sync
-
-```mermaid
-flowchart TD
-    A[Nuxt Color Mode] -->|watch| B[Sync Logic]
-    B -->|"theme prop"| C[Excalidraw Component]
-    B -->|CSS vars| D[Excalidraw Container]
-```
-
-Excalidraw has its own theme system. When implementing dark mode, you must pass the `theme` prop AND handle the CSS variables it expects. These two systems must be synced manually.
+Dark mode is implemented natively. `resolveColor(color, theme)` passes through in light mode, and in dark mode applies `invert(93%) + hue-rotate(180deg)` — the same algorithm as CSS filters, but computed in JS for canvas use. The document root gets a `theme--dark` class toggled via `watchEffect` in `CanvasContainer.vue`.
 
 ## HiDPI Canvas Setup Pattern
 
@@ -294,15 +241,11 @@ const unrotated = rotatePoint(point, { x: cx, y: cy }, -el.angle)
 
 **Rule**: Any geometric test against an element must check `element.angle` and unrotate accordingly.
 
-## Dark Mode: CSS Filter Algorithm (Not Separate Palette)
-
-Dark mode colors are NOT hardcoded separately. `resolveColor(color, theme)` passes through in light mode, and in dark mode applies `invert(93%) + hue-rotate(180deg)` — the same algorithm as CSS filters, but computed in JS for canvas use.
-
-Results are cached in a browser-only `Map`. The cache is explicitly set to `null` during SSR (`globalThis.window === undefined`) to prevent server-side memory leaks.
-
 ## useTheme Is a Global State Singleton
 
 `useTheme()` uses `createGlobalState()` from VueUse, meaning all consumers share the same reactive `theme` ref. Calling `useTheme()` in multiple composables does not create separate state — it returns the same instance.
+
+Dark mode color resolution results are cached in a browser-only `Map` inside `colors.ts`. Since SSR is disabled, there's no server-side memory leak concern.
 
 The `$reset()` method exists for testing teardown.
 
@@ -399,7 +342,7 @@ export function reseed(seed = 12_345): void {
 
 ## Focusing Elements Inside pointerdown Handlers
 
-When creating and focusing an input/textarea inside a `pointerdown` handler, the browser's native pointer event processing will steal focus back after the handler returns. This causes an immediate `blur` event with `relatedTarget: null`.
+When creating and focusing an input/textarea inside a `pointerdown` handler, the browser's native pointer event processing may steal focus back after the handler returns. This causes an immediate `blur` event with `relatedTarget: null`.
 
 ```mermaid
 flowchart LR
@@ -413,23 +356,16 @@ flowchart LR
 
 **Symptom**: Editor opens and closes instantly on click — no error, no console warning.
 
-**Diagnosis**: Add a blur listener and check `relatedTarget`. If it's `null`, focus was stolen by native pointer handling.
+**Current implementations differ:**
+- `useTextInteraction.ts` calls `textarea.focus()` synchronously (works because the text editor container is separate from the canvas pointer target)
+- `useCodeInteraction.ts` defers with `requestAnimationFrame(() => textarea.focus())` to avoid the focus-steal race
 
-**Fix pattern (both required):**
+**Both use the tool-switch-before-open pattern** — `setTool('selection')` is called before opening the editor, preventing `onBeforeToolChange` from closing it immediately:
 
-1. **Defer focus** — use `requestAnimationFrame` so focus happens after native handling completes:
-   ```ts
-   requestAnimationFrame(() => {
-     textarea.focus()
-     if (initialText) textarea.select()
-   })
-   ```
+```ts
+// In pointerdown handler:
+setTool('selection')  // Switch BEFORE opening
+openEditor(element)   // Editor sets editingElement ref
+```
 
-2. **Switch tool before opening editor** — prevents `onBeforeToolChange` from closing the editor if another tool switch occurs:
-   ```ts
-   // In pointerdown handler:
-   setTool('selection')  // Switch BEFORE opening
-   openEditor(element)   // Editor sets editingElement ref
-   ```
-
-**Reference**: See `useTextInteraction.ts` (lines 329-332) for the canonical pattern, and the fix applied to `useCodeInteraction.ts`.
+**Reference**: See `useTextInteraction.ts` (line ~329) and `useCodeInteraction.ts` (line ~162).

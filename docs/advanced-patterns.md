@@ -5,6 +5,8 @@ description: Vue 3 built-in components (Transition, Teleport, Suspense, KeepAliv
 
 # Built-in Components & Directives
 
+> **Codebase usage note:** None of these built-in components (Transition, Teleport, Suspense, KeepAlive) or directives (v-memo, v-once) are currently used in our codebase. Our app is canvas-based with minimal Vue template rendering. This doc serves as a reference for when they become needed (e.g., modal dialogs, animated panels, property editors).
+
 ## Transition
 
 Animate enter/leave of a single element or component.

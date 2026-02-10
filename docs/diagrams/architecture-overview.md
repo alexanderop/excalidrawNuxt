@@ -11,6 +11,9 @@ graph TD
     D --> E2[NewElement Canvas - in-progress shape]
     D --> E3[Interactive Canvas - selection UI + events]
 
+    C --> TEL[Text/Code Editor Layer z:3]
+    TEL --> TEL1[textEditorContainer div - pointer-events-none overlay]
+
     C --> CL[Canvas Layer Init]
     CL --> CL1[useCanvasLayers - 2D contexts + RoughCanvas on mount]
 
@@ -37,11 +40,13 @@ graph TD
     RN --> RN3[renderElement / renderScene - theme-aware]
     RN --> RN4[renderInteractive - selection borders + handles + marquee + groups]
     RN --> RN5[arrowhead.ts - Canvas 2D arrowhead rendering]
+    RN --> RN6[textMeasurement.ts - text/font metrics]
 
     C --> TL[Tools Feature]
     TL --> TL1[useTool - active tool + keyboard shortcuts]
     TL --> TL2[useDrawingInteraction - pointer to shape/arrow]
     TL --> TL3[DrawingToolbar.vue - tool selection UI]
+    TL --> TL4[useTextInteraction - text element editing]
 
     C --> LE[Linear Editor Feature]
     LE --> LE1[useMultiPointCreation - click-to-place mode]
@@ -63,6 +68,14 @@ graph TD
     BN --> BN2[bindUnbind.ts - bind/unbind arrow endpoints]
     BN --> BN3[updateBoundPoints.ts - recalc on move/resize]
     BN --> BN4[renderBindingHighlight.ts - blue highlight]
+    BN --> BN5[boundText.ts - bound text for shapes]
+
+    C --> CD[Code Feature]
+    CD --> CD1[useCodeInteraction - code element editing lifecycle]
+    CD --> CD2[useShikiHighlighter - Shiki syntax highlighting]
+    CD --> CD3[renderCodeElement.ts - canvas rendering of code]
+    CD --> CD4[buildEditorDom.ts - DOM editor construction]
+    CD --> CD5[measureCode.ts - code text metrics]
 
     C --> GR[Groups Feature]
     GR --> GR1[useGroups - group/ungroup selection, Cmd+G / Cmd+Shift+G]
@@ -72,6 +85,7 @@ graph TD
     A --> G[shared/]
     G --> G1[math.ts - Point, Box, distance, clamp, lerp, TWO_PI]
     G --> G2[random.ts - nanoid, randomInteger, generateId]
+    G --> G3[isTypingElement.ts - keyboard shortcut suppression guard]
 
     style C fill:#f9a825,color:#000
     style D fill:#ef6c00,color:#fff
@@ -81,4 +95,6 @@ graph TD
     style TL fill:#c62828,color:#fff
     style TH fill:#00838f,color:#fff
     style GR fill:#4e342e,color:#fff
+    style CD fill:#1b5e20,color:#fff
+    style BN fill:#4a148c,color:#fff
 ```

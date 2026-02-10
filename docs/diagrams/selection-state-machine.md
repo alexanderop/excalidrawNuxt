@@ -112,7 +112,9 @@ Defined in `app/features/selection/transformHandles.ts`:
 
 | Target | Action |
 |---|---|
-| Arrow element | Enters linear editing mode (`onDoubleClickArrow`) |
+| Linear element (arrow/line) | Enters linear editing mode (`onDoubleClickLinear`) |
+
+> **Note:** Double-click on text/code elements is handled by `useTextInteraction` / `useCodeInteraction`, not by `useSelectionInteraction`.
 
 ## Pointer Capture
 

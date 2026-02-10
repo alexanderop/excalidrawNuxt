@@ -68,38 +68,26 @@ Using `page.mouse` (Playwright's top-level mouse API) to simulate drags on canva
 
 **Symptom:** Pointer events never reach the canvas, `pointerdown` handlers don't fire, tool state doesn't update.
 
-**Solution:** Dispatch `PointerEvent`s directly within the iframe using `frame.evaluate`:
+**Solution:** Dispatch `PointerEvent`s directly within the iframe using `frame.evaluate`. The low-level command lives in `app/__test-utils__/commands/canvasDrag.ts`.
+
+Tests should use the higher-level helpers which wrap these commands:
 
 ```ts
-// ✅ Works: dispatch events inside the iframe
-const canvasDrag: BrowserCommand<[...]> = async (ctx, selector, startX, startY, endX, endY, options) => {
-  const frame = await ctx.frame()
+// ✅ Use the Pointer/UI/API helpers from app/__test-utils__/browser/
+import { Pointer, UI, API, waitForPaint } from '~/app/__test-utils__/browser'
 
-  await frame.evaluate(({ sel, sx, sy, ex, ey }) => {
-    const el = document.querySelector(sel)!
-    const rect = el.getBoundingClientRect()
+const ui = new UI(screen)
+await ui.clickTool('rectangle')
+await ui.pointer.drag(100, 100, 300, 200)
+await waitForPaint()
 
-    function fire(type: string, x: number, y: number): void {
-      el.dispatchEvent(new PointerEvent(type, {
-        clientX: rect.left + x,
-        clientY: rect.top + y,
-        button: 0,
-        buttons: type === 'pointerup' ? 0 : 1,
-        bubbles: true,
-        pointerId: 1,
-        pointerType: 'mouse',
-      }))
-    }
+const el = API.elements.at(-1)
+```
 
-    fire('pointerdown', sx, sy)
-    fire('pointermove', ex, ey)
-    fire('pointerup', ex, ey)
-  }, { sel: selector, sx: startX, sy: startY, ex: endX, ey: endY })
-}
+The `API` object provides programmatic access to app state via `globalThis.__h` (the test hook exposed by `CanvasContainer.vue`). This follows Excalidraw's `window.h` pattern.
 
+```ts
 // ❌ Fails: page.mouse coordinates don't map correctly into iframe
 await ctx.page.mouse.move(pageX, pageY)
 await ctx.page.mouse.down()
 ```
-
-See `app/__test-utils__/commands/canvasDrag.ts` for the full implementation.

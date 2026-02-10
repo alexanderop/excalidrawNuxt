@@ -14,12 +14,14 @@ graph LR
             Selection[selection/]
             LinearEditor[linear-editor/]
             Binding[binding/]
+            Code[code/]
             Theme[theme/]
             Groups[groups/]
         end
         subgraph "shared/"
             Math[math.ts]
             Random[random.ts]
+            IsTyping[isTypingElement.ts]
         end
     end
 
@@ -30,17 +32,23 @@ graph LR
     Canvas --> Selection
     Canvas --> LinearEditor
     Canvas --> Binding
+    Canvas --> Code
     Canvas --> Theme
     Canvas --> Groups
     Tools --> Elements
+    Tools --> Binding
+    Tools --> Code
     Rendering --> Elements
     Rendering --> Theme
     Rendering --> Selection
     Rendering --> LinearEditor
     Rendering --> Binding
+    Rendering --> Code
     LinearEditor --> Elements
+    LinearEditor --> Binding
     Binding --> Elements
-    Tools --> Binding
+    Code --> Elements
+    Code --> Rendering
     LinearEditor --> Binding
     Selection --> Elements
     Groups --> Elements
@@ -64,10 +72,11 @@ graph LR
 |---------|---------|-------------|
 | **canvas** | Canvas stack, viewport, render loop, dirty flags, scene orchestration | `useViewport`, `useRenderer`, `useSceneRenderer`, `useCanvasLayers`, `usePanning`, `createDirtyFlags`, `useAnimationController` |
 | **elements** | Element data model, creation, mutation | `useElements`, `createElement`, `mutateElement` |
-| **rendering** | Grid, shape generation, scene/element/interactive rendering | `renderGrid`, `renderScene`, `renderElement`, `generateShape` |
-| **tools** | Tool state, drawing interaction | `useToolStore`, `useDrawingInteraction` |
+| **rendering** | Grid, shape generation, scene/element/interactive rendering, text measurement | `renderGrid`, `renderScene`, `renderElement`, `generateShape`, `textMeasurement` |
+| **tools** | Tool state, drawing interaction, text editing interaction | `useToolStore`, `useDrawingInteraction`, `useTextInteraction` |
 | **selection** | Hit testing, bounds, drag/resize, selection state machine | `useSelection`, `useSelectionInteraction`, `hitTest`, `dragElements`, `resizeElement` |
 | **linear-editor** | Multi-point arrow creation, point editing | `useMultiPointCreation`, `useLinearEditor`, `pointHandles` |
-| **binding** | Arrow-to-shape binding, proximity detection | `bindArrowToElement`, `proximity`, `updateBoundPoints`, `renderSuggestedBinding` |
+| **binding** | Arrow-to-shape binding, proximity detection, bound text | `bindArrowToElement`, `proximity`, `updateBoundPoints`, `renderSuggestedBinding`, `boundText` |
+| **code** | Code element with syntax highlighting via Shiki | `useCodeInteraction`, `useShikiHighlighter`, `renderCodeElement`, `buildEditorDom`, `measureCode` |
 | **theme** | Light/dark mode, color resolution | `useTheme`, `resolveColor`, `applyDarkModeFilter` |
 | **groups** | Element grouping, group selection expansion | `useGroups`, `groupUtils` (pure functions), `cleanupAfterDelete` |

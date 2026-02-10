@@ -45,6 +45,8 @@ flowchart LR
     C --> C2[renderElement per visible element]
     C2 --> C3[generateShape via roughjs + cache]
     C2 --> C4[resolveColor for stroke/fill based on theme]
+    C --> C5[renderCodeElement for code elements]
+    C --> C6[textMeasurement for text metrics]
 ```
 
 ## Interactive Layer Pipeline
@@ -77,6 +79,8 @@ flowchart LR
 | Selection change/drag/resize | Interactive | `useSelectionInteraction` |
 | Group/ungroup | Static + Interactive | `useGroups` |
 | Linear editor point move | Static + Interactive | `useLinearEditor` |
+| Text editing submit | Static + Interactive | `useTextInteraction` |
+| Code editing submit | Static + Interactive | `useCodeInteraction` |
 | Animation tick | Interactive | `useAnimationController` |
 
 ## Theme Integration

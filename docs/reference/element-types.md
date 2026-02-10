@@ -6,6 +6,8 @@
 | `ellipse` | Box (x, y, width, height) | Standard shape |
 | `diamond` | Box (x, y, width, height) | Standard shape |
 | `arrow` | Points-based (x, y, points[]) | `points` are relative to `x,y`. First point always `[0,0]`. `width`/`height` derived from points AABB. No rotation handles (Phase 1). |
+| `line` | Points-based (x, y, points[]) | Same linear model as arrow. No arrowheads, no bindings. Has `polygon` boolean for closed shapes. |
+| `code` | Rectangle + `customData` | Not a distinct element type — uses `rectangle` with `customData.code` and `customData.language`. Rendered as a code block with syntax highlighting via Shiki. See Code Feature section below. |
 
 ## Base Element Fields (`ExcalidrawElementBase`)
 
@@ -14,7 +16,7 @@ All element types share these fields (defined in `elements/types.ts`):
 | Field | Type | Notes |
 |-------|------|-------|
 | `id` | `string` (readonly) | Unique ID via `nanoid` |
-| `type` | `ExcalidrawElementType` (readonly) | `'rectangle' \| 'ellipse' \| 'diamond' \| 'arrow' \| 'text'` |
+| `type` | `ExcalidrawElementType` (readonly) | `'rectangle' \| 'ellipse' \| 'diamond' \| 'arrow' \| 'line' \| 'text'` |
 | `x`, `y` | `number` | Scene position |
 | `width`, `height` | `number` | Bounding box size |
 | `angle` | `number` | Rotation in radians |
@@ -37,9 +39,11 @@ Prefer type guard functions over inline `el.type === '...'` checks when the vari
 | Guard | Narrows To | Replaces |
 |-------|-----------|----------|
 | `isArrowElement(el)` | `ExcalidrawArrowElement` | `el.type === 'arrow'` |
+| `isLineElement(el)` | `ExcalidrawLineElement` | `el.type === 'line'` |
 | `isTextElement(el)` | `ExcalidrawTextElement` | `el.type === 'text'` |
-| `isLinearElement(el)` | `ExcalidrawArrowElement` | `el.type === 'arrow'` (alias, for semantic clarity in linear contexts) |
+| `isLinearElement(el)` | `ExcalidrawLinearElement` | `el.type === 'arrow' \|\| el.type === 'line'` (covers both linear types) |
 | `isBindableElement(el)` | `BindableElement` | `el.type === 'rectangle' \|\| el.type === 'ellipse' \|\| el.type === 'diamond'` |
+| `isCodeElement(el)` | `boolean` (not a type guard) | `el.type === 'rectangle' && el.customData?.code !== undefined` (in `features/code/types.ts`) |
 
 **When NOT to use guards:** In exhaustive switch/if-chains that handle every type branch (e.g., `createElement.ts`, `shapeGenerator.ts`, `distanceToShapeEdge`). Those must list types explicitly for `never`-exhaustiveness checks.
 
@@ -59,7 +63,7 @@ Elements can be grouped via `Cmd+G`. Groups are **not** separate entities — th
 
 ## Arrow-Specific Architecture
 
-- **Tool types**: `LinearToolType = 'arrow'` vs `ShapeToolType = 'rectangle' | 'ellipse' | 'diamond'`. Guards: `isLinearTool()`, `isShapeTool()`.
+- **Tool types**: `LinearToolType = 'arrow' | 'line'` vs `ShapeToolType = 'rectangle' | 'ellipse' | 'diamond'`. Full: `ToolType = 'selection' | 'hand' | 'text' | 'code' | DrawingToolType`. Guards: `isLinearTool()`, `isShapeTool()`, `isDrawingTool()`, `isTextTool()`, `isCodeTool()`.
 - **Drawing**: `useDrawingInteraction` branches on `isLinearTool()` — arrows update `points[]`, shapes update `width/height`. After initial drag, linear tools enter multi-point mode via `onMultiPointStart` callback.
 - **Multi-point creation**: `useMultiPointCreation` — after initial 2-point drag, click-to-place additional points. Rubber-band line from last point to cursor. Finalize with Escape/Enter/dblclick or tool switch.
 - **Linear editor**: `useLinearEditor` — double-click an existing arrow to edit points. Point handles rendered at vertices, midpoint indicators on segments. Drag to move points, click midpoint to insert, Delete to remove (min 2). Shift-click for multi-select. Escape or click empty space to exit.
@@ -124,3 +128,26 @@ Dark mode uses programmatic color inversion (`invert(93%) + hue-rotate(180deg)`)
 - Selection colors: `SELECTION_COLORS` in `selection/constants.ts` — per-theme colors
 - Binding colors: `BINDING_COLORS` in `binding/constants.ts` — per-theme highlight
 - Linear editor colors: `LINEAR_EDITOR_COLORS` in `linear-editor/constants.ts` — per-theme point/midpoint/rubber-band colors
+- Code element colors: `CODE_THEME_COLORS` in `code/constants.ts` — per-theme bg/header/gutter/text colors
+
+## Code Feature (`features/code/`)
+
+Code elements are rectangles with `customData` containing `{ code: string, language: CodeLanguage }`. They render as styled code blocks with syntax highlighting (Shiki), a macOS-style header bar, line numbers, and a gutter. Supported languages: `'typescript' | 'vue'`.
+
+| File | Purpose |
+|------|---------|
+| `types.ts` | `CodeElementData`, `CodeLanguage` type, `isCodeElement()` / `getCodeData()` helpers |
+| `constants.ts` | Font sizes, padding, header dot layout, `CODE_THEME_COLORS` per-theme colors |
+| `renderCodeElement.ts` | Canvas 2D rendering: rounded rect bg, header bar, traffic-light dots, line numbers, Shiki tokens |
+| `useShikiHighlighter.ts` | Lazy-loads Shiki highlighter, returns `highlight(code, lang, theme)` |
+| `useCodeInteraction.ts` | Composable: double-click to edit code, DOM editor overlay, submit on blur/escape |
+| `buildEditorDom.ts` | Builds the textarea DOM for code editing |
+| `measureCode.ts` | Measures code dimensions for auto-sizing |
+| `code.browser.test.ts` | Browser tests for code element |
+| `index.ts` | Barrel exports |
+
+**Integration points:**
+- `rendering/shapeGenerator.ts` — skips roughjs shape generation for code elements
+- `rendering/renderElement.ts` — calls `renderCodeElement()` for code elements
+- `tools/useTextInteraction.ts` — skips text interaction for code elements
+- `canvas/CanvasContainer.vue` — manages `editingCodeElement` state and code editor overlay

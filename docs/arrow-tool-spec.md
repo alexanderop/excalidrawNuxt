@@ -379,8 +379,15 @@ Orthogonal routing with rounded corners. Excalidraw uses A* pathfinding on a gri
 | **4 (Curves)** | — | `rendering/shapeGenerator.ts`, `rendering/arrowhead.ts`, `selection/hitTest.ts`, `elements/types.ts` |
 | **5 (Binding)** | `features/binding/` (new feature dir) | `elements/types.ts`, `selection/dragElements.ts`, `selection/resizeElement.ts`, `tools/useDrawingInteraction.ts` |
 
-## Open Questions
+## Open Questions (Resolved)
 
-1. **Line tool?** — Excalidraw's `line` and `arrow` share the same `LinearElement` base. Should we add a generic `line` tool at the same time as `arrow`? (low extra cost in Phase 1 — same points model, just no arrowheads)
-2. **Arrowhead picker UI** — When do we add a toolbar/properties panel for choosing arrowhead style? Phase 1 ships with a fixed `'arrow'` endArrowhead.
-3. **Bidirectional arrows** — Phase 1 supports `startArrowhead` in the type but defaults it to `null`. Flip to `'arrow'` for bidirectional. When do we expose this in UI?
+1. ~~**Line tool?**~~ **RESOLVED** — Line tool is now implemented (`type: 'line'`). Shares `ExcalidrawLinearElement` base with arrow. Created via `createElement('line', ...)` with `endArrowhead: null`. Added to toolbar as shortcut `8`. Lines don't bind to shapes (binding checks `isArrowElement()` before binding).
+2. **Arrowhead picker UI** — Still TODO. No toolbar/properties panel for choosing arrowhead style yet. Only `'arrow'` (end) and `null` (start) are set by default.
+3. **Bidirectional arrows** — Still TODO. `startArrowhead` is in the type but defaults to `null`. No UI to toggle.
+
+## Implementation Notes (Updated 2026-02)
+
+- **Types are re-exported from `@excalidraw/element/types`**, not custom-defined. The spec code snippets show simplified versions for illustration. The actual `ExcalidrawArrowElement`, `FixedPointBinding`, `Arrowhead`, etc. come from the official package.
+- **`createElement.ts`** already sets `elbowed: false`, `strokeStyle: 'solid'`, `roundness: null`, and `groupIds: []` on all elements by default.
+- **`useDrawingInteraction.ts`** handles arrow creation (not `useArrowInteraction` as shown in Phase 1 diagram).
+- **Line tool** shares the same multi-point creation and linear editor infrastructure as arrows.

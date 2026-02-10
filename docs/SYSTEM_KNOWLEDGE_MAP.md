@@ -4,7 +4,7 @@
 
 ## Feature Inventory
 
-Nine feature modules under `app/features/`:
+Ten feature modules under `app/features/`:
 
 | Feature | Directory | Key Exports | Purpose |
 |---------|-----------|-------------|---------|
@@ -12,8 +12,9 @@ Nine feature modules under `app/features/`:
 | **Elements** | `elements/` | `useElements`, `createElement`, `mutateElement`, element types | Reactive element array, factory, in-place mutation + version bump |
 | **Rendering** | `rendering/` | `renderGrid`, `renderScene`, `renderElement`, `renderInteractiveScene`, `generateShape`, `renderArrowheads` | Grid, roughjs shapes, arrowheads, interactive overlays (selection borders, handles, linear editor, binding highlights, groups) |
 | **Selection** | `selection/` | `useSelection`, `useSelectionInteraction`, `hitTest`, `getTransformHandles`, `dragElements`, `resizeElement`, `bounds` | Click/drag selection, state machine, hit testing, transform handles, drag + resize |
-| **Tools** | `tools/` | `useToolStore`, `useDrawingInteraction`, `useTextInteraction`, `DrawingToolbar.vue` | Active tool state, keyboard shortcuts, pointer-to-shape/arrow creation, bound text on shapes |
-| **Linear Editor** | `linear-editor/` | `useLinearEditor`, `useMultiPointCreation`, `pointHandles`, `renderLinearEditor` | Arrow point editing (double-click), multi-point click-to-place creation, rubber band preview |
+| **Tools** | `tools/` | `useToolStore`, `useDrawingInteraction`, `useTextInteraction`, `DrawingToolbar.vue` | Active tool state, keyboard shortcuts (incl. line tool `l`/`8`), pointer-to-shape/arrow/line creation, bound text on shapes |
+| **Linear Editor** | `linear-editor/` | `useLinearEditor`, `useMultiPointCreation`, `pointHandles` (`movePoint`, `movePoints`, `getSizeFromPoints`, etc.), `renderLinearEditor` | Arrow/line point editing (double-click), multi-point click-to-place creation, rubber band preview |
+| **Code** | `code/` | `useCodeInteraction`, `useShikiHighlighter`, `renderCodeElement`, `measureCode`, `isCodeElement`, `getCodeData` | Code element with syntax highlighting via Shiki, inline code editor, TypeScript/Vue language support |
 | **Binding** | `binding/` | `getHoveredElementForBinding`, `bindArrowToElement`, `unbindArrowEndpoint`, `updateBoundArrowEndpoints`, `renderSuggestedBinding`, `proximity`, `bindTextToContainer`, `unbindTextFromContainer`, `updateBoundTextAfterContainerChange` | Arrow-to-shape binding, fixedPoint system, edge distance, blue highlight, bound text lifecycle |
 | **Groups** | `groups/` | `useGroups`, `expandSelectionToGroups`, `addToGroup`, `removeFromGroups`, `reorderElementsForGroup`, `cleanupAfterDelete` | Flat groupIds model, Cmd+G/Cmd+Shift+G, group selection expansion, z-order reordering |
 | **Theme** | `theme/` | `useTheme`, `resolveColor`, `applyDarkModeFilter`, `THEME` | Light/dark mode via localStorage, CSS invert+hue-rotate color transform, Alt+Shift+D toggle |
@@ -30,9 +31,16 @@ graph TD
     Canvas --> LinearEditor[Linear Editor]
     Canvas --> Binding
     Canvas --> Theme
+    Canvas --> Code
+    Canvas --> Groups
 
     Tools --> Elements
     Tools --> Binding
+
+    Code --> Elements
+    Code --> Selection
+    Code --> Theme
+    Code --> Tools
 
     Rendering --> Elements
     Rendering --> Selection
@@ -47,7 +55,6 @@ graph TD
     LinearEditor --> Binding
 
     Binding --> Elements
-    Binding --> Selection
 
     Groups --> Elements
 
@@ -60,10 +67,12 @@ graph TD
 ```
 
 **Key dependency notes:**
-- `useSceneRenderer` (canvas/) is the main orchestrator — it imports from rendering/, elements/, theme/, and receives state from selection/, linear-editor/, binding/, and groups/ via options
+- `CanvasContainer.vue` is the top-level orchestrator — it imports from elements/, tools/, code/, selection/, linear-editor/, binding/, groups/, and theme/ directly
+- `useSceneRenderer` (canvas/) wires dirty flags to domain paint callbacks across static/newElement/interactive layers
 - `renderInteractive.ts` (rendering/) is the cross-cutting overlay renderer — imports from selection/, linear-editor/, and binding/ to draw all interactive UI
-- `binding/proximity.ts` imports `distanceToSegment` from selection/hitTest (binding depends on selection)
-- `groups/` is relatively isolated — only depends on elements/ and shared/
+- `binding/proximity.ts` uses `@excalidraw/math` directly (no dependency on selection/hitTest)
+- `code/` depends on elements/, selection/, theme/, and tools/ (for type imports)
+- `groups/` is relatively isolated — only depends on elements/ and shared/; `useGroups` is not re-exported from index.ts (imported directly from `groups/composables/useGroups`)
 
 ## Diagrams
 
@@ -81,10 +90,11 @@ graph TD
 | Initialization Sequence | [diagrams/initialization-sequence.md](diagrams/initialization-sequence.md) | Composable boot order, deferred dirty-flag binding pattern |
 | Event Flow | [diagrams/event-flow.md](diagrams/event-flow.md) | Listener targets, pointer capture, panning priority, event pipeline |
 
-**Staleness warnings:** The architecture-overview, file-map, and feature-architecture diagrams were written before groups/ and theme/ features existed. They need updates to include:
-- `groups/` and `theme/` feature boxes + edges
+**Staleness warnings:** The architecture-overview, file-map, and feature-architecture diagrams were written before groups/, theme/, and code/ features existed. They need updates to include:
+- `groups/`, `theme/`, and `code/` feature boxes + edges
 - `useSceneRenderer` and `useCanvasLayers` in canvas composables
-- Cross-feature edges for rendering → theme, rendering → linear-editor, rendering → binding, binding → selection
+- Cross-feature edges for rendering → theme, rendering → linear-editor, rendering → binding, code → elements/selection/theme/tools
+- Canvas → Code and Canvas → Groups edges
 
 ## Specs
 
@@ -101,6 +111,7 @@ graph TD
 | Technology Stack | [reference/technology-stack.md](reference/technology-stack.md) | Framework, UI, styling, canvas, composables, and utility libraries |
 | Element Types | [reference/element-types.md](reference/element-types.md) | Shape/arrow models, arrow architecture, linear editor, and binding feature |
 | Arrow Tech Spec | [arrow-tech-spec.md](arrow-tech-spec.md) | Complete arrow behavior spec: data model, binding, curves, elbow routing, hit testing, creation flow |
+| State & Persistence | [excalidraw-state-and-persistence.md](excalidraw-state-and-persistence.md) | How Excalidraw manages state (AppState, Scene, Actions, Jotai), persistence (localStorage, IndexedDB, file export, encryption), history/undo (delta-based dual stacks), and collaboration (reconciliation, versioning, fractional indexing) |
 
 ## Composable Quick Reference
 
@@ -120,7 +131,19 @@ graph TD
 | `useSelectionInteraction` | selection | Options object | State machine: idle → clicking → dragging → marquee → resizing |
 | `useLinearEditor` | linear-editor | Options object | Double-click arrow editing: point selection, drag, insert, delete, binding updates |
 | `useMultiPointCreation` | linear-editor | Options object | Click-to-place arrow points, Shift for angle snapping, dblclick/Enter/Esc to finalize |
-| `useGroups` | groups | Options object | Group/ungroup selected elements, expand selection to groups, selectedGroupIds state |
+| `useGroups` | groups | Options object | Group/ungroup selected elements, expand selection to groups, selectedGroupIds state. Not re-exported from index.ts — import from `groups/composables/useGroups` |
 | `useTheme` | theme | `createGlobalState` | Light/dark toggle via localStorage, Alt+Shift+D shortcut, `isDark` computed |
+| `useCodeInteraction` | code | Options object | Code element creation/editing: click-to-create, inline editor with Shiki highlighting |
+| `useShikiHighlighter` | code | `createGlobalState` | Lazy-loads Shiki highlighter, caches instance, provides `highlight(code, lang, theme)` |
+
+## Shared Modules
+
+`app/shared/` contains cross-cutting utilities used by multiple features:
+
+| Module | File | Description |
+|--------|------|-------------|
+| **math** | `shared/math.ts` | Re-exports from `@excalidraw/math` and `@excalidraw/common` — point operations (`pointFrom`, `pointDistance`, etc.), angle/vector math, branded types (`GlobalPoint`, `LocalPoint`, `Radians`). Also has project-specific utils (`snapAngle`, `normalizePoints`) |
+| **random** | `shared/random.ts` | `generateId()`, `randomInteger()`, `randomVersionNonce()` |
+| **isTypingElement** | `shared/isTypingElement.ts` | Detects input/textarea focus for keyboard shortcut suppression |
 
 > **Note:** Update this map when new features, diagrams, or reference docs are added.

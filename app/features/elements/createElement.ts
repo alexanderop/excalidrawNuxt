@@ -98,9 +98,9 @@ export function createElement(
     } as SupportedElement
   }
 
-  if (type === 'rectangle') return { ...base, type } as SupportedElement
-  if (type === 'ellipse') return { ...base, type } as SupportedElement
-  if (type === 'diamond') return { ...base, type } as SupportedElement
+  if (type === 'rectangle' || type === 'ellipse' || type === 'diamond') {
+    return { ...base, type } as SupportedElement
+  }
 
   throw new Error(`Unhandled element type: ${String(type)}`)
 }

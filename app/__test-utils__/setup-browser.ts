@@ -1,3 +1,4 @@
+import { expect } from 'vitest'
 import '~/assets/css/main.css'
 
 // vitest-browser-vue mounts components into a <div> under <body>.
@@ -11,3 +12,14 @@ style.textContent = [
   'body > div { height: 100%; width: 100%; }',
 ].join('\n')
 document.head.append(style)
+
+// Float snapshot serializer — prevents float precision flakiness in snapshots.
+// Non-integer numbers are rounded to 5 decimal places.
+expect.addSnapshotSerializer({
+  serialize(val: number, _config, _indentation, _depth, _refs, _printer) {
+    return val.toFixed(5)
+  },
+  test(val: unknown) {
+    return typeof val === 'number' && Number.isFinite(val) && !Number.isInteger(val)
+  },
+})
