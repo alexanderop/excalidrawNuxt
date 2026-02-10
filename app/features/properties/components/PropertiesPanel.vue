@@ -10,19 +10,26 @@ import ColorSwatch from './ColorSwatch.vue'
 import FontPicker from './FontPicker.vue'
 import ArrowheadPicker from './ArrowheadPicker.vue'
 
-const { selectedElements, markDirty } = defineProps<{
+const { selectedElements } = defineProps<{
   selectedElements: ExcalidrawElement[]
-  markDirty: () => void
 }>()
 
-const selectedElementsComputed = computed(() => selectedElements)
+const emit = defineEmits<{
+  'mark-dirty': []
+  'bring-to-front': []
+  'bring-forward': []
+  'send-backward': []
+  'send-to-back': []
+  'delete': []
+  'duplicate': []
+}>()
 
 const styleDefaults = useStyleDefaults()
 
 const actions = usePropertyActions({
-  selectedElements: selectedElementsComputed,
+  selectedElements: computed(() => selectedElements),
   styleDefaults,
-  markDirty,
+  markDirty: () => emit('mark-dirty'),
 })
 
 const hasTextSelected = computed(() =>
@@ -48,6 +55,9 @@ const currentStrokeWidth = computed(() =>
 )
 const currentStrokeStyle = computed(() =>
   actions.getFormValue<string>('strokeStyle', styleDefaults.strokeStyle.value),
+)
+const currentRoughness = computed(() =>
+  actions.getFormValue<number>('roughness', styleDefaults.roughness.value),
 )
 const currentRoundness = computed(() => {
   const raw = actions.getFormValue<{ type: number } | null>('roundness', null)
@@ -96,6 +106,12 @@ const strokeStyleOptions = [
   { label: 'Dotted', value: 'dotted', icon: '<line x1="4" y1="12" x2="20" y2="12" stroke-dasharray="1.5 3"/>' },
 ]
 
+const roughnessOptions = [
+  { label: 'Architect', value: 0, icon: '<line x1="4" y1="12" x2="20" y2="12"/>' },
+  { label: 'Artist', value: 1, icon: '<path d="M4 12c2-2 4 2 6 0s4-2 6 0"/>' },
+  { label: 'Cartoonist', value: 2, icon: '<path d="M4 12c1-4 3 4 5-2s3 4 5-1 3 3 6 1"/>' },
+]
+
 const roundnessOptions = [
   { label: 'Sharp', value: 'sharp', icon: '<rect x="4" y="4" width="16" height="16"/>' },
   { label: 'Round', value: 'round', icon: '<rect x="4" y="4" width="16" height="16" rx="4"/>' },
@@ -115,6 +131,9 @@ function onStrokeWidthChange(val: string | number): void {
 }
 function onStrokeStyleChange(val: string | number): void {
   actions.changeStrokeStyle(val as 'solid' | 'dashed' | 'dotted')
+}
+function onRoughnessChange(val: string | number): void {
+  actions.changeRoughness(val as number)
 }
 function onRoundnessChange(val: string | number): void {
   actions.changeRoundness(val as 'sharp' | 'round')
@@ -144,111 +163,215 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
 </script>
 
 <template>
-  <div class="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1.5 rounded-lg border border-edge/40 bg-surface/80 px-2 py-1.5 shadow-lg backdrop-blur-md">
-    <!-- Stroke Color -->
-    <ColorSwatch
-      :color="currentStrokeColor === 'mixed' ? 'mixed' : currentStrokeColor"
-      label="Stroke color"
-      @update:color="actions.changeStrokeColor"
-    />
+  <div
+    class="properties-sidebar absolute left-3 top-16 z-10 flex w-52 flex-col rounded-lg border border-edge/40 bg-surface/80 shadow-lg backdrop-blur-md max-h-[calc(100vh-6rem)] overflow-y-auto"
+  >
+    <!-- Stroke -->
+    <div class="border-b border-edge/20 px-3 py-2.5">
+      <span class="mb-1.5 block text-[11px] font-medium tracking-wide text-foreground/50">Stroke</span>
+      <div class="flex items-center gap-1.5">
+        <ColorSwatch
+          :color="currentStrokeColor === 'mixed' ? 'mixed' : currentStrokeColor"
+          label="Stroke color"
+          @update:color="actions.changeStrokeColor"
+        />
+      </div>
+    </div>
 
-    <!-- Background Color -->
-    <ColorSwatch
-      :color="currentBgColor === 'mixed' ? 'mixed' : currentBgColor"
-      label="Background color"
-      @update:color="actions.changeBackgroundColor"
-    />
-
-    <!-- Divider -->
-    <div class="mx-0.5 h-6 w-px bg-edge/30" />
+    <!-- Background -->
+    <div class="border-b border-edge/20 px-3 py-2.5">
+      <span class="mb-1.5 block text-[11px] font-medium tracking-wide text-foreground/50">Background</span>
+      <div class="flex items-center gap-1.5">
+        <ColorSwatch
+          :color="currentBgColor === 'mixed' ? 'mixed' : currentBgColor"
+          label="Background color"
+          @update:color="actions.changeBackgroundColor"
+        />
+      </div>
+    </div>
 
     <!-- Fill Style -->
-    <ButtonIconSelect
-      :options="fillStyleOptions"
-      :model-value="currentFillStyle"
-      @update:model-value="onFillStyleChange"
-    />
-
-    <div class="mx-0.5 h-6 w-px bg-edge/30" />
+    <div class="border-b border-edge/20 px-3 py-2.5">
+      <span class="mb-1.5 block text-[11px] font-medium tracking-wide text-foreground/50">Fill</span>
+      <ButtonIconSelect
+        :options="fillStyleOptions"
+        :model-value="currentFillStyle"
+        @update:model-value="onFillStyleChange"
+      />
+    </div>
 
     <!-- Stroke Width -->
-    <ButtonIconSelect
-      :options="strokeWidthOptions"
-      :model-value="currentStrokeWidth"
-      @update:model-value="onStrokeWidthChange"
-    />
-
-    <div class="mx-0.5 h-6 w-px bg-edge/30" />
+    <div class="border-b border-edge/20 px-3 py-2.5">
+      <span class="mb-1.5 block text-[11px] font-medium tracking-wide text-foreground/50">Stroke width</span>
+      <ButtonIconSelect
+        :options="strokeWidthOptions"
+        :model-value="currentStrokeWidth"
+        @update:model-value="onStrokeWidthChange"
+      />
+    </div>
 
     <!-- Stroke Style -->
-    <ButtonIconSelect
-      :options="strokeStyleOptions"
-      :model-value="currentStrokeStyle"
-      @update:model-value="onStrokeStyleChange"
-    />
+    <div class="border-b border-edge/20 px-3 py-2.5">
+      <span class="mb-1.5 block text-[11px] font-medium tracking-wide text-foreground/50">Stroke style</span>
+      <ButtonIconSelect
+        :options="strokeStyleOptions"
+        :model-value="currentStrokeStyle"
+        @update:model-value="onStrokeStyleChange"
+      />
+    </div>
 
-    <div class="mx-0.5 h-6 w-px bg-edge/30" />
+    <!-- Sloppiness -->
+    <div class="border-b border-edge/20 px-3 py-2.5">
+      <span class="mb-1.5 block text-[11px] font-medium tracking-wide text-foreground/50">Sloppiness</span>
+      <ButtonIconSelect
+        :options="roughnessOptions"
+        :model-value="currentRoughness"
+        @update:model-value="onRoughnessChange"
+      />
+    </div>
 
-    <!-- Roundness -->
-    <ButtonIconSelect
-      :options="roundnessOptions"
-      :model-value="currentRoundness"
-      @update:model-value="onRoundnessChange"
-    />
-
-    <div class="mx-0.5 h-6 w-px bg-edge/30" />
+    <!-- Edges -->
+    <div class="border-b border-edge/20 px-3 py-2.5">
+      <span class="mb-1.5 block text-[11px] font-medium tracking-wide text-foreground/50">Edges</span>
+      <ButtonIconSelect
+        :options="roundnessOptions"
+        :model-value="currentRoundness"
+        @update:model-value="onRoundnessChange"
+      />
+    </div>
 
     <!-- Opacity -->
-    <OpacitySlider
-      :model-value="currentOpacity"
-      @update:model-value="onOpacityChange"
-    />
+    <div class="border-b border-edge/20 px-3 py-2.5">
+      <span class="mb-1.5 block text-[11px] font-medium tracking-wide text-foreground/50">Opacity</span>
+      <OpacitySlider
+        :model-value="currentOpacity"
+        @update:model-value="onOpacityChange"
+      />
+    </div>
 
-    <!-- Text controls (shown when text elements selected) -->
+    <!-- Text controls (conditional) -->
     <template v-if="hasTextSelected">
-      <div class="mx-0.5 h-6 w-px bg-edge/30" />
-
-      <!-- Font Family -->
-      <FontPicker
-        :model-value="currentFontFamily"
-        @update:model-value="onFontFamilyChange"
-      />
-
-      <!-- Font Size -->
-      <input
-        type="number"
-        :value="currentFontSize"
-        :min="8"
-        :max="120"
-        :step="4"
-        aria-label="Font size"
-        class="h-7 w-12 rounded border border-edge/30 bg-surface/60 px-1.5 text-center text-xs text-foreground/80 outline-none focus:border-accent/50"
-        @change="onFontSizeChange"
-      >
-
-      <!-- Text Align -->
-      <ButtonIconSelect
-        :options="textAlignOptions"
-        :model-value="currentTextAlign"
-        @update:model-value="onTextAlignChange"
-      />
+      <div class="border-b border-edge/20 px-3 py-2.5">
+        <span class="mb-1.5 block text-[11px] font-medium tracking-wide text-foreground/50">Text</span>
+        <div class="flex flex-col gap-2">
+          <div class="flex items-center gap-1.5">
+            <FontPicker
+              :model-value="currentFontFamily"
+              @update:model-value="onFontFamilyChange"
+            />
+            <input
+              type="number"
+              :value="currentFontSize"
+              :min="8"
+              :max="120"
+              :step="4"
+              aria-label="Font size"
+              class="h-7 w-12 rounded border border-edge/30 bg-surface/60 px-1.5 text-center text-xs text-foreground/80 outline-none focus:border-accent/50"
+              @change="onFontSizeChange"
+            >
+          </div>
+          <ButtonIconSelect
+            :options="textAlignOptions"
+            :model-value="currentTextAlign"
+            @update:model-value="onTextAlignChange"
+          />
+        </div>
+      </div>
     </template>
 
-    <!-- Arrow controls (shown when arrow elements selected) -->
+    <!-- Arrow controls (conditional) -->
     <template v-if="hasArrowSelected">
-      <div class="mx-0.5 h-6 w-px bg-edge/30" />
-
-      <ArrowheadPicker
-        label="Start"
-        :model-value="currentStartArrowhead"
-        @update:model-value="onStartArrowheadChange"
-      />
-
-      <ArrowheadPicker
-        label="End"
-        :model-value="currentEndArrowhead"
-        @update:model-value="onEndArrowheadChange"
-      />
+      <div class="border-b border-edge/20 px-3 py-2.5">
+        <span class="mb-1.5 block text-[11px] font-medium tracking-wide text-foreground/50">Arrowheads</span>
+        <div class="flex flex-col gap-1.5">
+          <ArrowheadPicker
+            label="Start"
+            :model-value="currentStartArrowhead"
+            @update:model-value="onStartArrowheadChange"
+          />
+          <ArrowheadPicker
+            label="End"
+            :model-value="currentEndArrowhead"
+            @update:model-value="onEndArrowheadChange"
+          />
+        </div>
+      </div>
     </template>
+
+    <!-- Layers -->
+    <div class="border-b border-edge/20 px-3 py-2.5">
+      <span class="mb-1.5 block text-[11px] font-medium tracking-wide text-foreground/50">Layers</span>
+      <div class="flex gap-0.5">
+        <button
+          aria-label="Send to back"
+          class="flex h-7 w-7 items-center justify-center rounded text-xs transition-colors text-foreground/70 hover:bg-muted/20 hover:text-foreground"
+          @click="emit('send-to-back')"
+        >
+          <svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <polyline points="7 14 12 19 17 14" />
+            <line x1="5" y1="21" x2="19" y2="21" />
+          </svg>
+        </button>
+        <button
+          aria-label="Send backward"
+          class="flex h-7 w-7 items-center justify-center rounded text-xs transition-colors text-foreground/70 hover:bg-muted/20 hover:text-foreground"
+          @click="emit('send-backward')"
+        >
+          <svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="7" x2="12" y2="19" />
+            <polyline points="7 14 12 19 17 14" />
+          </svg>
+        </button>
+        <button
+          aria-label="Bring forward"
+          class="flex h-7 w-7 items-center justify-center rounded text-xs transition-colors text-foreground/70 hover:bg-muted/20 hover:text-foreground"
+          @click="emit('bring-forward')"
+        >
+          <svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="17" x2="12" y2="5" />
+            <polyline points="7 10 12 5 17 10" />
+          </svg>
+        </button>
+        <button
+          aria-label="Bring to front"
+          class="flex h-7 w-7 items-center justify-center rounded text-xs transition-colors text-foreground/70 hover:bg-muted/20 hover:text-foreground"
+          @click="emit('bring-to-front')"
+        >
+          <svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="19" x2="12" y2="5" />
+            <polyline points="7 10 12 5 17 10" />
+            <line x1="5" y1="3" x2="19" y2="3" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="px-3 py-2.5">
+      <span class="mb-1.5 block text-[11px] font-medium tracking-wide text-foreground/50">Actions</span>
+      <div class="flex gap-0.5">
+        <button
+          aria-label="Duplicate"
+          class="flex h-7 w-7 items-center justify-center rounded text-xs transition-colors text-foreground/70 hover:bg-muted/20 hover:text-foreground"
+          @click="emit('duplicate')"
+        >
+          <svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" />
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+          </svg>
+        </button>
+        <button
+          aria-label="Delete"
+          class="flex h-7 w-7 items-center justify-center rounded text-xs transition-colors text-foreground/70 hover:bg-muted/20 hover:text-foreground"
+          @click="emit('delete')"
+        >
+          <svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6" />
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+          </svg>
+        </button>
+      </div>
+    </div>
   </div>
 </template>

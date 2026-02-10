@@ -17,6 +17,7 @@ Oxlint runs 50-100x faster than ESLint. It handles correctness, suspicious patte
 
 - `.oxlintrc.json` - Oxlint configuration
 - `eslint.config.ts` - ESLint flat config (not `.eslintrc`)
+- `eslint-rules/` - Local ESLint plugin with custom rules (e.g. `no-callback-object-props`)
 - `app/utils/tryCatch.ts` - Required utility since native try/catch is banned
 
 ## Gotchas
@@ -93,6 +94,9 @@ Features can import from shared code (`app/shared/`, `app/utils/`, etc.) and fro
 | Native `try/catch` | `tryCatch()` from `~/utils/tryCatch` |
 | Nested ternaries | Functions with early returns |
 | Hardcoded route strings | Named routes |
+| Function props (`() => void`) | `defineEmits` |
+| `Function` type in props | `defineEmits` |
+| All-function interface/object props | `defineEmits` (custom rule: `local/no-callback-object-props`) |
 | `console.log` | Remove or use `console.warn`/`console.error` (oxlint) |
 | `any` type | Proper types (oxlint: `typescript/no-explicit-any`) |
 
@@ -106,11 +110,12 @@ Features can import from shared code (`app/shared/`, `app/utils/`, etc.) and fro
 The flat config in `eslint.config.ts` is organized into named sections:
 
 1. **`app/vue-component-rules`** — PascalCase templates, dead code detection, max-template-depth (8), max-props (6), Vue 3.5+ APIs (`define-props-destructuring`, `prefer-use-template-ref`)
-2. **`app/typescript-style`** — Complexity (max 10), no nested ternaries, banned syntax (enums, else, try/catch, hardcoded routes)
-3. **`app/import-boundaries`** — Feature isolation zones, shared code cannot import from features/pages
-4. **`app/vitest-rules`** — `it()` not `test()`, hooks on top, max 2 nested describes, prefer Vitest locators over `querySelector`
-5. **`app/vitest-unit-flat-tests`** — Warns on `beforeEach`/`afterEach` in `*.unit.test.ts` (allows `beforeAll`/`afterAll`)
-6. **`app/unicorn-overrides`** — Enables `better-regex`, `custom-error-definition`, `consistent-destructuring`; disables `no-null`, `filename-case`, `prevent-abbreviations`, `no-array-callback-reference`, `no-await-expression-member`, `no-array-reduce`, `no-useless-undefined`
+2. **`app/typescript-style`** — Complexity (max 10), no nested ternaries, banned syntax (enums, else, try/catch, hardcoded routes, function props)
+3. **`app/local-rules`** — Custom rule `local/no-callback-object-props` (catches all-function interfaces/objects used as props)
+4. **`app/import-boundaries`** — Feature isolation zones, shared code cannot import from features/pages
+5. **`app/vitest-rules`** — `it()` not `test()`, hooks on top, max 2 nested describes, prefer Vitest locators over `querySelector`
+6. **`app/vitest-unit-flat-tests`** — Warns on `beforeEach`/`afterEach` in `*.unit.test.ts` (allows `beforeAll`/`afterAll`)
+7. **`app/unicorn-overrides`** — Enables `better-regex`, `custom-error-definition`, `consistent-destructuring`; disables `no-null`, `filename-case`, `prevent-abbreviations`, `no-array-callback-reference`, `no-await-expression-member`, `no-array-reduce`, `no-useless-undefined`
 
 ## Pre-commit Hooks
 

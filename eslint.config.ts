@@ -8,10 +8,11 @@ import pluginImportX from 'eslint-plugin-import-x'
 import pluginOxlint from 'eslint-plugin-oxlint'
 import pluginUnicorn from 'eslint-plugin-unicorn'
 import pluginVue from 'eslint-plugin-vue'
+import pluginLocal from './eslint-rules'
 
 export default defineConfigWithVueTs(
   {
-    ignores: ['**/dist/**', '**/coverage/**', '**/node_modules/**', '**/.nuxt/**', '**/.output/**', 'excalidraw/**'],
+    ignores: ['**/dist/**', '**/coverage/**', '**/node_modules/**', '**/.nuxt/**', '**/.output/**', 'excalidraw/**', 'eslint-rules/**'],
   },
 
   pluginVue.configs['flat/essential'],
@@ -99,7 +100,28 @@ export default defineConfigWithVueTs(
           selector: 'CallExpression[callee.property.name="push"][callee.object.name="router"] > TemplateLiteral:first-child',
           message: 'Use named routes instead of template literals.',
         },
+        // No function props — use defineEmits instead of callback props
+        {
+          selector: 'CallExpression[callee.name="defineProps"] TSTypeLiteral > TSPropertySignature > TSTypeAnnotation > TSFunctionType',
+          message: 'Props should not be functions. Use defineEmits instead of callback props.',
+        },
+        {
+          selector: 'CallExpression[callee.name="defineProps"] TSTypeLiteral > TSPropertySignature > TSTypeAnnotation > TSTypeReference[typeName.name="Function"]',
+          message: 'Props should not use the Function type. Use defineEmits instead of callback props.',
+        },
       ],
+    },
+  },
+
+  // =============================================
+  // Local rules — callback object props detection
+  // =============================================
+  {
+    name: 'app/local-rules',
+    files: ['app/**/*.vue'],
+    plugins: { local: pluginLocal },
+    rules: {
+      'local/no-callback-object-props': 'error',
     },
   },
 

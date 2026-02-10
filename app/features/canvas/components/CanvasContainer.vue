@@ -7,6 +7,8 @@ import { useSceneRenderer } from '../composables/useSceneRenderer'
 import { usePanning } from '../composables/usePanning'
 import { createDirtyFlags } from '../composables/createDirtyFlags'
 import { useElements } from '~/features/elements/useElements'
+import { useLayerOrder } from '~/features/elements/composables/useLayerOrder'
+import { mutateElement } from '~/features/elements/mutateElement'
 import { useToolStore } from '~/features/tools/useTool'
 import { useDrawingInteraction } from '~/features/tools/useDrawingInteraction'
 import { useTextInteraction } from '~/features/tools/useTextInteraction'
@@ -88,6 +90,28 @@ const {
   markStaticDirty: dirty.markStaticDirty,
   markInteractiveDirty: dirty.markInteractiveDirty,
 })
+
+// Layer order
+const layerOrder = useLayerOrder({ elements, replaceElements })
+
+function applyLayerAction(action: (ids: ReadonlySet<string>) => void): void {
+  action(selectedIds.value)
+  dirty.markStaticDirty()
+  dirty.markInteractiveDirty()
+}
+
+function handleDeleteFromPanel(): void {
+  const selected = selectedElements.value
+  if (selected.length === 0) return
+  for (const el of selected) {
+    mutateElement(el, { isDeleted: true })
+  }
+  const deletedIds = new Set(selected.map(el => el.id))
+  cleanupAfterDelete(elements.value, deletedIds)
+  clearSelection()
+  dirty.markStaticDirty()
+  dirty.markInteractiveDirty()
+}
 
 // Context menu
 function getContextMenuContext(): ContextMenuContext {
@@ -364,7 +388,12 @@ const combinedCursorClass = computed(() => {
     <PropertiesPanel
       v-if="selectedElements.length > 0"
       :selected-elements="selectedElements"
-      :mark-dirty="dirty.markStaticDirty"
+      @mark-dirty="dirty.markStaticDirty"
+      @bring-to-front="applyLayerAction(layerOrder.bringToFront)"
+      @bring-forward="applyLayerAction(layerOrder.bringForward)"
+      @send-backward="applyLayerAction(layerOrder.sendBackward)"
+      @send-to-back="applyLayerAction(layerOrder.sendToBack)"
+      @delete="handleDeleteFromPanel"
     />
     <ContextMenu
       :is-open="contextMenuOpen"

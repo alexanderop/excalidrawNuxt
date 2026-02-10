@@ -33,6 +33,7 @@ interface UsePropertyActionsReturn {
   changeStrokeWidth: (width: number) => void
   changeStrokeStyle: (style: StrokeStyle) => void
   changeOpacity: (opacity: number) => void
+  changeRoughness: (roughness: number) => void
   changeRoundness: (type: Roundness) => void
   changeFontFamily: (family: number) => void
   changeFontSize: (size: number) => void
@@ -72,6 +73,11 @@ export function usePropertyActions(options: UsePropertyActionsOptions): UsePrope
   function changeOpacity(opacity: number): void {
     applyToSelected(selectedElements, { opacity }, markDirty)
     styleDefaults.opacity.value = opacity
+  }
+
+  function changeRoughness(roughness: number): void {
+    applyToSelected(selectedElements, { roughness }, markDirty)
+    styleDefaults.roughness.value = roughness
   }
 
   function changeRoundness(type: Roundness): void {
@@ -119,6 +125,7 @@ export function usePropertyActions(options: UsePropertyActionsOptions): UsePrope
     changeStrokeWidth,
     changeStrokeStyle,
     changeOpacity,
+    changeRoughness,
     changeRoundness,
     changeFontFamily,
     changeFontSize,

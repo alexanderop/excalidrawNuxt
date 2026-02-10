@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, useTemplateRef } from 'vue'
+import { ref, computed, useTemplateRef } from 'vue'
 import { onClickOutside } from '@vueuse/core'
 
 const { modelValue } = defineProps<{
@@ -23,21 +23,15 @@ const fontOptions = [
   { label: 'Cascadia', value: 3, style: 'font-family: Cascadia, monospace' },
 ] as const
 
-function currentLabel(): string {
+const currentLabel = computed((): string => {
   if (modelValue === 'mixed') return 'Mixed'
   const found = fontOptions.find(o => o.value === modelValue)
   return found?.label ?? 'Virgil'
-}
+})
 
 function select(value: number): void {
   emit('update:modelValue', value)
   isOpen.value = false
-}
-
-function onKeydown(event: KeyboardEvent): void {
-  if (event.key === 'Escape') {
-    isOpen.value = false
-  }
 }
 </script>
 
@@ -45,7 +39,7 @@ function onKeydown(event: KeyboardEvent): void {
   <div
     ref="dropdownEl"
     class="relative"
-    @keydown="onKeydown"
+    @keydown.escape="isOpen = false"
   >
     <button
       aria-haspopup="listbox"
@@ -53,7 +47,7 @@ function onKeydown(event: KeyboardEvent): void {
       class="flex h-7 items-center gap-1 rounded px-1.5 text-xs transition-colors text-foreground/70 hover:bg-muted/20 hover:text-foreground"
       @click="isOpen = !isOpen"
     >
-      <span>{{ currentLabel() }}</span>
+      <span>{{ currentLabel }}</span>
       <svg
         aria-hidden="true"
         class="h-3 w-3"
@@ -71,7 +65,7 @@ function onKeydown(event: KeyboardEvent): void {
     <div
       v-if="isOpen"
       role="listbox"
-      class="absolute bottom-full left-0 mb-1 min-w-[120px] rounded-md border border-edge/40 bg-surface/95 py-0.5 shadow-lg backdrop-blur-md"
+      class="absolute top-full left-0 mt-1 min-w-[120px] rounded-md border border-edge/40 bg-surface/95 py-0.5 shadow-lg backdrop-blur-md"
     >
       <button
         v-for="option in fontOptions"

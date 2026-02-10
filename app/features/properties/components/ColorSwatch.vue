@@ -9,7 +9,6 @@ const { color, label } = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  click: []
   'update:color': [color: string]
 }>()
 
@@ -32,7 +31,6 @@ function togglePicker(): void {
   }
   updatePickerPosition()
   isPickerOpen.value = true
-  emit('click')
 }
 
 function updatePickerPosition(): void {
@@ -41,12 +39,22 @@ function updatePickerPosition(): void {
   const pickerWidth = 256 // w-64 = 16rem = 256px
   const pickerHeight = 300 // approximate
 
-  let top = rect.bottom + 6
-  let left = rect.left
+  // Primary: open to the right of the swatch
+  let left = rect.right + 8
+  let top = rect.top
 
-  // Flip above if near bottom
+  // Fallback: if would overflow right edge, open below instead
+  if (left + pickerWidth > window.innerWidth) {
+    left = rect.left
+    top = rect.bottom + 6
+  }
+
+  // Clamp vertically to stay on screen
   if (top + pickerHeight > window.innerHeight) {
-    top = rect.top - pickerHeight - 6
+    top = window.innerHeight - pickerHeight - 8
+  }
+  if (top < 8) {
+    top = 8
   }
 
   // Clamp horizontally
@@ -57,21 +65,13 @@ function updatePickerPosition(): void {
   pickerPosition.value = { top, left }
 }
 
-function onColorSelect(newColor: string): void {
-  emit('update:color', newColor)
-}
-
-function closePicker(): void {
-  isPickerOpen.value = false
-}
-
 // Recalculate position on scroll/resize while open
-function onReposition(): void {
+useEventListener(globalThis, 'resize', () => {
   if (isPickerOpen.value) updatePickerPosition()
-}
-
-useEventListener(globalThis, 'resize', onReposition)
-useEventListener(globalThis, 'scroll', onReposition, { capture: true })
+})
+useEventListener(globalThis, 'scroll', () => {
+  if (isPickerOpen.value) updatePickerPosition()
+}, { capture: true })
 </script>
 
 <template>
@@ -122,8 +122,8 @@ useEventListener(globalThis, 'scroll', onReposition, { capture: true })
       :is-open="isPickerOpen"
       :position-top="pickerPosition.top"
       :position-left="pickerPosition.left"
-      @update:model-value="onColorSelect"
-      @close="closePicker"
+      @update:model-value="(c: string) => emit('update:color', c)"
+      @close="isPickerOpen = false"
     />
   </div>
 </template>

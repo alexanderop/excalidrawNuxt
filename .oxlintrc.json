@@ -7,5 +7,13 @@
   "rules": {
     "typescript/no-explicit-any": "error",
     "eslint/no-console": ["error", { "allow": ["warn", "error"] }]
-  }
+  },
+  "overrides": [
+    {
+      "files": ["eslint-rules/**"],
+      "rules": {
+        "typescript/no-explicit-any": "off"
+      }
+    }
+  ]
 }

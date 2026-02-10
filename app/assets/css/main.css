@@ -26,3 +26,17 @@ html.theme--dark body,
 html.theme--dark #__nuxt {
   background: #121212;
 }
+
+/* Properties sidebar scrollbar */
+.properties-sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.properties-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.properties-sidebar::-webkit-scrollbar-thumb {
+  background: rgb(171 75 153 / 0.3);
+  border-radius: 2px;
+}
