@@ -4,20 +4,20 @@
  * without pulling in the full React-based excalidraw package.
  */
 
-declare module '@excalidraw/excalidraw/types' {
+declare module "@excalidraw/excalidraw/types" {
   export interface NormalizedZoomValue {
-    _brand: 'normalizedZoom'
+    _brand: "normalizedZoom";
   }
 
   export interface Zoom {
-    value: NormalizedZoomValue
+    value: NormalizedZoomValue;
   }
 
   export interface AppState {
-    zoom: Zoom
-    width: number
-    height: number
-    scrollX: number
-    scrollY: number
+    zoom: Zoom;
+    width: number;
+    height: number;
+    scrollX: number;
+    scrollY: number;
   }
 }

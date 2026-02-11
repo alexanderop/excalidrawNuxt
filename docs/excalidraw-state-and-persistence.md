@@ -59,14 +59,14 @@ graph TB
     B --> I
 ```
 
-| Layer | Mechanism | Purpose | Persisted? |
-|-------|-----------|---------|------------|
-| **AppState** | React `this.state` / `setState()` | UI state (tools, menus, zoom, selections) | Partially (per config) |
-| **Scene Graph** | `Scene` class with element maps | Element storage and ordering | Yes (elements only) |
-| **Store** | `Store` class with snapshots | Change detection, delta emission | No (runtime only) |
-| **History** | `History` class with dual stacks | Undo/redo via inverse deltas | No (in-memory) |
-| **Jotai Atoms** | `editorJotaiStore` | Lightweight isolated UI state | No |
-| **Actions** | `ActionManager` command dispatcher | Encapsulates state mutations | No |
+| Layer           | Mechanism                          | Purpose                                   | Persisted?             |
+| --------------- | ---------------------------------- | ----------------------------------------- | ---------------------- |
+| **AppState**    | React `this.state` / `setState()`  | UI state (tools, menus, zoom, selections) | Partially (per config) |
+| **Scene Graph** | `Scene` class with element maps    | Element storage and ordering              | Yes (elements only)    |
+| **Store**       | `Store` class with snapshots       | Change detection, delta emission          | No (runtime only)      |
+| **History**     | `History` class with dual stacks   | Undo/redo via inverse deltas              | No (in-memory)         |
+| **Jotai Atoms** | `editorJotaiStore`                 | Lightweight isolated UI state             | No                     |
+| **Actions**     | `ActionManager` command dispatcher | Encapsulates state mutations              | No                     |
 
 ---
 
@@ -78,17 +78,17 @@ AppState is a single large interface (~130 properties) managed as React componen
 
 ### Key Property Groups
 
-| Group | Examples | Persisted To |
-|-------|----------|-------------|
-| **Active Tool** | `activeTool`, `preferredSelectionTool` | Browser |
-| **Viewport** | `zoom`, `scrollX`, `scrollY`, `width`, `height` | Browser |
-| **Selection** | `selectedElementIds`, `selectedGroupIds`, `editingGroupId` | Browser only |
-| **Editing** | `editingTextElement`, `newElement`, `multiElement` | Never |
-| **Drawing Prefs** | `currentItemStrokeColor`, `currentItemFontFamily`, etc. | All (browser + export + server) |
-| **UI Panels** | `openMenu`, `openPopup`, `openSidebar`, `openDialog` | Never |
-| **Canvas** | `gridSize`, `gridModeEnabled`, `zenModeEnabled`, `theme` | All |
-| **Collaboration** | `collaborators`, `followedBy`, `userToFollow` | Never |
-| **Transient** | `isLoading`, `isResizing`, `isRotating`, `isCropping` | Never |
+| Group             | Examples                                                   | Persisted To                    |
+| ----------------- | ---------------------------------------------------------- | ------------------------------- |
+| **Active Tool**   | `activeTool`, `preferredSelectionTool`                     | Browser                         |
+| **Viewport**      | `zoom`, `scrollX`, `scrollY`, `width`, `height`            | Browser                         |
+| **Selection**     | `selectedElementIds`, `selectedGroupIds`, `editingGroupId` | Browser only                    |
+| **Editing**       | `editingTextElement`, `newElement`, `multiElement`         | Never                           |
+| **Drawing Prefs** | `currentItemStrokeColor`, `currentItemFontFamily`, etc.    | All (browser + export + server) |
+| **UI Panels**     | `openMenu`, `openPopup`, `openSidebar`, `openDialog`       | Never                           |
+| **Canvas**        | `gridSize`, `gridModeEnabled`, `zenModeEnabled`, `theme`   | All                             |
+| **Collaboration** | `collaborators`, `followedBy`, `userToFollow`              | Never                           |
+| **Transient**     | `isLoading`, `isResizing`, `isRotating`, `isCropping`      | Never                           |
 
 ### Initialization
 
@@ -117,6 +117,7 @@ newElement:         { browser: false, export: false, server: false }
 ```
 
 Three cleanup functions filter AppState before storage:
+
 - `clearAppStateForLocalStorage()` — browser storage
 - `cleanAppStateForExport()` — file export
 - `clearAppStateForDatabase()` — server/collaboration
@@ -158,10 +159,11 @@ Elements are **never hard-deleted**. Instead, `isDeleted: true` is set:
 
 ```typescript
 // Filtering:
-const nonDeleted = allElements.filter(el => !el.isDeleted);
+const nonDeleted = allElements.filter((el) => !el.isDeleted);
 ```
 
 Why soft deletion?
+
 1. Undo/redo can restore deleted elements
 2. Collaboration peers can recover elements
 3. History deltas reference elements by ID (they must still exist)
@@ -199,11 +201,11 @@ Used by: actions that return new element arrays.
 
 Every element carries three versioning fields:
 
-| Field | Type | Purpose |
-|-------|------|---------|
-| `version` | `number` | Sequential counter, incremented on every change |
-| `versionNonce` | `number` | Random integer for deterministic tie-breaking |
-| `updated` | `number` | Epoch ms timestamp |
+| Field          | Type     | Purpose                                         |
+| -------------- | -------- | ----------------------------------------------- |
+| `version`      | `number` | Sequential counter, incremented on every change |
+| `versionNonce` | `number` | Random integer for deterministic tie-breaking   |
+| `updated`      | `number` | Epoch ms timestamp                              |
 
 ---
 
@@ -220,7 +222,7 @@ interface Action {
   name: string;
   label: string;
   keywords?: string[];
-  keyTest?: (event: KeyboardEvent) => boolean;  // Keyboard shortcut
+  keyTest?: (event: KeyboardEvent) => boolean; // Keyboard shortcut
   perform: (
     elements: ExcalidrawElement[],
     appState: AppState,
@@ -234,10 +236,10 @@ interface Action {
 
 ```typescript
 interface ActionResult {
-  elements?: ExcalidrawElement[] | null;      // New elements array
-  appState?: Partial<AppState> | null;        // State patches
-  files?: BinaryFiles | null;                 // Binary file updates
-  captureUpdate: CaptureUpdateActionType;     // History control
+  elements?: ExcalidrawElement[] | null; // New elements array
+  appState?: Partial<AppState> | null; // State patches
+  files?: BinaryFiles | null; // Binary file updates
+  captureUpdate: CaptureUpdateActionType; // History control
   replaceFiles?: boolean;
 }
 ```
@@ -257,11 +259,11 @@ User Event → ActionManager.executeAction(action)
 
 ### CaptureUpdateAction — History Control
 
-| Mode | When Used | Undo-able? |
-|------|-----------|------------|
-| `IMMEDIATELY` | User-initiated actions (draw, delete, style change) | Yes, immediately |
-| `EVENTUALLY` | Frequent updates (scroll, zoom, typing batches) | Yes, batched later |
-| `NEVER` | Remote collaboration updates, scene initialization | No |
+| Mode          | When Used                                           | Undo-able?         |
+| ------------- | --------------------------------------------------- | ------------------ |
+| `IMMEDIATELY` | User-initiated actions (draw, delete, style change) | Yes, immediately   |
+| `EVENTUALLY`  | Frequent updates (scroll, zoom, typing batches)     | Yes, batched later |
+| `NEVER`       | Remote collaboration updates, scene initialization  | No                 |
 
 ---
 
@@ -333,8 +335,8 @@ The `Delta<T>` class stores bidirectional changes:
 
 ```typescript
 class Delta<T> {
-  deleted: Partial<T>;   // Values before the change
-  inserted: Partial<T>;  // Values after the change
+  deleted: Partial<T>; // Values before the change
+  inserted: Partial<T>; // Values after the change
 }
 ```
 
@@ -346,9 +348,9 @@ Categorizes element changes:
 
 ```typescript
 class ElementsDelta {
-  added:   Record<id, Delta<ElementPartial>>  // isDeleted: true → false
-  removed: Record<id, Delta<ElementPartial>>  // isDeleted: false → true
-  updated: Record<id, Delta<ElementPartial>>  // Property changes only
+  added: Record<id, Delta<ElementPartial>>; // isDeleted: true → false
+  removed: Record<id, Delta<ElementPartial>>; // isDeleted: false → true
+  updated: Record<id, Delta<ElementPartial>>; // Property changes only
 }
 ```
 
@@ -377,11 +379,11 @@ Enables element reordering in multiplayer without global index coordination. Eac
 
 ### Key Functions
 
-| Function | Purpose |
-|----------|---------|
-| `orderByFractionalIndex(elements)` | Sort by index, break ties by ID |
-| `syncMovedIndices(elements, moved)` | Generate new indices for moved elements only |
-| `syncInvalidIndices(elements)` | Fix contiguous groups of invalid indices |
+| Function                              | Purpose                                      |
+| ------------------------------------- | -------------------------------------------- |
+| `orderByFractionalIndex(elements)`    | Sort by index, break ties by ID              |
+| `syncMovedIndices(elements, moved)`   | Generate new indices for moved elements only |
+| `syncInvalidIndices(elements)`        | Fix contiguous groups of invalid indices     |
 | `validateFractionalIndices(elements)` | Assert: `prev.index < el.index < next.index` |
 
 ### Invariant
@@ -396,13 +398,13 @@ The `Scene` class keeps fractional indices in sync with array order on every mut
 
 ### Storage Layers
 
-| Storage | Data | Purpose | Limits |
-|---------|------|---------|--------|
-| **localStorage** | Elements JSON, AppState | Quick auto-save | ~5-10MB |
-| **IndexedDB** | Binary files (images) | Large media | Quota-based (~GB) |
-| **File System** | `.excalidraw` exports | User downloads | None |
-| **PNG/SVG** | Scene metadata in image chunks | Shareable images with embedded data | Image size |
-| **Firebase** | Encrypted elements + files | Collaboration | Cloud quota |
+| Storage          | Data                           | Purpose                             | Limits            |
+| ---------------- | ------------------------------ | ----------------------------------- | ----------------- |
+| **localStorage** | Elements JSON, AppState        | Quick auto-save                     | ~5-10MB           |
+| **IndexedDB**    | Binary files (images)          | Large media                         | Quota-based (~GB) |
+| **File System**  | `.excalidraw` exports          | User downloads                      | None              |
+| **PNG/SVG**      | Scene metadata in image chunks | Shareable images with embedded data | Image size        |
+| **Firebase**     | Encrypted elements + files     | Collaboration                       | Cloud quota       |
 
 ### .excalidraw File Format
 
@@ -411,9 +413,15 @@ The `Scene` class keeps fractional indices in sync with array order on every mut
   "type": "excalidraw",
   "version": 2,
   "source": "https://excalidraw.com",
-  "elements": [ /* ExcalidrawElement[] */ ],
-  "appState": { /* cleaned AppState */ },
-  "files": { /* FileId → BinaryFileData */ }
+  "elements": [
+    /* ExcalidrawElement[] */
+  ],
+  "appState": {
+    /* cleaned AppState */
+  },
+  "files": {
+    /* FileId → BinaryFileData */
+  }
 }
 ```
 
@@ -477,6 +485,7 @@ filesStore = createStore("files-db", "files-store");
 ### Data Restoration
 
 `restoreElements()` handles:
+
 - Schema migrations
 - Binding repair (arrow → shape connections)
 - Element validation
@@ -548,13 +557,16 @@ getSceneVersion(elements) = elements.reduce((acc, el) => acc + el.version, 0);
 ### Collaborator State
 
 ```typescript
-collaborators: Map<SocketId, {
-  pointer: { x, y, tool }
-  selectedElementIds: Record<string, true>
-  username: string
-  avatarUrl: string
-  isIdleState: boolean
-}>
+collaborators: Map<
+  SocketId,
+  {
+    pointer: { x; y; tool };
+    selectedElementIds: Record<string, true>;
+    username: string;
+    avatarUrl: string;
+    isIdleState: boolean;
+  }
+>;
 ```
 
 ---
@@ -594,14 +606,14 @@ These atoms are UI-only — they don't affect undo/redo, aren't serialized, and 
 
 ### What to Translate to Vue
 
-| React Pattern | Vue Equivalent |
-|---------------|----------------|
-| `this.state` + `setState()` | `reactive()` / `ref()` in composables |
-| React Context + hooks | `provide`/`inject` or composables with shared state |
-| Jotai atoms | `ref()` in module-scoped composables |
-| `ActionManager` class | Composable with action registry |
-| `withBatchedUpdates()` | `nextTick()` or `watchEffect()` batching |
-| `PureComponent` | `defineComponent` with `shallowRef` for elements |
+| React Pattern               | Vue Equivalent                                      |
+| --------------------------- | --------------------------------------------------- |
+| `this.state` + `setState()` | `reactive()` / `ref()` in composables               |
+| React Context + hooks       | `provide`/`inject` or composables with shared state |
+| Jotai atoms                 | `ref()` in module-scoped composables                |
+| `ActionManager` class       | Composable with action registry                     |
+| `withBatchedUpdates()`      | `nextTick()` or `watchEffect()` batching            |
+| `PureComponent`             | `defineComponent` with `shallowRef` for elements    |
 
 ### What to Simplify
 

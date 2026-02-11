@@ -1,22 +1,22 @@
 <script setup lang="ts">
 interface Option {
-  label: string
-  value: string | number
-  icon?: string
+  label: string;
+  value: string | number;
+  icon?: string;
 }
 
 const { options, modelValue } = defineProps<{
-  options: Option[]
-  modelValue: string | number | 'mixed' | null
-}>()
+  options: Option[];
+  modelValue: string | number | "mixed" | null;
+}>();
 
 const emit = defineEmits<{
-  'update:modelValue': [value: string | number]
-}>()
+  "update:modelValue": [value: string | number];
+}>();
 
 function isActive(optionValue: string | number): boolean {
-  if (modelValue === 'mixed' || modelValue === null) return false
-  return modelValue === optionValue
+  if (modelValue === "mixed" || modelValue === null) return false;
+  return modelValue === optionValue;
 }
 </script>
 
@@ -31,9 +31,11 @@ function isActive(optionValue: string | number): boolean {
       square
       :aria-label="option.label"
       :aria-pressed="isActive(option.value)"
-      :class="isActive(option.value)
-        ? 'bg-accent/20 text-accent hover:bg-accent/30'
-        : 'text-foreground/70 hover:bg-subdued/20 hover:text-foreground'"
+      :class="
+        isActive(option.value)
+          ? 'bg-accent/20 text-accent hover:bg-accent/30'
+          : 'text-foreground/70 hover:bg-subdued/20 hover:text-foreground'
+      "
       @click="emit('update:modelValue', option.value)"
     >
       <svg

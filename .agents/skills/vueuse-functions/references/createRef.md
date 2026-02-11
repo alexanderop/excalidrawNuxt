@@ -9,29 +9,25 @@ Returns a `deepRef` or `shallowRef` depending on the `deep` param.
 ## Usage
 
 ```ts
-import { createRef } from '@vueuse/core'
-import { isShallow, ref } from 'vue'
+import { createRef } from "@vueuse/core";
+import { isShallow, ref } from "vue";
 
-const initialData = 1
+const initialData = 1;
 
-const shallowData = createRef(initialData)
-const deepData = createRef(initialData, true)
+const shallowData = createRef(initialData);
+const deepData = createRef(initialData, true);
 
-isShallow(shallowData) // true
-isShallow(deepData) // false
+isShallow(shallowData); // true
+isShallow(deepData); // false
 ```
 
 ## Type Declarations
 
 ```ts
-export type CreateRefReturn<
-  T = any,
-  D extends boolean = false,
-> = ShallowOrDeepRef<T, D>
-export type ShallowOrDeepRef<
-  T = any,
-  D extends boolean = false,
-> = D extends true ? Ref<T> : ShallowRef<T>
+export type CreateRefReturn<T = any, D extends boolean = false> = ShallowOrDeepRef<T, D>;
+export type ShallowOrDeepRef<T = any, D extends boolean = false> = D extends true
+  ? Ref<T>
+  : ShallowRef<T>;
 /**
  * Returns a `deepRef` or `shallowRef` depending on the `deep` param.
  *
@@ -50,5 +46,5 @@ export type ShallowOrDeepRef<
 export declare function createRef<T = any, D extends boolean = false>(
   value: T,
   deep?: D,
-): CreateRefReturn<T, D>
+): CreateRefReturn<T, D>;
 ```

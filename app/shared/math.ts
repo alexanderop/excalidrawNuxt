@@ -26,12 +26,9 @@ export {
   pointsEqual,
   pointScaleFromOrigin,
   isPointWithinBounds,
-} from '@excalidraw/math'
+} from "@excalidraw/math";
 
-export type {
-  GlobalPoint,
-  LocalPoint,
-} from '@excalidraw/math'
+export type { GlobalPoint, LocalPoint } from "@excalidraw/math";
 
 // ---------------------------------------------------------------------------
 // Vectors (12 functions + 1 type)
@@ -49,9 +46,9 @@ export {
   vectorNormalize,
   vectorNormal,
   isVector,
-} from '@excalidraw/math'
+} from "@excalidraw/math";
 
-export type { Vector } from '@excalidraw/math'
+export type { Vector } from "@excalidraw/math";
 
 // ---------------------------------------------------------------------------
 // Angles (7 functions + 2 types)
@@ -64,9 +61,9 @@ export {
   radiansBetweenAngles,
   cartesian2Polar,
   isRightAngleRads,
-} from '@excalidraw/math'
+} from "@excalidraw/math";
 
-export type { Radians, Degrees } from '@excalidraw/math'
+export type { Radians, Degrees } from "@excalidraw/math";
 
 // ---------------------------------------------------------------------------
 // Segments (6 functions + 1 type)
@@ -79,15 +76,15 @@ export {
   pointOnLineSegment,
   distanceToLineSegment,
   lineSegmentIntersectionPoints,
-} from '@excalidraw/math'
+} from "@excalidraw/math";
 
-export type { LineSegment } from '@excalidraw/math'
+export type { LineSegment } from "@excalidraw/math";
 
 // ---------------------------------------------------------------------------
 // Lines (2 functions + 1 type)
 // ---------------------------------------------------------------------------
-export { line, linesIntersectAt } from '@excalidraw/math'
-export type { Line } from '@excalidraw/math'
+export { line, linesIntersectAt } from "@excalidraw/math";
+export type { Line } from "@excalidraw/math";
 
 // ---------------------------------------------------------------------------
 // Polygons (5 functions + 1 type)
@@ -98,9 +95,9 @@ export {
   polygonIncludesPoint,
   polygonIncludesPointNonZero,
   pointOnPolygon,
-} from '@excalidraw/math'
+} from "@excalidraw/math";
 
-export type { Polygon } from '@excalidraw/math'
+export type { Polygon } from "@excalidraw/math";
 
 // ---------------------------------------------------------------------------
 // Ellipses (5 functions + 1 type)
@@ -111,9 +108,9 @@ export {
   ellipseTouchesPoint,
   ellipseDistanceFromPoint,
   ellipseSegmentInterceptPoints,
-} from '@excalidraw/math'
+} from "@excalidraw/math";
 
-export type { Ellipse } from '@excalidraw/math'
+export type { Ellipse } from "@excalidraw/math";
 
 // ---------------------------------------------------------------------------
 // Rectangles (3 functions + 1 type)
@@ -122,9 +119,9 @@ export {
   rectangle,
   rectangleIntersectLineSegment,
   rectangleIntersectRectangle,
-} from '@excalidraw/math'
+} from "@excalidraw/math";
 
-export type { Rectangle } from '@excalidraw/math'
+export type { Rectangle } from "@excalidraw/math";
 
 // ---------------------------------------------------------------------------
 // Curves (5 functions + 1 type)
@@ -135,15 +132,15 @@ export {
   curveClosestPoint,
   curveIntersectLineSegment,
   curveLength,
-} from '@excalidraw/math'
+} from "@excalidraw/math";
 
-export type { Curve } from '@excalidraw/math'
+export type { Curve } from "@excalidraw/math";
 
 // ---------------------------------------------------------------------------
 // Triangles (1 function + 1 type)
 // ---------------------------------------------------------------------------
-export { triangleIncludesPoint } from '@excalidraw/math'
-export type { Triangle } from '@excalidraw/math'
+export { triangleIncludesPoint } from "@excalidraw/math";
+export type { Triangle } from "@excalidraw/math";
 
 // ---------------------------------------------------------------------------
 // Ranges (4 functions + 1 type)
@@ -153,9 +150,9 @@ export {
   rangesOverlap,
   rangeIntersection,
   rangeIncludesValue,
-} from '@excalidraw/math'
+} from "@excalidraw/math";
 
-export type { InclusiveRange } from '@excalidraw/math'
+export type { InclusiveRange } from "@excalidraw/math";
 
 // ---------------------------------------------------------------------------
 // Utils (7 functions)
@@ -168,26 +165,26 @@ export {
   average,
   isFiniteNumber,
   isCloseTo,
-} from '@excalidraw/math'
+} from "@excalidraw/math";
 
 // ---------------------------------------------------------------------------
 // From @excalidraw/common
 // ---------------------------------------------------------------------------
-export { getSizeFromPoints } from '@excalidraw/common'
+export { getSizeFromPoints } from "@excalidraw/common";
 
 // ---------------------------------------------------------------------------
 // Local imports for use within this file
 // ---------------------------------------------------------------------------
-import { pointFrom } from '@excalidraw/math'
-import type { LocalPoint } from '@excalidraw/math'
+import { pointFrom } from "@excalidraw/math";
+import type { LocalPoint } from "@excalidraw/math";
 
-export const TWO_PI = Math.PI * 2
+export const TWO_PI = Math.PI * 2;
 
 export interface Box {
-  x: number
-  y: number
-  width: number
-  height: number
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
 /**
@@ -195,10 +192,10 @@ export interface Box {
  * Returns the snapped displacement as a GlobalPoint.
  */
 export function snapAngle(dx: number, dy: number): { dx: number; dy: number } {
-  const angle = Math.atan2(dy, dx)
-  const snapped = Math.round(angle / (Math.PI / 12)) * (Math.PI / 12)
-  const length = Math.hypot(dx, dy)
-  return { dx: Math.cos(snapped) * length, dy: Math.sin(snapped) * length }
+  const angle = Math.atan2(dy, dx);
+  const snapped = Math.round(angle / (Math.PI / 12)) * (Math.PI / 12);
+  const length = Math.hypot(dx, dy);
+  return { dx: Math.cos(snapped) * length, dy: Math.sin(snapped) * length };
 }
 
 /**
@@ -211,17 +208,17 @@ export function normalizePoints(
   elementY: number,
   points: readonly LocalPoint[],
 ): { x: number; y: number; points: readonly LocalPoint[] } {
-  const first = points[0]
+  const first = points[0];
   if (!first || (first[0] === 0 && first[1] === 0)) {
-    return { x: elementX, y: elementY, points }
+    return { x: elementX, y: elementY, points };
   }
 
-  const dx = first[0]
-  const dy = first[1]
+  const dx = first[0];
+  const dy = first[1];
 
   return {
     x: elementX + dx,
     y: elementY + dy,
-    points: points.map(p => pointFrom<LocalPoint>(p[0] - dx, p[1] - dy)),
-  }
+    points: points.map((p) => pointFrom<LocalPoint>(p[0] - dx, p[1] - dy)),
+  };
 }

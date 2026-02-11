@@ -1,5 +1,5 @@
 ---
-category: '@Math'
+category: "@Math"
 ---
 
 # useAbs
@@ -9,10 +9,10 @@ Reactive `Math.abs`.
 ## Usage
 
 ```ts
-import { useAbs } from '@vueuse/math'
+import { useAbs } from "@vueuse/math";
 
-const value = ref(-23)
-const absValue = useAbs(value) // Ref<23>
+const value = ref(-23);
+const absValue = useAbs(value); // Ref<23>
 ```
 
 ## Type Declarations
@@ -25,7 +25,5 @@ const absValue = useAbs(value) // Ref<23>
  *
  * @__NO_SIDE_EFFECTS__
  */
-export declare function useAbs(
-  value: MaybeRefOrGetter<number>,
-): ComputedRef<number>
+export declare function useAbs(value: MaybeRefOrGetter<number>): ComputedRef<number>;
 ```

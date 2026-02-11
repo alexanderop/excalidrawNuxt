@@ -22,38 +22,35 @@ This function will be removed in future version.
 Use as normal the `watch`, but return extra `pause()` and `resume()` functions to control.
 
 ```ts
-import { watchPausable } from '@vueuse/core'
-import { nextTick, shallowRef } from 'vue'
+import { watchPausable } from "@vueuse/core";
+import { nextTick, shallowRef } from "vue";
 
-const source = shallowRef('foo')
+const source = shallowRef("foo");
 
-const { stop, pause, resume } = watchPausable(
-  source,
-  v => console.log(`Changed to ${v}!`),
-)
+const { stop, pause, resume } = watchPausable(source, (v) => console.log(`Changed to ${v}!`));
 
-source.value = 'bar'
-await nextTick() // Changed to bar!
+source.value = "bar";
+await nextTick(); // Changed to bar!
 
-pause()
+pause();
 
-source.value = 'foobar'
-await nextTick() // (nothing happend)
+source.value = "foobar";
+await nextTick(); // (nothing happend)
 
-resume()
+resume();
 
-source.value = 'hello'
-await nextTick() // Changed to hello!
+source.value = "hello";
+await nextTick(); // Changed to hello!
 ```
 
 ## Type Declarations
 
 ```ts
 export interface WatchPausableReturn extends Pausable {
-  stop: WatchStopHandle
+  stop: WatchStopHandle;
 }
-export type WatchPausableOptions<Immediate> =
-  WatchWithFilterOptions<Immediate> & PausableFilterOptions
+export type WatchPausableOptions<Immediate> = WatchWithFilterOptions<Immediate> &
+  PausableFilterOptions;
 /** @deprecated Use Vue's built-in `watch` instead. This function will be removed in future version. */
 export declare function watchPausable<
   T extends Readonly<MultiWatchSources>,
@@ -62,16 +59,13 @@ export declare function watchPausable<
   sources: [...T],
   cb: WatchCallback<MapSources<T>, MapOldSources<T, Immediate>>,
   options?: WatchPausableOptions<Immediate>,
-): WatchPausableReturn
+): WatchPausableReturn;
 /** @deprecated Use Vue's built-in `watch` instead. This function will be removed in future version. */
-export declare function watchPausable<
-  T,
-  Immediate extends Readonly<boolean> = false,
->(
+export declare function watchPausable<T, Immediate extends Readonly<boolean> = false>(
   source: WatchSource<T>,
   cb: WatchCallback<T, Immediate extends true ? T | undefined : T>,
   options?: WatchPausableOptions<Immediate>,
-): WatchPausableReturn
+): WatchPausableReturn;
 /** @deprecated Use Vue's built-in `watch` instead. This function will be removed in future version. */
 export declare function watchPausable<
   T extends object,
@@ -80,7 +74,7 @@ export declare function watchPausable<
   source: T,
   cb: WatchCallback<T, Immediate extends true ? T | undefined : T>,
   options?: WatchPausableOptions<Immediate>,
-): WatchPausableReturn
+): WatchPausableReturn;
 /** @deprecated Use Vue's built-in `watch` instead. This function will be removed in future version. */
-export declare const pausableWatch: typeof watchPausable
+export declare const pausableWatch: typeof watchPausable;
 ```

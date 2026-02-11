@@ -10,42 +10,44 @@ Create global state that can be injected into components.
 
 ```ts twoslash include useCounterStore
 // useCounterStore.ts
-import { createInjectionState } from '@vueuse/core'
-import { computed, shallowRef } from 'vue'
+import { createInjectionState } from "@vueuse/core";
+import { computed, shallowRef } from "vue";
 
 const [useProvideCounterStore, useCounterStore] = createInjectionState((initialValue: number) => {
   // state
-  const count = shallowRef(initialValue)
+  const count = shallowRef(initialValue);
 
   // getters
-  const double = computed(() => count.value * 2)
+  const double = computed(() => count.value * 2);
 
   // actions
   function increment() {
-    count.value++
+    count.value++;
   }
 
-  return { count, double, increment }
-})
+  return { count, double, increment };
+});
 
-export { useProvideCounterStore }
+export { useProvideCounterStore };
 
 // If you want to hide `useCounterStore` and wrap it in default value logic or throw error logic, please don't export `useCounterStore`
-export { useCounterStore }
+export { useCounterStore };
 
 export function useCounterStoreWithDefaultValue() {
-  return useCounterStore() ?? {
-    count: shallowRef(0),
-    double: shallowRef(0),
-    increment: () => {},
-  }
+  return (
+    useCounterStore() ?? {
+      count: shallowRef(0),
+      double: shallowRef(0),
+      increment: () => {},
+    }
+  );
 }
 
 export function useCounterStoreOrThrow() {
-  const counterStore = useCounterStore()
+  const counterStore = useCounterStore();
   if (counterStore == null)
-    throw new Error('Please call `useProvideCounterStore` on the appropriate parent component')
-  return counterStore
+    throw new Error("Please call `useProvideCounterStore` on the appropriate parent component");
+  return counterStore;
 }
 ```
 
@@ -55,9 +57,9 @@ export function useCounterStoreOrThrow() {
 // @filename: useCounterStore.ts
 // @include: useCounterStore
 // ---cut---
-import { useProvideCounterStore } from './useCounterStore'
+import { useProvideCounterStore } from "./useCounterStore";
 
-useProvideCounterStore(0)
+useProvideCounterStore(0);
 </script>
 
 <template>
@@ -73,10 +75,10 @@ useProvideCounterStore(0)
 // @filename: useCounterStore.ts
 // @include: useCounterStore
 // ---cut---
-import { useCounterStore } from './useCounterStore'
+import { useCounterStore } from "./useCounterStore";
 
 // use non-null assertion operator to ignore the case that store is not provided.
-const { count, double } = useCounterStore()!
+const { count, double } = useCounterStore()!;
 // if you want to allow component to working without providing store, you can use follow code instead:
 // const { count, double } = useCounterStore() ?? { count: shallowRef(0), double: shallowRef(0) }
 // also, you can use another hook to provide default value
@@ -87,12 +89,8 @@ const { count, double } = useCounterStore()!
 
 <template>
   <ul>
-    <li>
-      count: {{ count }}
-    </li>
-    <li>
-      double: {{ double }}
-    </li>
+    <li>count: {{ count }}</li>
+    <li>double: {{ double }}</li>
   </ul>
 </template>
 ```
@@ -103,16 +101,14 @@ const { count, double } = useCounterStore()!
 // @filename: useCounterStore.ts
 // @include: useCounterStore
 // ---cut---
-import { useCounterStore } from './useCounterStore'
+import { useCounterStore } from "./useCounterStore";
 
 // use non-null assertion operator to ignore the case that store is not provided.
-const { increment } = useCounterStore()!
+const { increment } = useCounterStore()!;
 </script>
 
 <template>
-  <button @click="increment">
-    +
-  </button>
+  <button @click="increment">+</button>
 </template>
 ```
 
@@ -120,58 +116,61 @@ const { increment } = useCounterStore()!
 
 ```ts
 // useCounterStore.ts
-import { createInjectionState } from '@vueuse/core'
-import { computed, shallowRef } from 'vue'
+import { createInjectionState } from "@vueuse/core";
+import { computed, shallowRef } from "vue";
 
 // custom injectionKey
-const CounterStoreKey = 'counter-store'
+const CounterStoreKey = "counter-store";
 
-const [useProvideCounterStore, useCounterStore] = createInjectionState((initialValue: number) => {
-  // state
-  const count = shallowRef(initialValue)
+const [useProvideCounterStore, useCounterStore] = createInjectionState(
+  (initialValue: number) => {
+    // state
+    const count = shallowRef(initialValue);
 
-  // getters
-  const double = computed(() => count.value * 2)
+    // getters
+    const double = computed(() => count.value * 2);
 
-  // actions
-  function increment() {
-    count.value++
-  }
+    // actions
+    function increment() {
+      count.value++;
+    }
 
-  return { count, double, increment }
-}, { injectionKey: CounterStoreKey })
+    return { count, double, increment };
+  },
+  { injectionKey: CounterStoreKey },
+);
 ```
 
 ## Provide a custom default value
 
 ```ts
 // useCounterStore.ts
-import { createInjectionState } from '@vueuse/core'
-import { computed, shallowRef } from 'vue'
+import { createInjectionState } from "@vueuse/core";
+import { computed, shallowRef } from "vue";
 
-const [useProvideCounterStore, useCounterStore] = createInjectionState((initialValue: number) => {
-  // state
-  const count = shallowRef(initialValue)
+const [useProvideCounterStore, useCounterStore] = createInjectionState(
+  (initialValue: number) => {
+    // state
+    const count = shallowRef(initialValue);
 
-  // getters
-  const double = computed(() => count.value * 2)
+    // getters
+    const double = computed(() => count.value * 2);
 
-  // actions
-  function increment() {
-    count.value++
-  }
+    // actions
+    function increment() {
+      count.value++;
+    }
 
-  return { count, double, increment }
-}, { defaultValue: 0 })
+    return { count, double, increment };
+  },
+  { defaultValue: 0 },
+);
 ```
 
 ## Type Declarations
 
 ```ts
-export type CreateInjectionStateReturn<
-  Arguments extends Array<any>,
-  Return,
-> = Readonly<
+export type CreateInjectionStateReturn<Arguments extends Array<any>, Return> = Readonly<
   [
     /**
      * Call this function in a provider component to create and provide the state.
@@ -187,16 +186,16 @@ export type CreateInjectionStateReturn<
      */
     useInjectedState: () => Return | undefined,
   ]
->
+>;
 export interface CreateInjectionStateOptions<Return> {
   /**
    * Custom injectionKey for InjectionState
    */
-  injectionKey?: string | InjectionKey<Return>
+  injectionKey?: string | InjectionKey<Return>;
   /**
    * Default value for the InjectionState
    */
-  defaultValue?: Return
+  defaultValue?: Return;
 }
 /**
  * Create global state that can be injected into components.
@@ -205,11 +204,8 @@ export interface CreateInjectionStateOptions<Return> {
  *
  * @__NO_SIDE_EFFECTS__
  */
-export declare function createInjectionState<
-  Arguments extends Array<any>,
-  Return,
->(
+export declare function createInjectionState<Arguments extends Array<any>, Return>(
   composable: (...args: Arguments) => Return,
   options?: CreateInjectionStateOptions<Return>,
-): CreateInjectionStateReturn<Arguments, Return>
+): CreateInjectionStateReturn<Arguments, Return>;
 ```

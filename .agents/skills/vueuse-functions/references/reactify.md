@@ -18,27 +18,27 @@ Check out [⚗️ Vue Chemistry](https://github.com/antfu/vue-chemistry)!
 Basic example
 
 ```ts
-import { reactify } from '@vueuse/core'
-import { shallowRef } from 'vue'
+import { reactify } from "@vueuse/core";
+import { shallowRef } from "vue";
 
 // a plain function
 function add(a: number, b: number): number {
-  return a + b
+  return a + b;
 }
 
 // now it accept refs and returns a computed ref
 // (a: number | Ref<number>, b: number | Ref<number>) => ComputedRef<number>
-const reactiveAdd = reactify(add)
+const reactiveAdd = reactify(add);
 
-const a = shallowRef(1)
-const b = shallowRef(2)
-const sum = reactiveAdd(a, b)
+const a = shallowRef(1);
+const b = shallowRef(2);
+const sum = reactiveAdd(a, b);
 
-console.log(sum.value) // 3
+console.log(sum.value); // 3
 
-a.value = 5
+a.value = 5;
 
-console.log(sum.value) // 7
+console.log(sum.value); // 7
 ```
 
 An example of implementing a reactive [Pythagorean theorem](https://en.wikipedia.org/wiki/Pythagorean_theorem).
@@ -46,84 +46,77 @@ An example of implementing a reactive [Pythagorean theorem](https://en.wikipedia
 <!-- eslint-skip -->
 
 ```ts
-import { reactify } from '@vueuse/core'
-import { shallowRef } from 'vue'
+import { reactify } from "@vueuse/core";
+import { shallowRef } from "vue";
 
-const pow = reactify(Math.pow)
-const sqrt = reactify(Math.sqrt)
-const add = reactify((a: number, b: number) => a + b)
+const pow = reactify(Math.pow);
+const sqrt = reactify(Math.sqrt);
+const add = reactify((a: number, b: number) => a + b);
 
-const a = shallowRef(3)
-const b = shallowRef(4)
-const c = sqrt(add(pow(a, 2), pow(b, 2)))
-console.log(c.value) // 5
+const a = shallowRef(3);
+const b = shallowRef(4);
+const c = sqrt(add(pow(a, 2), pow(b, 2)));
+console.log(c.value); // 5
 
 // 5:12:13
-a.value = 5
-b.value = 12
-console.log(c.value) // 13
+a.value = 5;
+b.value = 12;
+console.log(c.value); // 13
 ```
 
 You can also do it this way:
 
 ```ts
-import { reactify } from '@vueuse/core'
-import { shallowRef } from 'vue'
+import { reactify } from "@vueuse/core";
+import { shallowRef } from "vue";
 
 function pythagorean(a: number, b: number) {
-  return Math.sqrt(a ** 2 + b ** 2)
+  return Math.sqrt(a ** 2 + b ** 2);
 }
 
-const a = shallowRef(3)
-const b = shallowRef(4)
+const a = shallowRef(3);
+const b = shallowRef(4);
 
-const c = reactify(pythagorean)(a, b)
-console.log(c.value) // 5
+const c = reactify(pythagorean)(a, b);
+console.log(c.value); // 5
 ```
 
 Another example of making reactive `stringify`
 
 ```ts
-import { reactify } from '@vueuse/core'
-import { shallowRef } from 'vue'
+import { reactify } from "@vueuse/core";
+import { shallowRef } from "vue";
 
-const stringify = reactify(JSON.stringify)
+const stringify = reactify(JSON.stringify);
 
-const obj = shallowRef(42)
-const dumped = stringify(obj)
+const obj = shallowRef(42);
+const dumped = stringify(obj);
 
-console.log(dumped.value) // '42'
+console.log(dumped.value); // '42'
 
-obj.value = { foo: 'bar' }
+obj.value = { foo: "bar" };
 
-console.log(dumped.value) // '{"foo":"bar"}'
+console.log(dumped.value); // '{"foo":"bar"}'
 ```
 
 ## Type Declarations
 
 ```ts
-export type Reactified<T, Computed extends boolean> = T extends (
-  ...args: infer A
-) => infer R
+export type Reactified<T, Computed extends boolean> = T extends (...args: infer A) => infer R
   ? (
       ...args: {
-        [K in keyof A]: Computed extends true
-          ? MaybeRefOrGetter<A[K]>
-          : MaybeRef<A[K]>
+        [K in keyof A]: Computed extends true ? MaybeRefOrGetter<A[K]> : MaybeRef<A[K]>;
       }
     ) => ComputedRef<R>
-  : never
-export type ReactifyReturn<
-  T extends AnyFn = AnyFn,
-  K extends boolean = true,
-> = Reactified<T, K>
+  : never;
+export type ReactifyReturn<T extends AnyFn = AnyFn, K extends boolean = true> = Reactified<T, K>;
 export interface ReactifyOptions<T extends boolean> {
   /**
    * Accept passing a function as a reactive getter
    *
    * @default true
    */
-  computedGetter?: T
+  computedGetter?: T;
 }
 /**
  * Converts plain function into a reactive function.
@@ -138,7 +131,7 @@ export interface ReactifyOptions<T extends boolean> {
 export declare function reactify<T extends AnyFn, K extends boolean = true>(
   fn: T,
   options?: ReactifyOptions<K>,
-): ReactifyReturn<T, K>
+): ReactifyReturn<T, K>;
 /** @deprecated use `reactify` instead */
-export declare const createReactiveFn: typeof reactify
+export declare const createReactiveFn: typeof reactify;
 ```

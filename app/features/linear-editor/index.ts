@@ -6,12 +6,9 @@ export {
   LINEAR_EDITOR_COLORS,
   RUBBER_BAND_DASH,
   RUBBER_BAND_WIDTH,
-} from './constants'
+} from "./constants";
 
-export type {
-  MultiPointCreationState,
-  LinearEditorState,
-} from './types'
+export type { MultiPointCreationState, LinearEditorState } from "./types";
 
 export {
   getPointPositions,
@@ -24,13 +21,13 @@ export {
   movePoint,
   movePoints,
   getSizeFromPoints,
-} from './pointHandles'
+} from "./pointHandles";
 
-export { useMultiPointCreation } from './useMultiPointCreation'
-export { useLinearEditor } from './useLinearEditor'
+export { useMultiPointCreation } from "./useMultiPointCreation";
+export { useLinearEditor } from "./useLinearEditor";
 
 export {
   renderRubberBand,
   renderPointHandles,
   renderMidpointIndicator,
-} from './renderLinearEditor'
+} from "./renderLinearEditor";

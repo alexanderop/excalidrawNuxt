@@ -9,14 +9,9 @@ Reactive [DeviceOrientationEvent](https://developer.mozilla.org/en-US/docs/Web/A
 ## Usage
 
 ```ts
-import { useDeviceOrientation } from '@vueuse/core'
+import { useDeviceOrientation } from "@vueuse/core";
 
-const {
-  isAbsolute,
-  alpha,
-  beta,
-  gamma,
-} = useDeviceOrientation()
+const { isAbsolute, alpha, beta, gamma } = useDeviceOrientation();
 ```
 
 | State      | Type      | Description                                                                                                                |
@@ -33,9 +28,7 @@ You can find [more information about the state on the MDN](https://developer.moz
 ```vue
 <template>
   <UseDeviceOrientation v-slot="{ alpha, beta, gamma }">
-    Alpha: {{ alpha }}
-    Beta: {{ beta }}
-    Gamma: {{ gamma }}
+    Alpha: {{ alpha }} Beta: {{ beta }} Gamma: {{ gamma }}
   </UseDeviceOrientation>
 </template>
 ```
@@ -52,11 +45,11 @@ You can find [more information about the state on the MDN](https://developer.moz
  * @__NO_SIDE_EFFECTS__
  */
 export declare function useDeviceOrientation(options?: ConfigurableWindow): {
-  isSupported: ComputedRef<boolean>
-  isAbsolute: ShallowRef<boolean, boolean>
-  alpha: Ref<number | null, number | null>
-  beta: Ref<number | null, number | null>
-  gamma: Ref<number | null, number | null>
-}
-export type UseDeviceOrientationReturn = ReturnType<typeof useDeviceOrientation>
+  isSupported: ComputedRef<boolean>;
+  isAbsolute: ShallowRef<boolean, boolean>;
+  alpha: Ref<number | null, number | null>;
+  beta: Ref<number | null, number | null>;
+  gamma: Ref<number | null, number | null>;
+};
+export type UseDeviceOrientationReturn = ReturnType<typeof useDeviceOrientation>;
 ```

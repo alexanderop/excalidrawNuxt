@@ -12,10 +12,10 @@ Reactive [Clipboard API](https://developer.mozilla.org/en-US/docs/Web/API/Clipbo
 
 ```vue
 <script setup lang="ts">
-import { useClipboard } from '@vueuse/core'
+import { useClipboard } from "@vueuse/core";
 
-const source = ref('Hello')
-const { text, copy, copied, isSupported } = useClipboard({ source })
+const source = ref("Hello");
+const { text, copy, copied, isSupported } = useClipboard({ source });
 </script>
 
 <template>
@@ -25,11 +25,11 @@ const { text, copy, copied, isSupported } = useClipboard({ source })
       <span v-if="!copied">Copy</span>
       <span v-else>Copied!</span>
     </button>
-    <p>Current copied: <code>{{ text || 'none' }}</code></p>
+    <p>
+      Current copied: <code>{{ text || "none" }}</code>
+    </p>
   </div>
-  <p v-else>
-    Your browser does not support Clipboard API
-  </p>
+  <p v-else>Your browser does not support Clipboard API</p>
 </template>
 ```
 
@@ -56,7 +56,7 @@ const { text, copy, copied, isSupported } = useClipboard({ source })
 Set `legacy: true` to keep the ability to copy if [Clipboard API](https://developer.mozilla.org/en-US/docs/Web/API/Clipboard_API) is not available. It will handle copy with [execCommand](https://developer.mozilla.org/en-US/docs/Web/API/Document/execCommand) as fallback.
 
 ```ts
-const { copy, isSupported } = useClipboard({ legacy: true })
+const { copy, isSupported } = useClipboard({ legacy: true });
 ```
 
 ## Component Usage
@@ -65,7 +65,7 @@ const { copy, isSupported } = useClipboard({ legacy: true })
 <template>
   <UseClipboard v-slot="{ copy, copied }" source="copy me">
     <button @click="copy()">
-      {{ copied ? 'Copied' : 'Copy' }}
+      {{ copied ? "Copied" : "Copy" }}
     </button>
   </UseClipboard>
 </template>
@@ -80,31 +80,29 @@ export interface UseClipboardOptions<Source> extends ConfigurableNavigator {
    *
    * @default false
    */
-  read?: boolean
+  read?: boolean;
   /**
    * Copy source
    */
-  source?: Source
+  source?: Source;
   /**
    * Milliseconds to reset state of `copied` ref
    *
    * @default 1500
    */
-  copiedDuring?: number
+  copiedDuring?: number;
   /**
    * Whether fallback to document.execCommand('copy') if clipboard is undefined.
    *
    * @default false
    */
-  legacy?: boolean
+  legacy?: boolean;
 }
 export interface UseClipboardReturn<Optional> {
-  isSupported: ComputedRef<boolean>
-  text: Readonly<ShallowRef<string>>
-  copied: Readonly<ShallowRef<boolean>>
-  copy: Optional extends true
-    ? (text?: string) => Promise<void>
-    : (text: string) => Promise<void>
+  isSupported: ComputedRef<boolean>;
+  text: Readonly<ShallowRef<string>>;
+  copied: Readonly<ShallowRef<boolean>>;
+  copy: Optional extends true ? (text?: string) => Promise<void> : (text: string) => Promise<void>;
 }
 /**
  * Reactive Clipboard API.
@@ -116,8 +114,8 @@ export interface UseClipboardReturn<Optional> {
  */
 export declare function useClipboard(
   options?: UseClipboardOptions<undefined>,
-): UseClipboardReturn<false>
+): UseClipboardReturn<false>;
 export declare function useClipboard(
   options: UseClipboardOptions<MaybeRefOrGetter<string>>,
-): UseClipboardReturn<true>
+): UseClipboardReturn<true>;
 ```

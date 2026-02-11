@@ -10,9 +10,9 @@ Reactively track [`document.visibilityState`](https://developer.mozilla.org/en-U
 
 ```vue
 <script setup lang="ts">
-import { useDocumentVisibility } from '@vueuse/core'
+import { useDocumentVisibility } from "@vueuse/core";
 
-const visibility = useDocumentVisibility()
+const visibility = useDocumentVisibility();
 </script>
 ```
 
@@ -38,8 +38,6 @@ const visibility = useDocumentVisibility()
  */
 export declare function useDocumentVisibility(
   options?: ConfigurableDocument,
-): ShallowRef<DocumentVisibilityState, DocumentVisibilityState>
-export type UseDocumentVisibilityReturn = ReturnType<
-  typeof useDocumentVisibility
->
+): ShallowRef<DocumentVisibilityState, DocumentVisibilityState>;
+export type UseDocumentVisibilityReturn = ReturnType<typeof useDocumentVisibility>;
 ```

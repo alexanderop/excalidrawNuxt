@@ -1,5 +1,5 @@
 ---
-category: '@Math'
+category: "@Math"
 alias: not
 ---
 
@@ -10,14 +10,14 @@ alias: not
 ## Usage
 
 ```ts
-import { whenever } from '@vueuse/core'
-import { logicNot } from '@vueuse/math'
+import { whenever } from "@vueuse/core";
+import { logicNot } from "@vueuse/math";
 
-const a = ref(true)
+const a = ref(true);
 
 whenever(logicNot(a), () => {
-  console.log('a is now falsy!')
-})
+  console.log("a is now falsy!");
+});
 ```
 
 ## Type Declarations
@@ -30,7 +30,7 @@ whenever(logicNot(a), () => {
  *
  * @__NO_SIDE_EFFECTS__
  */
-export declare function logicNot(v: MaybeRefOrGetter<any>): ComputedRef<boolean>
+export declare function logicNot(v: MaybeRefOrGetter<any>): ComputedRef<boolean>;
 /** @deprecated use `logicNot` instead */
-export declare const not: typeof logicNot
+export declare const not: typeof logicNot;
 ```

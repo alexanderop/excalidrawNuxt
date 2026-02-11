@@ -9,21 +9,21 @@ Get the DOM element of current component as a ref.
 ## Usage
 
 ```ts
-import { useCurrentElement } from '@vueuse/core'
+import { useCurrentElement } from "@vueuse/core";
 
-const el = useCurrentElement() // ComputedRef<Element>
+const el = useCurrentElement(); // ComputedRef<Element>
 ```
 
 Or pass a specific vue component
 
 ```vue
 <script setup lang="ts">
-import { useCurrentElement, VueInstance } from '@vueuse/core'
-import { shallowRef } from 'vue'
+import { useCurrentElement, VueInstance } from "@vueuse/core";
+import { shallowRef } from "vue";
 
-const componentRef = shallowRef<VueInstance>(null as unknown as VueInstance)
+const componentRef = shallowRef<VueInstance>(null as unknown as VueInstance);
 
-const el = useCurrentElement(componentRef) // ComputedRef<Element>
+const el = useCurrentElement(componentRef); // ComputedRef<Element>
 </script>
 
 <template>
@@ -57,5 +57,5 @@ export declare function useCurrentElement<
       ? R["$el"]
       : T
     : T,
->(rootComponent?: MaybeElementRef<R>): ComputedRefWithControl<E>
+>(rootComponent?: MaybeElementRef<R>): ComputedRefWithControl<E>;
 ```

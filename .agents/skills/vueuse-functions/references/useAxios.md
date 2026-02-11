@@ -1,5 +1,5 @@
 ---
-category: '@Integrations'
+category: "@Integrations"
 ---
 
 # useAxios
@@ -15,9 +15,9 @@ npm i axios@^1
 ## Usage
 
 ```ts
-import { useAxios } from '@vueuse/integrations/useAxios'
+import { useAxios } from "@vueuse/integrations/useAxios";
 
-const { data, isFinished } = useAxios('/api/posts')
+const { data, isFinished } = useAxios("/api/posts");
 ```
 
 ### Return Values
@@ -36,27 +36,27 @@ const { data, isFinished } = useAxios('/api/posts')
 ### With Axios Instance
 
 ```ts
-import { useAxios } from '@vueuse/integrations/useAxios'
-import axios from 'axios'
+import { useAxios } from "@vueuse/integrations/useAxios";
+import axios from "axios";
 
 const instance = axios.create({
-  baseURL: '/api',
-})
+  baseURL: "/api",
+});
 
-const { data, isFinished } = useAxios('/posts', instance)
+const { data, isFinished } = useAxios("/posts", instance);
 ```
 
 ### With Config Options
 
 ```ts
-import { useAxios } from '@vueuse/integrations/useAxios'
-import axios from 'axios'
+import { useAxios } from "@vueuse/integrations/useAxios";
+import axios from "axios";
 
 const instance = axios.create({
-  baseURL: '/api',
-})
+  baseURL: "/api",
+});
 
-const { data, isFinished } = useAxios('/posts', { method: 'POST' }, instance)
+const { data, isFinished } = useAxios("/posts", { method: "POST" }, instance);
 ```
 
 ### Manual Execution
@@ -64,29 +64,29 @@ const { data, isFinished } = useAxios('/posts', { method: 'POST' }, instance)
 When you don't pass a `url`, the request won't fire immediately:
 
 ```ts
-import { useAxios } from '@vueuse/integrations/useAxios'
+import { useAxios } from "@vueuse/integrations/useAxios";
 
-const { execute } = useAxios()
-execute(url)
+const { execute } = useAxios();
+execute(url);
 ```
 
 The `execute` function `url` is optional - `url2` will replace `url1`:
 
 ```ts
-import { useAxios } from '@vueuse/integrations/useAxios'
+import { useAxios } from "@vueuse/integrations/useAxios";
 
-const { execute } = useAxios(url1, {}, { immediate: false })
-execute(url2)
+const { execute } = useAxios(url1, {}, { immediate: false });
+execute(url2);
 ```
 
 The `execute` function can accept config only:
 
 ```ts
-import { useAxios } from '@vueuse/integrations/useAxios'
+import { useAxios } from "@vueuse/integrations/useAxios";
 
-const { execute } = useAxios(url1, { method: 'GET' }, { immediate: false })
-execute({ params: { key: 1 } })
-execute({ params: { key: 2 } })
+const { execute } = useAxios(url1, { method: "GET" }, { immediate: false });
+execute({ params: { key: 1 } });
+execute({ params: { key: 2 } });
 ```
 
 ### Awaiting Results
@@ -94,25 +94,25 @@ execute({ params: { key: 2 } })
 The return value is thenable, so you can await it:
 
 ```ts
-import { useAxios } from '@vueuse/integrations/useAxios'
+import { useAxios } from "@vueuse/integrations/useAxios";
 
-const { data, isFinished, error } = await useAxios('/api/posts')
+const { data, isFinished, error } = await useAxios("/api/posts");
 // data is now populated
 ```
 
 Or await the execute function:
 
 ```ts
-import { useAxios } from '@vueuse/integrations/useAxios'
+import { useAxios } from "@vueuse/integrations/useAxios";
 
-const { execute } = useAxios()
-const result = await execute(url)
+const { execute } = useAxios();
+const result = await execute(url);
 ```
 
 ### Options
 
 ```ts
-const { data } = useAxios('/api/posts', config, instance, {
+const { data } = useAxios("/api/posts", config, instance, {
   // Execute immediately (default: true if url provided)
   immediate: true,
   // Use shallowRef for data (default: true)
@@ -124,10 +124,10 @@ const { data } = useAxios('/api/posts', config, instance, {
   // Initial data value
   initialData: [],
   // Callbacks
-  onSuccess: data => console.log('Success:', data),
-  onError: error => console.error('Error:', error),
-  onFinish: () => console.log('Finished'),
-})
+  onSuccess: (data) => console.log("Success:", data),
+  onError: (error) => console.error("Error:", error),
+  onFinish: () => console.log("Finished"),
+});
 ```
 
 ## Type Declarations
@@ -142,41 +142,39 @@ export interface UseAxiosReturn<
   /**
    * Axios Response
    */
-  response: ShallowRef<R | undefined>
+  response: ShallowRef<R | undefined>;
   /**
    * Axios response data
    */
-  data: O extends UseAxiosOptionsWithInitialData<T>
-    ? Ref<T>
-    : Ref<T | undefined>
+  data: O extends UseAxiosOptionsWithInitialData<T> ? Ref<T> : Ref<T | undefined>;
   /**
    * Indicates if the request has finished
    */
-  isFinished: Ref<boolean>
+  isFinished: Ref<boolean>;
   /**
    * Indicates if the request is currently loading
    */
-  isLoading: Ref<boolean>
+  isLoading: Ref<boolean>;
   /**
    * Indicates if the request was canceled
    */
-  isAborted: Ref<boolean>
+  isAborted: Ref<boolean>;
   /**
    * Any errors that may have occurred
    */
-  error: ShallowRef<unknown | undefined>
+  error: ShallowRef<unknown | undefined>;
   /**
    * Aborts the current request
    */
-  abort: (message?: string | undefined) => void
+  abort: (message?: string | undefined) => void;
   /**
    * Alias to `abort`
    */
-  cancel: (message?: string | undefined) => void
+  cancel: (message?: string | undefined) => void;
   /**
    * Alias to `isAborted`
    */
-  isCanceled: Ref<boolean>
+  isCanceled: Ref<boolean>;
 }
 export interface StrictUseAxiosReturn<
   T,
@@ -190,97 +188,87 @@ export interface StrictUseAxiosReturn<
   execute: (
     url?: string | AxiosRequestConfig<D>,
     config?: AxiosRequestConfig<D>,
-  ) => Promise<StrictUseAxiosReturn<T, R, D, O>>
+  ) => Promise<StrictUseAxiosReturn<T, R, D, O>>;
 }
 export interface EasyUseAxiosReturn<T, R, D> extends UseAxiosReturn<T, R, D> {
   /**
    * Manually call the axios request
    */
-  execute: (
-    url: string,
-    config?: AxiosRequestConfig<D>,
-  ) => Promise<EasyUseAxiosReturn<T, R, D>>
+  execute: (url: string, config?: AxiosRequestConfig<D>) => Promise<EasyUseAxiosReturn<T, R, D>>;
 }
 export interface UseAxiosOptionsBase<T = any> {
   /**
    * Will automatically run axios request when `useAxios` is used
    *
    */
-  immediate?: boolean
+  immediate?: boolean;
   /**
    * Use shallowRef.
    *
    * @default true
    */
-  shallow?: boolean
+  shallow?: boolean;
   /**
    * Abort previous request when a new request is made.
    *
    * @default true
    */
-  abortPrevious?: boolean
+  abortPrevious?: boolean;
   /**
    * Callback when error is caught.
    */
-  onError?: (e: unknown) => void
+  onError?: (e: unknown) => void;
   /**
    * Callback when success is caught.
    */
-  onSuccess?: (data: T) => void
+  onSuccess?: (data: T) => void;
   /**
    * Sets the state to initialState before executing the promise.
    */
-  resetOnExecute?: boolean
+  resetOnExecute?: boolean;
   /**
    * Callback when request is finished.
    */
-  onFinish?: () => void
+  onFinish?: () => void;
 }
-export interface UseAxiosOptionsWithInitialData<
-  T,
-> extends UseAxiosOptionsBase<T> {
+export interface UseAxiosOptionsWithInitialData<T> extends UseAxiosOptionsBase<T> {
   /**
    * Initial data
    */
-  initialData: T
+  initialData: T;
 }
-export type UseAxiosOptions<T = any> =
-  | UseAxiosOptionsBase<T>
-  | UseAxiosOptionsWithInitialData<T>
+export type UseAxiosOptions<T = any> = UseAxiosOptionsBase<T> | UseAxiosOptionsWithInitialData<T>;
 export declare function useAxios<
   T = any,
   R = AxiosResponse<T>,
   D = any,
-  O extends UseAxiosOptionsWithInitialData<T> =
-    UseAxiosOptionsWithInitialData<T>,
+  O extends UseAxiosOptionsWithInitialData<T> = UseAxiosOptionsWithInitialData<T>,
 >(
   url: string,
   config?: AxiosRequestConfig<D>,
   options?: O,
-): StrictUseAxiosReturn<T, R, D, O> & Promise<StrictUseAxiosReturn<T, R, D, O>>
+): StrictUseAxiosReturn<T, R, D, O> & Promise<StrictUseAxiosReturn<T, R, D, O>>;
 export declare function useAxios<
   T = any,
   R = AxiosResponse<T>,
   D = any,
-  O extends UseAxiosOptionsWithInitialData<T> =
-    UseAxiosOptionsWithInitialData<T>,
+  O extends UseAxiosOptionsWithInitialData<T> = UseAxiosOptionsWithInitialData<T>,
 >(
   url: string,
   instance?: AxiosInstance,
   options?: O,
-): StrictUseAxiosReturn<T, R, D, O> & Promise<StrictUseAxiosReturn<T, R, D, O>>
+): StrictUseAxiosReturn<T, R, D, O> & Promise<StrictUseAxiosReturn<T, R, D, O>>;
 export declare function useAxios<
   T = any,
   R = AxiosResponse<T>,
   D = any,
-  O extends UseAxiosOptionsWithInitialData<T> =
-    UseAxiosOptionsWithInitialData<T>,
+  O extends UseAxiosOptionsWithInitialData<T> = UseAxiosOptionsWithInitialData<T>,
 >(
   url: string,
   config: AxiosRequestConfig<D>,
   instance: AxiosInstance,
   options?: O,
-): StrictUseAxiosReturn<T, R, D, O> & Promise<StrictUseAxiosReturn<T, R, D, O>>
+): StrictUseAxiosReturn<T, R, D, O> & Promise<StrictUseAxiosReturn<T, R, D, O>>;
 export declare function useAxios<
   T = any,
   R = AxiosResponse<T>,
@@ -290,7 +278,7 @@ export declare function useAxios<
   url: string,
   config?: AxiosRequestConfig<D>,
   options?: O,
-): StrictUseAxiosReturn<T, R, D, O> & Promise<StrictUseAxiosReturn<T, R, D, O>>
+): StrictUseAxiosReturn<T, R, D, O> & Promise<StrictUseAxiosReturn<T, R, D, O>>;
 export declare function useAxios<
   T = any,
   R = AxiosResponse<T>,
@@ -300,7 +288,7 @@ export declare function useAxios<
   url: string,
   instance?: AxiosInstance,
   options?: O,
-): StrictUseAxiosReturn<T, R, D, O> & Promise<StrictUseAxiosReturn<T, R, D, O>>
+): StrictUseAxiosReturn<T, R, D, O> & Promise<StrictUseAxiosReturn<T, R, D, O>>;
 export declare function useAxios<
   T = any,
   R = AxiosResponse<T>,
@@ -311,15 +299,15 @@ export declare function useAxios<
   config: AxiosRequestConfig<D>,
   instance: AxiosInstance,
   options?: O,
-): StrictUseAxiosReturn<T, R, D, O> & Promise<StrictUseAxiosReturn<T, R, D, O>>
+): StrictUseAxiosReturn<T, R, D, O> & Promise<StrictUseAxiosReturn<T, R, D, O>>;
 export declare function useAxios<T = any, R = AxiosResponse<T>, D = any>(
   config?: AxiosRequestConfig<D>,
-): EasyUseAxiosReturn<T, R, D> & Promise<EasyUseAxiosReturn<T, R, D>>
+): EasyUseAxiosReturn<T, R, D> & Promise<EasyUseAxiosReturn<T, R, D>>;
 export declare function useAxios<T = any, R = AxiosResponse<T>, D = any>(
   instance?: AxiosInstance,
-): EasyUseAxiosReturn<T, R, D> & Promise<EasyUseAxiosReturn<T, R, D>>
+): EasyUseAxiosReturn<T, R, D> & Promise<EasyUseAxiosReturn<T, R, D>>;
 export declare function useAxios<T = any, R = AxiosResponse<T>, D = any>(
   config?: AxiosRequestConfig<D>,
   instance?: AxiosInstance,
-): EasyUseAxiosReturn<T, R, D> & Promise<EasyUseAxiosReturn<T, R, D>>
+): EasyUseAxiosReturn<T, R, D> & Promise<EasyUseAxiosReturn<T, R, D>>;
 ```

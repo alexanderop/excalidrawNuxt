@@ -11,36 +11,36 @@ Reactive `Array.findIndex`
 ### Use with array of multiple refs
 
 ```ts
-import { useArrayFindIndex } from '@vueuse/core'
+import { useArrayFindIndex } from "@vueuse/core";
 
-const item1 = ref(0)
-const item2 = ref(2)
-const item3 = ref(4)
-const item4 = ref(6)
-const item5 = ref(8)
-const list = [item1, item2, item3, item4, item5]
-const result = useArrayFindIndex(list, i => i % 2 === 0)
+const item1 = ref(0);
+const item2 = ref(2);
+const item3 = ref(4);
+const item4 = ref(6);
+const item5 = ref(8);
+const list = [item1, item2, item3, item4, item5];
+const result = useArrayFindIndex(list, (i) => i % 2 === 0);
 // result.value: 0
-item1.value = 1
+item1.value = 1;
 // result.value: 1
 ```
 
 ### Use with reactive array
 
 ```ts
-import { useArrayFindIndex } from '@vueuse/core'
+import { useArrayFindIndex } from "@vueuse/core";
 
-const list = ref([0, 2, 4, 6, 8])
-const result = useArrayFindIndex(list, i => i % 2 === 0)
+const list = ref([0, 2, 4, 6, 8]);
+const result = useArrayFindIndex(list, (i) => i % 2 === 0);
 // result.value: 0
-list.value.unshift(-1)
+list.value.unshift(-1);
 // result.value: 1
 ```
 
 ## Type Declarations
 
 ```ts
-export type UseArrayFindIndexReturn = ComputedRef<number>
+export type UseArrayFindIndexReturn = ComputedRef<number>;
 /**
  * Reactive `Array.findIndex`
  *
@@ -55,5 +55,5 @@ export type UseArrayFindIndexReturn = ComputedRef<number>
 export declare function useArrayFindIndex<T>(
   list: MaybeRefOrGetter<MaybeRefOrGetter<T>[]>,
   fn: (element: T, index: number, array: MaybeRefOrGetter<T>[]) => unknown,
-): UseArrayFindIndexReturn
+): UseArrayFindIndexReturn;
 ```

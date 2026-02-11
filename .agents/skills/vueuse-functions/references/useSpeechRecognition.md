@@ -11,16 +11,9 @@ Reactive [SpeechRecognition](https://developer.mozilla.org/en-US/docs/Web/API/Sp
 ## Usage
 
 ```ts
-import { useSpeechRecognition } from '@vueuse/core'
+import { useSpeechRecognition } from "@vueuse/core";
 
-const {
-  isSupported,
-  isListening,
-  isFinal,
-  result,
-  start,
-  stop,
-} = useSpeechRecognition()
+const { isSupported, isListening, isFinal, result, start, stop } = useSpeechRecognition();
 ```
 
 ### Options
@@ -28,13 +21,13 @@ const {
 The following shows the default values of the options, they will be directly passed to [SpeechRecognition API](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition).
 
 ```ts
-import { useSpeechRecognition } from '@vueuse/core'
+import { useSpeechRecognition } from "@vueuse/core";
 // ---cut---
 useSpeechRecognition({
-  lang: 'en-US',
+  lang: "en-US",
   interimResults: true,
   continuous: true,
-})
+});
 ```
 
 ## Type Declarations
@@ -46,26 +39,26 @@ export interface UseSpeechRecognitionOptions extends ConfigurableWindow {
    *
    * @default true
    */
-  continuous?: boolean
+  continuous?: boolean;
   /**
    * Controls whether interim results should be returned (true) or not (false.) Interim results are results that are not yet final
    *
    * @default true
    */
-  interimResults?: boolean
+  interimResults?: boolean;
   /**
    * Language for SpeechRecognition
    *
    * @default 'en-US'
    */
-  lang?: MaybeRefOrGetter<string>
+  lang?: MaybeRefOrGetter<string>;
   /**
    * A number representing the maximum returned alternatives for each result.
    *
    * @see https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition/maxAlternatives
    * @default 1
    */
-  maxAlternatives?: number
+  maxAlternatives?: number;
 }
 /**
  * Reactive SpeechRecognition.
@@ -74,21 +67,19 @@ export interface UseSpeechRecognitionOptions extends ConfigurableWindow {
  * @see https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition SpeechRecognition
  * @param options
  */
-export declare function useSpeechRecognition(
-  options?: UseSpeechRecognitionOptions,
-): {
-  isSupported: ComputedRef<boolean>
-  isListening: ShallowRef<boolean, boolean>
-  isFinal: ShallowRef<boolean, boolean>
-  recognition: SpeechRecognition | undefined
-  result: ShallowRef<string, string>
+export declare function useSpeechRecognition(options?: UseSpeechRecognitionOptions): {
+  isSupported: ComputedRef<boolean>;
+  isListening: ShallowRef<boolean, boolean>;
+  isFinal: ShallowRef<boolean, boolean>;
+  recognition: SpeechRecognition | undefined;
+  result: ShallowRef<string, string>;
   error: ShallowRef<
     Error | SpeechRecognitionErrorEvent | undefined,
     Error | SpeechRecognitionErrorEvent | undefined
-  >
-  toggle: (value?: boolean) => void
-  start: () => void
-  stop: () => void
-}
-export type UseSpeechRecognitionReturn = ReturnType<typeof useSpeechRecognition>
+  >;
+  toggle: (value?: boolean) => void;
+  start: () => void;
+  stop: () => void;
+};
+export type UseSpeechRecognitionReturn = ReturnType<typeof useSpeechRecognition>;
 ```

@@ -9,27 +9,27 @@ Reactive counter that increases on every interval.
 ## Usage
 
 ```ts
-import { useInterval } from '@vueuse/core'
+import { useInterval } from "@vueuse/core";
 
 // count will increase every 200ms
-const counter = useInterval(200)
+const counter = useInterval(200);
 ```
 
 ### With Controls
 
 ```ts
-import { useInterval } from '@vueuse/core'
+import { useInterval } from "@vueuse/core";
 
 const { counter, reset, pause, resume, isActive } = useInterval(200, {
   controls: true,
-})
+});
 
 // Reset counter to 0
-reset()
+reset();
 
 // Pause/resume the interval
-pause()
-resume()
+pause();
+resume();
 ```
 
 ### Options
@@ -45,25 +45,25 @@ resume()
 The interval can be reactive:
 
 ```ts
-import { useInterval } from '@vueuse/core'
+import { useInterval } from "@vueuse/core";
 
-const intervalMs = ref(1000)
-const counter = useInterval(intervalMs)
+const intervalMs = ref(1000);
+const counter = useInterval(intervalMs);
 
 // Change the interval dynamically
-intervalMs.value = 500
+intervalMs.value = 500;
 ```
 
 ### Callback on Every Interval
 
 ```ts
-import { useInterval } from '@vueuse/core'
+import { useInterval } from "@vueuse/core";
 
 useInterval(1000, {
   callback: (count) => {
-    console.log(`Tick ${count}`)
+    console.log(`Tick ${count}`);
   },
-})
+});
 ```
 
 ## Type Declarations
@@ -75,25 +75,25 @@ export interface UseIntervalOptions<Controls extends boolean> {
    *
    * @default false
    */
-  controls?: Controls
+  controls?: Controls;
   /**
    * Execute the update immediately on calling
    *
    * @default true
    */
-  immediate?: boolean
+  immediate?: boolean;
   /**
    * Callback on every interval
    */
-  callback?: (count: number) => void
+  callback?: (count: number) => void;
 }
 export interface UseIntervalControls {
-  counter: ShallowRef<number>
-  reset: () => void
+  counter: ShallowRef<number>;
+  reset: () => void;
 }
 export type UseIntervalReturn =
   | Readonly<ShallowRef<number>>
-  | Readonly<UseIntervalControls & Pausable>
+  | Readonly<UseIntervalControls & Pausable>;
 /**
  * Reactive counter increases on every interval
  *
@@ -104,9 +104,9 @@ export type UseIntervalReturn =
 export declare function useInterval(
   interval?: MaybeRefOrGetter<number>,
   options?: UseIntervalOptions<false>,
-): Readonly<ShallowRef<number>>
+): Readonly<ShallowRef<number>>;
 export declare function useInterval(
   interval: MaybeRefOrGetter<number>,
   options: UseIntervalOptions<true>,
-): Readonly<UseIntervalControls & Pausable>
+): Readonly<UseIntervalControls & Pausable>;
 ```

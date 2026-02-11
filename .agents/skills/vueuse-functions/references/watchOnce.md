@@ -12,12 +12,12 @@ See [Vue's docs](https://vuejs.org/guide/essentials/watchers.html#once-watchers)
 Similar to `watch`, but with `{ once: true }`
 
 ```ts
-import { watchOnce } from '@vueuse/core'
+import { watchOnce } from "@vueuse/core";
 
 watchOnce(source, () => {
   // triggers only once
-  console.log('source changed!')
-})
+  console.log("source changed!");
+});
 ```
 
 ## Type Declarations
@@ -27,15 +27,15 @@ export declare function watchOnce<T extends Readonly<MultiWatchSources>>(
   source: [...T],
   cb: WatchCallback<MapSources<T>, MapOldSources<T, true>>,
   options?: Omit<WatchOptions<true>, "once">,
-): WatchHandle
+): WatchHandle;
 export declare function watchOnce<T>(
   source: WatchSource<T>,
   cb: WatchCallback<T, T | undefined>,
   options?: Omit<WatchOptions<true>, "once">,
-): WatchHandle
+): WatchHandle;
 export declare function watchOnce<T extends object>(
   source: T,
   cb: WatchCallback<T, T | undefined>,
   options?: Omit<WatchOptions<true>, "once">,
-): WatchHandle
+): WatchHandle;
 ```

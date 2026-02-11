@@ -1,5 +1,5 @@
 ---
-category: '@Math'
+category: "@Math"
 ---
 
 # usePrecision
@@ -9,18 +9,18 @@ Reactively set the precision of a number.
 ## Usage
 
 ```ts
-import { usePrecision } from '@vueuse/math'
+import { usePrecision } from "@vueuse/math";
 
-const value = ref(3.1415)
-const result = usePrecision(value, 2) // 3.14
+const value = ref(3.1415);
+const result = usePrecision(value, 2); // 3.14
 
 const ceilResult = usePrecision(value, 2, {
-  math: 'ceil'
-}) // 3.15
+  math: "ceil",
+}); // 3.15
 
 const floorResult = usePrecision(value, 3, {
-  math: 'floor'
-}) // 3.141
+  math: "floor",
+}); // 3.141
 ```
 
 ## Type Declarations
@@ -32,7 +32,7 @@ export interface UsePrecisionOptions {
    *
    * @default 'round'
    */
-  math?: "floor" | "ceil" | "round"
+  math?: "floor" | "ceil" | "round";
 }
 /**
  * Reactively set the precision of a number.
@@ -45,5 +45,5 @@ export declare function usePrecision(
   value: MaybeRefOrGetter<number>,
   digits: MaybeRefOrGetter<number>,
   options?: MaybeRefOrGetter<UsePrecisionOptions>,
-): ComputedRef<number>
+): ComputedRef<number>;
 ```

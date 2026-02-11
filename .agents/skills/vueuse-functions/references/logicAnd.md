@@ -1,5 +1,5 @@
 ---
-category: '@Math'
+category: "@Math"
 alias: and
 related: logicNot, logicOr
 ---
@@ -11,15 +11,15 @@ related: logicNot, logicOr
 ## Usage
 
 ```ts
-import { whenever } from '@vueuse/core'
-import { logicAnd } from '@vueuse/math'
+import { whenever } from "@vueuse/core";
+import { logicAnd } from "@vueuse/math";
 
-const a = ref(true)
-const b = ref(false)
+const a = ref(true);
+const b = ref(false);
 
 whenever(logicAnd(a, b), () => {
-  console.log('both a and b are now truthy!')
-})
+  console.log("both a and b are now truthy!");
+});
 ```
 
 ## Type Declarations
@@ -32,9 +32,7 @@ whenever(logicAnd(a, b), () => {
  *
  * @__NO_SIDE_EFFECTS__
  */
-export declare function logicAnd(
-  ...args: MaybeRefOrGetter<any>[]
-): ComputedRef<boolean>
+export declare function logicAnd(...args: MaybeRefOrGetter<any>[]): ComputedRef<boolean>;
 /** @deprecated use `logicAnd` instead */
-export declare const and: typeof logicAnd
+export declare const and: typeof logicAnd;
 ```

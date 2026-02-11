@@ -1,5 +1,5 @@
 ---
-category: '@Electron'
+category: "@Electron"
 ---
 
 # useIpcRendererInvoke
@@ -9,14 +9,14 @@ Reactive [ipcRenderer.invoke API](https://www.electronjs.org/docs/api/ipc-render
 ## Usage
 
 ```ts
-import { useIpcRendererInvoke } from '@vueuse/electron'
-import { computed } from 'vue'
+import { useIpcRendererInvoke } from "@vueuse/electron";
+import { computed } from "vue";
 
 // enable nodeIntegration if you don't provide ipcRenderer explicitly
 // see: https://www.electronjs.org/docs/api/webview-tag#nodeintegration
 // Ref result will return
-const result = useIpcRendererInvoke<string>('custom-channel', 'some data')
-const msg = computed(() => result.value?.msg)
+const result = useIpcRendererInvoke<string>("custom-channel", "some data");
+const msg = computed(() => result.value?.msg);
 ```
 
 ## Type Declarations
@@ -38,7 +38,7 @@ export declare function useIpcRendererInvoke<T>(
   ipcRenderer: IpcRenderer,
   channel: string,
   ...args: any[]
-): ShallowRef<T | null>
+): ShallowRef<T | null>;
 /**
  * Returns Promise<any> - Resolves with the response from the main process.
  *
@@ -54,5 +54,5 @@ export declare function useIpcRendererInvoke<T>(
 export declare function useIpcRendererInvoke<T>(
   channel: string,
   ...args: any[]
-): ShallowRef<T | null>
+): ShallowRef<T | null>;
 ```

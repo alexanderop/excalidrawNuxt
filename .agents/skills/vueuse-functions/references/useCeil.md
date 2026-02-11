@@ -1,5 +1,5 @@
 ---
-category: '@Math'
+category: "@Math"
 ---
 
 # useCeil
@@ -9,10 +9,10 @@ Reactive `Math.ceil`
 ## Usage
 
 ```ts
-import { useCeil } from '@vueuse/math'
+import { useCeil } from "@vueuse/math";
 
-const value = ref(0.95)
-const result = useCeil(value) // 1
+const value = ref(0.95);
+const result = useCeil(value); // 1
 ```
 
 ## Type Declarations
@@ -25,7 +25,5 @@ const result = useCeil(value) // 1
  *
  * @__NO_SIDE_EFFECTS__
  */
-export declare function useCeil(
-  value: MaybeRefOrGetter<number>,
-): ComputedRef<number>
+export declare function useCeil(value: MaybeRefOrGetter<number>): ComputedRef<number>;
 ```

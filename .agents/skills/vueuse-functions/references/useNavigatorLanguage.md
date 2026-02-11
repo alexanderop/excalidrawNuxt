@@ -9,20 +9,20 @@ Reactive [navigator.language](https://developer.mozilla.org/en-US/docs/Web/API/N
 ## Usage
 
 ```ts
-import { useNavigatorLanguage } from '@vueuse/core'
+import { useNavigatorLanguage } from "@vueuse/core";
 
-const { language } = useNavigatorLanguage()
+const { language } = useNavigatorLanguage();
 
 watch(language, () => {
   // Listen to the value changing
-})
+});
 ```
 
 ## Type Declarations
 
 ```ts
 export interface NavigatorLanguageState {
-  isSupported: ComputedRef<boolean>
+  isSupported: ComputedRef<boolean>;
   /**
    *
    * ISO 639-1 standard Language Code
@@ -39,7 +39,7 @@ export interface NavigatorLanguageState {
    * @see https://www.loc.gov/standards/iso639-2/php/code_list.php
    *
    */
-  language: ShallowRef<string | undefined>
+  language: ShallowRef<string | undefined>;
 }
 /**
  *
@@ -52,6 +52,6 @@ export interface NavigatorLanguageState {
  */
 export declare function useNavigatorLanguage(
   options?: ConfigurableWindow,
-): Readonly<NavigatorLanguageState>
-export type UseNavigatorLanguageReturn = ReturnType<typeof useNavigatorLanguage>
+): Readonly<NavigatorLanguageState>;
+export type UseNavigatorLanguageReturn = ReturnType<typeof useNavigatorLanguage>;
 ```

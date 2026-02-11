@@ -10,22 +10,22 @@ Shorthand for props v-model binding. Think it like `toRefs(props)` but changes w
 ## Usage
 
 ```ts
-import { useVModels } from '@vueuse/core'
+import { useVModels } from "@vueuse/core";
 
 const props = defineProps({
   foo: string,
   bar: number,
-})
+});
 
-const emit = defineEmits(['update:foo', 'update:bar'])
+const emit = defineEmits(["update:foo", "update:bar"]);
 
-const { foo, bar } = useVModels(props, emit)
+const { foo, bar } = useVModels(props, emit);
 ```
 
 ### Options API
 
 ```ts
-import { useVModels } from '@vueuse/core'
+import { useVModels } from "@vueuse/core";
 
 export default {
   props: {
@@ -33,12 +33,12 @@ export default {
     bar: Number,
   },
   setup(props, { emit }) {
-    const { foo, bar } = useVModels(props, emit)
+    const { foo, bar } = useVModels(props, emit);
 
-    console.log(foo.value) // props.foo
-    foo.value = 'foo' // emit('update:foo', 'foo')
+    console.log(foo.value); // props.foo
+    foo.value = "foo"; // emit('update:foo', 'foo')
   },
-}
+};
 ```
 
 ## Type Declarations
@@ -58,10 +58,10 @@ export declare function useVModels<P extends object, Name extends string>(
   props: P,
   emit?: (name: Name, ...args: any[]) => void,
   options?: UseVModelOptions<any, true>,
-): ToRefs<P>
+): ToRefs<P>;
 export declare function useVModels<P extends object, Name extends string>(
   props: P,
   emit?: (name: Name, ...args: any[]) => void,
   options?: UseVModelOptions<any, false>,
-): ToRefs<P>
+): ToRefs<P>;
 ```

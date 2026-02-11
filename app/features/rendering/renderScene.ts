@@ -1,9 +1,9 @@
-import type { RoughCanvas } from 'roughjs/bin/canvas'
-import type { ExcalidrawElement } from '~/features/elements/types'
-import type { Theme } from '~/features/theme/types'
-import type { FileId, ImageCacheEntry } from '~/features/image'
-import { getElementBounds } from '~/features/selection/bounds'
-import { renderElement } from './renderElement'
+import type { RoughCanvas } from "roughjs/bin/canvas";
+import type { ExcalidrawElement } from "~/features/elements/types";
+import type { Theme } from "~/features/theme/types";
+import type { FileId, ImageCacheEntry } from "~/features/image";
+import { getElementBounds } from "~/features/selection/bounds";
+import { renderElement } from "./renderElement";
 
 export function renderScene(
   ctx: CanvasRenderingContext2D,
@@ -17,20 +17,20 @@ export function renderScene(
   theme: Theme,
   imageCache?: ReadonlyMap<FileId, ImageCacheEntry>,
 ): void {
-  ctx.save()
-  ctx.scale(zoom, zoom)
-  ctx.translate(scrollX, scrollY)
+  ctx.save();
+  ctx.scale(zoom, zoom);
+  ctx.translate(scrollX, scrollY);
 
-  const viewMinX = -scrollX
-  const viewMinY = -scrollY
-  const viewMaxX = viewMinX + w / zoom
-  const viewMaxY = viewMinY + h / zoom
+  const viewMinX = -scrollX;
+  const viewMinY = -scrollY;
+  const viewMaxX = viewMinX + w / zoom;
+  const viewMaxY = viewMinY + h / zoom;
 
   for (const element of elements) {
-    const [x1, y1, x2, y2] = getElementBounds(element)
-    if (x2 < viewMinX || x1 > viewMaxX || y2 < viewMinY || y1 > viewMaxY) continue
-    renderElement(ctx, rc, element, theme, imageCache)
+    const [x1, y1, x2, y2] = getElementBounds(element);
+    if (x2 < viewMinX || x1 > viewMaxX || y2 < viewMinY || y1 > viewMaxY) continue;
+    renderElement(ctx, rc, element, theme, imageCache);
   }
 
-  ctx.restore()
+  ctx.restore();
 }

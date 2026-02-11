@@ -1,19 +1,19 @@
-import type { ToolType } from '../types'
+import type { ToolType } from "../types";
 
 interface ToolIconDef {
-  viewBox: string
-  paths: string
+  viewBox: string;
+  paths: string;
 }
 
 export const TOOL_ICONS: Record<ToolType, ToolIconDef> = {
   selection: {
-    viewBox: '0 0 22 22',
+    viewBox: "0 0 22 22",
     paths: `<g stroke="currentColor" stroke-width="1.25" fill="none">
       <path d="M4.5 2.5L4.5 18.5L9.5 13.5L14.5 13.5Z" stroke-linecap="round" stroke-linejoin="round"/>
     </g>`,
   },
   hand: {
-    viewBox: '0 0 24 24',
+    viewBox: "0 0 24 24",
     paths: `<g stroke="currentColor" stroke-width="1.25" fill="none" stroke-linecap="round" stroke-linejoin="round">
       <path d="M8 13V5.5C8 4.67 8.67 4 9.5 4S11 4.67 11 5.5V11"/>
       <path d="M11 5.5C11 4.67 11.67 4 12.5 4S14 4.67 14 5.5V11"/>
@@ -22,56 +22,56 @@ export const TOOL_ICONS: Record<ToolType, ToolIconDef> = {
     </g>`,
   },
   rectangle: {
-    viewBox: '0 0 24 24',
+    viewBox: "0 0 24 24",
     paths: `<g stroke="currentColor" stroke-width="1.5" fill="none">
       <rect x="3" y="4" width="18" height="16" rx="2" ry="2"/>
     </g>`,
   },
   diamond: {
-    viewBox: '0 0 24 24',
+    viewBox: "0 0 24 24",
     paths: `<g stroke="currentColor" stroke-width="1.5" fill="none">
       <path d="M12 2L22 12L12 22L2 12Z" stroke-linejoin="round"/>
     </g>`,
   },
   ellipse: {
-    viewBox: '0 0 24 24',
+    viewBox: "0 0 24 24",
     paths: `<g stroke="currentColor" stroke-width="1.5" fill="none">
       <ellipse cx="12" cy="12" rx="10" ry="8"/>
     </g>`,
   },
   arrow: {
-    viewBox: '0 0 24 24',
+    viewBox: "0 0 24 24",
     paths: `<g stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
       <line x1="5" y1="19" x2="19" y2="5"/>
       <polyline points="10,5 19,5 19,14"/>
     </g>`,
   },
   line: {
-    viewBox: '0 0 24 24',
+    viewBox: "0 0 24 24",
     paths: `<g stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round">
       <line x1="5" y1="19" x2="19" y2="5"/>
     </g>`,
   },
   text: {
-    viewBox: '0 0 24 24',
+    viewBox: "0 0 24 24",
     paths: `<g stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
       <line x1="6" y1="5" x2="18" y2="5"/>
       <line x1="12" y1="5" x2="12" y2="19"/>
     </g>`,
   },
   code: {
-    viewBox: '0 0 24 24',
+    viewBox: "0 0 24 24",
     paths: `<g stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
       <polyline points="16,18 22,12 16,6"/>
       <polyline points="8,6 2,12 8,18"/>
     </g>`,
   },
   image: {
-    viewBox: '0 0 24 24',
+    viewBox: "0 0 24 24",
     paths: `<g stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
       <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
       <circle cx="8.5" cy="8.5" r="1.5"/>
       <polyline points="21,15 16,10 5,21"/>
     </g>`,
   },
-}
+};

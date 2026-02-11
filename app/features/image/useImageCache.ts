@@ -1,36 +1,36 @@
-import { shallowRef, triggerRef } from 'vue'
-import { createGlobalState } from '@vueuse/core'
-import type { FileId, ImageCacheEntry } from './types'
+import { shallowRef, triggerRef } from "vue";
+import { createGlobalState } from "@vueuse/core";
+import type { FileId, ImageCacheEntry } from "./types";
 
 export const useImageCache = createGlobalState(() => {
-  const cache = shallowRef(new Map<FileId, ImageCacheEntry>())
+  const cache = shallowRef(new Map<FileId, ImageCacheEntry>());
 
   function addImage(id: FileId, image: HTMLImageElement, mimeType: string): void {
-    cache.value.set(id, { image, mimeType })
-    triggerRef(cache)
+    cache.value.set(id, { image, mimeType });
+    triggerRef(cache);
   }
 
   function getImage(id: FileId): HTMLImageElement | undefined {
-    return cache.value.get(id)?.image
+    return cache.value.get(id)?.image;
   }
 
   function getEntry(id: FileId): ImageCacheEntry | undefined {
-    return cache.value.get(id)
+    return cache.value.get(id);
   }
 
   function hasImage(id: FileId): boolean {
-    return cache.value.has(id)
+    return cache.value.has(id);
   }
 
   function removeImage(id: FileId): void {
-    cache.value.delete(id)
-    triggerRef(cache)
+    cache.value.delete(id);
+    triggerRef(cache);
   }
 
   function $reset(): void {
-    cache.value.clear()
-    triggerRef(cache)
+    cache.value.clear();
+    triggerRef(cache);
   }
 
-  return { cache, addImage, getImage, getEntry, hasImage, removeImage, $reset }
-})
+  return { cache, addImage, getImage, getEntry, hasImage, removeImage, $reset };
+});

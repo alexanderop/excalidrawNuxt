@@ -11,9 +11,9 @@ Reactive browser location
 ## Usage
 
 ```ts
-import { useBrowserLocation } from '@vueuse/core'
+import { useBrowserLocation } from "@vueuse/core";
 
-const location = useBrowserLocation()
+const location = useBrowserLocation();
 ```
 
 ## Component Usage
@@ -28,18 +28,18 @@ const location = useBrowserLocation()
 
 ```ts
 export interface BrowserLocationState {
-  readonly trigger: string
-  readonly state?: any
-  readonly length?: number
-  readonly origin?: string
-  hash?: string
-  host?: string
-  hostname?: string
-  href?: string
-  pathname?: string
-  port?: string
-  protocol?: string
-  search?: string
+  readonly trigger: string;
+  readonly state?: any;
+  readonly length?: number;
+  readonly origin?: string;
+  hash?: string;
+  host?: string;
+  hostname?: string;
+  href?: string;
+  pathname?: string;
+  port?: string;
+  protocol?: string;
+  search?: string;
 }
 /**
  * Reactive browser location.
@@ -50,34 +50,34 @@ export interface BrowserLocationState {
  */
 export declare function useBrowserLocation(options?: ConfigurableWindow): Ref<
   {
-    readonly trigger: string
-    readonly state?: any
-    readonly length?: number | undefined
-    readonly origin?: string | undefined
-    hash?: string | undefined
-    host?: string | undefined
-    hostname?: string | undefined
-    href?: string | undefined
-    pathname?: string | undefined
-    port?: string | undefined
-    protocol?: string | undefined
-    search?: string | undefined
+    readonly trigger: string;
+    readonly state?: any;
+    readonly length?: number | undefined;
+    readonly origin?: string | undefined;
+    hash?: string | undefined;
+    host?: string | undefined;
+    hostname?: string | undefined;
+    href?: string | undefined;
+    pathname?: string | undefined;
+    port?: string | undefined;
+    protocol?: string | undefined;
+    search?: string | undefined;
   },
   | BrowserLocationState
   | {
-      readonly trigger: string
-      readonly state?: any
-      readonly length?: number | undefined
-      readonly origin?: string | undefined
-      hash?: string | undefined
-      host?: string | undefined
-      hostname?: string | undefined
-      href?: string | undefined
-      pathname?: string | undefined
-      port?: string | undefined
-      protocol?: string | undefined
-      search?: string | undefined
+      readonly trigger: string;
+      readonly state?: any;
+      readonly length?: number | undefined;
+      readonly origin?: string | undefined;
+      hash?: string | undefined;
+      host?: string | undefined;
+      hostname?: string | undefined;
+      href?: string | undefined;
+      pathname?: string | undefined;
+      port?: string | undefined;
+      protocol?: string | undefined;
+      search?: string | undefined;
     }
->
-export type UseBrowserLocationReturn = ReturnType<typeof useBrowserLocation>
+>;
+export type UseBrowserLocationReturn = ReturnType<typeof useBrowserLocation>;
 ```

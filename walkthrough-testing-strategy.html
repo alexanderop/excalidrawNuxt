@@ -1,404 +1,564 @@
-<!DOCTYPE html>
-<html lang="en"><head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Testing Strategy — Excalidraw Nuxt</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
-<script>
-  tailwind.config = {
-    theme: {
-      extend: {
-        colors: {
-          wt: {
-            bg: '#000000', surface: '#0a0a0a', raised: '#141414',
-            border: '#2a2a2a', fg: '#ffffff', muted: '#a0a0a0',
-            accent: '#a855f7', file: '#c084fc', red: '#ef4444',
-          },
-          node: {
-            component: '#a855f7', composable: '#7c3aed', utility: '#6d28d9',
-            external: '#525252', event: '#d8b4fe', data: '#9333ea',
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Testing Strategy — Excalidraw Nuxt</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"
+    ></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              wt: {
+                bg: "#000000",
+                surface: "#0a0a0a",
+                raised: "#141414",
+                border: "#2a2a2a",
+                fg: "#ffffff",
+                muted: "#a0a0a0",
+                accent: "#a855f7",
+                file: "#c084fc",
+                red: "#ef4444",
+              },
+              node: {
+                component: "#a855f7",
+                composable: "#7c3aed",
+                utility: "#6d28d9",
+                external: "#525252",
+                event: "#d8b4fe",
+                data: "#9333ea",
+              },
+            },
           },
         },
-      },
-    },
-  };
-</script>
-<style>
-  body { margin:0; background:#000; font-family: system-ui, -apple-system, sans-serif; overflow:hidden; }
-  .mermaid-wrap svg { max-width: none !important; height: auto !important; }
-  .mermaid-wrap .node { cursor: pointer; }
-  .mermaid-wrap .node:hover rect,
-  .mermaid-wrap .node:hover polygon,
-  .mermaid-wrap .node:hover circle,
-  .mermaid-wrap .node:hover .label-container {
-    filter: brightness(1.3); transition: filter .15s;
-  }
-  .dt-body h3 { font-size:.95rem; font-weight:700; color:#ffffff; margin:20px 0 8px; }
-  .dt-body h3:first-child { margin-top:0; }
-  .dt-body p { color:#a0a0a0; font-size:.88rem; line-height:1.65; margin-bottom:10px; }
-  .dt-body ul { color:#a0a0a0; font-size:.88rem; line-height:1.65; margin:0 0 12px; padding-left:18px; }
-  .dt-body li { margin-bottom:4px; }
-  .dt-body li code, .dt-body p code {
-    background:rgba(168,85,247,.12); padding:1px 6px; border-radius:4px;
-    font-family:'SF Mono','Fira Code',monospace; font-size:.82rem; color:#c084fc;
-  }
-  .dt-body pre {
-    background:#000000; border:1px solid #2a2a2a; border-radius:8px;
-    padding:14px 16px; overflow-x:auto; margin:8px 0 14px;
-  }
-  .dt-body pre code {
-    font-family:'SF Mono','Fira Code',monospace; font-size:.78rem; line-height:1.55;
-    color:#e0e0e0; background:none; padding:0; border-radius:0;
-  }
-</style>
-</head>
-<body>
-<div id="root"></div>
-
-<script type="text/babel" data-type="module">
-const { useState, useCallback, useEffect, useRef } = React;
-
-const DIAGRAM = "graph TD\n  subgraph commands[\"NPM Scripts (package.json)\"]\n    testAll[\"bun run test\"]\n    testUnit[\"bun run test:unit\"]\n    testBrowser[\"bun run test:browser\"]\n    testCoverage[\"bun run test:coverage\"]\n  end\n\n  subgraph rootConfig[\"Root Config\"]\n    vitestConfig[\"vitest.config.ts&lt;br/&gt;&lt;i&gt;Workspace orchestrator&lt;/i&gt;\"]\n  end\n\n  subgraph projects[\"Dual-Project Architecture\"]\n    subgraph unitProject[\"Unit Project (Node)\"]\n      unitConfig[\"vitest.config.unit.ts&lt;br/&gt;&lt;i&gt;*.unit.test.ts → Node env&lt;/i&gt;\"]\n    end\n    subgraph browserProject[\"Browser Project (Playwright)\"]\n      browserConfig[\"vitest.config.browser.ts&lt;br/&gt;&lt;i&gt;*.browser.test.ts → Chromium&lt;/i&gt;\"]\n      setupBrowser[\"setup-browser.ts&lt;br/&gt;&lt;i&gt;Imports Tailwind CSS&lt;/i&gt;\"]\n    end\n  end\n\n  subgraph testUtils[\"__test-utils__/\"]\n    withSetup[\"withSetup.ts&lt;br/&gt;&lt;i&gt;Vue effectScope + Disposable&lt;/i&gt;\"]\n    elementFactory[\"factories/element.ts&lt;br/&gt;&lt;i&gt;Type-safe element builders&lt;/i&gt;\"]\n    viewportFactory[\"factories/viewport.ts&lt;br/&gt;&lt;i&gt;Viewport state builder&lt;/i&gt;\"]\n    pointFactory[\"factories/point.ts&lt;br/&gt;&lt;i&gt;Point coordinate builder&lt;/i&gt;\"]\n  end\n\n  subgraph unitTests[\"Unit Tests (19 files)\"]\n    pureFnTests[\"Pure Function Tests&lt;br/&gt;&lt;i&gt;math, coords, tryCatch&lt;/i&gt;\"]\n    businessTests[\"Business Logic Tests&lt;br/&gt;&lt;i&gt;elements, selection, tools&lt;/i&gt;\"]\n    composableTests[\"Composable Tests&lt;br/&gt;&lt;i&gt;useTool, useSelection, useViewport&lt;/i&gt;\"]\n  end\n\n  subgraph browserTests[\"Browser Tests (2 files)\"]\n    canvasTest[\"CanvasContainer.browser.test.ts&lt;br/&gt;&lt;i&gt;Mount smoke test&lt;/i&gt;\"]\n    toolbarTest[\"DrawingToolbar.browser.test.ts&lt;br/&gt;&lt;i&gt;Keyboard shortcuts + UI&lt;/i&gt;\"]\n  end\n\n  subgraph tsSetup[\"TypeScript\"]\n    tsconfigVitest[\"tsconfig.vitest.json&lt;br/&gt;&lt;i&gt;vitest/globals types&lt;/i&gt;\"]\n  end\n\n  subgraph lintRules[\"ESLint Test Rules\"]\n    eslintVitest[\"@vitest/eslint-plugin&lt;br/&gt;&lt;i&gt;it() not test(), hooks on top&lt;/i&gt;\"]\n  end\n\n  subgraph qualityGates[\"Quality Gates\"]\n    preCommit[\"Pre-commit Hook&lt;br/&gt;&lt;i&gt;lint-staged + typecheck&lt;/i&gt;\"]\n  end\n\n  testAll -->|\"vitest run\"| vitestConfig\n  testUnit -->|\"--project unit\"| unitConfig\n  testBrowser -->|\"--project browser\"| browserConfig\n  testCoverage -->|\"vitest run --coverage\"| vitestConfig\n\n  vitestConfig -->|\"projects array\"| unitConfig\n  vitestConfig -->|\"projects array\"| browserConfig\n\n  browserConfig -->|\"setupFiles\"| setupBrowser\n\n  unitConfig -.->|\"runs\"| unitTests\n  browserConfig -.->|\"runs\"| browserTests\n\n  composableTests -->|\"uses\"| withSetup\n  businessTests -->|\"uses\"| elementFactory\n  businessTests -->|\"uses\"| viewportFactory\n  businessTests -->|\"uses\"| pointFactory\n  composableTests -->|\"uses\"| elementFactory\n\n  browserTests -.->|\"renders via\"| vitest_browser_vue[\"vitest-browser-vue&lt;br/&gt;&lt;i&gt;render() API&lt;/i&gt;\"]\n\n  tsconfigVitest -.->|\"provides types\"| unitTests\n  tsconfigVitest -.->|\"provides types\"| browserTests\n\n  eslintVitest -.->|\"enforces\"| unitTests\n  eslintVitest -.->|\"enforces\"| browserTests\n\n  preCommit -.->|\"runs before commit\"| lintRules\n\n  classDef component fill:#a855f7,stroke:#c084fc,color:#fff\n  classDef composable fill:#7c3aed,stroke:#a78bfa,color:#fff\n  classDef utility fill:#6d28d9,stroke:#8b5cf6,color:#fff\n  classDef external fill:#525252,stroke:#737373,color:#fff\n  classDef event fill:#d8b4fe,stroke:#e9d5ff,color:#000\n  classDef data fill:#9333ea,stroke:#a855f7,color:#fff\n\n  class testAll,testUnit,testBrowser,testCoverage event\n  class vitestConfig,unitConfig,browserConfig data\n  class setupBrowser,withSetup,elementFactory,viewportFactory,pointFactory utility\n  class pureFnTests,businessTests,composableTests,canvasTest,toolbarTest component\n  class tsconfigVitest,eslintVitest,preCommit composable\n  class vitest_browser_vue external\n\n  click testAll nodeClickHandler \"View details\"\n  click testUnit nodeClickHandler \"View details\"\n  click testBrowser nodeClickHandler \"View details\"\n  click testCoverage nodeClickHandler \"View details\"\n  click vitestConfig nodeClickHandler \"View details\"\n  click unitConfig nodeClickHandler \"View details\"\n  click browserConfig nodeClickHandler \"View details\"\n  click setupBrowser nodeClickHandler \"View details\"\n  click withSetup nodeClickHandler \"View details\"\n  click elementFactory nodeClickHandler \"View details\"\n  click viewportFactory nodeClickHandler \"View details\"\n  click pointFactory nodeClickHandler \"View details\"\n  click pureFnTests nodeClickHandler \"View details\"\n  click businessTests nodeClickHandler \"View details\"\n  click composableTests nodeClickHandler \"View details\"\n  click canvasTest nodeClickHandler \"View details\"\n  click toolbarTest nodeClickHandler \"View details\"\n  click tsconfigVitest nodeClickHandler \"View details\"\n  click eslintVitest nodeClickHandler \"View details\"\n  click preCommit nodeClickHandler \"View details\"\n  click vitest_browser_vue nodeClickHandler \"View details\"";
-
-const NODES = {
-  testAll: {
-    title: "bun run test",
-    content: "<h3>Overview</h3><p>The primary entry point for running all tests. Executes <code>vitest run</code> which triggers both the unit and browser test projects in sequence.</p><h3>Script Definition</h3><pre><code>\"test\": \"vitest run\"</code></pre><h3>How It Works</h3><ul><li>Reads the root <code>vitest.config.ts</code> which defines two projects</li><li>Runs unit tests (Node env) first, then browser tests (Playwright)</li><li>Exits with non-zero code if any test fails</li></ul>",
-    files: ["package.json:15"]
-  },
-  testUnit: {
-    title: "bun run test:unit",
-    content: "<h3>Overview</h3><p>Runs only the unit test project in watch mode. Uses Vitest's <code>--project</code> flag to select the \"unit\" project.</p><h3>Script Definition</h3><pre><code>\"test:unit\": \"vitest --project unit\"</code></pre><h3>Details</h3><ul><li>Matches files: <code>app/**/*.unit.test.ts</code></li><li>Uses Node environment — no browser overhead, fast execution</li><li>Watch mode by default (re-runs on file changes)</li></ul>",
-    files: ["package.json:16"]
-  },
-  testBrowser: {
-    title: "bun run test:browser",
-    content: "<h3>Overview</h3><p>Runs only the browser test project using Playwright's Chromium instance. Tests Vue components in a real browser environment.</p><h3>Script Definition</h3><pre><code>\"test:browser\": \"vitest --project browser\"</code></pre><h3>Details</h3><ul><li>Matches files: <code>app/**/*.browser.test.ts</code></li><li>Spins up a Chromium instance via Playwright</li><li>Components rendered with real DOM, CSS, and event handling</li><li>Uses <code>vitest-browser-vue</code> for the <code>render()</code> API</li></ul>",
-    files: ["package.json:17"]
-  },
-  testCoverage: {
-    title: "bun run test:coverage",
-    content: "<h3>Overview</h3><p>Runs all tests with V8 code coverage reporting. Uses <code>@vitest/coverage-v8</code> for native-speed instrumentation.</p><h3>Script Definition</h3><pre><code>\"test:coverage\": \"vitest run --coverage\"</code></pre><h3>Details</h3><ul><li>Generates coverage reports after all projects finish</li><li>V8-based coverage is faster than Istanbul/Babel alternatives</li><li>Reports include line, branch, function, and statement coverage</li></ul>",
-    files: ["package.json:19"]
-  },
-  vitestConfig: {
-    title: "Root Vitest Config (Workspace)",
-    content: "<h3>Overview</h3><p>The root configuration that orchestrates the dual-project test architecture. It defines the <code>~</code> path alias and lists both unit and browser projects.</p><h3>Key Code</h3><pre><code>export default defineConfig({\n  resolve: {\n    alias: {\n      '~': fileURLToPath(new URL('app', import.meta.url)),\n    },\n  },\n  test: {\n    globals: true,\n    projects: [\n      'vitest.config.unit.ts',\n      'vitest.config.browser.ts',\n    ],\n  },\n})</code></pre><h3>Design Decisions</h3><ul><li><code>globals: true</code> — <code>describe</code>, <code>it</code>, <code>expect</code> available without imports</li><li><code>~</code> alias maps to <code>app/</code> — mirrors Nuxt 4 path resolution</li><li>Two separate project configs keep unit and browser concerns isolated</li></ul>",
-    files: ["vitest.config.ts:1-17"]
-  },
-  unitConfig: {
-    title: "Unit Test Config",
-    content: "<h3>Overview</h3><p>Configures the \"unit\" test project. Runs in Node environment for maximum speed — no DOM, no browser overhead. Tests pure functions, business logic, and Vue composables.</p><h3>Key Code</h3><pre><code>export default defineConfig({\n  test: {\n    name: 'unit',\n    include: ['app/**/*.unit.test.ts'],\n    environment: 'node',\n    globals: true,\n  },\n  resolve: {\n    alias: {\n      '~': fileURLToPath(new URL('app', import.meta.url)),\n    },\n  },\n})</code></pre><h3>File Naming Convention</h3><p>Unit test files MUST use the <code>*.unit.test.ts</code> suffix. This is how Vitest routes them to the Node environment instead of the browser.</p>",
-    files: ["vitest.config.unit.ts:1-16"]
-  },
-  browserConfig: {
-    title: "Browser Test Config",
-    content: "<h3>Overview</h3><p>Configures the \"browser\" test project. Uses Playwright with Chromium to test Vue components in a real browser. Includes Vue and Tailwind plugins for accurate rendering.</p><h3>Key Code</h3><pre><code>export default defineConfig({\n  plugins: [vue(), tailwindcss()],\n  test: {\n    name: 'browser',\n    include: ['app/**/*.browser.test.ts'],\n    browser: {\n      enabled: true,\n      provider: 'playwright',\n      instances: [{ browser: 'chromium' }],\n    },\n    globals: true,\n    setupFiles: ['app/__test-utils__/setup-browser.ts'],\n  },\n})</code></pre><h3>Why Playwright?</h3><ul><li>Real browser rendering — tests see actual CSS, layout, events</li><li><code>@vitejs/plugin-vue</code> compiles SFCs on the fly</li><li><code>@tailwindcss/vite</code> ensures Tailwind utilities work in tests</li><li>Setup file imports <code>main.css</code> for design tokens</li></ul>",
-    files: ["vitest.config.browser.ts:1-24"]
-  },
-  setupBrowser: {
-    title: "Browser Setup File",
-    content: "<h3>Overview</h3><p>Minimal setup file that imports the project's Tailwind CSS. This ensures browser tests render with the correct design tokens and utility classes.</p><h3>Full Source</h3><pre><code>import '~/assets/css/main.css'</code></pre><h3>Why It Matters</h3><p>Without this import, browser-rendered components would have no styling. The <code>@tailwindcss/vite</code> plugin processes this import and injects all the CSS utilities the components need.</p>",
-    files: ["app/__test-utils__/setup-browser.ts:1"]
-  },
-  withSetup: {
-    title: "withSetup() — Composable Test Wrapper",
-    content: "<h3>Overview</h3><p>A utility that wraps Vue composables in an <code>effectScope</code> for testing. Returns the composable's reactive state plus a <code>Disposable</code> interface for automatic cleanup via the <code>using</code> keyword.</p><h3>Full Source</h3><pre><code>import { effectScope } from 'vue'\n\nexport function withSetup&lt;T extends object&gt;(\n  composable: () =&gt; T,\n): T &amp; Disposable {\n  const scope = effectScope()\n  const result = scope.run(composable)!\n  return Object.assign({}, result, {\n    [Symbol.dispose]() { scope.stop() },\n  })\n}</code></pre><h3>Usage Pattern</h3><pre><code>// TC39 'using' keyword auto-cleans up the scope\nusing tool = withSetup(() =&gt; useTool())\nexpect(tool.activeTool.value).toBe('selection')</code></pre><h3>Why effectScope?</h3><ul><li>Vue composables create watchers, computed properties, and side effects</li><li><code>effectScope</code> collects them all and <code>.stop()</code> disposes them</li><li>The <code>Disposable</code> protocol (<code>Symbol.dispose</code>) pairs with <code>using</code> for zero-leak testing</li></ul>",
-    files: ["app/__test-utils__/withSetup.ts:1-11"]
-  },
-  elementFactory: {
-    title: "Element Factory",
-    content: "<h3>Overview</h3><p>Type-safe factory functions for creating test elements. Uses function overloads to return the correct ExcalidrawElement subtype based on the <code>type</code> field.</p><h3>Key Code</h3><pre><code>const BASE_PROPS = {\n  id: 'test-id', x: 0, y: 0, width: 100, height: 100,\n  angle: 0, strokeColor: '#1e1e1e', backgroundColor: 'transparent',\n  fillStyle: 'hachure', strokeWidth: 2, roughness: 1, opacity: 100,\n  seed: 12_345, versionNonce: 67_890, isDeleted: false,\n}\n\n// Overloaded: returns correct type per shape\nexport function createTestElement(\n  overrides: Partial&lt;ExcalidrawElement&gt; = {},\n): ExcalidrawElement {\n  const type = overrides.type ?? 'rectangle'\n  if (type === 'ellipse') return { ...BASE_PROPS, ...overrides, type }\n  if (type === 'diamond') return { ...BASE_PROPS, ...overrides, type }\n  return { ...BASE_PROPS, ...overrides, type: 'rectangle' }\n}\n\nexport function createTestArrowElement(\n  overrides: Partial&lt;Omit&lt;ExcalidrawArrowElement, 'type'&gt;&gt; = {},\n): ExcalidrawArrowElement {\n  return { ...BASE_PROPS, type: 'arrow',\n    points: [createPoint(0, 0), createPoint(100, 50)],\n    startArrowhead: null, endArrowhead: 'arrow', ...overrides }\n}</code></pre><h3>Design</h3><ul><li>Sensible defaults — most tests only override 1-2 properties</li><li>TypeScript overloads give precise return types without casts</li><li>Separate <code>createTestArrowElement</code> for arrow-specific properties</li></ul>",
-    files: ["app/__test-utils__/factories/element.ts:1-51"]
-  },
-  viewportFactory: {
-    title: "Viewport Factory",
-    content: "<h3>Overview</h3><p>Creates test viewport state with sensible defaults (no scroll, zoom 1x).</p><h3>Full Source</h3><pre><code>import type { Viewport } from '~/features/canvas/coords'\n\nexport function createViewport(\n  overrides: Partial&lt;Viewport&gt; = {},\n): Viewport {\n  return { scrollX: 0, scrollY: 0, zoom: 1, ...overrides }\n}</code></pre><h3>Usage</h3><pre><code>const vp = createViewport({ zoom: 2, scrollX: 100 })</code></pre>",
-    files: ["app/__test-utils__/factories/viewport.ts:1-5"]
-  },
-  pointFactory: {
-    title: "Point Factory",
-    content: "<h3>Overview</h3><p>Creates test point coordinates with defaults at the origin (0, 0).</p><h3>Full Source</h3><pre><code>import type { Point } from '~/shared/math'\n\nexport function createTestPoint(\n  overrides: Partial&lt;Point&gt; = {},\n): Point {\n  return { x: 0, y: 0, ...overrides }\n}</code></pre>",
-    files: ["app/__test-utils__/factories/point.ts:1-5"]
-  },
-  pureFnTests: {
-    title: "Pure Function Tests",
-    content: "<h3>Overview</h3><p>Tests for stateless utility functions — math, coordinates, and the tryCatch wrapper. These are the simplest tests: no setup, no mocking, just input/output assertions.</p><h3>Example: math.unit.test.ts</h3><pre><code>import { createPoint, distance, midpoint, clamp } from '~/shared/math'\n\ndescribe('math utilities', () =&gt; {\n  describe('createPoint', () =&gt; {\n    it('creates a point with given coordinates', () =&gt; {\n      const p = createPoint(3, 7)\n      expect(p).toEqual({ x: 3, y: 7 })\n    })\n  })\n\n  describe('distance', () =&gt; {\n    it('returns euclidean distance for a 3-4-5 triangle', () =&gt; {\n      const a = { x: 0, y: 0 }\n      const b = { x: 3, y: 4 }\n      expect(distance(a, b)).toBe(5)\n    })\n  })\n})</code></pre><h3>Test Files</h3><ul><li><code>app/shared/math.unit.test.ts</code> — 10 describes, 30+ assertions</li><li><code>app/shared/random.unit.test.ts</code> — ID generation, seed values</li><li><code>app/utils/tryCatch.unit.test.ts</code> — Result tuple utility</li><li><code>app/features/canvas/coords.unit.test.ts</code> — Coordinate transforms</li></ul>",
-    files: ["app/shared/math.unit.test.ts:1-275", "app/shared/random.unit.test.ts", "app/utils/tryCatch.unit.test.ts", "app/features/canvas/coords.unit.test.ts"]
-  },
-  businessTests: {
-    title: "Business Logic Tests",
-    content: "<h3>Overview</h3><p>Tests for domain logic — element creation, hit testing, bounds calculation, transforms, and shape generation. These use the factory helpers to construct test data.</p><h3>Example: bounds.unit.test.ts</h3><pre><code>import { createTestElement } from '~/__test-utils__/factories/element'\nimport { getElementBounds, getCommonBounds } from './bounds'\n\ndescribe('getElementBounds', () =&gt; {\n  it('returns [x, y, x+w, y+h] for axis-aligned element', () =&gt; {\n    const el = createTestElement({ x: 10, y: 20, width: 100, height: 50 })\n    expect(getElementBounds(el)).toEqual([10, 20, 110, 70])\n  })\n\n  it('expands bounds for rotated element', () =&gt; {\n    const el = createTestElement({ width: 100, height: 0, angle: Math.PI / 4 })\n    const [x1, y1, x2, y2] = getElementBounds(el)\n    expect(x2 - x1).toBeCloseTo(70.71, 1)\n  })\n})</code></pre><h3>Test Files</h3><ul><li><code>createElement.unit.test.ts</code> — Element creation with defaults/overrides</li><li><code>mutateElement.unit.test.ts</code> — Immutable element mutations</li><li><code>bounds.unit.test.ts</code> — Bounding box calculations</li><li><code>hitTest.unit.test.ts</code> — Point-in-shape detection</li><li><code>transformHandles.unit.test.ts</code> — Resize handle positions</li><li><code>shapeGenerator.unit.test.ts</code> — RoughJS shape generation</li><li><code>dragElements.unit.test.ts</code> — Element dragging logic</li><li><code>resizeElement.unit.test.ts</code> — Resize transforms</li></ul>",
-    files: ["app/features/selection/bounds.unit.test.ts:1-48", "app/features/elements/createElement.unit.test.ts:1-75", "app/features/selection/hitTest.unit.test.ts"]
-  },
-  composableTests: {
-    title: "Composable Tests",
-    content: "<h3>Overview</h3><p>Tests for Vue composables — reactive state managers that use <code>ref</code>, <code>computed</code>, and <code>watch</code>. Each composable is wrapped in <code>withSetup()</code> with the TC39 <code>using</code> keyword for automatic cleanup.</p><h3>Example: useTool.unit.test.ts</h3><pre><code>import { withSetup } from '~/__test-utils__/withSetup'\nimport { useTool } from './useTool'\n\ndescribe('useTool', () =&gt; {\n  it('defaults activeTool to selection', () =&gt; {\n    using tool = withSetup(() =&gt; useTool())\n    expect(tool.activeTool.value).toBe('selection')\n  })\n\n  it('sets activeTool via setTool', () =&gt; {\n    using tool = withSetup(() =&gt; useTool())\n    tool.setTool('rectangle')\n    expect(tool.activeTool.value).toBe('rectangle')\n  })\n})</code></pre><h3>Example: useSelection.unit.test.ts</h3><pre><code>it('select() replaces selection with single element', () =&gt; {\n  const elements = shallowRef([\n    createTestElement({ id: 'a' }),\n    createTestElement({ id: 'b' }),\n  ])\n  using sel = withSetup(() =&gt; useSelection(elements))\n  sel.select('a')\n  expect(sel.selectedIds.value.has('a')).toBe(true)\n  expect(sel.selectedIds.value.size).toBe(1)\n})</code></pre><h3>Test Files</h3><ul><li><code>useTool.unit.test.ts</code> — Tool state management</li><li><code>useSelection.unit.test.ts</code> — Selection state (select, toggle, clear, selectAll)</li><li><code>useViewport.unit.test.ts</code> — Pan/zoom viewport state</li><li><code>useElements.unit.test.ts</code> — Element CRUD operations</li><li><code>useDrawingInteraction.unit.test.ts</code> — Mouse interaction → element creation</li></ul>",
-    files: ["app/features/tools/useTool.unit.test.ts:1-25", "app/features/selection/composables/useSelection.unit.test.ts:1-96"]
-  },
-  canvasTest: {
-    title: "CanvasContainer Browser Test",
-    content: "<h3>Overview</h3><p>A smoke test that verifies the main canvas component mounts without errors in a real browser environment. Uses <code>vitest-browser-vue</code>'s <code>render()</code> API.</p><h3>Full Source</h3><pre><code>import { render } from 'vitest-browser-vue'\nimport CanvasContainer from './CanvasContainer.vue'\n\ndescribe('CanvasContainer', () =&gt; {\n  it('mounts without error', async () =&gt; {\n    const screen = render(CanvasContainer)\n    expect(screen).toBeTruthy()\n  })\n})</code></pre><h3>Why Browser?</h3><p>CanvasContainer relies on <code>&lt;canvas&gt;</code> elements, pointer events, and CSS layouts that only exist in a real browser. Testing in Node would require extensive mocking with no confidence gain.</p>",
-    files: ["app/features/canvas/components/CanvasContainer.browser.test.ts:1-9"]
-  },
-  toolbarTest: {
-    title: "DrawingToolbar Browser Test",
-    content: "<h3>Overview</h3><p>Tests keyboard shortcuts for the drawing toolbar. Uses <code>userEvent.keyboard()</code> from <code>@vitest/browser/context</code> to simulate real keypress events, then asserts ARIA attributes on toolbar buttons.</p><h3>Key Code</h3><pre><code>import { render } from 'vitest-browser-vue'\nimport { userEvent } from '@vitest/browser/context'\nimport CanvasContainer from '~/features/canvas/components/CanvasContainer.vue'\n\ndescribe('DrawingToolbar numeric shortcuts', () =&gt; {\n  it('pressing 1 activates the selection tool', async () =&gt; {\n    const screen = render(CanvasContainer)\n    await userEvent.keyboard('1')\n    const selectionBtn = screen.getByRole('button', { name: 'Selection' })\n    await expect.element(selectionBtn).toHaveAttribute('aria-pressed', 'true')\n  })\n\n  it('pressing 2 activates the rectangle tool', async () =&gt; {\n    const screen = render(CanvasContainer)\n    await userEvent.keyboard('2')\n    const rectangleBtn = screen.getByRole('button', { name: 'Rectangle' })\n    await expect.element(rectangleBtn).toHaveAttribute('aria-pressed', 'true')\n  })\n})</code></pre><h3>Testing Philosophy</h3><ul><li>Tests <strong>user behavior</strong>, not implementation — \"press key → button is active\"</li><li>Queries by <code>role</code> and <code>name</code>, not CSS selectors</li><li>ARIA assertions validate accessibility at the same time</li></ul>",
-    files: ["app/features/tools/components/DrawingToolbar.browser.test.ts:1-41"]
-  },
-  tsconfigVitest: {
-    title: "TypeScript Config for Tests",
-    content: "<h3>Overview</h3><p>Extends the Nuxt-generated TypeScript config and adds <code>vitest/globals</code> types so <code>describe</code>, <code>it</code>, <code>expect</code> are typed without imports.</p><h3>Full Source</h3><pre><code>{\n  \"extends\": \"./.nuxt/tsconfig.app.json\",\n  \"compilerOptions\": {\n    \"types\": [\"vitest/globals\"],\n    \"composite\": true\n  },\n  \"include\": [\n    \"app/**/*.ts\",\n    \"app/**/*.vue\",\n    \"app/__test-utils__/**/*\"\n  ]\n}</code></pre><h3>Details</h3><ul><li><code>composite: true</code> — enables project references for incremental builds</li><li>Includes the <code>__test-utils__</code> directory explicitly for factory/helper types</li><li>Extends <code>.nuxt/tsconfig.app.json</code> so all Nuxt auto-imports and path aliases work in tests</li></ul>",
-    files: ["tsconfig.vitest.json:1-13"]
-  },
-  eslintVitest: {
-    title: "ESLint Vitest Rules",
-    content: "<h3>Overview</h3><p>The <code>@vitest/eslint-plugin</code> enforces consistent test patterns across all test files. These rules apply to <code>app/**/*.{unit,browser}.test.ts</code> files.</p><h3>Enforced Rules</h3><ul><li><code>it()</code> not <code>test()</code> — consistent API preference</li><li>Hooks on top — <code>beforeEach</code>/<code>afterEach</code> must be at the top of describe blocks</li><li>Max 2 nested describes — prevents deeply nested test structure</li><li>No complexity limit in tests — tests can be verbose for clarity</li></ul><h3>Example Violation</h3><pre><code>// BAD — uses test() instead of it()\ntest('creates element', () =&gt; { ... })\n\n// GOOD\nit('creates element', () =&gt; { ... })</code></pre>",
-    files: ["docs/linting-setup.md", "eslint.config.ts"]
-  },
-  preCommit: {
-    title: "Pre-commit Quality Gate",
-    content: "<h3>Overview</h3><p>A <code>simple-git-hooks</code> pre-commit hook ensures all staged files pass linting and type checking before any commit is created.</p><h3>Configuration</h3><pre><code>\"simple-git-hooks\": {\n  \"pre-commit\": \"bun run lint-staged &amp;&amp; bun run typecheck\"\n},\n\"lint-staged\": {\n  \"*.{ts,vue}\": [\n    \"oxlint --fix\",\n    \"eslint --fix --cache\"\n  ]\n}</code></pre><h3>Pipeline</h3><ul><li><strong>Step 1</strong>: <code>lint-staged</code> runs Oxlint then ESLint on staged files only</li><li><strong>Step 2</strong>: <code>nuxi typecheck</code> verifies the entire project types</li><li>Both must pass — if either fails, the commit is blocked</li></ul>",
-    files: ["package.json:22-29"]
-  },
-  vitest_browser_vue: {
-    title: "vitest-browser-vue",
-    content: "<h3>Overview</h3><p>A third-party library that provides the <code>render()</code> function for mounting Vue components inside Vitest's browser environment. Think of it as the browser-native equivalent of <code>@testing-library/vue</code>.</p><h3>Usage</h3><pre><code>import { render } from 'vitest-browser-vue'\nimport MyComponent from './MyComponent.vue'\n\nconst screen = render(MyComponent)\n// screen exposes getByRole, getByText, etc.</code></pre><h3>Key APIs</h3><ul><li><code>render(Component, options?)</code> — mounts component, returns query object</li><li><code>screen.getByRole()</code> — accessible element queries</li><li><code>expect.element(el).toHaveAttribute()</code> — element-specific matchers</li><li>Works with <code>userEvent</code> from <code>@vitest/browser/context</code></li></ul>",
-    files: []
-  },
-};
-
-const LEGEND = [
-  { label: "Test Files", color: "bg-node-component" },
-  { label: "Config", color: "bg-node-data" },
-  { label: "Scripts", color: "bg-node-event" },
-  { label: "Utilities", color: "bg-node-utility" },
-  { label: "TypeScript / Lint", color: "bg-node-composable" },
-  { label: "External", color: "bg-node-external" },
-];
-
-function usePanZoom() {
-  const viewportRef = useRef(null);
-  const canvasRef = useRef(null);
-  const zoomDisplayRef = useRef(null);
-  const st = useRef({ zoom: 1, panX: 0, panY: 0 });
-  const drag = useRef({ on: false, lx: 0, ly: 0 });
-
-  const apply = useCallback(() => {
-    const { zoom, panX, panY } = st.current;
-    if (canvasRef.current)
-      canvasRef.current.style.transform = "translate(" + panX + "px," + panY + "px) scale(" + zoom + ")";
-    if (zoomDisplayRef.current)
-      zoomDisplayRef.current.textContent = Math.round(zoom * 100) + '%';
-  }, []);
-
-  const fitToScreen = useCallback(() => {
-    const svg = canvasRef.current?.querySelector('svg');
-    const vp = viewportRef.current;
-    if (!svg || !vp) return;
-    const s = st.current;
-    const vw = vp.clientWidth, vh = vp.clientHeight;
-    const sw = svg.getBoundingClientRect().width / s.zoom;
-    const sh = svg.getBoundingClientRect().height / s.zoom;
-    const fit = Math.max(0.15, Math.min(2, Math.min((vw - 80) / sw, (vh - 80) / sh)));
-    s.zoom = fit;
-    s.panX = (vw - sw * fit) / 2;
-    s.panY = (vh - sh * fit) / 2;
-    apply();
-  }, [apply]);
-
-  useEffect(() => {
-    const vp = viewportRef.current;
-    if (!vp) return;
-
-    const onWheel = (e) => {
-      e.preventDefault();
-      const r = vp.getBoundingClientRect();
-      const mx = e.clientX - r.left, my = e.clientY - r.top;
-      const s = st.current;
-      const f = e.deltaY < 0 ? 1.12 : 1 / 1.12;
-      const nz = Math.min(4, Math.max(0.15, s.zoom * f));
-      const sc = nz / s.zoom;
-      s.panX = mx - sc * (mx - s.panX);
-      s.panY = my - sc * (my - s.panY);
-      s.zoom = nz;
-      apply();
-    };
-
-    const onDown = (e) => {
-      if (e.target.closest('.node')) return;
-      drag.current = { on: true, lx: e.clientX, ly: e.clientY };
-      vp.setPointerCapture(e.pointerId);
-    };
-    const onMove = (e) => {
-      const d = drag.current;
-      if (!d.on) return;
-      st.current.panX += e.clientX - d.lx;
-      st.current.panY += e.clientY - d.ly;
-      d.lx = e.clientX; d.ly = e.clientY;
-      apply();
-    };
-    const onUp = () => { drag.current.on = false; };
-
-    vp.addEventListener('wheel', onWheel, { passive: false });
-    vp.addEventListener('pointerdown', onDown);
-    vp.addEventListener('pointermove', onMove);
-    vp.addEventListener('pointerup', onUp);
-    vp.addEventListener('pointercancel', onUp);
-    window.addEventListener('resize', fitToScreen);
-
-    return () => {
-      vp.removeEventListener('wheel', onWheel);
-      vp.removeEventListener('pointerdown', onDown);
-      vp.removeEventListener('pointermove', onMove);
-      vp.removeEventListener('pointerup', onUp);
-      vp.removeEventListener('pointercancel', onUp);
-      window.removeEventListener('resize', fitToScreen);
-    };
-  }, [apply, fitToScreen]);
-
-  const zoomIn = useCallback(() => { st.current.zoom = Math.min(4, st.current.zoom * 1.25); apply(); }, [apply]);
-  const zoomOut = useCallback(() => { st.current.zoom = Math.max(0.15, st.current.zoom / 1.25); apply(); }, [apply]);
-
-  return { viewportRef, canvasRef, zoomDisplayRef, zoomIn, zoomOut, fitToScreen };
-}
-
-function MermaidDiagram({ onNodeClick }) {
-  const ref = useRef(null);
-
-  useEffect(() => {
-    window.nodeClickHandler = onNodeClick;
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: 'dark',
-      themeVariables: {
-        primaryColor: '#0a0a0a',
-        primaryTextColor: '#ffffff',
-        primaryBorderColor: '#2a2a2a',
-        lineColor: '#a0a0a0',
-        secondaryColor: '#000000',
-        tertiaryColor: '#000000',
-        background: '#000000',
-        mainBkg: '#0a0a0a',
-        nodeBorder: '#2a2a2a',
-        clusterBkg: 'rgba(10,10,10,0.8)',
-        clusterBorder: '#7c3aed',
-        titleColor: '#ffffff',
-        edgeLabelBackground: 'transparent',
-      },
-      flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis' },
-      securityLevel: 'loose',
-    });
-    mermaid.render('walkthrough-diagram', DIAGRAM).then(({ svg, bindFunctions }) => {
-      if (ref.current) {
-        ref.current.innerHTML = svg;
-        bindFunctions?.(ref.current);
+      };
+    </script>
+    <style>
+      body {
+        margin: 0;
+        background: #000;
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        overflow: hidden;
       }
-    });
-    return () => { delete window.nodeClickHandler; };
-  }, [onNodeClick]);
+      .mermaid-wrap svg {
+        max-width: none !important;
+        height: auto !important;
+      }
+      .mermaid-wrap .node {
+        cursor: pointer;
+      }
+      .mermaid-wrap .node:hover rect,
+      .mermaid-wrap .node:hover polygon,
+      .mermaid-wrap .node:hover circle,
+      .mermaid-wrap .node:hover .label-container {
+        filter: brightness(1.3);
+        transition: filter 0.15s;
+      }
+      .dt-body h3 {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #ffffff;
+        margin: 20px 0 8px;
+      }
+      .dt-body h3:first-child {
+        margin-top: 0;
+      }
+      .dt-body p {
+        color: #a0a0a0;
+        font-size: 0.88rem;
+        line-height: 1.65;
+        margin-bottom: 10px;
+      }
+      .dt-body ul {
+        color: #a0a0a0;
+        font-size: 0.88rem;
+        line-height: 1.65;
+        margin: 0 0 12px;
+        padding-left: 18px;
+      }
+      .dt-body li {
+        margin-bottom: 4px;
+      }
+      .dt-body li code,
+      .dt-body p code {
+        background: rgba(168, 85, 247, 0.12);
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-family: "SF Mono", "Fira Code", monospace;
+        font-size: 0.82rem;
+        color: #c084fc;
+      }
+      .dt-body pre {
+        background: #000000;
+        border: 1px solid #2a2a2a;
+        border-radius: 8px;
+        padding: 14px 16px;
+        overflow-x: auto;
+        margin: 8px 0 14px;
+      }
+      .dt-body pre code {
+        font-family: "SF Mono", "Fira Code", monospace;
+        font-size: 0.78rem;
+        line-height: 1.55;
+        color: #e0e0e0;
+        background: none;
+        padding: 0;
+        border-radius: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
 
-  return <div ref={ref} className="mermaid-wrap" />;
-}
+    <script type="text/babel" data-type="module">
+      const { useState, useCallback, useEffect, useRef } = React;
 
-function ZoomControls({ zoomDisplayRef, onZoomIn, onZoomOut, onFit }) {
-  return (
-    <div className="fixed bottom-5 left-5 z-20 flex flex-col gap-1.5">
-      <button onClick={onZoomIn} className="w-8 h-8 rounded-md border border-wt-border bg-wt-surface text-wt-fg flex items-center justify-center hover:bg-wt-raised transition-colors text-sm font-bold">+</button>
-      <div ref={zoomDisplayRef} className="text-[10px] text-wt-muted text-center">100%</div>
-      <button onClick={onZoomOut} className="w-8 h-8 rounded-md border border-wt-border bg-wt-surface text-wt-fg flex items-center justify-center hover:bg-wt-raised transition-colors text-sm font-bold">&minus;</button>
-      <button onClick={onFit} className="w-8 h-8 rounded-md border border-wt-border bg-wt-surface text-wt-muted flex items-center justify-center hover:bg-wt-raised transition-colors text-[10px]" title="Fit to screen">Fit</button>
-    </div>
-  );
-}
+      const DIAGRAM =
+        'graph TD\n  subgraph commands["NPM Scripts (package.json)"]\n    testAll["bun run test"]\n    testUnit["bun run test:unit"]\n    testBrowser["bun run test:browser"]\n    testCoverage["bun run test:coverage"]\n  end\n\n  subgraph rootConfig["Root Config"]\n    vitestConfig["vitest.config.ts&lt;br/&gt;&lt;i&gt;Workspace orchestrator&lt;/i&gt;"]\n  end\n\n  subgraph projects["Dual-Project Architecture"]\n    subgraph unitProject["Unit Project (Node)"]\n      unitConfig["vitest.config.unit.ts&lt;br/&gt;&lt;i&gt;*.unit.test.ts → Node env&lt;/i&gt;"]\n    end\n    subgraph browserProject["Browser Project (Playwright)"]\n      browserConfig["vitest.config.browser.ts&lt;br/&gt;&lt;i&gt;*.browser.test.ts → Chromium&lt;/i&gt;"]\n      setupBrowser["setup-browser.ts&lt;br/&gt;&lt;i&gt;Imports Tailwind CSS&lt;/i&gt;"]\n    end\n  end\n\n  subgraph testUtils["__test-utils__/"]\n    withSetup["withSetup.ts&lt;br/&gt;&lt;i&gt;Vue effectScope + Disposable&lt;/i&gt;"]\n    elementFactory["factories/element.ts&lt;br/&gt;&lt;i&gt;Type-safe element builders&lt;/i&gt;"]\n    viewportFactory["factories/viewport.ts&lt;br/&gt;&lt;i&gt;Viewport state builder&lt;/i&gt;"]\n    pointFactory["factories/point.ts&lt;br/&gt;&lt;i&gt;Point coordinate builder&lt;/i&gt;"]\n  end\n\n  subgraph unitTests["Unit Tests (19 files)"]\n    pureFnTests["Pure Function Tests&lt;br/&gt;&lt;i&gt;math, coords, tryCatch&lt;/i&gt;"]\n    businessTests["Business Logic Tests&lt;br/&gt;&lt;i&gt;elements, selection, tools&lt;/i&gt;"]\n    composableTests["Composable Tests&lt;br/&gt;&lt;i&gt;useTool, useSelection, useViewport&lt;/i&gt;"]\n  end\n\n  subgraph browserTests["Browser Tests (2 files)"]\n    canvasTest["CanvasContainer.browser.test.ts&lt;br/&gt;&lt;i&gt;Mount smoke test&lt;/i&gt;"]\n    toolbarTest["DrawingToolbar.browser.test.ts&lt;br/&gt;&lt;i&gt;Keyboard shortcuts + UI&lt;/i&gt;"]\n  end\n\n  subgraph tsSetup["TypeScript"]\n    tsconfigVitest["tsconfig.vitest.json&lt;br/&gt;&lt;i&gt;vitest/globals types&lt;/i&gt;"]\n  end\n\n  subgraph lintRules["ESLint Test Rules"]\n    eslintVitest["@vitest/eslint-plugin&lt;br/&gt;&lt;i&gt;it() not test(), hooks on top&lt;/i&gt;"]\n  end\n\n  subgraph qualityGates["Quality Gates"]\n    preCommit["Pre-commit Hook&lt;br/&gt;&lt;i&gt;lint-staged + typecheck&lt;/i&gt;"]\n  end\n\n  testAll -->|"vitest run"| vitestConfig\n  testUnit -->|"--project unit"| unitConfig\n  testBrowser -->|"--project browser"| browserConfig\n  testCoverage -->|"vitest run --coverage"| vitestConfig\n\n  vitestConfig -->|"projects array"| unitConfig\n  vitestConfig -->|"projects array"| browserConfig\n\n  browserConfig -->|"setupFiles"| setupBrowser\n\n  unitConfig -.->|"runs"| unitTests\n  browserConfig -.->|"runs"| browserTests\n\n  composableTests -->|"uses"| withSetup\n  businessTests -->|"uses"| elementFactory\n  businessTests -->|"uses"| viewportFactory\n  businessTests -->|"uses"| pointFactory\n  composableTests -->|"uses"| elementFactory\n\n  browserTests -.->|"renders via"| vitest_browser_vue["vitest-browser-vue&lt;br/&gt;&lt;i&gt;render() API&lt;/i&gt;"]\n\n  tsconfigVitest -.->|"provides types"| unitTests\n  tsconfigVitest -.->|"provides types"| browserTests\n\n  eslintVitest -.->|"enforces"| unitTests\n  eslintVitest -.->|"enforces"| browserTests\n\n  preCommit -.->|"runs before commit"| lintRules\n\n  classDef component fill:#a855f7,stroke:#c084fc,color:#fff\n  classDef composable fill:#7c3aed,stroke:#a78bfa,color:#fff\n  classDef utility fill:#6d28d9,stroke:#8b5cf6,color:#fff\n  classDef external fill:#525252,stroke:#737373,color:#fff\n  classDef event fill:#d8b4fe,stroke:#e9d5ff,color:#000\n  classDef data fill:#9333ea,stroke:#a855f7,color:#fff\n\n  class testAll,testUnit,testBrowser,testCoverage event\n  class vitestConfig,unitConfig,browserConfig data\n  class setupBrowser,withSetup,elementFactory,viewportFactory,pointFactory utility\n  class pureFnTests,businessTests,composableTests,canvasTest,toolbarTest component\n  class tsconfigVitest,eslintVitest,preCommit composable\n  class vitest_browser_vue external\n\n  click testAll nodeClickHandler "View details"\n  click testUnit nodeClickHandler "View details"\n  click testBrowser nodeClickHandler "View details"\n  click testCoverage nodeClickHandler "View details"\n  click vitestConfig nodeClickHandler "View details"\n  click unitConfig nodeClickHandler "View details"\n  click browserConfig nodeClickHandler "View details"\n  click setupBrowser nodeClickHandler "View details"\n  click withSetup nodeClickHandler "View details"\n  click elementFactory nodeClickHandler "View details"\n  click viewportFactory nodeClickHandler "View details"\n  click pointFactory nodeClickHandler "View details"\n  click pureFnTests nodeClickHandler "View details"\n  click businessTests nodeClickHandler "View details"\n  click composableTests nodeClickHandler "View details"\n  click canvasTest nodeClickHandler "View details"\n  click toolbarTest nodeClickHandler "View details"\n  click tsconfigVitest nodeClickHandler "View details"\n  click eslintVitest nodeClickHandler "View details"\n  click preCommit nodeClickHandler "View details"\n  click vitest_browser_vue nodeClickHandler "View details"';
 
-function DetailPanel({ node, onClose }) {
-  useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [onClose]);
+      const NODES = {
+        testAll: {
+          title: "bun run test",
+          content:
+            '<h3>Overview</h3><p>The primary entry point for running all tests. Executes <code>vitest run</code> which triggers both the unit and browser test projects in sequence.</p><h3>Script Definition</h3><pre><code>"test": "vitest run"</code></pre><h3>How It Works</h3><ul><li>Reads the root <code>vitest.config.ts</code> which defines two projects</li><li>Runs unit tests (Node env) first, then browser tests (Playwright)</li><li>Exits with non-zero code if any test fails</li></ul>',
+          files: ["package.json:15"],
+        },
+        testUnit: {
+          title: "bun run test:unit",
+          content:
+            '<h3>Overview</h3><p>Runs only the unit test project in watch mode. Uses Vitest\'s <code>--project</code> flag to select the "unit" project.</p><h3>Script Definition</h3><pre><code>"test:unit": "vitest --project unit"</code></pre><h3>Details</h3><ul><li>Matches files: <code>app/**/*.unit.test.ts</code></li><li>Uses Node environment — no browser overhead, fast execution</li><li>Watch mode by default (re-runs on file changes)</li></ul>',
+          files: ["package.json:16"],
+        },
+        testBrowser: {
+          title: "bun run test:browser",
+          content:
+            '<h3>Overview</h3><p>Runs only the browser test project using Playwright\'s Chromium instance. Tests Vue components in a real browser environment.</p><h3>Script Definition</h3><pre><code>"test:browser": "vitest --project browser"</code></pre><h3>Details</h3><ul><li>Matches files: <code>app/**/*.browser.test.ts</code></li><li>Spins up a Chromium instance via Playwright</li><li>Components rendered with real DOM, CSS, and event handling</li><li>Uses <code>vitest-browser-vue</code> for the <code>render()</code> API</li></ul>',
+          files: ["package.json:17"],
+        },
+        testCoverage: {
+          title: "bun run test:coverage",
+          content:
+            '<h3>Overview</h3><p>Runs all tests with V8 code coverage reporting. Uses <code>@vitest/coverage-v8</code> for native-speed instrumentation.</p><h3>Script Definition</h3><pre><code>"test:coverage": "vitest run --coverage"</code></pre><h3>Details</h3><ul><li>Generates coverage reports after all projects finish</li><li>V8-based coverage is faster than Istanbul/Babel alternatives</li><li>Reports include line, branch, function, and statement coverage</li></ul>',
+          files: ["package.json:19"],
+        },
+        vitestConfig: {
+          title: "Root Vitest Config (Workspace)",
+          content:
+            "<h3>Overview</h3><p>The root configuration that orchestrates the dual-project test architecture. It defines the <code>~</code> path alias and lists both unit and browser projects.</p><h3>Key Code</h3><pre><code>export default defineConfig({\n  resolve: {\n    alias: {\n      '~': fileURLToPath(new URL('app', import.meta.url)),\n    },\n  },\n  test: {\n    globals: true,\n    projects: [\n      'vitest.config.unit.ts',\n      'vitest.config.browser.ts',\n    ],\n  },\n})</code></pre><h3>Design Decisions</h3><ul><li><code>globals: true</code> — <code>describe</code>, <code>it</code>, <code>expect</code> available without imports</li><li><code>~</code> alias maps to <code>app/</code> — mirrors Nuxt 4 path resolution</li><li>Two separate project configs keep unit and browser concerns isolated</li></ul>",
+          files: ["vitest.config.ts:1-17"],
+        },
+        unitConfig: {
+          title: "Unit Test Config",
+          content:
+            "<h3>Overview</h3><p>Configures the \"unit\" test project. Runs in Node environment for maximum speed — no DOM, no browser overhead. Tests pure functions, business logic, and Vue composables.</p><h3>Key Code</h3><pre><code>export default defineConfig({\n  test: {\n    name: 'unit',\n    include: ['app/**/*.unit.test.ts'],\n    environment: 'node',\n    globals: true,\n  },\n  resolve: {\n    alias: {\n      '~': fileURLToPath(new URL('app', import.meta.url)),\n    },\n  },\n})</code></pre><h3>File Naming Convention</h3><p>Unit test files MUST use the <code>*.unit.test.ts</code> suffix. This is how Vitest routes them to the Node environment instead of the browser.</p>",
+          files: ["vitest.config.unit.ts:1-16"],
+        },
+        browserConfig: {
+          title: "Browser Test Config",
+          content:
+            "<h3>Overview</h3><p>Configures the \"browser\" test project. Uses Playwright with Chromium to test Vue components in a real browser. Includes Vue and Tailwind plugins for accurate rendering.</p><h3>Key Code</h3><pre><code>export default defineConfig({\n  plugins: [vue(), tailwindcss()],\n  test: {\n    name: 'browser',\n    include: ['app/**/*.browser.test.ts'],\n    browser: {\n      enabled: true,\n      provider: 'playwright',\n      instances: [{ browser: 'chromium' }],\n    },\n    globals: true,\n    setupFiles: ['app/__test-utils__/setup-browser.ts'],\n  },\n})</code></pre><h3>Why Playwright?</h3><ul><li>Real browser rendering — tests see actual CSS, layout, events</li><li><code>@vitejs/plugin-vue</code> compiles SFCs on the fly</li><li><code>@tailwindcss/vite</code> ensures Tailwind utilities work in tests</li><li>Setup file imports <code>main.css</code> for design tokens</li></ul>",
+          files: ["vitest.config.browser.ts:1-24"],
+        },
+        setupBrowser: {
+          title: "Browser Setup File",
+          content:
+            "<h3>Overview</h3><p>Minimal setup file that imports the project's Tailwind CSS. This ensures browser tests render with the correct design tokens and utility classes.</p><h3>Full Source</h3><pre><code>import '~/assets/css/main.css'</code></pre><h3>Why It Matters</h3><p>Without this import, browser-rendered components would have no styling. The <code>@tailwindcss/vite</code> plugin processes this import and injects all the CSS utilities the components need.</p>",
+          files: ["app/__test-utils__/setup-browser.ts:1"],
+        },
+        withSetup: {
+          title: "withSetup() — Composable Test Wrapper",
+          content:
+            "<h3>Overview</h3><p>A utility that wraps Vue composables in an <code>effectScope</code> for testing. Returns the composable's reactive state plus a <code>Disposable</code> interface for automatic cleanup via the <code>using</code> keyword.</p><h3>Full Source</h3><pre><code>import { effectScope } from 'vue'\n\nexport function withSetup&lt;T extends object&gt;(\n  composable: () =&gt; T,\n): T &amp; Disposable {\n  const scope = effectScope()\n  const result = scope.run(composable)!\n  return Object.assign({}, result, {\n    [Symbol.dispose]() { scope.stop() },\n  })\n}</code></pre><h3>Usage Pattern</h3><pre><code>// TC39 'using' keyword auto-cleans up the scope\nusing tool = withSetup(() =&gt; useTool())\nexpect(tool.activeTool.value).toBe('selection')</code></pre><h3>Why effectScope?</h3><ul><li>Vue composables create watchers, computed properties, and side effects</li><li><code>effectScope</code> collects them all and <code>.stop()</code> disposes them</li><li>The <code>Disposable</code> protocol (<code>Symbol.dispose</code>) pairs with <code>using</code> for zero-leak testing</li></ul>",
+          files: ["app/__test-utils__/withSetup.ts:1-11"],
+        },
+        elementFactory: {
+          title: "Element Factory",
+          content:
+            "<h3>Overview</h3><p>Type-safe factory functions for creating test elements. Uses function overloads to return the correct ExcalidrawElement subtype based on the <code>type</code> field.</p><h3>Key Code</h3><pre><code>const BASE_PROPS = {\n  id: 'test-id', x: 0, y: 0, width: 100, height: 100,\n  angle: 0, strokeColor: '#1e1e1e', backgroundColor: 'transparent',\n  fillStyle: 'hachure', strokeWidth: 2, roughness: 1, opacity: 100,\n  seed: 12_345, versionNonce: 67_890, isDeleted: false,\n}\n\n// Overloaded: returns correct type per shape\nexport function createTestElement(\n  overrides: Partial&lt;ExcalidrawElement&gt; = {},\n): ExcalidrawElement {\n  const type = overrides.type ?? 'rectangle'\n  if (type === 'ellipse') return { ...BASE_PROPS, ...overrides, type }\n  if (type === 'diamond') return { ...BASE_PROPS, ...overrides, type }\n  return { ...BASE_PROPS, ...overrides, type: 'rectangle' }\n}\n\nexport function createTestArrowElement(\n  overrides: Partial&lt;Omit&lt;ExcalidrawArrowElement, 'type'&gt;&gt; = {},\n): ExcalidrawArrowElement {\n  return { ...BASE_PROPS, type: 'arrow',\n    points: [createPoint(0, 0), createPoint(100, 50)],\n    startArrowhead: null, endArrowhead: 'arrow', ...overrides }\n}</code></pre><h3>Design</h3><ul><li>Sensible defaults — most tests only override 1-2 properties</li><li>TypeScript overloads give precise return types without casts</li><li>Separate <code>createTestArrowElement</code> for arrow-specific properties</li></ul>",
+          files: ["app/__test-utils__/factories/element.ts:1-51"],
+        },
+        viewportFactory: {
+          title: "Viewport Factory",
+          content:
+            "<h3>Overview</h3><p>Creates test viewport state with sensible defaults (no scroll, zoom 1x).</p><h3>Full Source</h3><pre><code>import type { Viewport } from '~/features/canvas/coords'\n\nexport function createViewport(\n  overrides: Partial&lt;Viewport&gt; = {},\n): Viewport {\n  return { scrollX: 0, scrollY: 0, zoom: 1, ...overrides }\n}</code></pre><h3>Usage</h3><pre><code>const vp = createViewport({ zoom: 2, scrollX: 100 })</code></pre>",
+          files: ["app/__test-utils__/factories/viewport.ts:1-5"],
+        },
+        pointFactory: {
+          title: "Point Factory",
+          content:
+            "<h3>Overview</h3><p>Creates test point coordinates with defaults at the origin (0, 0).</p><h3>Full Source</h3><pre><code>import type { Point } from '~/shared/math'\n\nexport function createTestPoint(\n  overrides: Partial&lt;Point&gt; = {},\n): Point {\n  return { x: 0, y: 0, ...overrides }\n}</code></pre>",
+          files: ["app/__test-utils__/factories/point.ts:1-5"],
+        },
+        pureFnTests: {
+          title: "Pure Function Tests",
+          content:
+            "<h3>Overview</h3><p>Tests for stateless utility functions — math, coordinates, and the tryCatch wrapper. These are the simplest tests: no setup, no mocking, just input/output assertions.</p><h3>Example: math.unit.test.ts</h3><pre><code>import { createPoint, distance, midpoint, clamp } from '~/shared/math'\n\ndescribe('math utilities', () =&gt; {\n  describe('createPoint', () =&gt; {\n    it('creates a point with given coordinates', () =&gt; {\n      const p = createPoint(3, 7)\n      expect(p).toEqual({ x: 3, y: 7 })\n    })\n  })\n\n  describe('distance', () =&gt; {\n    it('returns euclidean distance for a 3-4-5 triangle', () =&gt; {\n      const a = { x: 0, y: 0 }\n      const b = { x: 3, y: 4 }\n      expect(distance(a, b)).toBe(5)\n    })\n  })\n})</code></pre><h3>Test Files</h3><ul><li><code>app/shared/math.unit.test.ts</code> — 10 describes, 30+ assertions</li><li><code>app/shared/random.unit.test.ts</code> — ID generation, seed values</li><li><code>app/utils/tryCatch.unit.test.ts</code> — Result tuple utility</li><li><code>app/features/canvas/coords.unit.test.ts</code> — Coordinate transforms</li></ul>",
+          files: [
+            "app/shared/math.unit.test.ts:1-275",
+            "app/shared/random.unit.test.ts",
+            "app/utils/tryCatch.unit.test.ts",
+            "app/features/canvas/coords.unit.test.ts",
+          ],
+        },
+        businessTests: {
+          title: "Business Logic Tests",
+          content:
+            "<h3>Overview</h3><p>Tests for domain logic — element creation, hit testing, bounds calculation, transforms, and shape generation. These use the factory helpers to construct test data.</p><h3>Example: bounds.unit.test.ts</h3><pre><code>import { createTestElement } from '~/__test-utils__/factories/element'\nimport { getElementBounds, getCommonBounds } from './bounds'\n\ndescribe('getElementBounds', () =&gt; {\n  it('returns [x, y, x+w, y+h] for axis-aligned element', () =&gt; {\n    const el = createTestElement({ x: 10, y: 20, width: 100, height: 50 })\n    expect(getElementBounds(el)).toEqual([10, 20, 110, 70])\n  })\n\n  it('expands bounds for rotated element', () =&gt; {\n    const el = createTestElement({ width: 100, height: 0, angle: Math.PI / 4 })\n    const [x1, y1, x2, y2] = getElementBounds(el)\n    expect(x2 - x1).toBeCloseTo(70.71, 1)\n  })\n})</code></pre><h3>Test Files</h3><ul><li><code>createElement.unit.test.ts</code> — Element creation with defaults/overrides</li><li><code>mutateElement.unit.test.ts</code> — Immutable element mutations</li><li><code>bounds.unit.test.ts</code> — Bounding box calculations</li><li><code>hitTest.unit.test.ts</code> — Point-in-shape detection</li><li><code>transformHandles.unit.test.ts</code> — Resize handle positions</li><li><code>shapeGenerator.unit.test.ts</code> — RoughJS shape generation</li><li><code>dragElements.unit.test.ts</code> — Element dragging logic</li><li><code>resizeElement.unit.test.ts</code> — Resize transforms</li></ul>",
+          files: [
+            "app/features/selection/bounds.unit.test.ts:1-48",
+            "app/features/elements/createElement.unit.test.ts:1-75",
+            "app/features/selection/hitTest.unit.test.ts",
+          ],
+        },
+        composableTests: {
+          title: "Composable Tests",
+          content:
+            "<h3>Overview</h3><p>Tests for Vue composables — reactive state managers that use <code>ref</code>, <code>computed</code>, and <code>watch</code>. Each composable is wrapped in <code>withSetup()</code> with the TC39 <code>using</code> keyword for automatic cleanup.</p><h3>Example: useTool.unit.test.ts</h3><pre><code>import { withSetup } from '~/__test-utils__/withSetup'\nimport { useTool } from './useTool'\n\ndescribe('useTool', () =&gt; {\n  it('defaults activeTool to selection', () =&gt; {\n    using tool = withSetup(() =&gt; useTool())\n    expect(tool.activeTool.value).toBe('selection')\n  })\n\n  it('sets activeTool via setTool', () =&gt; {\n    using tool = withSetup(() =&gt; useTool())\n    tool.setTool('rectangle')\n    expect(tool.activeTool.value).toBe('rectangle')\n  })\n})</code></pre><h3>Example: useSelection.unit.test.ts</h3><pre><code>it('select() replaces selection with single element', () =&gt; {\n  const elements = shallowRef([\n    createTestElement({ id: 'a' }),\n    createTestElement({ id: 'b' }),\n  ])\n  using sel = withSetup(() =&gt; useSelection(elements))\n  sel.select('a')\n  expect(sel.selectedIds.value.has('a')).toBe(true)\n  expect(sel.selectedIds.value.size).toBe(1)\n})</code></pre><h3>Test Files</h3><ul><li><code>useTool.unit.test.ts</code> — Tool state management</li><li><code>useSelection.unit.test.ts</code> — Selection state (select, toggle, clear, selectAll)</li><li><code>useViewport.unit.test.ts</code> — Pan/zoom viewport state</li><li><code>useElements.unit.test.ts</code> — Element CRUD operations</li><li><code>useDrawingInteraction.unit.test.ts</code> — Mouse interaction → element creation</li></ul>",
+          files: [
+            "app/features/tools/useTool.unit.test.ts:1-25",
+            "app/features/selection/composables/useSelection.unit.test.ts:1-96",
+          ],
+        },
+        canvasTest: {
+          title: "CanvasContainer Browser Test",
+          content:
+            "<h3>Overview</h3><p>A smoke test that verifies the main canvas component mounts without errors in a real browser environment. Uses <code>vitest-browser-vue</code>'s <code>render()</code> API.</p><h3>Full Source</h3><pre><code>import { render } from 'vitest-browser-vue'\nimport CanvasContainer from './CanvasContainer.vue'\n\ndescribe('CanvasContainer', () =&gt; {\n  it('mounts without error', async () =&gt; {\n    const screen = render(CanvasContainer)\n    expect(screen).toBeTruthy()\n  })\n})</code></pre><h3>Why Browser?</h3><p>CanvasContainer relies on <code>&lt;canvas&gt;</code> elements, pointer events, and CSS layouts that only exist in a real browser. Testing in Node would require extensive mocking with no confidence gain.</p>",
+          files: ["app/features/canvas/components/CanvasContainer.browser.test.ts:1-9"],
+        },
+        toolbarTest: {
+          title: "DrawingToolbar Browser Test",
+          content:
+            "<h3>Overview</h3><p>Tests keyboard shortcuts for the drawing toolbar. Uses <code>userEvent.keyboard()</code> from <code>@vitest/browser/context</code> to simulate real keypress events, then asserts ARIA attributes on toolbar buttons.</p><h3>Key Code</h3><pre><code>import { render } from 'vitest-browser-vue'\nimport { userEvent } from '@vitest/browser/context'\nimport CanvasContainer from '~/features/canvas/components/CanvasContainer.vue'\n\ndescribe('DrawingToolbar numeric shortcuts', () =&gt; {\n  it('pressing 1 activates the selection tool', async () =&gt; {\n    const screen = render(CanvasContainer)\n    await userEvent.keyboard('1')\n    const selectionBtn = screen.getByRole('button', { name: 'Selection' })\n    await expect.element(selectionBtn).toHaveAttribute('aria-pressed', 'true')\n  })\n\n  it('pressing 2 activates the rectangle tool', async () =&gt; {\n    const screen = render(CanvasContainer)\n    await userEvent.keyboard('2')\n    const rectangleBtn = screen.getByRole('button', { name: 'Rectangle' })\n    await expect.element(rectangleBtn).toHaveAttribute('aria-pressed', 'true')\n  })\n})</code></pre><h3>Testing Philosophy</h3><ul><li>Tests <strong>user behavior</strong>, not implementation — \"press key → button is active\"</li><li>Queries by <code>role</code> and <code>name</code>, not CSS selectors</li><li>ARIA assertions validate accessibility at the same time</li></ul>",
+          files: ["app/features/tools/components/DrawingToolbar.browser.test.ts:1-41"],
+        },
+        tsconfigVitest: {
+          title: "TypeScript Config for Tests",
+          content:
+            '<h3>Overview</h3><p>Extends the Nuxt-generated TypeScript config and adds <code>vitest/globals</code> types so <code>describe</code>, <code>it</code>, <code>expect</code> are typed without imports.</p><h3>Full Source</h3><pre><code>{\n  "extends": "./.nuxt/tsconfig.app.json",\n  "compilerOptions": {\n    "types": ["vitest/globals"],\n    "composite": true\n  },\n  "include": [\n    "app/**/*.ts",\n    "app/**/*.vue",\n    "app/__test-utils__/**/*"\n  ]\n}</code></pre><h3>Details</h3><ul><li><code>composite: true</code> — enables project references for incremental builds</li><li>Includes the <code>__test-utils__</code> directory explicitly for factory/helper types</li><li>Extends <code>.nuxt/tsconfig.app.json</code> so all Nuxt auto-imports and path aliases work in tests</li></ul>',
+          files: ["tsconfig.vitest.json:1-13"],
+        },
+        eslintVitest: {
+          title: "ESLint Vitest Rules",
+          content:
+            "<h3>Overview</h3><p>The <code>@vitest/eslint-plugin</code> enforces consistent test patterns across all test files. These rules apply to <code>app/**/*.{unit,browser}.test.ts</code> files.</p><h3>Enforced Rules</h3><ul><li><code>it()</code> not <code>test()</code> — consistent API preference</li><li>Hooks on top — <code>beforeEach</code>/<code>afterEach</code> must be at the top of describe blocks</li><li>Max 2 nested describes — prevents deeply nested test structure</li><li>No complexity limit in tests — tests can be verbose for clarity</li></ul><h3>Example Violation</h3><pre><code>// BAD — uses test() instead of it()\ntest('creates element', () =&gt; { ... })\n\n// GOOD\nit('creates element', () =&gt; { ... })</code></pre>",
+          files: ["docs/linting-setup.md", "eslint.config.ts"],
+        },
+        preCommit: {
+          title: "Pre-commit Quality Gate",
+          content:
+            '<h3>Overview</h3><p>A <code>simple-git-hooks</code> pre-commit hook ensures all staged files pass linting and type checking before any commit is created.</p><h3>Configuration</h3><pre><code>"simple-git-hooks": {\n  "pre-commit": "bun run lint-staged &amp;&amp; bun run typecheck"\n},\n"lint-staged": {\n  "*.{ts,vue}": [\n    "oxlint --fix",\n    "eslint --fix --cache"\n  ]\n}</code></pre><h3>Pipeline</h3><ul><li><strong>Step 1</strong>: <code>lint-staged</code> runs Oxlint then ESLint on staged files only</li><li><strong>Step 2</strong>: <code>nuxi typecheck</code> verifies the entire project types</li><li>Both must pass — if either fails, the commit is blocked</li></ul>',
+          files: ["package.json:22-29"],
+        },
+        vitest_browser_vue: {
+          title: "vitest-browser-vue",
+          content:
+            "<h3>Overview</h3><p>A third-party library that provides the <code>render()</code> function for mounting Vue components inside Vitest's browser environment. Think of it as the browser-native equivalent of <code>@testing-library/vue</code>.</p><h3>Usage</h3><pre><code>import { render } from 'vitest-browser-vue'\nimport MyComponent from './MyComponent.vue'\n\nconst screen = render(MyComponent)\n// screen exposes getByRole, getByText, etc.</code></pre><h3>Key APIs</h3><ul><li><code>render(Component, options?)</code> — mounts component, returns query object</li><li><code>screen.getByRole()</code> — accessible element queries</li><li><code>expect.element(el).toHaveAttribute()</code> — element-specific matchers</li><li>Works with <code>userEvent</code> from <code>@vitest/browser/context</code></li></ul>",
+          files: [],
+        },
+      };
 
-  return (
-    <div className="fixed top-4 right-4 bottom-4 w-[420px] z-30 bg-wt-surface border border-wt-border rounded-xl shadow-2xl flex flex-col overflow-hidden">
-      <button onClick={onClose}
-        className="absolute top-3 right-3 z-10 w-7 h-7 rounded-md border border-wt-border bg-wt-raised text-wt-muted flex items-center justify-center text-lg hover:bg-wt-red hover:border-wt-red hover:text-white transition-colors">
-        &times;
-      </button>
-      <div className="flex-1 overflow-y-auto p-5">
-        <h2 className="text-lg font-bold text-wt-fg mb-4 pr-9">{node.title}</h2>
-        <div className="dt-body" dangerouslySetInnerHTML={{ __html: node.content }} />
-        {node.files?.length > 0 && (
-          <div className="mt-5 pt-4 border-t border-wt-border">
-            <div className="text-[0.7rem] uppercase tracking-wider text-wt-muted font-semibold mb-1.5">
-              Related Files
+      const LEGEND = [
+        { label: "Test Files", color: "bg-node-component" },
+        { label: "Config", color: "bg-node-data" },
+        { label: "Scripts", color: "bg-node-event" },
+        { label: "Utilities", color: "bg-node-utility" },
+        { label: "TypeScript / Lint", color: "bg-node-composable" },
+        { label: "External", color: "bg-node-external" },
+      ];
+
+      function usePanZoom() {
+        const viewportRef = useRef(null);
+        const canvasRef = useRef(null);
+        const zoomDisplayRef = useRef(null);
+        const st = useRef({ zoom: 1, panX: 0, panY: 0 });
+        const drag = useRef({ on: false, lx: 0, ly: 0 });
+
+        const apply = useCallback(() => {
+          const { zoom, panX, panY } = st.current;
+          if (canvasRef.current)
+            canvasRef.current.style.transform =
+              "translate(" + panX + "px," + panY + "px) scale(" + zoom + ")";
+          if (zoomDisplayRef.current)
+            zoomDisplayRef.current.textContent = Math.round(zoom * 100) + "%";
+        }, []);
+
+        const fitToScreen = useCallback(() => {
+          const svg = canvasRef.current?.querySelector("svg");
+          const vp = viewportRef.current;
+          if (!svg || !vp) return;
+          const s = st.current;
+          const vw = vp.clientWidth,
+            vh = vp.clientHeight;
+          const sw = svg.getBoundingClientRect().width / s.zoom;
+          const sh = svg.getBoundingClientRect().height / s.zoom;
+          const fit = Math.max(0.15, Math.min(2, Math.min((vw - 80) / sw, (vh - 80) / sh)));
+          s.zoom = fit;
+          s.panX = (vw - sw * fit) / 2;
+          s.panY = (vh - sh * fit) / 2;
+          apply();
+        }, [apply]);
+
+        useEffect(() => {
+          const vp = viewportRef.current;
+          if (!vp) return;
+
+          const onWheel = (e) => {
+            e.preventDefault();
+            const r = vp.getBoundingClientRect();
+            const mx = e.clientX - r.left,
+              my = e.clientY - r.top;
+            const s = st.current;
+            const f = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+            const nz = Math.min(4, Math.max(0.15, s.zoom * f));
+            const sc = nz / s.zoom;
+            s.panX = mx - sc * (mx - s.panX);
+            s.panY = my - sc * (my - s.panY);
+            s.zoom = nz;
+            apply();
+          };
+
+          const onDown = (e) => {
+            if (e.target.closest(".node")) return;
+            drag.current = { on: true, lx: e.clientX, ly: e.clientY };
+            vp.setPointerCapture(e.pointerId);
+          };
+          const onMove = (e) => {
+            const d = drag.current;
+            if (!d.on) return;
+            st.current.panX += e.clientX - d.lx;
+            st.current.panY += e.clientY - d.ly;
+            d.lx = e.clientX;
+            d.ly = e.clientY;
+            apply();
+          };
+          const onUp = () => {
+            drag.current.on = false;
+          };
+
+          vp.addEventListener("wheel", onWheel, { passive: false });
+          vp.addEventListener("pointerdown", onDown);
+          vp.addEventListener("pointermove", onMove);
+          vp.addEventListener("pointerup", onUp);
+          vp.addEventListener("pointercancel", onUp);
+          window.addEventListener("resize", fitToScreen);
+
+          return () => {
+            vp.removeEventListener("wheel", onWheel);
+            vp.removeEventListener("pointerdown", onDown);
+            vp.removeEventListener("pointermove", onMove);
+            vp.removeEventListener("pointerup", onUp);
+            vp.removeEventListener("pointercancel", onUp);
+            window.removeEventListener("resize", fitToScreen);
+          };
+        }, [apply, fitToScreen]);
+
+        const zoomIn = useCallback(() => {
+          st.current.zoom = Math.min(4, st.current.zoom * 1.25);
+          apply();
+        }, [apply]);
+        const zoomOut = useCallback(() => {
+          st.current.zoom = Math.max(0.15, st.current.zoom / 1.25);
+          apply();
+        }, [apply]);
+
+        return { viewportRef, canvasRef, zoomDisplayRef, zoomIn, zoomOut, fitToScreen };
+      }
+
+      function MermaidDiagram({ onNodeClick }) {
+        const ref = useRef(null);
+
+        useEffect(() => {
+          window.nodeClickHandler = onNodeClick;
+          mermaid.initialize({
+            startOnLoad: false,
+            theme: "dark",
+            themeVariables: {
+              primaryColor: "#0a0a0a",
+              primaryTextColor: "#ffffff",
+              primaryBorderColor: "#2a2a2a",
+              lineColor: "#a0a0a0",
+              secondaryColor: "#000000",
+              tertiaryColor: "#000000",
+              background: "#000000",
+              mainBkg: "#0a0a0a",
+              nodeBorder: "#2a2a2a",
+              clusterBkg: "rgba(10,10,10,0.8)",
+              clusterBorder: "#7c3aed",
+              titleColor: "#ffffff",
+              edgeLabelBackground: "transparent",
+            },
+            flowchart: { useMaxWidth: false, htmlLabels: true, curve: "basis" },
+            securityLevel: "loose",
+          });
+          mermaid.render("walkthrough-diagram", DIAGRAM).then(({ svg, bindFunctions }) => {
+            if (ref.current) {
+              ref.current.innerHTML = svg;
+              bindFunctions?.(ref.current);
+            }
+          });
+          return () => {
+            delete window.nodeClickHandler;
+          };
+        }, [onNodeClick]);
+
+        return <div ref={ref} className="mermaid-wrap" />;
+      }
+
+      function ZoomControls({ zoomDisplayRef, onZoomIn, onZoomOut, onFit }) {
+        return (
+          <div className="fixed bottom-5 left-5 z-20 flex flex-col gap-1.5">
+            <button
+              onClick={onZoomIn}
+              className="w-8 h-8 rounded-md border border-wt-border bg-wt-surface text-wt-fg flex items-center justify-center hover:bg-wt-raised transition-colors text-sm font-bold"
+            >
+              +
+            </button>
+            <div ref={zoomDisplayRef} className="text-[10px] text-wt-muted text-center">
+              100%
             </div>
-            <code className="text-sm text-wt-file font-mono leading-relaxed">
-              {node.files.map((f, i) => <span key={i}>{f}<br/></span>)}
-            </code>
+            <button
+              onClick={onZoomOut}
+              className="w-8 h-8 rounded-md border border-wt-border bg-wt-surface text-wt-fg flex items-center justify-center hover:bg-wt-raised transition-colors text-sm font-bold"
+            >
+              &minus;
+            </button>
+            <button
+              onClick={onFit}
+              className="w-8 h-8 rounded-md border border-wt-border bg-wt-surface text-wt-muted flex items-center justify-center hover:bg-wt-raised transition-colors text-[10px]"
+              title="Fit to screen"
+            >
+              Fit
+            </button>
           </div>
-        )}
-      </div>
-    </div>
-  );
-}
+        );
+      }
 
-function App() {
-  const [activeId, _setActiveId] = useState(null);
-  const pz = usePanZoom();
+      function DetailPanel({ node, onClose }) {
+        useEffect(() => {
+          const onKey = (e) => {
+            if (e.key === "Escape") onClose();
+          };
+          document.addEventListener("keydown", onKey);
+          return () => document.removeEventListener("keydown", onKey);
+        }, [onClose]);
 
-  const setActiveNode = useCallback((nodeId) => {
-    _setActiveId(nodeId);
-    document.querySelectorAll('.mermaid-wrap .node').forEach(n => { n.style.opacity = nodeId ? '0.4' : '1'; });
-    if (nodeId) {
-      const el = document.querySelector('.mermaid-wrap .node[id*="' + nodeId + '"]');
-      if (el) el.style.opacity = '1';
-    }
-  }, []);
+        return (
+          <div className="fixed top-4 right-4 bottom-4 w-[420px] z-30 bg-wt-surface border border-wt-border rounded-xl shadow-2xl flex flex-col overflow-hidden">
+            <button
+              onClick={onClose}
+              className="absolute top-3 right-3 z-10 w-7 h-7 rounded-md border border-wt-border bg-wt-raised text-wt-muted flex items-center justify-center text-lg hover:bg-wt-red hover:border-wt-red hover:text-white transition-colors"
+            >
+              &times;
+            </button>
+            <div className="flex-1 overflow-y-auto p-5">
+              <h2 className="text-lg font-bold text-wt-fg mb-4 pr-9">{node.title}</h2>
+              <div className="dt-body" dangerouslySetInnerHTML={{ __html: node.content }} />
+              {node.files?.length > 0 && (
+                <div className="mt-5 pt-4 border-t border-wt-border">
+                  <div className="text-[0.7rem] uppercase tracking-wider text-wt-muted font-semibold mb-1.5">
+                    Related Files
+                  </div>
+                  <code className="text-sm text-wt-file font-mono leading-relaxed">
+                    {node.files.map((f, i) => (
+                      <span key={i}>
+                        {f}
+                        <br />
+                      </span>
+                    ))}
+                  </code>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      }
 
-  const closeDetail = useCallback(() => {
-    _setActiveId(null);
-    document.querySelectorAll('.mermaid-wrap .node').forEach(n => { n.style.opacity = '1'; });
-  }, []);
+      function App() {
+        const [activeId, _setActiveId] = useState(null);
+        const pz = usePanZoom();
 
-  useEffect(() => { setTimeout(pz.fitToScreen, 600); }, [pz.fitToScreen]);
+        const setActiveNode = useCallback((nodeId) => {
+          _setActiveId(nodeId);
+          document.querySelectorAll(".mermaid-wrap .node").forEach((n) => {
+            n.style.opacity = nodeId ? "0.4" : "1";
+          });
+          if (nodeId) {
+            const el = document.querySelector('.mermaid-wrap .node[id*="' + nodeId + '"]');
+            if (el) el.style.opacity = "1";
+          }
+        }, []);
 
-  return (
-    <>
-      <header className="fixed top-0 inset-x-0 z-10 px-6 py-3.5 bg-gradient-to-b from-wt-bg to-transparent pointer-events-none">
-        <h1 className="text-base font-semibold text-wt-fg">Testing Strategy</h1>
-        <p className="text-sm text-wt-muted mt-0.5">Dual-project Vitest architecture with Node unit tests and Playwright browser tests</p>
-      </header>
+        const closeDetail = useCallback(() => {
+          _setActiveId(null);
+          document.querySelectorAll(".mermaid-wrap .node").forEach((n) => {
+            n.style.opacity = "1";
+          });
+        }, []);
 
-      <div ref={pz.viewportRef} className="w-full h-screen overflow-hidden cursor-grab active:cursor-grabbing">
-        <div ref={pz.canvasRef} className="origin-top-left will-change-transform inline-block p-[80px_60px_60px]">
-          <MermaidDiagram onNodeClick={setActiveNode} />
-        </div>
-      </div>
+        useEffect(() => {
+          setTimeout(pz.fitToScreen, 600);
+        }, [pz.fitToScreen]);
 
-      <ZoomControls zoomDisplayRef={pz.zoomDisplayRef} onZoomIn={pz.zoomIn} onZoomOut={pz.zoomOut} onFit={pz.fitToScreen} />
+        return (
+          <>
+            <header className="fixed top-0 inset-x-0 z-10 px-6 py-3.5 bg-gradient-to-b from-wt-bg to-transparent pointer-events-none">
+              <h1 className="text-base font-semibold text-wt-fg">Testing Strategy</h1>
+              <p className="text-sm text-wt-muted mt-0.5">
+                Dual-project Vitest architecture with Node unit tests and Playwright browser tests
+              </p>
+            </header>
 
-      <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-20 flex gap-4 px-4 py-2 bg-wt-surface border border-wt-border rounded-lg shadow-xl">
-        {LEGEND.map(l => (
-          <span key={l.label} className="flex items-center gap-1.5 text-xs text-wt-muted">
-            <span className={"w-2 h-2 rounded-full " + l.color} />{l.label}
-          </span>
-        ))}
-      </div>
+            <div
+              ref={pz.viewportRef}
+              className="w-full h-screen overflow-hidden cursor-grab active:cursor-grabbing"
+            >
+              <div
+                ref={pz.canvasRef}
+                className="origin-top-left will-change-transform inline-block p-[80px_60px_60px]"
+              >
+                <MermaidDiagram onNodeClick={setActiveNode} />
+              </div>
+            </div>
 
-      {activeId && NODES[activeId] && <DetailPanel node={NODES[activeId]} onClose={closeDetail} />}
+            <ZoomControls
+              zoomDisplayRef={pz.zoomDisplayRef}
+              onZoomIn={pz.zoomIn}
+              onZoomOut={pz.zoomOut}
+              onFit={pz.fitToScreen}
+            />
 
-      <div className="fixed bottom-5 right-5 z-20 text-xs text-wt-muted opacity-50">
-        <kbd>Scroll</kbd> zoom · <kbd>Drag</kbd> pan · Click nodes
-      </div>
-    </>
-  );
-}
+            <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-20 flex gap-4 px-4 py-2 bg-wt-surface border border-wt-border rounded-lg shadow-xl">
+              {LEGEND.map((l) => (
+                <span key={l.label} className="flex items-center gap-1.5 text-xs text-wt-muted">
+                  <span className={"w-2 h-2 rounded-full " + l.color} />
+                  {l.label}
+                </span>
+              ))}
+            </div>
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);
-</script>
-</body></html>
+            {activeId && NODES[activeId] && (
+              <DetailPanel node={NODES[activeId]} onClose={closeDetail} />
+            )}
+
+            <div className="fixed bottom-5 right-5 z-20 text-xs text-wt-muted opacity-50">
+              <kbd>Scroll</kbd> zoom · <kbd>Drag</kbd> pan · Click nodes
+            </div>
+          </>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+    </script>
+  </body>
+</html>

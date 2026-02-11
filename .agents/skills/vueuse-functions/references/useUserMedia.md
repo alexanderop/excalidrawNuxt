@@ -11,17 +11,17 @@ Reactive [`mediaDevices.getUserMedia`](https://developer.mozilla.org/en-US/docs/
 
 ```vue
 <script setup lang="ts">
-import { useUserMedia } from '@vueuse/core'
-import { useTemplateRef, watchEffect } from 'vue'
+import { useUserMedia } from "@vueuse/core";
+import { useTemplateRef, watchEffect } from "vue";
 
-const { stream, start } = useUserMedia()
-start()
+const { stream, start } = useUserMedia();
+start();
 
-const videoRef = useTemplateRef('video')
+const videoRef = useTemplateRef("video");
 watchEffect(() => {
   // preview on a video element
-  videoRef.value.srcObject = stream.value
-})
+  videoRef.value.srcObject = stream.value;
+});
 </script>
 
 <template>
@@ -32,24 +32,21 @@ watchEffect(() => {
 ### Devices
 
 ```ts
-import { useDevicesList, useUserMedia } from '@vueuse/core'
-import { computed, reactive } from 'vue'
+import { useDevicesList, useUserMedia } from "@vueuse/core";
+import { computed, reactive } from "vue";
 
-const {
-  videoInputs: cameras,
-  audioInputs: microphones,
-} = useDevicesList({
+const { videoInputs: cameras, audioInputs: microphones } = useDevicesList({
   requestPermissions: true,
-})
-const currentCamera = computed(() => cameras.value[0]?.deviceId)
-const currentMicrophone = computed(() => microphones.value[0]?.deviceId)
+});
+const currentCamera = computed(() => cameras.value[0]?.deviceId);
+const currentMicrophone = computed(() => microphones.value[0]?.deviceId);
 
 const { stream } = useUserMedia({
   constraints: reactive({
     video: { deviceId: currentCamera },
-    audio: { deviceId: currentMicrophone, }
-  })
-})
+    audio: { deviceId: currentMicrophone },
+  }),
+});
 ```
 
 ## Type Declarations
@@ -60,20 +57,20 @@ export interface UseUserMediaOptions extends ConfigurableNavigator {
    * If the stream is enabled
    * @default false
    */
-  enabled?: MaybeRef<boolean>
+  enabled?: MaybeRef<boolean>;
   /**
    * Recreate stream when deviceIds or constraints changed
    *
    * @default true
    */
-  autoSwitch?: MaybeRef<boolean>
+  autoSwitch?: MaybeRef<boolean>;
   /**
    * MediaStreamConstraints to be applied to the requested MediaStream
    * If provided, the constraints will override videoDeviceId and audioDeviceId
    *
    * @default {}
    */
-  constraints?: MaybeRef<MediaStreamConstraints>
+  constraints?: MaybeRef<MediaStreamConstraints>;
 }
 /**
  * Reactive `mediaDevices.getUserMedia` streaming
@@ -82,11 +79,11 @@ export interface UseUserMediaOptions extends ConfigurableNavigator {
  * @param options
  */
 export declare function useUserMedia(options?: UseUserMediaOptions): {
-  isSupported: ComputedRef<boolean>
-  stream: Ref<MediaStream | undefined, MediaStream | undefined>
-  start: () => Promise<MediaStream | undefined>
-  stop: () => void
-  restart: () => Promise<MediaStream | undefined>
+  isSupported: ComputedRef<boolean>;
+  stream: Ref<MediaStream | undefined, MediaStream | undefined>;
+  start: () => Promise<MediaStream | undefined>;
+  stop: () => void;
+  restart: () => Promise<MediaStream | undefined>;
   constraints: Ref<
     | MediaStreamConstraints
     | {
@@ -98,255 +95,255 @@ export declare function useUserMedia(options?: UseUserMediaOptions): {
                     aspectRatio?:
                       | number
                       | {
-                          exact?: number | undefined
-                          ideal?: number | undefined
-                          max?: number | undefined
-                          min?: number | undefined
+                          exact?: number | undefined;
+                          ideal?: number | undefined;
+                          max?: number | undefined;
+                          min?: number | undefined;
                         }
-                      | undefined
+                      | undefined;
                     autoGainControl?:
                       | boolean
                       | {
-                          exact?: boolean | undefined
-                          ideal?: boolean | undefined
+                          exact?: boolean | undefined;
+                          ideal?: boolean | undefined;
                         }
-                      | undefined
+                      | undefined;
                     backgroundBlur?:
                       | boolean
                       | {
-                          exact?: boolean | undefined
-                          ideal?: boolean | undefined
+                          exact?: boolean | undefined;
+                          ideal?: boolean | undefined;
                         }
-                      | undefined
+                      | undefined;
                     channelCount?:
                       | number
                       | {
-                          exact?: number | undefined
-                          ideal?: number | undefined
-                          max?: number | undefined
-                          min?: number | undefined
+                          exact?: number | undefined;
+                          ideal?: number | undefined;
+                          max?: number | undefined;
+                          min?: number | undefined;
                         }
-                      | undefined
+                      | undefined;
                     deviceId?:
                       | string
                       | string[]
                       | {
-                          exact?: string | string[] | undefined
-                          ideal?: string | string[] | undefined
+                          exact?: string | string[] | undefined;
+                          ideal?: string | string[] | undefined;
                         }
-                      | undefined
+                      | undefined;
                     displaySurface?:
                       | string
                       | string[]
                       | {
-                          exact?: string | string[] | undefined
-                          ideal?: string | string[] | undefined
+                          exact?: string | string[] | undefined;
+                          ideal?: string | string[] | undefined;
                         }
-                      | undefined
+                      | undefined;
                     echoCancellation?:
                       | boolean
                       | {
-                          exact?: boolean | undefined
-                          ideal?: boolean | undefined
+                          exact?: boolean | undefined;
+                          ideal?: boolean | undefined;
                         }
-                      | undefined
+                      | undefined;
                     facingMode?:
                       | string
                       | string[]
                       | {
-                          exact?: string | string[] | undefined
-                          ideal?: string | string[] | undefined
+                          exact?: string | string[] | undefined;
+                          ideal?: string | string[] | undefined;
                         }
-                      | undefined
+                      | undefined;
                     frameRate?:
                       | number
                       | {
-                          exact?: number | undefined
-                          ideal?: number | undefined
-                          max?: number | undefined
-                          min?: number | undefined
+                          exact?: number | undefined;
+                          ideal?: number | undefined;
+                          max?: number | undefined;
+                          min?: number | undefined;
                         }
-                      | undefined
+                      | undefined;
                     groupId?:
                       | string
                       | string[]
                       | {
-                          exact?: string | string[] | undefined
-                          ideal?: string | string[] | undefined
+                          exact?: string | string[] | undefined;
+                          ideal?: string | string[] | undefined;
                         }
-                      | undefined
+                      | undefined;
                     height?:
                       | number
                       | {
-                          exact?: number | undefined
-                          ideal?: number | undefined
-                          max?: number | undefined
-                          min?: number | undefined
+                          exact?: number | undefined;
+                          ideal?: number | undefined;
+                          max?: number | undefined;
+                          min?: number | undefined;
                         }
-                      | undefined
+                      | undefined;
                     noiseSuppression?:
                       | boolean
                       | {
-                          exact?: boolean | undefined
-                          ideal?: boolean | undefined
+                          exact?: boolean | undefined;
+                          ideal?: boolean | undefined;
                         }
-                      | undefined
+                      | undefined;
                     sampleRate?:
                       | number
                       | {
-                          exact?: number | undefined
-                          ideal?: number | undefined
-                          max?: number | undefined
-                          min?: number | undefined
+                          exact?: number | undefined;
+                          ideal?: number | undefined;
+                          max?: number | undefined;
+                          min?: number | undefined;
                         }
-                      | undefined
+                      | undefined;
                     sampleSize?:
                       | number
                       | {
-                          exact?: number | undefined
-                          ideal?: number | undefined
-                          max?: number | undefined
-                          min?: number | undefined
+                          exact?: number | undefined;
+                          ideal?: number | undefined;
+                          max?: number | undefined;
+                          min?: number | undefined;
                         }
-                      | undefined
+                      | undefined;
                     width?:
                       | number
                       | {
-                          exact?: number | undefined
-                          ideal?: number | undefined
-                          max?: number | undefined
-                          min?: number | undefined
+                          exact?: number | undefined;
+                          ideal?: number | undefined;
+                          max?: number | undefined;
+                          min?: number | undefined;
                         }
-                      | undefined
+                      | undefined;
                   }[]
-                | undefined
+                | undefined;
               aspectRatio?:
                 | number
                 | {
-                    exact?: number | undefined
-                    ideal?: number | undefined
-                    max?: number | undefined
-                    min?: number | undefined
+                    exact?: number | undefined;
+                    ideal?: number | undefined;
+                    max?: number | undefined;
+                    min?: number | undefined;
                   }
-                | undefined
+                | undefined;
               autoGainControl?:
                 | boolean
                 | {
-                    exact?: boolean | undefined
-                    ideal?: boolean | undefined
+                    exact?: boolean | undefined;
+                    ideal?: boolean | undefined;
                   }
-                | undefined
+                | undefined;
               backgroundBlur?:
                 | boolean
                 | {
-                    exact?: boolean | undefined
-                    ideal?: boolean | undefined
+                    exact?: boolean | undefined;
+                    ideal?: boolean | undefined;
                   }
-                | undefined
+                | undefined;
               channelCount?:
                 | number
                 | {
-                    exact?: number | undefined
-                    ideal?: number | undefined
-                    max?: number | undefined
-                    min?: number | undefined
+                    exact?: number | undefined;
+                    ideal?: number | undefined;
+                    max?: number | undefined;
+                    min?: number | undefined;
                   }
-                | undefined
+                | undefined;
               deviceId?:
                 | string
                 | string[]
                 | {
-                    exact?: string | string[] | undefined
-                    ideal?: string | string[] | undefined
+                    exact?: string | string[] | undefined;
+                    ideal?: string | string[] | undefined;
                   }
-                | undefined
+                | undefined;
               displaySurface?:
                 | string
                 | string[]
                 | {
-                    exact?: string | string[] | undefined
-                    ideal?: string | string[] | undefined
+                    exact?: string | string[] | undefined;
+                    ideal?: string | string[] | undefined;
                   }
-                | undefined
+                | undefined;
               echoCancellation?:
                 | boolean
                 | {
-                    exact?: boolean | undefined
-                    ideal?: boolean | undefined
+                    exact?: boolean | undefined;
+                    ideal?: boolean | undefined;
                   }
-                | undefined
+                | undefined;
               facingMode?:
                 | string
                 | string[]
                 | {
-                    exact?: string | string[] | undefined
-                    ideal?: string | string[] | undefined
+                    exact?: string | string[] | undefined;
+                    ideal?: string | string[] | undefined;
                   }
-                | undefined
+                | undefined;
               frameRate?:
                 | number
                 | {
-                    exact?: number | undefined
-                    ideal?: number | undefined
-                    max?: number | undefined
-                    min?: number | undefined
+                    exact?: number | undefined;
+                    ideal?: number | undefined;
+                    max?: number | undefined;
+                    min?: number | undefined;
                   }
-                | undefined
+                | undefined;
               groupId?:
                 | string
                 | string[]
                 | {
-                    exact?: string | string[] | undefined
-                    ideal?: string | string[] | undefined
+                    exact?: string | string[] | undefined;
+                    ideal?: string | string[] | undefined;
                   }
-                | undefined
+                | undefined;
               height?:
                 | number
                 | {
-                    exact?: number | undefined
-                    ideal?: number | undefined
-                    max?: number | undefined
-                    min?: number | undefined
+                    exact?: number | undefined;
+                    ideal?: number | undefined;
+                    max?: number | undefined;
+                    min?: number | undefined;
                   }
-                | undefined
+                | undefined;
               noiseSuppression?:
                 | boolean
                 | {
-                    exact?: boolean | undefined
-                    ideal?: boolean | undefined
+                    exact?: boolean | undefined;
+                    ideal?: boolean | undefined;
                   }
-                | undefined
+                | undefined;
               sampleRate?:
                 | number
                 | {
-                    exact?: number | undefined
-                    ideal?: number | undefined
-                    max?: number | undefined
-                    min?: number | undefined
+                    exact?: number | undefined;
+                    ideal?: number | undefined;
+                    max?: number | undefined;
+                    min?: number | undefined;
                   }
-                | undefined
+                | undefined;
               sampleSize?:
                 | number
                 | {
-                    exact?: number | undefined
-                    ideal?: number | undefined
-                    max?: number | undefined
-                    min?: number | undefined
+                    exact?: number | undefined;
+                    ideal?: number | undefined;
+                    max?: number | undefined;
+                    min?: number | undefined;
                   }
-                | undefined
+                | undefined;
               width?:
                 | number
                 | {
-                    exact?: number | undefined
-                    ideal?: number | undefined
-                    max?: number | undefined
-                    min?: number | undefined
+                    exact?: number | undefined;
+                    ideal?: number | undefined;
+                    max?: number | undefined;
+                    min?: number | undefined;
                   }
-                | undefined
+                | undefined;
             }
-          | undefined
-        peerIdentity?: string | undefined
-        preferCurrentTab?: boolean | undefined
+          | undefined;
+        peerIdentity?: string | undefined;
+        preferCurrentTab?: boolean | undefined;
         video?:
           | boolean
           | {
@@ -355,253 +352,253 @@ export declare function useUserMedia(options?: UseUserMediaOptions): {
                     aspectRatio?:
                       | number
                       | {
-                          exact?: number | undefined
-                          ideal?: number | undefined
-                          max?: number | undefined
-                          min?: number | undefined
+                          exact?: number | undefined;
+                          ideal?: number | undefined;
+                          max?: number | undefined;
+                          min?: number | undefined;
                         }
-                      | undefined
+                      | undefined;
                     autoGainControl?:
                       | boolean
                       | {
-                          exact?: boolean | undefined
-                          ideal?: boolean | undefined
+                          exact?: boolean | undefined;
+                          ideal?: boolean | undefined;
                         }
-                      | undefined
+                      | undefined;
                     backgroundBlur?:
                       | boolean
                       | {
-                          exact?: boolean | undefined
-                          ideal?: boolean | undefined
+                          exact?: boolean | undefined;
+                          ideal?: boolean | undefined;
                         }
-                      | undefined
+                      | undefined;
                     channelCount?:
                       | number
                       | {
-                          exact?: number | undefined
-                          ideal?: number | undefined
-                          max?: number | undefined
-                          min?: number | undefined
+                          exact?: number | undefined;
+                          ideal?: number | undefined;
+                          max?: number | undefined;
+                          min?: number | undefined;
                         }
-                      | undefined
+                      | undefined;
                     deviceId?:
                       | string
                       | string[]
                       | {
-                          exact?: string | string[] | undefined
-                          ideal?: string | string[] | undefined
+                          exact?: string | string[] | undefined;
+                          ideal?: string | string[] | undefined;
                         }
-                      | undefined
+                      | undefined;
                     displaySurface?:
                       | string
                       | string[]
                       | {
-                          exact?: string | string[] | undefined
-                          ideal?: string | string[] | undefined
+                          exact?: string | string[] | undefined;
+                          ideal?: string | string[] | undefined;
                         }
-                      | undefined
+                      | undefined;
                     echoCancellation?:
                       | boolean
                       | {
-                          exact?: boolean | undefined
-                          ideal?: boolean | undefined
+                          exact?: boolean | undefined;
+                          ideal?: boolean | undefined;
                         }
-                      | undefined
+                      | undefined;
                     facingMode?:
                       | string
                       | string[]
                       | {
-                          exact?: string | string[] | undefined
-                          ideal?: string | string[] | undefined
+                          exact?: string | string[] | undefined;
+                          ideal?: string | string[] | undefined;
                         }
-                      | undefined
+                      | undefined;
                     frameRate?:
                       | number
                       | {
-                          exact?: number | undefined
-                          ideal?: number | undefined
-                          max?: number | undefined
-                          min?: number | undefined
+                          exact?: number | undefined;
+                          ideal?: number | undefined;
+                          max?: number | undefined;
+                          min?: number | undefined;
                         }
-                      | undefined
+                      | undefined;
                     groupId?:
                       | string
                       | string[]
                       | {
-                          exact?: string | string[] | undefined
-                          ideal?: string | string[] | undefined
+                          exact?: string | string[] | undefined;
+                          ideal?: string | string[] | undefined;
                         }
-                      | undefined
+                      | undefined;
                     height?:
                       | number
                       | {
-                          exact?: number | undefined
-                          ideal?: number | undefined
-                          max?: number | undefined
-                          min?: number | undefined
+                          exact?: number | undefined;
+                          ideal?: number | undefined;
+                          max?: number | undefined;
+                          min?: number | undefined;
                         }
-                      | undefined
+                      | undefined;
                     noiseSuppression?:
                       | boolean
                       | {
-                          exact?: boolean | undefined
-                          ideal?: boolean | undefined
+                          exact?: boolean | undefined;
+                          ideal?: boolean | undefined;
                         }
-                      | undefined
+                      | undefined;
                     sampleRate?:
                       | number
                       | {
-                          exact?: number | undefined
-                          ideal?: number | undefined
-                          max?: number | undefined
-                          min?: number | undefined
+                          exact?: number | undefined;
+                          ideal?: number | undefined;
+                          max?: number | undefined;
+                          min?: number | undefined;
                         }
-                      | undefined
+                      | undefined;
                     sampleSize?:
                       | number
                       | {
-                          exact?: number | undefined
-                          ideal?: number | undefined
-                          max?: number | undefined
-                          min?: number | undefined
+                          exact?: number | undefined;
+                          ideal?: number | undefined;
+                          max?: number | undefined;
+                          min?: number | undefined;
                         }
-                      | undefined
+                      | undefined;
                     width?:
                       | number
                       | {
-                          exact?: number | undefined
-                          ideal?: number | undefined
-                          max?: number | undefined
-                          min?: number | undefined
+                          exact?: number | undefined;
+                          ideal?: number | undefined;
+                          max?: number | undefined;
+                          min?: number | undefined;
                         }
-                      | undefined
+                      | undefined;
                   }[]
-                | undefined
+                | undefined;
               aspectRatio?:
                 | number
                 | {
-                    exact?: number | undefined
-                    ideal?: number | undefined
-                    max?: number | undefined
-                    min?: number | undefined
+                    exact?: number | undefined;
+                    ideal?: number | undefined;
+                    max?: number | undefined;
+                    min?: number | undefined;
                   }
-                | undefined
+                | undefined;
               autoGainControl?:
                 | boolean
                 | {
-                    exact?: boolean | undefined
-                    ideal?: boolean | undefined
+                    exact?: boolean | undefined;
+                    ideal?: boolean | undefined;
                   }
-                | undefined
+                | undefined;
               backgroundBlur?:
                 | boolean
                 | {
-                    exact?: boolean | undefined
-                    ideal?: boolean | undefined
+                    exact?: boolean | undefined;
+                    ideal?: boolean | undefined;
                   }
-                | undefined
+                | undefined;
               channelCount?:
                 | number
                 | {
-                    exact?: number | undefined
-                    ideal?: number | undefined
-                    max?: number | undefined
-                    min?: number | undefined
+                    exact?: number | undefined;
+                    ideal?: number | undefined;
+                    max?: number | undefined;
+                    min?: number | undefined;
                   }
-                | undefined
+                | undefined;
               deviceId?:
                 | string
                 | string[]
                 | {
-                    exact?: string | string[] | undefined
-                    ideal?: string | string[] | undefined
+                    exact?: string | string[] | undefined;
+                    ideal?: string | string[] | undefined;
                   }
-                | undefined
+                | undefined;
               displaySurface?:
                 | string
                 | string[]
                 | {
-                    exact?: string | string[] | undefined
-                    ideal?: string | string[] | undefined
+                    exact?: string | string[] | undefined;
+                    ideal?: string | string[] | undefined;
                   }
-                | undefined
+                | undefined;
               echoCancellation?:
                 | boolean
                 | {
-                    exact?: boolean | undefined
-                    ideal?: boolean | undefined
+                    exact?: boolean | undefined;
+                    ideal?: boolean | undefined;
                   }
-                | undefined
+                | undefined;
               facingMode?:
                 | string
                 | string[]
                 | {
-                    exact?: string | string[] | undefined
-                    ideal?: string | string[] | undefined
+                    exact?: string | string[] | undefined;
+                    ideal?: string | string[] | undefined;
                   }
-                | undefined
+                | undefined;
               frameRate?:
                 | number
                 | {
-                    exact?: number | undefined
-                    ideal?: number | undefined
-                    max?: number | undefined
-                    min?: number | undefined
+                    exact?: number | undefined;
+                    ideal?: number | undefined;
+                    max?: number | undefined;
+                    min?: number | undefined;
                   }
-                | undefined
+                | undefined;
               groupId?:
                 | string
                 | string[]
                 | {
-                    exact?: string | string[] | undefined
-                    ideal?: string | string[] | undefined
+                    exact?: string | string[] | undefined;
+                    ideal?: string | string[] | undefined;
                   }
-                | undefined
+                | undefined;
               height?:
                 | number
                 | {
-                    exact?: number | undefined
-                    ideal?: number | undefined
-                    max?: number | undefined
-                    min?: number | undefined
+                    exact?: number | undefined;
+                    ideal?: number | undefined;
+                    max?: number | undefined;
+                    min?: number | undefined;
                   }
-                | undefined
+                | undefined;
               noiseSuppression?:
                 | boolean
                 | {
-                    exact?: boolean | undefined
-                    ideal?: boolean | undefined
+                    exact?: boolean | undefined;
+                    ideal?: boolean | undefined;
                   }
-                | undefined
+                | undefined;
               sampleRate?:
                 | number
                 | {
-                    exact?: number | undefined
-                    ideal?: number | undefined
-                    max?: number | undefined
-                    min?: number | undefined
+                    exact?: number | undefined;
+                    ideal?: number | undefined;
+                    max?: number | undefined;
+                    min?: number | undefined;
                   }
-                | undefined
+                | undefined;
               sampleSize?:
                 | number
                 | {
-                    exact?: number | undefined
-                    ideal?: number | undefined
-                    max?: number | undefined
-                    min?: number | undefined
+                    exact?: number | undefined;
+                    ideal?: number | undefined;
+                    max?: number | undefined;
+                    min?: number | undefined;
                   }
-                | undefined
+                | undefined;
               width?:
                 | number
                 | {
-                    exact?: number | undefined
-                    ideal?: number | undefined
-                    max?: number | undefined
-                    min?: number | undefined
+                    exact?: number | undefined;
+                    ideal?: number | undefined;
+                    max?: number | undefined;
+                    min?: number | undefined;
                   }
-                | undefined
+                | undefined;
             }
-          | undefined
+          | undefined;
       }
     | undefined,
     | MaybeRef<MediaStreamConstraints>
@@ -614,255 +611,255 @@ export declare function useUserMedia(options?: UseUserMediaOptions): {
                     aspectRatio?:
                       | number
                       | {
-                          exact?: number | undefined
-                          ideal?: number | undefined
-                          max?: number | undefined
-                          min?: number | undefined
+                          exact?: number | undefined;
+                          ideal?: number | undefined;
+                          max?: number | undefined;
+                          min?: number | undefined;
                         }
-                      | undefined
+                      | undefined;
                     autoGainControl?:
                       | boolean
                       | {
-                          exact?: boolean | undefined
-                          ideal?: boolean | undefined
+                          exact?: boolean | undefined;
+                          ideal?: boolean | undefined;
                         }
-                      | undefined
+                      | undefined;
                     backgroundBlur?:
                       | boolean
                       | {
-                          exact?: boolean | undefined
-                          ideal?: boolean | undefined
+                          exact?: boolean | undefined;
+                          ideal?: boolean | undefined;
                         }
-                      | undefined
+                      | undefined;
                     channelCount?:
                       | number
                       | {
-                          exact?: number | undefined
-                          ideal?: number | undefined
-                          max?: number | undefined
-                          min?: number | undefined
+                          exact?: number | undefined;
+                          ideal?: number | undefined;
+                          max?: number | undefined;
+                          min?: number | undefined;
                         }
-                      | undefined
+                      | undefined;
                     deviceId?:
                       | string
                       | string[]
                       | {
-                          exact?: string | string[] | undefined
-                          ideal?: string | string[] | undefined
+                          exact?: string | string[] | undefined;
+                          ideal?: string | string[] | undefined;
                         }
-                      | undefined
+                      | undefined;
                     displaySurface?:
                       | string
                       | string[]
                       | {
-                          exact?: string | string[] | undefined
-                          ideal?: string | string[] | undefined
+                          exact?: string | string[] | undefined;
+                          ideal?: string | string[] | undefined;
                         }
-                      | undefined
+                      | undefined;
                     echoCancellation?:
                       | boolean
                       | {
-                          exact?: boolean | undefined
-                          ideal?: boolean | undefined
+                          exact?: boolean | undefined;
+                          ideal?: boolean | undefined;
                         }
-                      | undefined
+                      | undefined;
                     facingMode?:
                       | string
                       | string[]
                       | {
-                          exact?: string | string[] | undefined
-                          ideal?: string | string[] | undefined
+                          exact?: string | string[] | undefined;
+                          ideal?: string | string[] | undefined;
                         }
-                      | undefined
+                      | undefined;
                     frameRate?:
                       | number
                       | {
-                          exact?: number | undefined
-                          ideal?: number | undefined
-                          max?: number | undefined
-                          min?: number | undefined
+                          exact?: number | undefined;
+                          ideal?: number | undefined;
+                          max?: number | undefined;
+                          min?: number | undefined;
                         }
-                      | undefined
+                      | undefined;
                     groupId?:
                       | string
                       | string[]
                       | {
-                          exact?: string | string[] | undefined
-                          ideal?: string | string[] | undefined
+                          exact?: string | string[] | undefined;
+                          ideal?: string | string[] | undefined;
                         }
-                      | undefined
+                      | undefined;
                     height?:
                       | number
                       | {
-                          exact?: number | undefined
-                          ideal?: number | undefined
-                          max?: number | undefined
-                          min?: number | undefined
+                          exact?: number | undefined;
+                          ideal?: number | undefined;
+                          max?: number | undefined;
+                          min?: number | undefined;
                         }
-                      | undefined
+                      | undefined;
                     noiseSuppression?:
                       | boolean
                       | {
-                          exact?: boolean | undefined
-                          ideal?: boolean | undefined
+                          exact?: boolean | undefined;
+                          ideal?: boolean | undefined;
                         }
-                      | undefined
+                      | undefined;
                     sampleRate?:
                       | number
                       | {
-                          exact?: number | undefined
-                          ideal?: number | undefined
-                          max?: number | undefined
-                          min?: number | undefined
+                          exact?: number | undefined;
+                          ideal?: number | undefined;
+                          max?: number | undefined;
+                          min?: number | undefined;
                         }
-                      | undefined
+                      | undefined;
                     sampleSize?:
                       | number
                       | {
-                          exact?: number | undefined
-                          ideal?: number | undefined
-                          max?: number | undefined
-                          min?: number | undefined
+                          exact?: number | undefined;
+                          ideal?: number | undefined;
+                          max?: number | undefined;
+                          min?: number | undefined;
                         }
-                      | undefined
+                      | undefined;
                     width?:
                       | number
                       | {
-                          exact?: number | undefined
-                          ideal?: number | undefined
-                          max?: number | undefined
-                          min?: number | undefined
+                          exact?: number | undefined;
+                          ideal?: number | undefined;
+                          max?: number | undefined;
+                          min?: number | undefined;
                         }
-                      | undefined
+                      | undefined;
                   }[]
-                | undefined
+                | undefined;
               aspectRatio?:
                 | number
                 | {
-                    exact?: number | undefined
-                    ideal?: number | undefined
-                    max?: number | undefined
-                    min?: number | undefined
+                    exact?: number | undefined;
+                    ideal?: number | undefined;
+                    max?: number | undefined;
+                    min?: number | undefined;
                   }
-                | undefined
+                | undefined;
               autoGainControl?:
                 | boolean
                 | {
-                    exact?: boolean | undefined
-                    ideal?: boolean | undefined
+                    exact?: boolean | undefined;
+                    ideal?: boolean | undefined;
                   }
-                | undefined
+                | undefined;
               backgroundBlur?:
                 | boolean
                 | {
-                    exact?: boolean | undefined
-                    ideal?: boolean | undefined
+                    exact?: boolean | undefined;
+                    ideal?: boolean | undefined;
                   }
-                | undefined
+                | undefined;
               channelCount?:
                 | number
                 | {
-                    exact?: number | undefined
-                    ideal?: number | undefined
-                    max?: number | undefined
-                    min?: number | undefined
+                    exact?: number | undefined;
+                    ideal?: number | undefined;
+                    max?: number | undefined;
+                    min?: number | undefined;
                   }
-                | undefined
+                | undefined;
               deviceId?:
                 | string
                 | string[]
                 | {
-                    exact?: string | string[] | undefined
-                    ideal?: string | string[] | undefined
+                    exact?: string | string[] | undefined;
+                    ideal?: string | string[] | undefined;
                   }
-                | undefined
+                | undefined;
               displaySurface?:
                 | string
                 | string[]
                 | {
-                    exact?: string | string[] | undefined
-                    ideal?: string | string[] | undefined
+                    exact?: string | string[] | undefined;
+                    ideal?: string | string[] | undefined;
                   }
-                | undefined
+                | undefined;
               echoCancellation?:
                 | boolean
                 | {
-                    exact?: boolean | undefined
-                    ideal?: boolean | undefined
+                    exact?: boolean | undefined;
+                    ideal?: boolean | undefined;
                   }
-                | undefined
+                | undefined;
               facingMode?:
                 | string
                 | string[]
                 | {
-                    exact?: string | string[] | undefined
-                    ideal?: string | string[] | undefined
+                    exact?: string | string[] | undefined;
+                    ideal?: string | string[] | undefined;
                   }
-                | undefined
+                | undefined;
               frameRate?:
                 | number
                 | {
-                    exact?: number | undefined
-                    ideal?: number | undefined
-                    max?: number | undefined
-                    min?: number | undefined
+                    exact?: number | undefined;
+                    ideal?: number | undefined;
+                    max?: number | undefined;
+                    min?: number | undefined;
                   }
-                | undefined
+                | undefined;
               groupId?:
                 | string
                 | string[]
                 | {
-                    exact?: string | string[] | undefined
-                    ideal?: string | string[] | undefined
+                    exact?: string | string[] | undefined;
+                    ideal?: string | string[] | undefined;
                   }
-                | undefined
+                | undefined;
               height?:
                 | number
                 | {
-                    exact?: number | undefined
-                    ideal?: number | undefined
-                    max?: number | undefined
-                    min?: number | undefined
+                    exact?: number | undefined;
+                    ideal?: number | undefined;
+                    max?: number | undefined;
+                    min?: number | undefined;
                   }
-                | undefined
+                | undefined;
               noiseSuppression?:
                 | boolean
                 | {
-                    exact?: boolean | undefined
-                    ideal?: boolean | undefined
+                    exact?: boolean | undefined;
+                    ideal?: boolean | undefined;
                   }
-                | undefined
+                | undefined;
               sampleRate?:
                 | number
                 | {
-                    exact?: number | undefined
-                    ideal?: number | undefined
-                    max?: number | undefined
-                    min?: number | undefined
+                    exact?: number | undefined;
+                    ideal?: number | undefined;
+                    max?: number | undefined;
+                    min?: number | undefined;
                   }
-                | undefined
+                | undefined;
               sampleSize?:
                 | number
                 | {
-                    exact?: number | undefined
-                    ideal?: number | undefined
-                    max?: number | undefined
-                    min?: number | undefined
+                    exact?: number | undefined;
+                    ideal?: number | undefined;
+                    max?: number | undefined;
+                    min?: number | undefined;
                   }
-                | undefined
+                | undefined;
               width?:
                 | number
                 | {
-                    exact?: number | undefined
-                    ideal?: number | undefined
-                    max?: number | undefined
-                    min?: number | undefined
+                    exact?: number | undefined;
+                    ideal?: number | undefined;
+                    max?: number | undefined;
+                    min?: number | undefined;
                   }
-                | undefined
+                | undefined;
             }
-          | undefined
-        peerIdentity?: string | undefined
-        preferCurrentTab?: boolean | undefined
+          | undefined;
+        peerIdentity?: string | undefined;
+        preferCurrentTab?: boolean | undefined;
         video?:
           | boolean
           | {
@@ -871,268 +868,268 @@ export declare function useUserMedia(options?: UseUserMediaOptions): {
                     aspectRatio?:
                       | number
                       | {
-                          exact?: number | undefined
-                          ideal?: number | undefined
-                          max?: number | undefined
-                          min?: number | undefined
+                          exact?: number | undefined;
+                          ideal?: number | undefined;
+                          max?: number | undefined;
+                          min?: number | undefined;
                         }
-                      | undefined
+                      | undefined;
                     autoGainControl?:
                       | boolean
                       | {
-                          exact?: boolean | undefined
-                          ideal?: boolean | undefined
+                          exact?: boolean | undefined;
+                          ideal?: boolean | undefined;
                         }
-                      | undefined
+                      | undefined;
                     backgroundBlur?:
                       | boolean
                       | {
-                          exact?: boolean | undefined
-                          ideal?: boolean | undefined
+                          exact?: boolean | undefined;
+                          ideal?: boolean | undefined;
                         }
-                      | undefined
+                      | undefined;
                     channelCount?:
                       | number
                       | {
-                          exact?: number | undefined
-                          ideal?: number | undefined
-                          max?: number | undefined
-                          min?: number | undefined
+                          exact?: number | undefined;
+                          ideal?: number | undefined;
+                          max?: number | undefined;
+                          min?: number | undefined;
                         }
-                      | undefined
+                      | undefined;
                     deviceId?:
                       | string
                       | string[]
                       | {
-                          exact?: string | string[] | undefined
-                          ideal?: string | string[] | undefined
+                          exact?: string | string[] | undefined;
+                          ideal?: string | string[] | undefined;
                         }
-                      | undefined
+                      | undefined;
                     displaySurface?:
                       | string
                       | string[]
                       | {
-                          exact?: string | string[] | undefined
-                          ideal?: string | string[] | undefined
+                          exact?: string | string[] | undefined;
+                          ideal?: string | string[] | undefined;
                         }
-                      | undefined
+                      | undefined;
                     echoCancellation?:
                       | boolean
                       | {
-                          exact?: boolean | undefined
-                          ideal?: boolean | undefined
+                          exact?: boolean | undefined;
+                          ideal?: boolean | undefined;
                         }
-                      | undefined
+                      | undefined;
                     facingMode?:
                       | string
                       | string[]
                       | {
-                          exact?: string | string[] | undefined
-                          ideal?: string | string[] | undefined
+                          exact?: string | string[] | undefined;
+                          ideal?: string | string[] | undefined;
                         }
-                      | undefined
+                      | undefined;
                     frameRate?:
                       | number
                       | {
-                          exact?: number | undefined
-                          ideal?: number | undefined
-                          max?: number | undefined
-                          min?: number | undefined
+                          exact?: number | undefined;
+                          ideal?: number | undefined;
+                          max?: number | undefined;
+                          min?: number | undefined;
                         }
-                      | undefined
+                      | undefined;
                     groupId?:
                       | string
                       | string[]
                       | {
-                          exact?: string | string[] | undefined
-                          ideal?: string | string[] | undefined
+                          exact?: string | string[] | undefined;
+                          ideal?: string | string[] | undefined;
                         }
-                      | undefined
+                      | undefined;
                     height?:
                       | number
                       | {
-                          exact?: number | undefined
-                          ideal?: number | undefined
-                          max?: number | undefined
-                          min?: number | undefined
+                          exact?: number | undefined;
+                          ideal?: number | undefined;
+                          max?: number | undefined;
+                          min?: number | undefined;
                         }
-                      | undefined
+                      | undefined;
                     noiseSuppression?:
                       | boolean
                       | {
-                          exact?: boolean | undefined
-                          ideal?: boolean | undefined
+                          exact?: boolean | undefined;
+                          ideal?: boolean | undefined;
                         }
-                      | undefined
+                      | undefined;
                     sampleRate?:
                       | number
                       | {
-                          exact?: number | undefined
-                          ideal?: number | undefined
-                          max?: number | undefined
-                          min?: number | undefined
+                          exact?: number | undefined;
+                          ideal?: number | undefined;
+                          max?: number | undefined;
+                          min?: number | undefined;
                         }
-                      | undefined
+                      | undefined;
                     sampleSize?:
                       | number
                       | {
-                          exact?: number | undefined
-                          ideal?: number | undefined
-                          max?: number | undefined
-                          min?: number | undefined
+                          exact?: number | undefined;
+                          ideal?: number | undefined;
+                          max?: number | undefined;
+                          min?: number | undefined;
                         }
-                      | undefined
+                      | undefined;
                     width?:
                       | number
                       | {
-                          exact?: number | undefined
-                          ideal?: number | undefined
-                          max?: number | undefined
-                          min?: number | undefined
+                          exact?: number | undefined;
+                          ideal?: number | undefined;
+                          max?: number | undefined;
+                          min?: number | undefined;
                         }
-                      | undefined
+                      | undefined;
                   }[]
-                | undefined
+                | undefined;
               aspectRatio?:
                 | number
                 | {
-                    exact?: number | undefined
-                    ideal?: number | undefined
-                    max?: number | undefined
-                    min?: number | undefined
+                    exact?: number | undefined;
+                    ideal?: number | undefined;
+                    max?: number | undefined;
+                    min?: number | undefined;
                   }
-                | undefined
+                | undefined;
               autoGainControl?:
                 | boolean
                 | {
-                    exact?: boolean | undefined
-                    ideal?: boolean | undefined
+                    exact?: boolean | undefined;
+                    ideal?: boolean | undefined;
                   }
-                | undefined
+                | undefined;
               backgroundBlur?:
                 | boolean
                 | {
-                    exact?: boolean | undefined
-                    ideal?: boolean | undefined
+                    exact?: boolean | undefined;
+                    ideal?: boolean | undefined;
                   }
-                | undefined
+                | undefined;
               channelCount?:
                 | number
                 | {
-                    exact?: number | undefined
-                    ideal?: number | undefined
-                    max?: number | undefined
-                    min?: number | undefined
+                    exact?: number | undefined;
+                    ideal?: number | undefined;
+                    max?: number | undefined;
+                    min?: number | undefined;
                   }
-                | undefined
+                | undefined;
               deviceId?:
                 | string
                 | string[]
                 | {
-                    exact?: string | string[] | undefined
-                    ideal?: string | string[] | undefined
+                    exact?: string | string[] | undefined;
+                    ideal?: string | string[] | undefined;
                   }
-                | undefined
+                | undefined;
               displaySurface?:
                 | string
                 | string[]
                 | {
-                    exact?: string | string[] | undefined
-                    ideal?: string | string[] | undefined
+                    exact?: string | string[] | undefined;
+                    ideal?: string | string[] | undefined;
                   }
-                | undefined
+                | undefined;
               echoCancellation?:
                 | boolean
                 | {
-                    exact?: boolean | undefined
-                    ideal?: boolean | undefined
+                    exact?: boolean | undefined;
+                    ideal?: boolean | undefined;
                   }
-                | undefined
+                | undefined;
               facingMode?:
                 | string
                 | string[]
                 | {
-                    exact?: string | string[] | undefined
-                    ideal?: string | string[] | undefined
+                    exact?: string | string[] | undefined;
+                    ideal?: string | string[] | undefined;
                   }
-                | undefined
+                | undefined;
               frameRate?:
                 | number
                 | {
-                    exact?: number | undefined
-                    ideal?: number | undefined
-                    max?: number | undefined
-                    min?: number | undefined
+                    exact?: number | undefined;
+                    ideal?: number | undefined;
+                    max?: number | undefined;
+                    min?: number | undefined;
                   }
-                | undefined
+                | undefined;
               groupId?:
                 | string
                 | string[]
                 | {
-                    exact?: string | string[] | undefined
-                    ideal?: string | string[] | undefined
+                    exact?: string | string[] | undefined;
+                    ideal?: string | string[] | undefined;
                   }
-                | undefined
+                | undefined;
               height?:
                 | number
                 | {
-                    exact?: number | undefined
-                    ideal?: number | undefined
-                    max?: number | undefined
-                    min?: number | undefined
+                    exact?: number | undefined;
+                    ideal?: number | undefined;
+                    max?: number | undefined;
+                    min?: number | undefined;
                   }
-                | undefined
+                | undefined;
               noiseSuppression?:
                 | boolean
                 | {
-                    exact?: boolean | undefined
-                    ideal?: boolean | undefined
+                    exact?: boolean | undefined;
+                    ideal?: boolean | undefined;
                   }
-                | undefined
+                | undefined;
               sampleRate?:
                 | number
                 | {
-                    exact?: number | undefined
-                    ideal?: number | undefined
-                    max?: number | undefined
-                    min?: number | undefined
+                    exact?: number | undefined;
+                    ideal?: number | undefined;
+                    max?: number | undefined;
+                    min?: number | undefined;
                   }
-                | undefined
+                | undefined;
               sampleSize?:
                 | number
                 | {
-                    exact?: number | undefined
-                    ideal?: number | undefined
-                    max?: number | undefined
-                    min?: number | undefined
+                    exact?: number | undefined;
+                    ideal?: number | undefined;
+                    max?: number | undefined;
+                    min?: number | undefined;
                   }
-                | undefined
+                | undefined;
               width?:
                 | number
                 | {
-                    exact?: number | undefined
-                    ideal?: number | undefined
-                    max?: number | undefined
-                    min?: number | undefined
+                    exact?: number | undefined;
+                    ideal?: number | undefined;
+                    max?: number | undefined;
+                    min?: number | undefined;
                   }
-                | undefined
+                | undefined;
             }
-          | undefined
+          | undefined;
       }
     | undefined
-  >
+  >;
   enabled:
     | Ref<boolean, boolean>
     | ShallowRef<boolean, boolean>
     | WritableComputedRef<boolean, boolean>
     | ShallowRef<true, true>
-    | ShallowRef<false, false>
+    | ShallowRef<false, false>;
   autoSwitch:
     | Ref<boolean, boolean>
     | ShallowRef<boolean, boolean>
     | WritableComputedRef<boolean, boolean>
     | ShallowRef<true, true>
-    | ShallowRef<false, false>
-}
-export type UseUserMediaReturn = ReturnType<typeof useUserMedia>
+    | ShallowRef<false, false>;
+};
+export type UseUserMediaReturn = ReturnType<typeof useUserMedia>;
 ```

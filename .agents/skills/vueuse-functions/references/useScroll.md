@@ -10,11 +10,11 @@ Reactive scroll position and state.
 
 ```vue
 <script setup lang="ts">
-import { useScroll } from '@vueuse/core'
-import { useTemplateRef } from 'vue'
+import { useScroll } from "@vueuse/core";
+import { useTemplateRef } from "vue";
 
-const el = useTemplateRef('el')
-const { x, y, isScrolling, arrivedState, directions } = useScroll(el)
+const el = useTemplateRef("el");
+const { x, y, isScrolling, arrivedState, directions } = useScroll(el);
 </script>
 
 <template>
@@ -25,11 +25,11 @@ const { x, y, isScrolling, arrivedState, directions } = useScroll(el)
 ### With offsets
 
 ```ts
-import { useScroll } from '@vueuse/core'
+import { useScroll } from "@vueuse/core";
 // ---cut---
 const { x, y, isScrolling, arrivedState, directions } = useScroll(el, {
   offset: { top: 30, bottom: 30, right: 30, left: 30 },
-})
+});
 ```
 
 ### Setting scroll position
@@ -38,21 +38,17 @@ Set the `x` and `y` values to make the element scroll to that position.
 
 ```vue
 <script setup lang="ts">
-import { useScroll } from '@vueuse/core'
-import { useTemplateRef } from 'vue'
+import { useScroll } from "@vueuse/core";
+import { useTemplateRef } from "vue";
 
-const el = useTemplateRef('el')
-const { x, y } = useScroll(el)
+const el = useTemplateRef("el");
+const { x, y } = useScroll(el);
 </script>
 
 <template>
   <div ref="el" />
-  <button @click="x += 10">
-    Scroll right 10px
-  </button>
-  <button @click="y += 10">
-    Scroll down 10px
-  </button>
+  <button @click="x += 10">Scroll right 10px</button>
+  <button @click="y += 10">Scroll down 10px</button>
 </template>
 ```
 
@@ -61,16 +57,16 @@ const { x, y } = useScroll(el)
 Set `behavior: smooth` to enable smooth scrolling. The `behavior` option defaults to `auto`, which means no smooth scrolling. See the `behavior` option on [`window.scrollTo()`](https://developer.mozilla.org/en-US/docs/Web/API/Window/scrollTo) for more information.
 
 ```ts
-import { useScroll } from '@vueuse/core'
-import { useTemplateRef } from 'vue'
+import { useScroll } from "@vueuse/core";
+import { useTemplateRef } from "vue";
 
-const el = useTemplateRef('el')
-const { x, y } = useScroll(el, { behavior: 'smooth' })
+const el = useTemplateRef("el");
+const { x, y } = useScroll(el, { behavior: "smooth" });
 
 // Or as a `ref`:
-const smooth = ref(false)
-const behavior = computed(() => smooth.value ? 'smooth' : 'auto')
-const { x, y } = useScroll(el, { behavior })
+const smooth = ref(false);
+const behavior = computed(() => (smooth.value ? "smooth" : "auto"));
+const { x, y } = useScroll(el, { behavior });
 ```
 
 ### Recalculate scroll state
@@ -80,25 +76,25 @@ You can call the `measure()` method to manually update the scroll position and `
 This is useful, for example, after dynamic content changes or when you want to recalculate the scroll state outside of scroll events.
 
 ```ts
-import { useScroll } from '@vueuse/core'
-import { nextTick, onMounted, useTemplateRef, watch } from 'vue'
+import { useScroll } from "@vueuse/core";
+import { nextTick, onMounted, useTemplateRef, watch } from "vue";
 
-const el = useTemplateRef('el')
-const reactiveValue = shallowRef(false)
+const el = useTemplateRef("el");
+const reactiveValue = shallowRef(false);
 
-const { measure } = useScroll(el)
+const { measure } = useScroll(el);
 
 // In a watcher
 watch(reactiveValue, () => {
-  measure()
-})
+  measure();
+});
 
 // Or inside any function
 function updateScrollState() {
   // ...some logic
   nextTick(() => {
-    measure()
-  })
+    measure();
+  });
 }
 ```
 
@@ -111,13 +107,13 @@ function updateScrollState() {
 
 ```vue
 <script setup lang="ts">
-import type { UseScrollReturn } from '@vueuse/core'
-import { vScroll } from '@vueuse/components'
+import type { UseScrollReturn } from "@vueuse/core";
+import { vScroll } from "@vueuse/components";
 
-const data = ref([1, 2, 3, 4, 5, 6])
+const data = ref([1, 2, 3, 4, 5, 6]);
 
 function onScroll(state: UseScrollReturn) {
-  console.log(state) // {x, y, isScrolling, arrivedState, directions}
+  console.log(state); // {x, y, isScrolling, arrivedState, directions}
 }
 </script>
 
@@ -146,24 +142,24 @@ export interface UseScrollOptions extends ConfigurableWindow {
    *
    * @default 0
    */
-  throttle?: number
+  throttle?: number;
   /**
    * The check time when scrolling ends.
    * This configuration will be setting to (throttle + idle) when the `throttle` is configured.
    *
    * @default 200
    */
-  idle?: number
+  idle?: number;
   /**
    * Offset arrived states by x pixels
    *
    */
   offset?: {
-    left?: number
-    right?: number
-    top?: number
-    bottom?: number
-  }
+    left?: number;
+    right?: number;
+    top?: number;
+    bottom?: number;
+  };
   /**
    * Use MutationObserver to monitor specific DOM changes,
    * such as attribute modifications, child node additions or removals, or subtree changes.
@@ -172,37 +168,37 @@ export interface UseScrollOptions extends ConfigurableWindow {
   observe?:
     | boolean
     | {
-        mutation?: boolean
-      }
+        mutation?: boolean;
+      };
   /**
    * Trigger it when scrolling.
    *
    */
-  onScroll?: (e: Event) => void
+  onScroll?: (e: Event) => void;
   /**
    * Trigger it when scrolling ends.
    *
    */
-  onStop?: (e: Event) => void
+  onStop?: (e: Event) => void;
   /**
    * Listener options for scroll event.
    *
    * @default {capture: false, passive: true}
    */
-  eventListenerOptions?: boolean | AddEventListenerOptions
+  eventListenerOptions?: boolean | AddEventListenerOptions;
   /**
    * Optionally specify a scroll behavior of `auto` (default, not smooth scrolling) or
    * `smooth` (for smooth scrolling) which takes effect when changing the `x` or `y` refs.
    *
    * @default 'auto'
    */
-  behavior?: MaybeRefOrGetter<ScrollBehavior>
+  behavior?: MaybeRefOrGetter<ScrollBehavior>;
   /**
    * On error callback
    *
    * Default log error to `console.error`
    */
-  onError?: (error: unknown) => void
+  onError?: (error: unknown) => void;
 }
 /**
  * Reactive scroll.
@@ -212,27 +208,25 @@ export interface UseScrollOptions extends ConfigurableWindow {
  * @param options
  */
 export declare function useScroll(
-  element: MaybeRefOrGetter<
-    HTMLElement | SVGElement | Window | Document | null | undefined
-  >,
+  element: MaybeRefOrGetter<HTMLElement | SVGElement | Window | Document | null | undefined>,
   options?: UseScrollOptions,
 ): {
-  x: WritableComputedRef<number, number>
-  y: WritableComputedRef<number, number>
-  isScrolling: ShallowRef<boolean, boolean>
+  x: WritableComputedRef<number, number>;
+  y: WritableComputedRef<number, number>;
+  isScrolling: ShallowRef<boolean, boolean>;
   arrivedState: {
-    left: boolean
-    right: boolean
-    top: boolean
-    bottom: boolean
-  }
+    left: boolean;
+    right: boolean;
+    top: boolean;
+    bottom: boolean;
+  };
   directions: {
-    left: boolean
-    right: boolean
-    top: boolean
-    bottom: boolean
-  }
-  measure(): void
-}
-export type UseScrollReturn = ReturnType<typeof useScroll>
+    left: boolean;
+    right: boolean;
+    top: boolean;
+    bottom: boolean;
+  };
+  measure(): void;
+};
+export type UseScrollReturn = ReturnType<typeof useScroll>;
 ```

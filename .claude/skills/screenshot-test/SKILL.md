@@ -29,21 +29,23 @@ app/features/{feature}/
 ## Test Template
 
 ```typescript
-import { page as vitestPage } from 'vitest/browser'
-import { CanvasPage } from '~/__test-utils__/browser'
-import { waitForPaint } from '~/__test-utils__/browser/waiters'
+import { page as vitestPage } from "vitest/browser";
+import { CanvasPage } from "~/__test-utils__/browser";
+import { waitForPaint } from "~/__test-utils__/browser/waiters";
 
-describe('{feature name} rendering', () => {
-  it('{describes what the user sees}', async () => {
-    const page = await CanvasPage.create()
+describe("{feature name} rendering", () => {
+  it("{describes what the user sees}", async () => {
+    const page = await CanvasPage.create();
 
     // Simulate user actions using grid cells
-    await page.canvas.createElementAtCells('rectangle', [2, 2], [6, 5])
-    await waitForPaint()
+    await page.canvas.createElementAtCells("rectangle", [2, 2], [6, 5]);
+    await waitForPaint();
 
-    await expect(vitestPage.getByTestId('canvas-container')).toMatchScreenshot('{descriptive-name}')
-  })
-})
+    await expect(vitestPage.getByTestId("canvas-container")).toMatchScreenshot(
+      "{descriptive-name}",
+    );
+  });
+});
 ```
 
 `CanvasPage.create()` handles everything: `reseed()` → `render(CanvasContainer)` → `waitForCanvasReady()` → cleanup via `onTestFinished`. No `beforeEach`/`afterEach` needed.
@@ -53,85 +55,85 @@ describe('{feature name} rendering', () => {
 ### Drawing elements (via `CanvasPage`)
 
 ```typescript
-const page = await CanvasPage.create()
+const page = await CanvasPage.create();
 
 // Draw using grid cells (preferred — readable and maintainable)
-await page.canvas.createElementAtCells('rectangle', [1, 1], [4, 3])
-await page.canvas.createElementAtCells('diamond', [5, 1], [8, 3])
-await page.canvas.createElementAtCells('ellipse', [1, 4], [4, 6])
-await page.canvas.createElementAtCells('arrow', [5, 5], [8, 5])
+await page.canvas.createElementAtCells("rectangle", [1, 1], [4, 3]);
+await page.canvas.createElementAtCells("diamond", [5, 1], [8, 3]);
+await page.canvas.createElementAtCells("ellipse", [1, 4], [4, 6]);
+await page.canvas.createElementAtCells("arrow", [5, 5], [8, 5]);
 
 // Draw and get a live accessor to the created element
-const { id, get } = await page.canvas.createElement('rectangle', [2, 2], [5, 5])
+const { id, get } = await page.canvas.createElement("rectangle", [2, 2], [5, 5]);
 
 // Draw using raw pixel coords (only when precise positioning matters for screenshots)
-await page.canvas.pointer.drag(100, 100, 300, 250)
+await page.canvas.pointer.drag(100, 100, 300, 250);
 ```
 
 ### Tool selection
 
 ```typescript
-await page.toolbar.select('rectangle')   // shortcut '2'
-await page.toolbar.select('diamond')     // shortcut '3'
-await page.toolbar.select('ellipse')     // shortcut '4'
-await page.toolbar.select('arrow')       // shortcut 'a'
-await page.toolbar.select('line')        // shortcut 'l'
-await page.toolbar.select('text')        // shortcut 't'
-await page.toolbar.select('code')        // shortcut 'c'
-await page.toolbar.select('selection')   // shortcut '1'
-await page.toolbar.select('hand')        // shortcut 'h'
+await page.toolbar.select("rectangle"); // shortcut '2'
+await page.toolbar.select("diamond"); // shortcut '3'
+await page.toolbar.select("ellipse"); // shortcut '4'
+await page.toolbar.select("arrow"); // shortcut 'a'
+await page.toolbar.select("line"); // shortcut 'l'
+await page.toolbar.select("text"); // shortcut 't'
+await page.toolbar.select("code"); // shortcut 'c'
+await page.toolbar.select("selection"); // shortcut '1'
+await page.toolbar.select("hand"); // shortcut 'h'
 ```
 
 ### Clicking and dragging on canvas
 
 ```typescript
 // Grid-based (preferred)
-await page.canvas.click([3, 3])
-await page.canvas.click([3, 3], { shiftKey: true })  // with modifier
-await page.canvas.draw([1, 1], [4, 4])                // raw drag between cells
-await page.canvas.clickCenter([2, 2], [5, 5])          // click center of region
-await page.canvas.dblClick([3, 3])
+await page.canvas.click([3, 3]);
+await page.canvas.click([3, 3], { shiftKey: true }); // with modifier
+await page.canvas.draw([1, 1], [4, 4]); // raw drag between cells
+await page.canvas.clickCenter([2, 2], [5, 5]); // click center of region
+await page.canvas.dblClick([3, 3]);
 
 // Raw pixel access (when needed for precise screenshot positions)
-await page.canvas.pointer.clickAt(200, 150)
-await page.canvas.pointer.drag(100, 100, 300, 250)
+await page.canvas.pointer.clickAt(200, 150);
+await page.canvas.pointer.drag(100, 100, 300, 250);
 ```
 
 ### Selection
 
 ```typescript
-await page.selection.clickElement(element)
-await page.selection.shiftClickElement(element)
-await page.selection.boxSelect([0, 0], [8, 4])
-page.selection.clear()
-page.selection.expectSelected(id1, id2)
-page.selection.expectNoneSelected()
+await page.selection.clickElement(element);
+await page.selection.shiftClickElement(element);
+await page.selection.boxSelect([0, 0], [8, 4]);
+page.selection.clear();
+page.selection.expectSelected(id1, id2);
+page.selection.expectNoneSelected();
 ```
 
 ### Scene (programmatic setup)
 
 ```typescript
-const el = page.scene.addElement({ x: 50, width: 80 })
-await page.scene.flush()   // markStaticDirty + waitForPaint
-page.scene.expectElementCount(2)
-page.scene.expectElementType(0, 'rectangle')
+const el = page.scene.addElement({ x: 50, width: 80 });
+await page.scene.flush(); // markStaticDirty + waitForPaint
+page.scene.expectElementCount(2);
+page.scene.expectElementType(0, "rectangle");
 ```
 
 ### Keyboard input
 
 ```typescript
-await page.keyboard.press('{Delete}')
+await page.keyboard.press("{Delete}");
 await page.keyboard.withModifierKeys({ ctrlKey: true }, async () => {
-  await page.keyboard.press('g')  // Ctrl+G (group)
-})
-await page.keyboard.undo()   // Ctrl+Z
-await page.keyboard.redo()   // Ctrl+Shift+Z
+  await page.keyboard.press("g"); // Ctrl+G (group)
+});
+await page.keyboard.undo(); // Ctrl+Z
+await page.keyboard.redo(); // Ctrl+Shift+Z
 ```
 
 ### Tool state assertions
 
 ```typescript
-await page.toolbar.expectActive('selection')  // checks aria-pressed="true"
+await page.toolbar.expectActive("selection"); // checks aria-pressed="true"
 ```
 
 ## Grid Coordinate System
@@ -148,8 +150,8 @@ Use grid cells for element placement to make tests self-documenting:
 
 ```typescript
 // Clear layout: two shapes side by side
-await page.canvas.createElementAtCells('rectangle', [1, 1], [4, 3])  // left shape
-await page.canvas.createElementAtCells('diamond', [5, 1], [8, 3])    // right shape
+await page.canvas.createElementAtCells("rectangle", [1, 1], [4, 3]); // left shape
+await page.canvas.createElementAtCells("diamond", [5, 1], [8, 3]); // right shape
 ```
 
 ### Debug overlay
@@ -157,7 +159,7 @@ await page.canvas.createElementAtCells('diamond', [5, 1], [8, 3])    // right sh
 When debugging, inject a visible grid:
 
 ```typescript
-await page.canvas.grid.showOverlay(10000) // shows red grid lines for 10 seconds
+await page.canvas.grid.showOverlay(10000); // shows red grid lines for 10 seconds
 ```
 
 ## Critical Rules
@@ -188,31 +190,33 @@ bun test:browser -- --update              # update all baselines
 If asked to "add a screenshot test for grouping", produce something like:
 
 ```typescript
-import { page as vitestPage } from 'vitest/browser'
-import { CanvasPage } from '~/__test-utils__/browser'
-import { waitForPaint } from '~/__test-utils__/browser/waiters'
+import { page as vitestPage } from "vitest/browser";
+import { CanvasPage } from "~/__test-utils__/browser";
+import { waitForPaint } from "~/__test-utils__/browser/waiters";
 
-describe('grouping rendering', () => {
-  it('renders two grouped elements with shared selection outline', async () => {
-    const page = await CanvasPage.create()
+describe("grouping rendering", () => {
+  it("renders two grouped elements with shared selection outline", async () => {
+    const page = await CanvasPage.create();
 
     // User draws two shapes
-    await page.canvas.createElementAtCells('rectangle', [2, 2], [5, 4])
-    await page.canvas.createElementAtCells('ellipse', [6, 2], [9, 4])
+    await page.canvas.createElementAtCells("rectangle", [2, 2], [5, 4]);
+    await page.canvas.createElementAtCells("ellipse", [6, 2], [9, 4]);
 
     // User selects both (click first, shift-click second)
-    await page.canvas.clickCenter([2, 2], [5, 4])
-    await page.canvas.clickCenter([6, 2], [9, 4], { shiftKey: true })
+    await page.canvas.clickCenter([2, 2], [5, 4]);
+    await page.canvas.clickCenter([6, 2], [9, 4], { shiftKey: true });
 
     // User groups them with Ctrl+G
     await page.keyboard.withModifierKeys({ ctrlKey: true }, async () => {
-      await page.keyboard.press('g')
-    })
-    await waitForPaint()
+      await page.keyboard.press("g");
+    });
+    await waitForPaint();
 
-    await expect(vitestPage.getByTestId('canvas-container')).toMatchScreenshot('grouped-elements-selected')
-  })
-})
+    await expect(vitestPage.getByTestId("canvas-container")).toMatchScreenshot(
+      "grouped-elements-selected",
+    );
+  });
+});
 ```
 
 Notice how the test reads like a user story: draw two shapes, select both, group them, verify the visual result.

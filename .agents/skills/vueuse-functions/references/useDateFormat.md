@@ -56,9 +56,9 @@ by [dayjs](https://github.com/iamkun/dayjs).
 
 ```vue
 <script setup lang="ts">
-import { useDateFormat, useNow } from '@vueuse/core'
+import { useDateFormat, useNow } from "@vueuse/core";
 
-const formatted = useDateFormat(useNow(), 'YYYY-MM-DD HH:mm:ss')
+const formatted = useDateFormat(useNow(), "YYYY-MM-DD HH:mm:ss");
 </script>
 
 <template>
@@ -70,9 +70,9 @@ const formatted = useDateFormat(useNow(), 'YYYY-MM-DD HH:mm:ss')
 
 ```vue
 <script setup lang="ts">
-import { useDateFormat, useNow } from '@vueuse/core'
+import { useDateFormat, useNow } from "@vueuse/core";
 
-const formatted = useDateFormat(useNow(), 'YYYY-MM-DD (ddd)', { locales: 'en-US' })
+const formatted = useDateFormat(useNow(), "YYYY-MM-DD (ddd)", { locales: "en-US" });
 </script>
 
 <template>
@@ -84,16 +84,21 @@ const formatted = useDateFormat(useNow(), 'YYYY-MM-DD (ddd)', { locales: 'en-US'
 
 ```vue
 <script setup lang="ts">
-import { useDateFormat } from '@vueuse/core'
+import { useDateFormat } from "@vueuse/core";
 
-function customMeridiem(hours: number, minutes: number, isLowercase?: boolean, hasPeriod?: boolean) {
-  const m = hours > 11 ? (isLowercase ? 'μμ' : 'ΜΜ') : (isLowercase ? 'πμ' : 'ΠΜ')
-  return hasPeriod ? m.split('').reduce((acc, current) => acc += `${current}.`, '') : m
+function customMeridiem(
+  hours: number,
+  minutes: number,
+  isLowercase?: boolean,
+  hasPeriod?: boolean,
+) {
+  const m = hours > 11 ? (isLowercase ? "μμ" : "ΜΜ") : isLowercase ? "πμ" : "ΠΜ";
+  return hasPeriod ? m.split("").reduce((acc, current) => (acc += `${current}.`), "") : m;
 }
 
-const am = useDateFormat('2022-01-01 05:05:05', 'hh:mm:ss A', { customMeridiem })
+const am = useDateFormat("2022-01-01 05:05:05", "hh:mm:ss A", { customMeridiem });
 // am.value = '05:05:05 ΠΜ'
-const pm = useDateFormat('2022-01-01 17:05:05', 'hh:mm:ss AA', { customMeridiem })
+const pm = useDateFormat("2022-01-01 17:05:05", "hh:mm:ss AA", { customMeridiem });
 // pm.value = '05:05:05 Μ.Μ.'
 </script>
 ```
@@ -101,14 +106,14 @@ const pm = useDateFormat('2022-01-01 17:05:05', 'hh:mm:ss AA', { customMeridiem 
 ## Type Declarations
 
 ```ts
-export type DateLike = Date | number | string | undefined
+export type DateLike = Date | number | string | undefined;
 export interface UseDateFormatOptions {
   /**
    * The locale(s) to used for dd/ddd/dddd/MMM/MMMM format
    *
    * [MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl#locales_argument).
    */
-  locales?: MaybeRefOrGetter<Intl.LocalesArgument>
+  locales?: MaybeRefOrGetter<Intl.LocalesArgument>;
   /**
    * A custom function to re-modify the way to display meridiem
    *
@@ -118,15 +123,15 @@ export interface UseDateFormatOptions {
     minutes: number,
     isLowercase?: boolean,
     hasPeriod?: boolean,
-  ) => string
+  ) => string;
 }
 export declare function formatDate(
   date: Date,
   formatStr: string,
   options?: UseDateFormatOptions,
-): string
-export declare function normalizeDate(date: DateLike): Date
-export type UseDateFormatReturn = ComputedRef<string>
+): string;
+export declare function normalizeDate(date: DateLike): Date;
+export type UseDateFormatReturn = ComputedRef<string>;
 /**
  * Get the formatted date according to the string of tokens passed in.
  *
@@ -141,5 +146,5 @@ export declare function useDateFormat(
   date: MaybeRefOrGetter<DateLike>,
   formatStr?: MaybeRefOrGetter<string>,
   options?: UseDateFormatOptions,
-): UseDateFormatReturn
+): UseDateFormatReturn;
 ```

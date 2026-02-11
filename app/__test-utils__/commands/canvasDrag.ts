@@ -1,6 +1,6 @@
-import type { BrowserCommand } from 'vitest/node'
+import type { BrowserCommand } from "vitest/node";
 
-declare module 'vitest/browser' {
+declare module "vitest/browser" {
   interface BrowserCommands {
     canvasDrag: (
       selector: string,
@@ -9,7 +9,7 @@ declare module 'vitest/browser' {
       endX: number,
       endY: number,
       options?: { steps?: number },
-    ) => Promise<void>
+    ) => Promise<void>;
   }
 }
 
@@ -23,50 +23,61 @@ declare module 'vitest/browser' {
  * Uses frame.evaluate to dispatch events inside the iframe, avoiding
  * page↔iframe coordinate translation issues that break page.mouse approaches.
  */
-export const canvasDrag: BrowserCommand<[
-  selector: string,
-  startX: number,
-  startY: number,
-  endX: number,
-  endY: number,
-  options?: { steps?: number },
-]> = async (ctx, selector, startX, startY, endX, endY, options) => {
+export const canvasDrag: BrowserCommand<
+  [
+    selector: string,
+    startX: number,
+    startY: number,
+    endX: number,
+    endY: number,
+    options?: { steps?: number },
+  ]
+> = async (ctx, selector, startX, startY, endX, endY, options) => {
   // @ts-expect-error -- vitest browser command context exposes frame() at runtime
-  const frame = await ctx.frame()
-  const steps = options?.steps ?? 5
+  const frame = await ctx.frame();
+  const steps = options?.steps ?? 5;
 
-  interface DragParams { sel: string; sx: number; sy: number; ex: number; ey: number; s: number }
+  interface DragParams {
+    sel: string;
+    sx: number;
+    sy: number;
+    ex: number;
+    ey: number;
+    s: number;
+  }
 
   await frame.evaluate(
     ({ sel, sx, sy, ex, ey, s }: DragParams) => {
-      const el = document.querySelector(sel)
-      if (!el) throw new Error(`Element "${sel}" not found`)
+      const el = document.querySelector(sel);
+      if (!el) throw new Error(`Element "${sel}" not found`);
 
-      const rect = el.getBoundingClientRect()
+      const rect = el.getBoundingClientRect();
 
       function fire(type: string, x: number, y: number): void {
-        el!.dispatchEvent(new PointerEvent(type, {
-          clientX: rect.left + x,
-          clientY: rect.top + y,
-          button: 0,
-          buttons: type === 'pointerup' ? 0 : 1,
-          bubbles: true,
-          cancelable: true,
-          pointerId: 1,
-          pointerType: 'mouse',
-          isPrimary: true,
-        }))
+        el!.dispatchEvent(
+          new PointerEvent(type, {
+            clientX: rect.left + x,
+            clientY: rect.top + y,
+            button: 0,
+            buttons: type === "pointerup" ? 0 : 1,
+            bubbles: true,
+            cancelable: true,
+            pointerId: 1,
+            pointerType: "mouse",
+            isPrimary: true,
+          }),
+        );
       }
 
-      fire('pointerdown', sx, sy)
+      fire("pointerdown", sx, sy);
 
       for (let i = 1; i <= s; i++) {
-        const t = i / s
-        fire('pointermove', sx + (ex - sx) * t, sy + (ey - sy) * t)
+        const t = i / s;
+        fire("pointermove", sx + (ex - sx) * t, sy + (ey - sy) * t);
       }
 
-      fire('pointerup', ex, ey)
+      fire("pointerup", ex, ey);
     },
     { sel: selector, sx: startX, sy: startY, ex: endX, ey: endY, s: steps },
-  )
-}
+  );
+};

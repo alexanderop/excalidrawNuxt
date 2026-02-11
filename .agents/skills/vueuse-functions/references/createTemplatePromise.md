@@ -11,12 +11,12 @@ Template as Promise. Useful for constructing custom Dialogs, Modals, Toasts, etc
 
 ```vue
 <script setup lang="ts">
-import { createTemplatePromise } from '@vueuse/core'
+import { createTemplatePromise } from "@vueuse/core";
 
-const TemplatePromise = createTemplatePromise<ReturnType>()
+const TemplatePromise = createTemplatePromise<ReturnType>();
 
 async function open() {
-  const result = await TemplatePromise.start()
+  const result = await TemplatePromise.start();
   // button is clicked, result is 'ok'
 }
 </script>
@@ -24,9 +24,7 @@ async function open() {
 <template>
   <TemplatePromise v-slot="{ promise, resolve, reject, args }">
     <!-- your UI -->
-    <button @click="resolve('ok')">
-      OK
-    </button>
+    <button @click="resolve('ok')">OK</button>
   </TemplatePromise>
 </template>
 ```
@@ -46,10 +44,10 @@ This function is migrated from [vue-template-promise](https://github.com/antfu/v
 `createTemplatePromise` returns a **Vue Component** that you can directly use in your template with `<script setup>`
 
 ```ts twoslash include main
-import { createTemplatePromise } from '@vueuse/core'
+import { createTemplatePromise } from "@vueuse/core";
 
-const TemplatePromise = createTemplatePromise()
-const MyPromise = createTemplatePromise<boolean>() // with generic type
+const TemplatePromise = createTemplatePromise();
+const MyPromise = createTemplatePromise<boolean>(); // with generic type
 ```
 
 In template, use `v-slot` to access the promise and resolve functions.
@@ -58,9 +56,7 @@ In template, use `v-slot` to access the promise and resolve functions.
 <template>
   <TemplatePromise v-slot="{ promise, resolve, reject, args }">
     <!-- you can have anything -->
-    <button @click="resolve('ok')">
-      OK
-    </button>
+    <button @click="resolve('ok')">OK</button>
   </TemplatePromise>
   <MyPromise v-slot="{ promise, resolve, reject, args }">
     <!-- another one -->
@@ -73,7 +69,7 @@ The slot will not be rendered initially (similar to `v-if="false"`), until you c
 ```ts
 // @include: main
 // ---cut---
-const result = await TemplatePromise.start()
+const result = await TemplatePromise.start();
 ```
 
 Once `resolve` or `reject` is called in the template, the promise will be resolved or rejected, returning the value you passed in. Once resolved, the slot will be removed automatically.
@@ -83,15 +79,15 @@ Once `resolve` or `reject` is called in the template, the promise will be resolv
 You can pass arguments to the `start` with arguments.
 
 ```ts twoslash include passing-arguments
-import { createTemplatePromise } from '@vueuse/core'
+import { createTemplatePromise } from "@vueuse/core";
 
-const TemplatePromise = createTemplatePromise<boolean, [string, number]>()
+const TemplatePromise = createTemplatePromise<boolean, [string, number]>();
 ```
 
 ```ts
 // @include: passing-arguments
 // ---cut---
-const result = await TemplatePromise.start('hello', 123) // Pr
+const result = await TemplatePromise.start("hello", 123); // Pr
 ```
 
 And in the template slot, you can access the arguments via `args` property.
@@ -103,9 +99,7 @@ And in the template slot, you can access the arguments via `args` property.
     <!-- hello -->
     <div>{{ args[1] }}</div>
     <!-- 123 -->
-    <button @click="resolve(true)">
-      OK
-    </button>
+    <button @click="resolve(true)">OK</button>
   </TemplatePromise>
 </template>
 ```
@@ -115,15 +109,15 @@ And in the template slot, you can access the arguments via `args` property.
 Use the `singleton` option to ensure only one instance of the promise can be active at a time. If `start` is called while a promise is already active, it will return the existing promise instead of creating a new one.
 
 ```ts
-import { createTemplatePromise } from '@vueuse/core'
+import { createTemplatePromise } from "@vueuse/core";
 
 const TemplatePromise = createTemplatePromise<boolean>({
   singleton: true,
-})
+});
 
 // These will return the same promise if called in quick succession
-const result1 = TemplatePromise.start()
-const result2 = TemplatePromise.start() // returns the same promise as result1
+const result1 = TemplatePromise.start();
+const result2 = TemplatePromise.start(); // returns the same promise as result1
 ```
 
 ### Transition
@@ -134,18 +128,16 @@ You can use transition to animate the slot.
 <script setup lang="ts">
 const TemplatePromise = createTemplatePromise<ReturnType>({
   transition: {
-    name: 'fade',
+    name: "fade",
     appear: true,
   },
-})
+});
 </script>
 
 <template>
   <TemplatePromise v-slot="{ resolve }">
     <!-- your UI -->
-    <button @click="resolve('ok')">
-      OK
-    </button>
+    <button @click="resolve('ok')">OK</button>
   </TemplatePromise>
 </template>
 
@@ -179,16 +171,10 @@ The slot provides the following props:
 ```vue
 <template>
   <TemplatePromise v-slot="{ promise, resolve, reject, args, isResolving }">
-    <div v-if="isResolving">
-      Loading...
-    </div>
+    <div v-if="isResolving">Loading...</div>
     <div v-else>
-      <button @click="resolve('ok')">
-        OK
-      </button>
-      <button @click="reject('cancelled')">
-        Cancel
-      </button>
+      <button @click="resolve('ok')">OK</button>
+      <button @click="reject('cancelled')">Cancel</button>
     </div>
   </TemplatePromise>
 </template>
@@ -199,36 +185,36 @@ The slot provides the following props:
 The common approach to call a dialog or a modal programmatically would be like this:
 
 ```ts
-const dialog = useDialog()
+const dialog = useDialog();
 const result = await dialog.open({
-  title: 'Hello',
-  content: 'World',
-})
+  title: "Hello",
+  content: "World",
+});
 ```
 
 This would work by sending these information to the top-level component and let it render the dialog. However, it limits the flexibility you could express in the UI. For example, you could want the title to be red, or have extra buttons, etc. You would end up with a lot of options like:
 
 ```ts
 const result = await dialog.open({
-  title: 'Hello',
-  titleClass: 'text-red',
-  content: 'World',
-  contentClass: 'text-blue text-sm',
+  title: "Hello",
+  titleClass: "text-red",
+  content: "World",
+  contentClass: "text-blue text-sm",
   buttons: [
-    { text: 'OK', class: 'bg-red', onClick: () => {} },
-    { text: 'Cancel', class: 'bg-blue', onClick: () => {} },
+    { text: "OK", class: "bg-red", onClick: () => {} },
+    { text: "Cancel", class: "bg-blue", onClick: () => {} },
   ],
   // ...
-})
+});
 ```
 
 Even this is not flexible enough. If you want more, you might end up with manual render function.
 
 ```ts
 const result = await dialog.open({
-  title: 'Hello',
+  title: "Hello",
   contentSlot: () => h(MyComponent, { content }),
-})
+});
 ```
 
 This is like reinventing a new DSL in the script to express the UI template.
@@ -242,32 +228,32 @@ export interface TemplatePromiseProps<Return, Args extends any[] = []> {
   /**
    * The promise instance.
    */
-  promise: Promise<Return> | undefined
+  promise: Promise<Return> | undefined;
   /**
    * Resolve the promise.
    */
-  resolve: (v: Return | Promise<Return>) => void
+  resolve: (v: Return | Promise<Return>) => void;
   /**
    * Reject the promise.
    */
-  reject: (v: any) => void
+  reject: (v: any) => void;
   /**
    * Arguments passed to TemplatePromise.start()
    */
-  args: Args
+  args: Args;
   /**
    * Indicates if the promise is resolving.
    * When passing another promise to `resolve`, this will be set to `true` until the promise is resolved.
    */
-  isResolving: boolean
+  isResolving: boolean;
   /**
    * Options passed to createTemplatePromise()
    */
-  options: TemplatePromiseOptions
+  options: TemplatePromiseOptions;
   /**
    * Unique key for list rendering.
    */
-  key: number
+  key: number;
 }
 export interface TemplatePromiseOptions {
   /**
@@ -275,24 +261,21 @@ export interface TemplatePromiseOptions {
    *
    * @default false
    */
-  singleton?: boolean
+  singleton?: boolean;
   /**
    * Transition props for the promise.
    */
-  transition?: TransitionGroupProps
+  transition?: TransitionGroupProps;
 }
-export type TemplatePromise<
-  Return,
-  Args extends any[] = [],
-> = DefineComponent<object> & {
+export type TemplatePromise<Return, Args extends any[] = []> = DefineComponent<object> & {
   new (): {
     $slots: {
-      default: (_: TemplatePromiseProps<Return, Args>) => any
-    }
-  }
+      default: (_: TemplatePromiseProps<Return, Args>) => any;
+    };
+  };
 } & {
-  start: (...args: Args) => Promise<Return>
-}
+  start: (...args: Args) => Promise<Return>;
+};
 /**
  * Creates a template promise component.
  *
@@ -302,5 +285,5 @@ export type TemplatePromise<
  */
 export declare function createTemplatePromise<Return, Args extends any[] = []>(
   options?: TemplatePromiseOptions,
-): TemplatePromise<Return, Args>
+): TemplatePromise<Return, Args>;
 ```

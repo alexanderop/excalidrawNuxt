@@ -9,9 +9,9 @@ Reactive FPS (frames per second).
 ## Usage
 
 ```ts
-import { useFps } from '@vueuse/core'
+import { useFps } from "@vueuse/core";
 
-const fps = useFps()
+const fps = useFps();
 ```
 
 ## Type Declarations
@@ -22,7 +22,7 @@ export interface UseFpsOptions {
    * Calculate the FPS on every x frames.
    * @default 10
    */
-  every?: number
+  every?: number;
 }
-export declare function useFps(options?: UseFpsOptions): ShallowRef<number>
+export declare function useFps(options?: UseFpsOptions): ShallowRef<number>;
 ```

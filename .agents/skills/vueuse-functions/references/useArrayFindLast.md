@@ -9,31 +9,31 @@ Reactive `Array.findLast`.
 ## Usage
 
 ```ts
-import { useArrayFindLast } from '@vueuse/core'
+import { useArrayFindLast } from "@vueuse/core";
 
-const list = [ref(1), ref(-1), ref(2)]
-const positive = useArrayFindLast(list, val => val > 0)
+const list = [ref(1), ref(-1), ref(2)];
+const positive = useArrayFindLast(list, (val) => val > 0);
 // positive.value: 2
 ```
 
 ### Use with reactive array
 
 ```ts
-import { useArrayFindLast } from '@vueuse/core'
+import { useArrayFindLast } from "@vueuse/core";
 
-const list = reactive([-1, -2])
-const positive = useArrayFindLast(list, val => val > 0)
+const list = reactive([-1, -2]);
+const positive = useArrayFindLast(list, (val) => val > 0);
 // positive.value: undefined
-list.push(10)
+list.push(10);
 // positive.value: 10
-list.push(5)
+list.push(5);
 // positive.value: 5
 ```
 
 ## Type Declarations
 
 ```ts
-export type UseArrayFindLastReturn<T = any> = ComputedRef<T | undefined>
+export type UseArrayFindLastReturn<T = any> = ComputedRef<T | undefined>;
 /**
  * Reactive `Array.findLast`
  *
@@ -48,5 +48,5 @@ export type UseArrayFindLastReturn<T = any> = ComputedRef<T | undefined>
 export declare function useArrayFindLast<T>(
   list: MaybeRefOrGetter<MaybeRefOrGetter<T>[]>,
   fn: (element: T, index: number, array: MaybeRefOrGetter<T>[]) => boolean,
-): UseArrayFindLastReturn<T>
+): UseArrayFindLastReturn<T>;
 ```

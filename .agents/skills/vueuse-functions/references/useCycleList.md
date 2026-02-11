@@ -11,28 +11,28 @@ Cycle through a list of items.
 ## Usage
 
 ```ts
-import { useCycleList } from '@vueuse/core'
+import { useCycleList } from "@vueuse/core";
 
 const { state, next, prev, go } = useCycleList([
-  'Dog',
-  'Cat',
-  'Lizard',
-  'Shark',
-  'Whale',
-  'Dolphin',
-  'Octopus',
-  'Seal',
-])
+  "Dog",
+  "Cat",
+  "Lizard",
+  "Shark",
+  "Whale",
+  "Dolphin",
+  "Octopus",
+  "Seal",
+]);
 
-console.log(state.value) // 'Dog'
+console.log(state.value); // 'Dog'
 
-prev()
+prev();
 
-console.log(state.value) // 'Seal'
+console.log(state.value); // 'Seal'
 
-go(3)
+go(3);
 
-console.log(state.value) // 'Shark'
+console.log(state.value); // 'Shark'
 ```
 
 ## Type Declarations
@@ -43,15 +43,15 @@ export interface UseCycleListOptions<T> {
    * The initial value of the state.
    * A ref can be provided to reuse.
    */
-  initialValue?: MaybeRef<T>
+  initialValue?: MaybeRef<T>;
   /**
    * The default index when
    */
-  fallbackIndex?: number
+  fallbackIndex?: number;
   /**
    * Custom function to get the index of the current value.
    */
-  getIndexOf?: (value: T, list: T[]) => number
+  getIndexOf?: (value: T, list: T[]) => number;
 }
 /**
  * Cycle through a list of items
@@ -61,15 +61,15 @@ export interface UseCycleListOptions<T> {
 export declare function useCycleList<T>(
   list: MaybeRefOrGetter<T[]>,
   options?: UseCycleListOptions<T>,
-): UseCycleListReturn<T>
+): UseCycleListReturn<T>;
 export interface UseCycleListReturn<T> {
-  state: ShallowRef<T>
-  index: WritableComputedRef<number>
-  next: (n?: number) => T
-  prev: (n?: number) => T
+  state: ShallowRef<T>;
+  index: WritableComputedRef<number>;
+  next: (n?: number) => T;
+  prev: (n?: number) => T;
   /**
    * Go to a specific index
    */
-  go: (i: number) => T
+  go: (i: number) => T;
 }
 ```

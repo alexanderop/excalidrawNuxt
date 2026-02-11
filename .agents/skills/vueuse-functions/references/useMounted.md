@@ -9,19 +9,19 @@ Mounted state in ref.
 ## Usage
 
 ```ts
-import { useMounted } from '@vueuse/core'
+import { useMounted } from "@vueuse/core";
 
-const isMounted = useMounted()
+const isMounted = useMounted();
 ```
 
 Which is essentially a shorthand of:
 
 ```ts
-const isMounted = ref(false)
+const isMounted = ref(false);
 
 onMounted(() => {
-  isMounted.value = true
-})
+  isMounted.value = true;
+});
 ```
 
 ## Type Declarations
@@ -34,5 +34,5 @@ onMounted(() => {
  *
  * @__NO_SIDE_EFFECTS__
  */
-export declare function useMounted(): ShallowRef<boolean, boolean>
+export declare function useMounted(): ShallowRef<boolean, boolean>;
 ```

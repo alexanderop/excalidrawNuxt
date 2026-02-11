@@ -9,19 +9,17 @@ Reactive keys pressed state, with magical keys combination support.
 ## Usage
 
 ```ts
-import { useMagicKeys } from '@vueuse/core'
+import { useMagicKeys } from "@vueuse/core";
 
-const { shift, space, a /* keys you want to monitor */ } = useMagicKeys()
+const { shift, space, a /* keys you want to monitor */ } = useMagicKeys();
 
 watch(space, (v) => {
-  if (v)
-    console.log('space has been pressed')
-})
+  if (v) console.log("space has been pressed");
+});
 
 watchEffect(() => {
-  if (shift.value && a.value)
-    console.log('Shift + A have been pressed')
-})
+  if (shift.value && a.value) console.log("Shift + A have been pressed");
+});
 ```
 
 ::: tip NOTE
@@ -32,20 +30,18 @@ The `noUncheckedIndexedAccess` TypeScript option adds `undefined` to any un-decl
 You'll need to use optional chaining or wrap with a getter function:
 
 ```ts
-const { shift, space, a } = useMagicKeys()
+const { shift, space, a } = useMagicKeys();
 
 watch(
   () => space?.value,
   (v) => {
-    if (v)
-      console.log('space has been pressed')
+    if (v) console.log("space has been pressed");
   },
-)
+);
 
 watchEffect(() => {
-  if (shift?.value && a?.value)
-    console.log('Shift + A have been pressed')
-})
+  if (shift?.value && a?.value) console.log("Shift + A have been pressed");
+});
 ```
 
 Check the [TypeScript documentation](https://www.typescriptlang.org/tsconfig/#noUncheckedIndexedAccess) for more details about `noUncheckedIndexedAccess`.
@@ -59,38 +55,36 @@ Check out [all the possible keycodes](https://developer.mozilla.org/en-US/docs/W
 You can magically use combinations (shortcuts/hotkeys) by connecting keys with `+` or `_`.
 
 ```ts
-import { useMagicKeys } from '@vueuse/core'
+import { useMagicKeys } from "@vueuse/core";
 
-const keys = useMagicKeys()
-const shiftCtrlA = keys['Shift+Ctrl+A']
+const keys = useMagicKeys();
+const shiftCtrlA = keys["Shift+Ctrl+A"];
 
 watch(shiftCtrlA, (v) => {
-  if (v)
-    console.log('Shift + Ctrl + A have been pressed')
-})
+  if (v) console.log("Shift + Ctrl + A have been pressed");
+});
 ```
 
 ```ts
-import { useMagicKeys } from '@vueuse/core'
+import { useMagicKeys } from "@vueuse/core";
 
-const { Ctrl_A_B, space, alt_s /* ... */ } = useMagicKeys()
+const { Ctrl_A_B, space, alt_s /* ... */ } = useMagicKeys();
 
 watch(Ctrl_A_B, (v) => {
-  if (v)
-    console.log('Control+A+B have been pressed')
-})
+  if (v) console.log("Control+A+B have been pressed");
+});
 ```
 
 You can also use `whenever` function to make it shorter
 
 ```ts
-import { useMagicKeys, whenever } from '@vueuse/core'
+import { useMagicKeys, whenever } from "@vueuse/core";
 
-const keys = useMagicKeys()
+const keys = useMagicKeys();
 
 whenever(keys.shift_space, () => {
-  console.log('Shift+Space have been pressed')
-})
+  console.log("Shift+Space have been pressed");
+});
 ```
 
 ### Current Pressed keys
@@ -98,30 +92,30 @@ whenever(keys.shift_space, () => {
 A special property `current` is provided to representing all the keys been pressed currently.
 
 ```ts
-import { useMagicKeys, whenever } from '@vueuse/core'
+import { useMagicKeys, whenever } from "@vueuse/core";
 
-const { current } = useMagicKeys()
+const { current } = useMagicKeys();
 
-console.log(current) // Set { 'control', 'a' }
+console.log(current); // Set { 'control', 'a' }
 
 whenever(
-  () => current.has('a') && !current.has('b'),
-  () => console.log('A is pressed but not B'),
-)
+  () => current.has("a") && !current.has("b"),
+  () => console.log("A is pressed but not B"),
+);
 ```
 
 ### Key Aliasing
 
 ```ts
-import { useMagicKeys, whenever } from '@vueuse/core'
+import { useMagicKeys, whenever } from "@vueuse/core";
 
 const { shift_cool } = useMagicKeys({
   aliasMap: {
-    cool: 'space',
+    cool: "space",
   },
-})
+});
 
-whenever(shift_cool, () => console.log('Shift + Space have been pressed'))
+whenever(shift_cool, () => console.log("Shift + Space have been pressed"));
 ```
 
 By default, we have some [preconfigured alias for common practices](https://github.com/vueuse/vueuse/blob/main/packages/core/useMagicKeys/aliasMap.ts).
@@ -131,35 +125,34 @@ By default, we have some [preconfigured alias for common practices](https://gith
 You might have some `<input />` elements in your apps, and you don't want to trigger the magic keys handling when users focused on those inputs. There is an example of using `useActiveElement` and `logicAnd` to do that.
 
 ```ts
-import { useActiveElement, useMagicKeys, whenever } from '@vueuse/core'
-import { logicAnd } from '@vueuse/math'
+import { useActiveElement, useMagicKeys, whenever } from "@vueuse/core";
+import { logicAnd } from "@vueuse/math";
 
-const activeElement = useActiveElement()
-const notUsingInput = computed(() =>
-  activeElement.value?.tagName !== 'INPUT'
-  && activeElement.value?.tagName !== 'TEXTAREA',)
+const activeElement = useActiveElement();
+const notUsingInput = computed(
+  () => activeElement.value?.tagName !== "INPUT" && activeElement.value?.tagName !== "TEXTAREA",
+);
 
-const { tab } = useMagicKeys()
+const { tab } = useMagicKeys();
 
 whenever(logicAnd(tab, notUsingInput), () => {
-  console.log('Tab has been pressed outside of inputs!')
-})
+  console.log("Tab has been pressed outside of inputs!");
+});
 ```
 
 ### Custom Event Handler
 
 ```ts
-import { useMagicKeys, whenever } from '@vueuse/core'
+import { useMagicKeys, whenever } from "@vueuse/core";
 
 const { ctrl_s } = useMagicKeys({
   passive: false,
   onEventFired(e) {
-    if (e.ctrlKey && e.key === 's' && e.type === 'keydown')
-      e.preventDefault()
+    if (e.ctrlKey && e.key === "s" && e.type === "keydown") e.preventDefault();
   },
-})
+});
 
-whenever(ctrl_s, () => console.log('Ctrl+S have been pressed'))
+whenever(ctrl_s, () => console.log("Ctrl+S have been pressed"));
 ```
 
 > ⚠️ This usage is NOT recommended, please use with caution.
@@ -169,16 +162,14 @@ whenever(ctrl_s, () => console.log('Ctrl+S have been pressed'))
 By default, the values of `useMagicKeys()` are `Ref<boolean>`. If you want to use the object in the template, you can set it to reactive mode.
 
 ```ts
-import { useMagicKeys } from '@vueuse/core'
+import { useMagicKeys } from "@vueuse/core";
 // ---cut---
-const keys = useMagicKeys({ reactive: true })
+const keys = useMagicKeys({ reactive: true });
 ```
 
 ```vue
 <template>
-  <div v-if="keys.shift">
-    You are holding the Shift key!
-  </div>
+  <div v-if="keys.shift">You are holding the Shift key!</div>
 </template>
 ```
 
@@ -191,13 +182,13 @@ export interface UseMagicKeysOptions<Reactive extends boolean> {
    *
    * @default false
    */
-  reactive?: Reactive
+  reactive?: Reactive;
   /**
    * Target for listening events
    *
    * @default window
    */
-  target?: MaybeRefOrGetter<EventTarget>
+  target?: MaybeRefOrGetter<EventTarget>;
   /**
    * Alias map for keys, all the keys should be lowercase
    * { target: keycode }
@@ -205,20 +196,20 @@ export interface UseMagicKeysOptions<Reactive extends boolean> {
    * @example { ctrl: "control" }
    * @default <predefined-map>
    */
-  aliasMap?: Record<string, string>
+  aliasMap?: Record<string, string>;
   /**
    * Register passive listener
    *
    * @default true
    */
-  passive?: boolean
+  passive?: boolean;
   /**
    * Custom event handler for keydown/keyup event.
    * Useful when you want to apply custom logic.
    *
    * When using `e.preventDefault()`, you will need to pass `passive: false` to useMagicKeys().
    */
-  onEventFired?: (e: KeyboardEvent) => void | boolean
+  onEventFired?: (e: KeyboardEvent) => void | boolean;
 }
 export interface MagicKeysInternal {
   /**
@@ -227,12 +218,11 @@ export interface MagicKeysInternal {
    *
    * @see https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key
    */
-  current: Set<string>
+  current: Set<string>;
 }
 export type UseMagicKeysReturn<Reactive extends boolean> = Readonly<
-  Record<string, Reactive extends true ? boolean : ComputedRef<boolean>> &
-    MagicKeysInternal
->
+  Record<string, Reactive extends true ? boolean : ComputedRef<boolean>> & MagicKeysInternal
+>;
 /**
  * Reactive keys pressed state, with magical keys combination support.
  *
@@ -240,6 +230,6 @@ export type UseMagicKeysReturn<Reactive extends boolean> = Readonly<
  */
 export declare function useMagicKeys<T extends boolean = false>(
   options?: UseMagicKeysOptions<T>,
-): UseMagicKeysReturn<T>
-export { DefaultMagicKeysAliasMap } from "./aliasMap"
+): UseMagicKeysReturn<T>;
+export { DefaultMagicKeysAliasMap } from "./aliasMap";
 ```

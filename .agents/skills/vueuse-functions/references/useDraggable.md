@@ -10,21 +10,19 @@ Make elements draggable.
 
 ```vue
 <script setup lang="ts">
-import { useDraggable } from '@vueuse/core'
-import { useTemplateRef } from 'vue'
+import { useDraggable } from "@vueuse/core";
+import { useTemplateRef } from "vue";
 
-const el = useTemplateRef('el')
+const el = useTemplateRef("el");
 
 // `style` will be a helper computed for `left: ?px; top: ?px;`
 const { x, y, style } = useDraggable(el, {
   initialValue: { x: 40, y: 40 },
-})
+});
 </script>
 
 <template>
-  <div ref="el" :style="style" style="position: fixed">
-    Drag me! I am at {{ x }}, {{ y }}
-  </div>
+  <div ref="el" :style="style" style="position: fixed">Drag me! I am at {{ x }}, {{ y }}</div>
 </template>
 ```
 
@@ -45,7 +43,7 @@ useDraggable(el, {
   // Initial position (default: { x: 0, y: 0 })
   initialValue: { x: 40, y: 40 },
   // Restrict dragging to specific axis: 'x', 'y', or 'both' (default)
-  axis: 'both',
+  axis: "both",
   // Only trigger when clicking directly on the element (default: false)
   exact: false,
   // Prevent default browser behavior (default: false)
@@ -59,7 +57,7 @@ useDraggable(el, {
   // Mouse buttons that trigger drag (default: [0] - left button)
   buttons: [0],
   // Pointer types to listen to (default: ['mouse', 'touch', 'pen'])
-  pointerTypes: ['mouse', 'touch', 'pen'],
+  pointerTypes: ["mouse", "touch", "pen"],
   // Custom drag handle element (default: target element)
   handle: handleRef,
   // Container element for bounds (default: none)
@@ -72,7 +70,7 @@ useDraggable(el, {
   },
   onMove: (position, event) => {},
   onEnd: (position, event) => {},
-})
+});
 ```
 
 ### Prevent Default
@@ -80,11 +78,11 @@ useDraggable(el, {
 Set `preventDefault: true` to override the default drag-and-drop behavior of certain elements in the browser (e.g., images).
 
 ```ts
-import { useDraggable } from '@vueuse/core'
+import { useDraggable } from "@vueuse/core";
 
 const { x, y, style } = useDraggable(el, {
   preventDefault: true,
-})
+});
 ```
 
 ### Container Bounds
@@ -92,11 +90,11 @@ const { x, y, style } = useDraggable(el, {
 Use `containerElement` to constrain dragging within a container.
 
 ```ts
-import { useDraggable } from '@vueuse/core'
+import { useDraggable } from "@vueuse/core";
 
 const { x, y } = useDraggable(el, {
   containerElement: containerRef,
-})
+});
 ```
 
 Set `autoScroll: true` to enable auto-scroll when dragging near the edges.
@@ -106,9 +104,9 @@ const { x, y, style } = useDraggable(el, {
   autoScroll: {
     speed: 2, // Control the speed of auto-scroll.
     margin: 30, // Set the margin from the edge that triggers auto-scroll.
-    direction: 'both' // Determine the direction of auto-scroll.
+    direction: "both", // Determine the direction of auto-scroll.
   },
-})
+});
 ```
 
 ## Component Usage
@@ -140,25 +138,25 @@ export interface UseDraggableOptions {
    *
    * @default false
    */
-  exact?: MaybeRefOrGetter<boolean>
+  exact?: MaybeRefOrGetter<boolean>;
   /**
    * Prevent events defaults
    *
    * @default false
    */
-  preventDefault?: MaybeRefOrGetter<boolean>
+  preventDefault?: MaybeRefOrGetter<boolean>;
   /**
    * Prevent events propagation
    *
    * @default false
    */
-  stopPropagation?: MaybeRefOrGetter<boolean>
+  stopPropagation?: MaybeRefOrGetter<boolean>;
   /**
    * Whether dispatch events in capturing phase
    *
    * @default true
    */
-  capture?: boolean
+  capture?: boolean;
   /**
    * Element to attach `pointermove` and `pointerup` events to.
    *
@@ -166,57 +164,55 @@ export interface UseDraggableOptions {
    */
   draggingElement?: MaybeRefOrGetter<
     HTMLElement | SVGElement | Window | Document | null | undefined
-  >
+  >;
   /**
    * Element for calculating bounds (If not set, it will use the event's target).
    *
    * @default undefined
    */
-  containerElement?: MaybeRefOrGetter<
-    HTMLElement | SVGElement | null | undefined
-  >
+  containerElement?: MaybeRefOrGetter<HTMLElement | SVGElement | null | undefined>;
   /**
    * Handle that triggers the drag event
    *
    * @default target
    */
-  handle?: MaybeRefOrGetter<HTMLElement | SVGElement | null | undefined>
+  handle?: MaybeRefOrGetter<HTMLElement | SVGElement | null | undefined>;
   /**
    * Pointer types that listen to.
    *
    * @default ['mouse', 'touch', 'pen']
    */
-  pointerTypes?: PointerType[]
+  pointerTypes?: PointerType[];
   /**
    * Initial position of the element.
    *
    * @default { x: 0, y: 0 }
    */
-  initialValue?: MaybeRefOrGetter<Position>
+  initialValue?: MaybeRefOrGetter<Position>;
   /**
    * Callback when the dragging starts. Return `false` to prevent dragging.
    */
-  onStart?: (position: Position, event: PointerEvent) => void | false
+  onStart?: (position: Position, event: PointerEvent) => void | false;
   /**
    * Callback during dragging.
    */
-  onMove?: (position: Position, event: PointerEvent) => void
+  onMove?: (position: Position, event: PointerEvent) => void;
   /**
    * Callback when dragging end.
    */
-  onEnd?: (position: Position, event: PointerEvent) => void
+  onEnd?: (position: Position, event: PointerEvent) => void;
   /**
    * Axis to drag on.
    *
    * @default 'both'
    */
-  axis?: "x" | "y" | "both"
+  axis?: "x" | "y" | "both";
   /**
    * Disabled drag and drop.
    *
    * @default false
    */
-  disabled?: MaybeRefOrGetter<boolean>
+  disabled?: MaybeRefOrGetter<boolean>;
   /**
    * Mouse buttons that are allowed to trigger drag events.
    *
@@ -229,7 +225,7 @@ export interface UseDraggableOptions {
    * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button#value
    * @default [0]
    */
-  buttons?: MaybeRefOrGetter<number[]>
+  buttons?: MaybeRefOrGetter<number[]>;
   /**
    * Whether to restrict dragging within the visible area of the container.
    *
@@ -238,7 +234,7 @@ export interface UseDraggableOptions {
    *
    * @default false
    */
-  restrictInView?: MaybeRefOrGetter<boolean>
+  restrictInView?: MaybeRefOrGetter<boolean>;
   /**
    * Whether to enable auto-scroll when dragging near the edges.
    *
@@ -252,21 +248,21 @@ export interface UseDraggableOptions {
          *
          * @default 2
          */
-        speed?: MaybeRefOrGetter<number | Position>
+        speed?: MaybeRefOrGetter<number | Position>;
         /**
          * Margin from the edge to trigger auto-scroll.
          *
          * @default 30
          */
-        margin?: MaybeRefOrGetter<number | Position>
+        margin?: MaybeRefOrGetter<number | Position>;
         /**
          * Direction of auto-scroll.
          *
          * @default 'both'
          */
-        direction?: "x" | "y" | "both"
+        direction?: "x" | "y" | "both";
       }
-  >
+  >;
 }
 /**
  * Make elements draggable.
@@ -282,36 +278,36 @@ export declare function useDraggable(
   | {
       position: Ref<
         {
-          x: number
-          y: number
+          x: number;
+          y: number;
         },
         | Position
         | {
-            x: number
-            y: number
+            x: number;
+            y: number;
           }
-      >
-      isDragging: ComputedRef<boolean>
-      style: ComputedRef<string>
-      x: Ref<number, number>
-      y: Ref<number, number>
+      >;
+      isDragging: ComputedRef<boolean>;
+      style: ComputedRef<string>;
+      x: Ref<number, number>;
+      y: Ref<number, number>;
     }
   | {
       position: Ref<
         {
-          x: number
-          y: number
+          x: number;
+          y: number;
         },
         | Position
         | {
-            x: number
-            y: number
+            x: number;
+            y: number;
           }
-      >
-      isDragging: ComputedRef<boolean>
-      style: ComputedRef<string>
-      x: Ref<number, number>
-      y: Ref<number, number>
-    }
-export type UseDraggableReturn = ReturnType<typeof useDraggable>
+      >;
+      isDragging: ComputedRef<boolean>;
+      style: ComputedRef<string>;
+      x: Ref<number, number>;
+      y: Ref<number, number>;
+    };
+export type UseDraggableReturn = ReturnType<typeof useDraggable>;
 ```

@@ -1,5 +1,5 @@
 ---
-category: '@Firebase'
+category: "@Firebase"
 ---
 
 # useRTDB
@@ -9,15 +9,17 @@ Reactive [Firebase Realtime Database](https://firebase.google.com/docs/database)
 ## Usage
 
 ```ts
-import { useRTDB } from '@vueuse/firebase/useRTDB'
-import { initializeApp } from 'firebase/app'
-import { getDatabase } from 'firebase/database'
+import { useRTDB } from "@vueuse/firebase/useRTDB";
+import { initializeApp } from "firebase/app";
+import { getDatabase } from "firebase/database";
 
-const app = initializeApp({ /* config */ })
-const db = getDatabase(app)
+const app = initializeApp({
+  /* config */
+});
+const db = getDatabase(app);
 
 // in setup()
-const todos = useRTDB(db.ref('todos'))
+const todos = useRTDB(db.ref("todos"));
 ```
 
 ## Options
@@ -36,7 +38,7 @@ Returns a `Ref<T | undefined>` that is automatically updated when the database v
 You can reuse the db reference by passing `autoDispose: false`
 
 ```ts
-const todos = useRTDB(db.ref('todos'), { autoDispose: false })
+const todos = useRTDB(db.ref("todos"), { autoDispose: false });
 ```
 
 or use `createGlobalState` from the core package
@@ -45,12 +47,10 @@ or use `createGlobalState` from the core package
 // @filename: store.ts
 // ---cut---
 // store.ts
-import { createGlobalState } from '@vueuse/core'
-import { useRTDB } from '@vueuse/firebase/useRTDB'
+import { createGlobalState } from "@vueuse/core";
+import { useRTDB } from "@vueuse/firebase/useRTDB";
 
-export const useTodos = createGlobalState(
-  () => useRTDB(db.ref('todos')),
-)
+export const useTodos = createGlobalState(() => useRTDB(db.ref("todos")));
 ```
 
 ```vue
@@ -58,9 +58,9 @@ export const useTodos = createGlobalState(
 <script setup lang="ts">
 // @include: store
 // ---cut---
-import { useTodos } from './store'
+import { useTodos } from "./store";
 
-const todos = useTodos()
+const todos = useTodos();
 </script>
 ```
 
@@ -68,8 +68,8 @@ const todos = useTodos()
 
 ```ts
 export interface UseRTDBOptions {
-  errorHandler?: (err: Error) => void
-  autoDispose?: boolean
+  errorHandler?: (err: Error) => void;
+  autoDispose?: boolean;
 }
 /**
  * Reactive Firebase Realtime Database binding.
@@ -79,5 +79,5 @@ export interface UseRTDBOptions {
 export declare function useRTDB<T = any>(
   docRef: DatabaseReference,
   options?: UseRTDBOptions,
-): Ref<T | undefined, T | undefined>
+): Ref<T | undefined, T | undefined>;
 ```

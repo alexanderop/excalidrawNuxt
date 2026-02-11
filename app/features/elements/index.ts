@@ -1,7 +1,7 @@
-export { createElement } from './createElement'
-export { mutateElement, moveElement } from './mutateElement'
-export { useElements } from './useElements'
-export { useLayerOrder } from './composables/useLayerOrder'
+export { createElement } from "./createElement";
+export { mutateElement, moveElement } from "./mutateElement";
+export { useElements } from "./useElements";
+export { useLayerOrder } from "./composables/useLayerOrder";
 export type {
   ExcalidrawElement,
   ExcalidrawElementType,
@@ -28,7 +28,7 @@ export type {
   StrokeStyle,
   NonDeletedExcalidrawElement,
   NonDeleted,
-} from './types'
+} from "./types";
 export {
   isArrowElement,
   isTextElement,
@@ -44,7 +44,7 @@ export {
   isExcalidrawElement,
   isImageElement,
   isInitializedImageElement,
-} from './types'
+} from "./types";
 
 // ---------------------------------------------------------------------------
 // Element utilities from @excalidraw/element
@@ -59,7 +59,7 @@ export {
   getNormalizedDimensions,
   newElementWith,
   bumpVersion,
-} from '@excalidraw/element'
+} from "@excalidraw/element";
 
 export {
   DEFAULT_BG_COLOR,
@@ -72,7 +72,7 @@ export {
   DEFAULT_STROKE_COLOR,
   DEFAULT_STROKE_WIDTH,
   DEFAULT_TEXT_ALIGN,
-} from './constants'
+} from "./constants";
 
 // ---------------------------------------------------------------------------
 // Bound text utilities from @excalidraw/element
@@ -88,6 +88,6 @@ export {
   isTextBindableContainer,
   hasBoundTextElement,
   isBoundToContainer,
-} from '@excalidraw/element'
+} from "@excalidraw/element";
 
-export { BOUND_TEXT_PADDING, arrayToMap } from '@excalidraw/common'
+export { BOUND_TEXT_PADDING, arrayToMap } from "@excalidraw/common";

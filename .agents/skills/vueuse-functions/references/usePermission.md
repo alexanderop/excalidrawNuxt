@@ -9,9 +9,9 @@ Reactive [Permissions API](https://developer.mozilla.org/en-US/docs/Web/API/Perm
 ## Usage
 
 ```ts
-import { usePermission } from '@vueuse/core'
+import { usePermission } from "@vueuse/core";
 
-const microphoneAccess = usePermission('microphone')
+const microphoneAccess = usePermission("microphone");
 ```
 
 ## Type Declarations
@@ -33,29 +33,25 @@ type DescriptorNamePolyfill =
   | "persistent-storage"
   | "push"
   | "speaker"
-  | "local-fonts"
+  | "local-fonts";
 export type GeneralPermissionDescriptor =
   | PermissionDescriptor
   | {
-      name: DescriptorNamePolyfill
-    }
-export interface UsePermissionOptions<
-  Controls extends boolean,
-> extends ConfigurableNavigator {
+      name: DescriptorNamePolyfill;
+    };
+export interface UsePermissionOptions<Controls extends boolean> extends ConfigurableNavigator {
   /**
    * Expose more controls
    *
    * @default false
    */
-  controls?: Controls
+  controls?: Controls;
 }
-export type UsePermissionReturn = Readonly<
-  ShallowRef<PermissionState | undefined>
->
+export type UsePermissionReturn = Readonly<ShallowRef<PermissionState | undefined>>;
 export interface UsePermissionReturnWithControls {
-  state: UsePermissionReturn
-  isSupported: ComputedRef<boolean>
-  query: () => Promise<PermissionStatus | undefined>
+  state: UsePermissionReturn;
+  isSupported: ComputedRef<boolean>;
+  query: () => Promise<PermissionStatus | undefined>;
 }
 /**
  * Reactive Permissions API.
@@ -65,15 +61,11 @@ export interface UsePermissionReturnWithControls {
  * @__NO_SIDE_EFFECTS__
  */
 export declare function usePermission(
-  permissionDesc:
-    | GeneralPermissionDescriptor
-    | GeneralPermissionDescriptor["name"],
+  permissionDesc: GeneralPermissionDescriptor | GeneralPermissionDescriptor["name"],
   options?: UsePermissionOptions<false>,
-): UsePermissionReturn
+): UsePermissionReturn;
 export declare function usePermission(
-  permissionDesc:
-    | GeneralPermissionDescriptor
-    | GeneralPermissionDescriptor["name"],
+  permissionDesc: GeneralPermissionDescriptor | GeneralPermissionDescriptor["name"],
   options: UsePermissionOptions<true>,
-): UsePermissionReturnWithControls
+): UsePermissionReturnWithControls;
 ```

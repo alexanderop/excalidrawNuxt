@@ -9,7 +9,7 @@ export {
   elementsAreInSameGroup,
   reorderElementsForGroup,
   cleanupAfterDelete,
-} from './groupUtils'
+} from "./groupUtils";
 
-export type { GroupExpansionResult } from './groupUtils'
-export type { GroupId } from './types'
+export type { GroupExpansionResult } from "./groupUtils";
+export type { GroupId } from "./types";

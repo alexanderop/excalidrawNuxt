@@ -1,39 +1,39 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed } from "vue";
 
 const { modelValue } = defineProps<{
-  modelValue: number | 'mixed'
-}>()
+  modelValue: number | "mixed";
+}>();
 
 const emit = defineEmits<{
-  'update:modelValue': [value: number]
-}>()
+  "update:modelValue": [value: number];
+}>();
 
 interface FontOption {
-  label: string
-  value: number
-  style: string
+  label: string;
+  value: number;
+  style: string;
 }
 
 const fontOptions: FontOption[] = [
-  { label: 'Virgil', value: 1, style: 'font-family: Virgil, cursive' },
-  { label: 'Helvetica', value: 2, style: 'font-family: Helvetica, Arial, sans-serif' },
-  { label: 'Cascadia', value: 3, style: 'font-family: Cascadia, monospace' },
-]
+  { label: "Virgil", value: 1, style: "font-family: Virgil, cursive" },
+  { label: "Helvetica", value: 2, style: "font-family: Helvetica, Arial, sans-serif" },
+  { label: "Cascadia", value: 3, style: "font-family: Cascadia, monospace" },
+];
 
 const selected = computed({
   get: () => {
-    if (modelValue === 'mixed') return undefined
-    return fontOptions.find(o => o.value === modelValue) ?? fontOptions[0]
+    if (modelValue === "mixed") return undefined;
+    return fontOptions.find((o) => o.value === modelValue) ?? fontOptions[0];
   },
   set: (option: FontOption | FontOption[] | undefined) => {
     if (option && !Array.isArray(option)) {
-      emit('update:modelValue', option.value)
+      emit("update:modelValue", option.value);
     }
   },
-})
+});
 
-const placeholder = computed(() => modelValue === 'mixed' ? 'Mixed' : undefined)
+const placeholder = computed(() => (modelValue === "mixed" ? "Mixed" : undefined));
 </script>
 
 <template>

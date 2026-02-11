@@ -115,12 +115,12 @@ sequenceDiagram
 
 **Composables using pointer capture:**
 
-| Composable | Capture on | Release on |
-|---|---|---|
-| `usePanning` | pointerdown (space held or hand tool) | pointerup |
-| `useDrawingInteraction` | pointerdown (drawing tool active) | pointerup |
-| `useSelectionInteraction` | pointerdown (resize, drag, or box-select) | pointerup |
-| `useLinearEditor` | pointerdown (point handle or midpoint hit) | pointerup |
+| Composable                | Capture on                                 | Release on |
+| ------------------------- | ------------------------------------------ | ---------- |
+| `usePanning`              | pointerdown (space held or hand tool)      | pointerup  |
+| `useDrawingInteraction`   | pointerdown (drawing tool active)          | pointerup  |
+| `useSelectionInteraction` | pointerdown (resize, drag, or box-select)  | pointerup  |
+| `useLinearEditor`         | pointerdown (point handle or midpoint hit) | pointerup  |
 
 ## Space-Key Panning vs Selection Priority
 
@@ -196,13 +196,13 @@ flowchart TD
 
 ## Composable Event Summary
 
-| Composable | Canvas Events | Document Events | State Written |
-|---|---|---|---|
-| `usePanning` | `wheel`, `pointerdown`, `pointermove`, `pointerup` | `keydown` (Space), `keyup` (Space) | `spaceHeld`, `isPanning`, viewport scroll/zoom |
-| `useDrawingInteraction` | `pointerdown`, `pointermove`, `pointerup` | -- | `newElement`, element mutations, `suggestedBindings` |
-| `useSelectionInteraction` | `pointerdown`, `pointermove`, `pointerup`, `dblclick` | `keydown` (Delete, Escape, Ctrl+A, Ctrl+G, Ctrl+Shift+G, arrows) | selection state, `selectionBox`, `cursorStyle`, element mutations, group actions |
-| `useMultiPointCreation` | `pointerdown`, `pointermove`, `dblclick` | `keydown` (Escape, Enter) | `multiElement`, `lastCursorPoint`, `suggestedBindings` |
-| `useLinearEditor` | `pointerdown`, `pointermove`, `pointerup` | `keydown` (Escape, Delete/Backspace) | `editingElement`, `selectedPointIndices`, `hoveredMidpointIndex`, `suggestedBindings` |
-| `useTextInteraction` | `pointerdown` | -- | `editingTextElement`, element mutations, text editor DOM |
-| `useCodeInteraction` | `pointerdown` | -- | `editingCodeElement`, element mutations, code editor DOM |
-| `useTheme` | -- | `keydown` (Alt+Shift+D) | `theme` (light/dark), document root class toggle |
+| Composable                | Canvas Events                                         | Document Events                                                  | State Written                                                                         |
+| ------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `usePanning`              | `wheel`, `pointerdown`, `pointermove`, `pointerup`    | `keydown` (Space), `keyup` (Space)                               | `spaceHeld`, `isPanning`, viewport scroll/zoom                                        |
+| `useDrawingInteraction`   | `pointerdown`, `pointermove`, `pointerup`             | --                                                               | `newElement`, element mutations, `suggestedBindings`                                  |
+| `useSelectionInteraction` | `pointerdown`, `pointermove`, `pointerup`, `dblclick` | `keydown` (Delete, Escape, Ctrl+A, Ctrl+G, Ctrl+Shift+G, arrows) | selection state, `selectionBox`, `cursorStyle`, element mutations, group actions      |
+| `useMultiPointCreation`   | `pointerdown`, `pointermove`, `dblclick`              | `keydown` (Escape, Enter)                                        | `multiElement`, `lastCursorPoint`, `suggestedBindings`                                |
+| `useLinearEditor`         | `pointerdown`, `pointermove`, `pointerup`             | `keydown` (Escape, Delete/Backspace)                             | `editingElement`, `selectedPointIndices`, `hoveredMidpointIndex`, `suggestedBindings` |
+| `useTextInteraction`      | `pointerdown`                                         | --                                                               | `editingTextElement`, element mutations, text editor DOM                              |
+| `useCodeInteraction`      | `pointerdown`                                         | --                                                               | `editingCodeElement`, element mutations, code editor DOM                              |
+| `useTheme`                | --                                                    | `keydown` (Alt+Shift+D)                                          | `theme` (light/dark), document root class toggle                                      |

@@ -35,7 +35,7 @@ export type {
   StrokeStyle,
   NonDeletedExcalidrawElement,
   NonDeleted,
-} from '@excalidraw/element/types'
+} from "@excalidraw/element/types";
 
 // ---------------------------------------------------------------------------
 // Official type guard re-exports (runtime functions)
@@ -55,7 +55,7 @@ export {
   isExcalidrawElement,
   isImageElement,
   isInitializedImageElement,
-} from '@excalidraw/element'
+} from "@excalidraw/element";
 
 // ---------------------------------------------------------------------------
 // Narrow unions for our supported subset
@@ -68,7 +68,7 @@ import type {
   ExcalidrawLineElement,
   ExcalidrawTextElement,
   ExcalidrawImageElement,
-} from '@excalidraw/element/types'
+} from "@excalidraw/element/types";
 
 /** The element types our app creates and renders. */
 export type SupportedElement =
@@ -78,10 +78,10 @@ export type SupportedElement =
   | ExcalidrawArrowElement
   | ExcalidrawLineElement
   | ExcalidrawTextElement
-  | ExcalidrawImageElement
+  | ExcalidrawImageElement;
 
 /** The 3 shape types that arrows can bind to. */
 export type SupportedBindableElement =
   | ExcalidrawRectangleElement
   | ExcalidrawEllipseElement
-  | ExcalidrawDiamondElement
+  | ExcalidrawDiamondElement;

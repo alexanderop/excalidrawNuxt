@@ -148,15 +148,15 @@ sequenceDiagram
 
 ## Phase Summary
 
-| Phase | What happens | Key detail |
-|-------|-------------|------------|
-| **setup() - early** | `useTheme`, `useViewport`, `useElements`, `useToolStore`, `useSelection` | Pure reactive state, no DOM needed. Theme is a global singleton. |
-| **setup() - canvas layers** | `useCanvasLayers(canvasRefs)` | Returns `null` shallowRefs; registers internal `onMounted` hook |
-| **setup() - dirty flags** | `createDirtyFlags()` | Returns stable noop wrappers; breaks circular dependency |
-| **setup() - groups** | `useGroups(elements, selectedIds, ..., dirty.mark*)` | Group/ungroup operations; receives noop dirty wrappers |
-| **setup() - text/code** | `useTextInteraction`, `useCodeInteraction` | Text and code element editing; receive canvasRef, textEditorContainerRef, dirty wrappers |
-| **setup() - interactions** | `usePanning`, `useMultiPointCreation`, `useLinearEditor`, `useDrawingInteraction`, `useSelectionInteraction` | All receive noop dirty wrappers via `shared` object. Selection interaction receives group callbacks. |
-| **setup() - renderer** | `useSceneRenderer` calls `useRenderer` + `useAnimationController` | Creates RAF loop, returns real `mark*Dirty` functions + animation controller |
-| **setup() - bind** | `dirty.bind(realCallbacks)` | Swaps noops for real callbacks; all composables now trigger real repaints |
-| **onMounted()** | `useCanvasLayers` internal hook | Gets 2D contexts + RoughCanvas from real DOM elements |
-| **First frame** | RAF fires, `staticDirty=true` | Renders grid + scene on static canvas |
+| Phase                       | What happens                                                                                                 | Key detail                                                                                           |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| **setup() - early**         | `useTheme`, `useViewport`, `useElements`, `useToolStore`, `useSelection`                                     | Pure reactive state, no DOM needed. Theme is a global singleton.                                     |
+| **setup() - canvas layers** | `useCanvasLayers(canvasRefs)`                                                                                | Returns `null` shallowRefs; registers internal `onMounted` hook                                      |
+| **setup() - dirty flags**   | `createDirtyFlags()`                                                                                         | Returns stable noop wrappers; breaks circular dependency                                             |
+| **setup() - groups**        | `useGroups(elements, selectedIds, ..., dirty.mark*)`                                                         | Group/ungroup operations; receives noop dirty wrappers                                               |
+| **setup() - text/code**     | `useTextInteraction`, `useCodeInteraction`                                                                   | Text and code element editing; receive canvasRef, textEditorContainerRef, dirty wrappers             |
+| **setup() - interactions**  | `usePanning`, `useMultiPointCreation`, `useLinearEditor`, `useDrawingInteraction`, `useSelectionInteraction` | All receive noop dirty wrappers via `shared` object. Selection interaction receives group callbacks. |
+| **setup() - renderer**      | `useSceneRenderer` calls `useRenderer` + `useAnimationController`                                            | Creates RAF loop, returns real `mark*Dirty` functions + animation controller                         |
+| **setup() - bind**          | `dirty.bind(realCallbacks)`                                                                                  | Swaps noops for real callbacks; all composables now trigger real repaints                            |
+| **onMounted()**             | `useCanvasLayers` internal hook                                                                              | Gets 2D contexts + RoughCanvas from real DOM elements                                                |
+| **First frame**             | RAF fires, `staticDirty=true`                                                                                | Renders grid + scene on static canvas                                                                |

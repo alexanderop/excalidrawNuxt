@@ -12,13 +12,13 @@ When no argument is passed, it will return the parent element of the current com
 
 ```vue
 <script setup lang="ts">
-import { useParentElement } from '@vueuse/core'
+import { useParentElement } from "@vueuse/core";
 
-const parentEl = useParentElement()
+const parentEl = useParentElement();
 
 onMounted(() => {
-  console.log(parentEl.value)
-})
+  console.log(parentEl.value);
+});
 </script>
 ```
 
@@ -26,16 +26,16 @@ It can also accept a `ref` as the first argument.
 
 ```vue
 <script setup lang="ts">
-import { useParentElement } from '@vueuse/core'
-import { useTemplateRef } from 'vue'
+import { useParentElement } from "@vueuse/core";
+import { useTemplateRef } from "vue";
 
-const tooltip = useTemplateRef('tooltip')
+const tooltip = useTemplateRef("tooltip");
 
-const tooltipWrapper = useParentElement(tooltip)
+const tooltipWrapper = useParentElement(tooltip);
 
 onMounted(() => {
-  console.log(tooltipWrapper.value)
-})
+  console.log(tooltipWrapper.value);
+});
 </script>
 
 <template>
@@ -50,5 +50,5 @@ onMounted(() => {
 ```ts
 export declare function useParentElement(
   element?: MaybeRefOrGetter<HTMLElement | SVGElement | null | undefined>,
-): Readonly<ShallowRef<HTMLElement | SVGElement | null | undefined>>
+): Readonly<ShallowRef<HTMLElement | SVGElement | null | undefined>>;
 ```

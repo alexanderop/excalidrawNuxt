@@ -7,6 +7,7 @@ Add an **image tool** that lets users insert images onto the canvas via file pic
 ## How Excalidraw Does It (Reference)
 
 Excalidraw's image flow:
+
 1. User activates image tool → native file dialog opens
 2. Selected files are normalized (resized if >2MB, SVGs validated)
 3. Placeholder elements (`status: "pending"`) are inserted immediately at scene position
@@ -16,6 +17,7 @@ Excalidraw's image flow:
 7. Rendering checks `imageCache` — draws loaded image or placeholder icon
 
 Key Excalidraw types:
+
 ```ts
 ExcalidrawImageElement = ElementBase & {
   type: "image"
@@ -31,6 +33,7 @@ Three input methods: toolbar button (file dialog), drop onto canvas, Ctrl+V past
 ## Our Vue-Idiomatic Design
 
 ### Principles
+
 - Use VueUse composables over manual browser API wiring
 - `createGlobalState` for shared stores (matches existing `useElements`, `useTool` patterns)
 - Composable pipeline: each composable does one thing
@@ -80,32 +83,30 @@ app/features/image/
 ### 1. Types (`types.ts`)
 
 ```ts
-import type { ExcalidrawImageElement, FileId } from '@excalidraw/element/types'
-import type { ExcalidrawElement } from '~/features/elements/types'
+import type { ExcalidrawImageElement, FileId } from "@excalidraw/element/types";
+import type { ExcalidrawElement } from "~/features/elements/types";
 
 // Re-export upstream types
-export type { ExcalidrawImageElement, FileId }
+export type { ExcalidrawImageElement, FileId };
 
 // Our binary file data (simplified from Excalidraw's BinaryFileData)
 export interface BinaryFileData {
-  id: FileId
-  dataURL: string
-  mimeType: string
-  created: number
+  id: FileId;
+  dataURL: string;
+  mimeType: string;
+  created: number;
 }
 
 // Type guard
-export function isImageElement(
-  el: ExcalidrawElement,
-): el is ExcalidrawImageElement {
-  return el.type === 'image'
+export function isImageElement(el: ExcalidrawElement): el is ExcalidrawImageElement {
+  return el.type === "image";
 }
 
 // Initialized = has fileId set
 export function isInitializedImageElement(
   el: ExcalidrawElement,
 ): el is ExcalidrawImageElement & { fileId: FileId } {
-  return isImageElement(el) && el.fileId !== null
+  return isImageElement(el) && el.fileId !== null;
 }
 ```
 
@@ -118,12 +119,12 @@ export function isInitializedImageElement(
 // Uses createGlobalState (matches useElements, useTool patterns)
 
 createGlobalState(() => {
-  const cache = shallowRef(new Map<FileId, CacheEntry>())
+  const cache = shallowRef(new Map<FileId, CacheEntry>());
   // addFile(id, dataURL, mimeType) → load HTMLImageElement, store in cache
   // getImage(id) → HTMLImageElement | undefined
   // hasImage(id) → boolean
   // clear() → reset (for tests)
-})
+});
 ```
 
 **VueUse**: `createGlobalState` for singleton shared across components.
@@ -200,40 +201,41 @@ export function renderImageElement(
   element: ExcalidrawImageElement,
   imageCache: Map<FileId, CacheEntry>,
 ): void {
-  ctx.save()
-  ctx.translate(element.x, element.y)
+  ctx.save();
+  ctx.translate(element.x, element.y);
   if (element.angle) {
-    ctx.translate(element.width / 2, element.height / 2)
-    ctx.rotate(element.angle)
-    ctx.translate(-element.width / 2, -element.height / 2)
+    ctx.translate(element.width / 2, element.height / 2);
+    ctx.rotate(element.angle);
+    ctx.translate(-element.width / 2, -element.height / 2);
   }
-  ctx.globalAlpha = element.opacity / 100
+  ctx.globalAlpha = element.opacity / 100;
 
   // Apply scale (flip)
-  const [sx, sy] = element.scale
+  const [sx, sy] = element.scale;
   if (sx !== 1 || sy !== 1) {
-    ctx.translate(sx < 0 ? element.width : 0, sy < 0 ? element.height : 0)
-    ctx.scale(sx, sy)
+    ctx.translate(sx < 0 ? element.width : 0, sy < 0 ? element.height : 0);
+    ctx.scale(sx, sy);
   }
 
-  const cached = element.fileId ? imageCache.get(element.fileId) : null
+  const cached = element.fileId ? imageCache.get(element.fileId) : null;
   if (cached?.image instanceof HTMLImageElement) {
     // Draw the actual image
-    ctx.drawImage(cached.image, 0, 0, element.width, element.height)
+    ctx.drawImage(cached.image, 0, 0, element.width, element.height);
   } else {
     // Draw placeholder (loading spinner or error icon)
-    drawImagePlaceholder(ctx, element)
+    drawImagePlaceholder(ctx, element);
   }
 
-  ctx.restore()
+  ctx.restore();
 }
 ```
 
 **Integration in `renderElement.ts`**: Add early check before text/shape rendering:
+
 ```ts
 if (isImageElement(element)) {
-  renderImageElement(ctx, element, imageCache)
-  return
+  renderImageElement(ctx, element, imageCache);
+  return;
 }
 ```
 
@@ -254,18 +256,19 @@ case 'image':
 In `elements/createElement.ts`, add image branch:
 
 ```ts
-if (type === 'image') {
+if (type === "image") {
   return newElement({
-    type: 'image',
-    x, y,
-    width: 100,          // placeholder size, updated after load
+    type: "image",
+    x,
+    y,
+    width: 100, // placeholder size, updated after load
     height: 100,
     fileId: null,
-    status: 'pending',
+    status: "pending",
     scale: [1, 1],
     crop: null,
     ...commonProps,
-  })
+  });
 }
 ```
 
@@ -273,59 +276,61 @@ if (type === 'image') {
 
 ## Integration Points (Existing Files to Modify)
 
-| File | Change |
-|------|--------|
-| `features/elements/types.ts` | Add `ExcalidrawImageElement` to `SupportedElement`, re-export `isImageElement` |
-| `features/tools/types.ts` | Add `'image'` to `ToolType`, add `isImageTool()` guard |
-| `features/tools/useTool.ts` | Add keyboard shortcut (`9`) |
-| `features/tools/components/DrawingToolbar.vue` | Add image tool button |
-| `features/tools/toolIcons.ts` | Add image icon SVG definition |
-| `features/rendering/renderElement.ts` | Add `isImageElement` early check → `renderImageElement()` |
-| `features/rendering/shapeGenerator.ts` | Add throw guard for `'image'` type |
-| `features/selection/hitTest.ts` | Add `case 'image'` → rectangle hit test |
-| `features/selection/resizeElement.ts` | Default aspect-ratio-locked for images |
-| `features/elements/createElement.ts` | Add `if (type === 'image')` branch |
-| `features/canvas/components/CanvasContainer.vue` | Wire `useImageInteraction`, pass imageCache to renderer |
+| File                                             | Change                                                                         |
+| ------------------------------------------------ | ------------------------------------------------------------------------------ |
+| `features/elements/types.ts`                     | Add `ExcalidrawImageElement` to `SupportedElement`, re-export `isImageElement` |
+| `features/tools/types.ts`                        | Add `'image'` to `ToolType`, add `isImageTool()` guard                         |
+| `features/tools/useTool.ts`                      | Add keyboard shortcut (`9`)                                                    |
+| `features/tools/components/DrawingToolbar.vue`   | Add image tool button                                                          |
+| `features/tools/toolIcons.ts`                    | Add image icon SVG definition                                                  |
+| `features/rendering/renderElement.ts`            | Add `isImageElement` early check → `renderImageElement()`                      |
+| `features/rendering/shapeGenerator.ts`           | Add throw guard for `'image'` type                                             |
+| `features/selection/hitTest.ts`                  | Add `case 'image'` → rectangle hit test                                        |
+| `features/selection/resizeElement.ts`            | Default aspect-ratio-locked for images                                         |
+| `features/elements/createElement.ts`             | Add `if (type === 'image')` branch                                             |
+| `features/canvas/components/CanvasContainer.vue` | Wire `useImageInteraction`, pass imageCache to renderer                        |
 
 ## New Files
 
-| File | Purpose |
-|------|---------|
-| `features/image/index.ts` | Barrel exports |
-| `features/image/types.ts` | `BinaryFileData`, `isImageElement`, `isInitializedImageElement` |
-| `features/image/constants.ts` | MIME types, max size, placeholder SVGs |
-| `features/image/useImageCache.ts` | Global `FileId → HTMLImageElement` cache |
-| `features/image/useImageUpload.ts` | `File → DataURL → HTMLImageElement` pipeline |
-| `features/image/useImageTool.ts` | Tool activation + file dialog |
-| `features/image/useImageInteraction.ts` | Drop zone, paste handler, element creation |
-| `features/image/renderImageElement.ts` | Canvas 2D `drawImage` rendering |
+| File                                    | Purpose                                                         |
+| --------------------------------------- | --------------------------------------------------------------- |
+| `features/image/index.ts`               | Barrel exports                                                  |
+| `features/image/types.ts`               | `BinaryFileData`, `isImageElement`, `isInitializedImageElement` |
+| `features/image/constants.ts`           | MIME types, max size, placeholder SVGs                          |
+| `features/image/useImageCache.ts`       | Global `FileId → HTMLImageElement` cache                        |
+| `features/image/useImageUpload.ts`      | `File → DataURL → HTMLImageElement` pipeline                    |
+| `features/image/useImageTool.ts`        | Tool activation + file dialog                                   |
+| `features/image/useImageInteraction.ts` | Drop zone, paste handler, element creation                      |
+| `features/image/renderImageElement.ts`  | Canvas 2D `drawImage` rendering                                 |
 
 ---
 
 ## VueUse Composables Used
 
-| Composable | Where | Why |
-|------------|-------|-----|
-| `useFileDialog` | `useImageTool` | Native file picker without hidden input management |
-| `useDropZone` | `useImageInteraction` | Drag & drop with MIME filtering + `isOverDropZone` |
-| `useEventListener` | `useImageInteraction` | Paste event detection (already used in project) |
-| `useObjectUrl` | `useImageUpload` | Auto-revoked blob URLs (prevents memory leaks) |
-| `useImage` | `useImageUpload` | Reactive `HTMLImageElement` loading with error state |
-| `useBase64` | `useImageUpload` | File → DataURL conversion for persistence |
-| `createGlobalState` | `useImageCache` | Singleton cache shared across components |
-| `useThrottleFn` | `useImageInteraction` | Throttle resize operations during drag |
+| Composable          | Where                 | Why                                                  |
+| ------------------- | --------------------- | ---------------------------------------------------- |
+| `useFileDialog`     | `useImageTool`        | Native file picker without hidden input management   |
+| `useDropZone`       | `useImageInteraction` | Drag & drop with MIME filtering + `isOverDropZone`   |
+| `useEventListener`  | `useImageInteraction` | Paste event detection (already used in project)      |
+| `useObjectUrl`      | `useImageUpload`      | Auto-revoked blob URLs (prevents memory leaks)       |
+| `useImage`          | `useImageUpload`      | Reactive `HTMLImageElement` loading with error state |
+| `useBase64`         | `useImageUpload`      | File → DataURL conversion for persistence            |
+| `createGlobalState` | `useImageCache`       | Singleton cache shared across components             |
+| `useThrottleFn`     | `useImageInteraction` | Throttle resize operations during drag               |
 
 ---
 
 ## Testing Strategy
 
 ### Unit Tests
+
 - `useImageCache` — add/get/clear, singleton behavior
 - `useImageUpload` — mock File, verify cache population
 - `isImageElement` / `isInitializedImageElement` type guards
 - `renderImageElement` — mock canvas context, verify `drawImage` calls
 
 ### Browser Tests
+
 - Insert image via file dialog → element appears on canvas
 - Drag & drop image file → element at drop position
 - Paste image from clipboard → element at viewport center

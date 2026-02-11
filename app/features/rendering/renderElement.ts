@@ -1,17 +1,17 @@
-import type { RoughCanvas } from 'roughjs/bin/canvas'
-import type { ExcalidrawElement, ExcalidrawTextElement } from '~/features/elements/types'
-import { isArrowElement, isLinearElement, isTextElement } from '~/features/elements/types'
-import type { Theme } from '~/features/theme/types'
-import { resolveColor } from '~/features/theme/colors'
-import { isCodeElement, renderCodeElement } from '~/features/code'
-import { isImageElement, renderImageElement } from '~/features/image'
-import type { FileId, ImageCacheEntry } from '~/features/image'
-import { generateShape } from './shapeGenerator'
-import { renderArrowheads } from './arrowhead'
-import { getFontString, getLineHeightInPx } from './textMeasurement'
+import type { RoughCanvas } from "roughjs/bin/canvas";
+import type { ExcalidrawElement, ExcalidrawTextElement } from "~/features/elements/types";
+import { isArrowElement, isLinearElement, isTextElement } from "~/features/elements/types";
+import type { Theme } from "~/features/theme/types";
+import { resolveColor } from "~/features/theme/colors";
+import { isCodeElement, renderCodeElement } from "~/features/code";
+import { isImageElement, renderImageElement } from "~/features/image";
+import type { FileId, ImageCacheEntry } from "~/features/image";
+import { generateShape } from "./shapeGenerator";
+import { renderArrowheads } from "./arrowhead";
+import { getFontString, getLineHeightInPx } from "./textMeasurement";
 
 function isZeroSizeShape(element: ExcalidrawElement): boolean {
-  return !isLinearElement(element) && element.width === 0 && element.height === 0
+  return !isLinearElement(element) && element.width === 0 && element.height === 0;
 }
 
 export function renderElement(
@@ -21,29 +21,29 @@ export function renderElement(
   theme: Theme,
   imageCache?: ReadonlyMap<FileId, ImageCacheEntry>,
 ): void {
-  if (element.isDeleted) return
+  if (element.isDeleted) return;
 
   if (isImageElement(element)) {
-    renderImageElement(ctx, element, imageCache ?? new Map())
-    return
+    renderImageElement(ctx, element, imageCache ?? new Map());
+    return;
   }
 
   if (isCodeElement(element)) {
-    renderCodeElement(ctx, element, theme)
-    return
+    renderCodeElement(ctx, element, theme);
+    return;
   }
 
-  if (isLinearElement(element) && element.points.length < 2) return
+  if (isLinearElement(element) && element.points.length < 2) return;
 
   if (isTextElement(element)) {
-    if (!element.text) return
-    renderTextElement(ctx, element, theme)
-    return
+    if (!element.text) return;
+    renderTextElement(ctx, element, theme);
+    return;
   }
 
-  if (isZeroSizeShape(element)) return
+  if (isZeroSizeShape(element)) return;
 
-  renderRoughShape(ctx, rc, element, theme)
+  renderRoughShape(ctx, rc, element, theme);
 }
 
 function renderRoughShape(
@@ -52,18 +52,25 @@ function renderRoughShape(
   element: ExcalidrawElement,
   theme: Theme,
 ): void {
-  ctx.save()
-  ctx.translate(element.x, element.y)
-  ctx.globalAlpha = element.opacity / 100
+  ctx.save();
 
-  const drawable = generateShape(element, theme)
-  rc.draw(drawable)
+  const cx = element.x + element.width / 2;
+  const cy = element.y + element.height / 2;
+
+  ctx.translate(cx, cy);
+  ctx.rotate(element.angle);
+  ctx.translate(-element.width / 2, -element.height / 2);
+
+  ctx.globalAlpha = element.opacity / 100;
+
+  const drawable = generateShape(element, theme);
+  rc.draw(drawable);
 
   if (isArrowElement(element)) {
-    renderArrowheads(ctx, element, theme)
+    renderArrowheads(ctx, element, theme);
   }
 
-  ctx.restore()
+  ctx.restore();
 }
 
 function renderTextElement(
@@ -71,28 +78,41 @@ function renderTextElement(
   element: ExcalidrawTextElement,
   theme: Theme,
 ): void {
-  ctx.save()
-  ctx.translate(element.x, element.y)
-  ctx.globalAlpha = element.opacity / 100
+  ctx.save();
 
-  const font = getFontString(element.fontSize, element.fontFamily)
-  ctx.font = font
-  ctx.fillStyle = resolveColor(element.strokeColor, theme)
-  ctx.textAlign = element.textAlign as CanvasTextAlign
-  ctx.textBaseline = 'top'
+  const cx = element.x + element.width / 2;
+  const cy = element.y + element.height / 2;
 
-  const lineHeightPx = getLineHeightInPx(element.fontSize, element.lineHeight)
-  const lines = element.text.split('\n')
+  ctx.translate(cx, cy);
+  ctx.rotate(element.angle);
+  ctx.translate(-element.width / 2, -element.height / 2);
 
-  let horizontalOffset = 0
+  ctx.globalAlpha = element.opacity / 100;
+
+  const font = getFontString(element.fontSize, element.fontFamily);
+  ctx.font = font;
+  ctx.fillStyle = resolveColor(element.strokeColor, theme);
+  ctx.textAlign = element.textAlign as CanvasTextAlign;
+  ctx.textBaseline = "top";
+
+  const lineHeightPx = getLineHeightInPx(element.fontSize, element.lineHeight);
+  const lines = element.text.split("\n");
+
+  let horizontalOffset = 0;
   switch (element.textAlign) {
-    case 'center': { horizontalOffset = element.width / 2; break }
-    case 'right': { horizontalOffset = element.width; break }
+    case "center": {
+      horizontalOffset = element.width / 2;
+      break;
+    }
+    case "right": {
+      horizontalOffset = element.width;
+      break;
+    }
   }
 
   for (const [i, line] of lines.entries()) {
-    ctx.fillText(line, horizontalOffset, i * lineHeightPx)
+    ctx.fillText(line, horizontalOffset, i * lineHeightPx);
   }
 
-  ctx.restore()
+  ctx.restore();
 }

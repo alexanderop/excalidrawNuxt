@@ -9,9 +9,9 @@ An [EventSource](https://developer.mozilla.org/en-US/docs/Web/API/EventSource) o
 ## Usage
 
 ```ts
-import { useEventSource } from '@vueuse/core'
+import { useEventSource } from "@vueuse/core";
 
-const { status, data, error, close } = useEventSource('https://event-source-url')
+const { status, data, error, close } = useEventSource("https://event-source-url");
 ```
 
 See the [Type Declarations](#type-declarations) for more options.
@@ -21,12 +21,9 @@ See the [Type Declarations](#type-declarations) for more options.
 You can define named events with the second parameter
 
 ```ts
-import { useEventSource } from '@vueuse/core'
+import { useEventSource } from "@vueuse/core";
 // ---cut---
-const { event, data } = useEventSource(
-  'https://event-source-url',
-  ['notice', 'update']
-)
+const { event, data } = useEventSource("https://event-source-url", ["notice", "update"]);
 ```
 
 ### immediate
@@ -46,35 +43,27 @@ If url is provided as a ref, when the url changes, it will automatically reconne
 Reconnect on errors automatically (disabled by default).
 
 ```ts
-import { useEventSource } from '@vueuse/core'
+import { useEventSource } from "@vueuse/core";
 // ---cut---
-const { status, data, close } = useEventSource(
-  'https://event-source-url',
-  [],
-  {
-    autoReconnect: true,
-  }
-)
+const { status, data, close } = useEventSource("https://event-source-url", [], {
+  autoReconnect: true,
+});
 ```
 
 Or with more controls over its behavior:
 
 ```ts
-import { useEventSource } from '@vueuse/core'
+import { useEventSource } from "@vueuse/core";
 // ---cut---
-const { status, data, close } = useEventSource(
-  'https://event-source-url',
-  [],
-  {
-    autoReconnect: {
-      retries: 3,
-      delay: 1000,
-      onFailed() {
-        alert('Failed to connect EventSource after 3 retries')
-      },
+const { status, data, close } = useEventSource("https://event-source-url", [], {
+  autoReconnect: {
+    retries: 3,
+    delay: 1000,
+    onFailed() {
+      alert("Failed to connect EventSource after 3 retries");
     },
-  }
-)
+  },
+});
 ```
 
 ### Data Serialization
@@ -82,17 +71,13 @@ const { status, data, close } = useEventSource(
 Apply custom transformations to incoming data using a serialization function.
 
 ```ts
-import { useEventSource } from '@vueuse/core'
+import { useEventSource } from "@vueuse/core";
 // ---cut---
-const { data } = useEventSource(
-  'https://event-source-url',
-  [],
-  {
-    serializer: {
-      read: rawData => JSON.parse(rawData),
-    },
-  }
-)
+const { data } = useEventSource("https://event-source-url", [], {
+  serializer: {
+    read: (rawData) => JSON.parse(rawData),
+  },
+});
 
 // If server sends: '{"name":"John","age":30}'
 // data.value will be: { name: 'John', age: 30 }
@@ -101,7 +86,7 @@ const { data } = useEventSource(
 ## Type Declarations
 
 ```ts
-export type EventSourceStatus = "CONNECTING" | "OPEN" | "CLOSED"
+export type EventSourceStatus = "CONNECTING" | "OPEN" | "CLOSED";
 export interface UseEventSourceOptions<Data> extends EventSourceInit {
   /**
    * Enabled auto reconnect
@@ -118,74 +103,74 @@ export interface UseEventSourceOptions<Data> extends EventSourceInit {
          *
          * @default -1
          */
-        retries?: number | (() => boolean)
+        retries?: number | (() => boolean);
         /**
          * Delay for reconnect, in milliseconds
          *
          * @default 1000
          */
-        delay?: number
+        delay?: number;
         /**
          * On maximum retry times reached.
          */
-        onFailed?: Fn
-      }
+        onFailed?: Fn;
+      };
   /**
    * Immediately open the connection when calling this composable
    *
    * @default true
    */
-  immediate?: boolean
+  immediate?: boolean;
   /**
    * Automatically connect to the websocket when URL changes
    *
    * @default true
    */
-  autoConnect?: boolean
+  autoConnect?: boolean;
   /**
    * Custom data serialization
    */
   serializer?: {
-    read: (v?: string) => Data
-  }
+    read: (v?: string) => Data;
+  };
 }
 export interface UseEventSourceReturn<Events extends string[], Data = any> {
   /**
    * Reference to the latest data received via the EventSource,
    * can be watched to respond to incoming messages
    */
-  data: ShallowRef<Data | null>
+  data: ShallowRef<Data | null>;
   /**
    * The current state of the connection, can be only one of:
    * 'CONNECTING', 'OPEN' 'CLOSED'
    */
-  status: ShallowRef<EventSourceStatus>
+  status: ShallowRef<EventSourceStatus>;
   /**
    * The latest named event
    */
-  event: ShallowRef<Events[number] | null>
+  event: ShallowRef<Events[number] | null>;
   /**
    * The current error
    */
-  error: ShallowRef<Event | null>
+  error: ShallowRef<Event | null>;
   /**
    * Closes the EventSource connection gracefully.
    */
-  close: EventSource["close"]
+  close: EventSource["close"];
   /**
    * Reopen the EventSource connection.
    * If there the current one is active, will close it before opening a new one.
    */
-  open: Fn
+  open: Fn;
   /**
    * Reference to the current EventSource instance.
    */
-  eventSource: Ref<EventSource | null>
+  eventSource: Ref<EventSource | null>;
   /**
    * The last event ID string, for server-sent events.
    * @see https://developer.mozilla.org/en-US/docs/Web/API/MessageEvent/lastEventId
    */
-  lastEventId: ShallowRef<string | null>
+  lastEventId: ShallowRef<string | null>;
 }
 /**
  * Reactive wrapper for EventSource.
@@ -200,5 +185,5 @@ export declare function useEventSource<Events extends string[], Data = any>(
   url: MaybeRefOrGetter<string | URL | undefined>,
   events?: Events,
   options?: UseEventSourceOptions<Data>,
-): UseEventSourceReturn<Events, Data>
+): UseEventSourceReturn<Events, Data>;
 ```

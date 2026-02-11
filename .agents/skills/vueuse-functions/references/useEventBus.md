@@ -9,27 +9,27 @@ A basic event bus.
 ## Usage
 
 ```ts
-import { useEventBus } from '@vueuse/core'
+import { useEventBus } from "@vueuse/core";
 
-const bus = useEventBus<string>('news')
+const bus = useEventBus<string>("news");
 
 function listener(event: string) {
-  console.log(`news: ${event}`)
+  console.log(`news: ${event}`);
 }
 
 // listen to an event
-const unsubscribe = bus.on(listener)
+const unsubscribe = bus.on(listener);
 
 // fire an event
-bus.emit('The Tokyo Olympics has begun')
+bus.emit("The Tokyo Olympics has begun");
 
 // unregister the listener
-unsubscribe()
+unsubscribe();
 // or
-bus.off(listener)
+bus.off(listener);
 
 // clearing all listeners
-bus.reset()
+bus.reset();
 ```
 
 Listeners registered inside of components `setup` will be unregistered automatically when the component gets unmounted.
@@ -40,62 +40,59 @@ Using `EventBusKey` is the key to bind the event type to the key, similar to Vue
 
 ```ts
 // fooKey.ts
-import type { EventBusKey } from '@vueuse/core'
+import type { EventBusKey } from "@vueuse/core";
 
-export const fooKey: EventBusKey<{ name: foo }> = Symbol('symbol-key')
+export const fooKey: EventBusKey<{ name: foo }> = Symbol("symbol-key");
 ```
 
 ```ts
-import { useEventBus } from '@vueuse/core'
+import { useEventBus } from "@vueuse/core";
 
-import { fooKey } from './fooKey'
+import { fooKey } from "./fooKey";
 
-const bus = useEventBus(fooKey)
+const bus = useEventBus(fooKey);
 
 bus.on((e) => {
   // `e` will be `{ name: foo }`
-})
+});
 ```
 
 ## Type Declarations
 
 ```ts
-export type EventBusListener<T = unknown, P = any> = (
-  event: T,
-  payload?: P,
-) => void
-export type EventBusEvents<T, P = any> = Set<EventBusListener<T, P>>
+export type EventBusListener<T = unknown, P = any> = (event: T, payload?: P) => void;
+export type EventBusEvents<T, P = any> = Set<EventBusListener<T, P>>;
 export interface EventBusKey<T> extends Symbol {}
-export type EventBusIdentifier<T = unknown> = EventBusKey<T> | string | number
+export type EventBusIdentifier<T = unknown> = EventBusKey<T> | string | number;
 export interface UseEventBusReturn<T, P> {
   /**
    * Subscribe to an event. When calling emit, the listeners will execute.
    * @param listener watch listener.
    * @returns a stop function to remove the current callback.
    */
-  on: (listener: EventBusListener<T, P>) => Fn
+  on: (listener: EventBusListener<T, P>) => Fn;
   /**
    * Similar to `on`, but only fires once
    * @param listener watch listener.
    * @returns a stop function to remove the current callback.
    */
-  once: (listener: EventBusListener<T, P>) => Fn
+  once: (listener: EventBusListener<T, P>) => Fn;
   /**
    * Emit an event, the corresponding event listeners will execute.
    * @param event data sent.
    */
-  emit: (event?: T, payload?: P) => void
+  emit: (event?: T, payload?: P) => void;
   /**
    * Remove the corresponding listener.
    * @param listener watch listener.
    */
-  off: (listener: EventBusListener<T>) => void
+  off: (listener: EventBusListener<T>) => void;
   /**
    * Clear all events
    */
-  reset: () => void
+  reset: () => void;
 }
 export declare function useEventBus<T = unknown, P = any>(
   key: EventBusIdentifier<T>,
-): UseEventBusReturn<T, P>
+): UseEventBusReturn<T, P>;
 ```

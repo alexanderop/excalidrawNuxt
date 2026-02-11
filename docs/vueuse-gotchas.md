@@ -16,16 +16,16 @@ watch(r, (pressed) => { ... })  // Error!
 
 ```ts
 const KEY_TO_TOOL: Record<string, ToolType> = {
-  r: 'rectangle',
-  o: 'ellipse',
-  d: 'diamond',
-}
+  r: "rectangle",
+  o: "ellipse",
+  d: "diamond",
+};
 
-if (typeof document !== 'undefined') {
-  useEventListener(document, 'keydown', (e: KeyboardEvent) => {
-    const tool = KEY_TO_TOOL[e.key]
-    if (tool) setTool(tool)
-  })
+if (typeof document !== "undefined") {
+  useEventListener(document, "keydown", (e: KeyboardEvent) => {
+    const tool = KEY_TO_TOOL[e.key];
+    if (tool) setTool(tool);
+  });
 }
 ```
 
@@ -37,8 +37,8 @@ Composables using `useEventListener(document, ...)` fail in Vitest unit tests (n
 
 ```ts
 // ✅ Works in both browser and node-mode tests
-if (typeof document !== 'undefined') {
-  useEventListener(document, 'keydown', handler)
+if (typeof document !== "undefined") {
+  useEventListener(document, "keydown", handler);
 }
 ```
 
@@ -48,12 +48,12 @@ When a Vue component imports other `.vue` files, the browser Vitest config needs
 
 ```ts
 // vitest.config.browser.ts
-import vue from '@vitejs/plugin-vue'
+import vue from "@vitejs/plugin-vue";
 
 export default defineConfig({
-  plugins: [vue(), tailwindcss()],  // ← Add vue() plugin
+  plugins: [vue(), tailwindcss()], // ← Add vue() plugin
   // ...
-})
+});
 ```
 
 Without this, you'll get: `"Install @vitejs/plugin-vue to handle .vue files"`
@@ -74,22 +74,22 @@ Tests should use the higher-level helpers which wrap these commands:
 
 ```ts
 // ✅ Use the Pointer/UI/API helpers from app/__test-utils__/browser/
-import { Pointer, UI, API, waitForPaint } from '~/app/__test-utils__/browser'
+import { Pointer, UI, API, waitForPaint } from "~/app/__test-utils__/browser";
 
-const ui = new UI(screen)
-await ui.clickTool('rectangle')
-await ui.pointer.drag(100, 100, 300, 200)
-await waitForPaint()
+const ui = new UI(screen);
+await ui.clickTool("rectangle");
+await ui.pointer.drag(100, 100, 300, 200);
+await waitForPaint();
 
-const el = API.elements.at(-1)
+const el = API.elements.at(-1);
 ```
 
 The `API` object provides programmatic access to app state via `globalThis.__h` (the test hook exposed by `CanvasContainer.vue`). This follows Excalidraw's `window.h` pattern.
 
 ```ts
 // ❌ Fails: page.mouse coordinates don't map correctly into iframe
-await ctx.page.mouse.move(pageX, pageY)
-await ctx.page.mouse.down()
+await ctx.page.mouse.move(pageX, pageY);
+await ctx.page.mouse.down();
 ```
 
 ## Mocking @vueuse/core in Unit Tests with createGlobalState
@@ -101,17 +101,19 @@ When a composable (e.g. `useElements`) is wrapped with `createGlobalState`, all 
 **Solution:** Use the `importOriginal` pattern so the mock inherits all real exports:
 
 ```ts
-vi.mock('@vueuse/core', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@vueuse/core')>()
-  return { ...actual, useEventListener: mockUseEventListener }
-})
+vi.mock("@vueuse/core", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@vueuse/core")>();
+  return { ...actual, useEventListener: mockUseEventListener };
+});
 ```
 
 Also, `createGlobalState` singletons persist across tests. Add a `beforeEach` to reset:
 
 ```ts
 // eslint-disable-next-line vitest/no-hooks -- createGlobalState singleton needs reset between tests
-beforeEach(() => { useElements().replaceElements([]) })
+beforeEach(() => {
+  useElements().replaceElements([]);
+});
 ```
 
 ## onKeyStroke Test Mocking
@@ -119,10 +121,10 @@ beforeEach(() => { useElements().replaceElements([]) })
 When composables use `onKeyStroke` from VueUse, tests need a mock that filters by key. The shared test utility `createEventHandlerMap` in `app/__test-utils__/mocks/eventListenerMock.ts` exports `mockOnKeyStroke` for this purpose. Register it in the `@vueuse/core` mock alongside `useEventListener`:
 
 ```ts
-vi.mock('@vueuse/core', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@vueuse/core')>()
-  return { ...actual, useEventListener: mockUseEventListener, onKeyStroke: mockOnKeyStroke }
-})
+vi.mock("@vueuse/core", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@vueuse/core")>();
+  return { ...actual, useEventListener: mockUseEventListener, onKeyStroke: mockOnKeyStroke };
+});
 ```
 
 If tests use `vi.hoisted` to create their own mock map, define `mockOnKeyStroke` there too (wraps handler with key filtering, delegates to the event handler map).

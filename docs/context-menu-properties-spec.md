@@ -6,15 +6,15 @@
 
 All 7 phases are complete. Tests: 52 unit tests across 4 test files.
 
-| Phase | Status | Notes |
-|-------|--------|-------|
-| Phase 1: Style Defaults & Property Actions Core | Done | `useStyleDefaults` (14 refs), `usePropertyActions` (11 methods + getFormValue) |
-| Phase 2: Properties Panel UI | Done | `PropertiesPanel.vue`, `ButtonIconSelect.vue`, `OpacitySlider.vue`, `ColorSwatch.vue` |
-| Phase 3: Color Picker | Done | `ColorPicker.vue`, `palette.ts` with palette grid, hex input, recent colors, keyboard quick-pick (1-5) |
-| Phase 4: Context Menu | Done | `useContextMenu`, `ContextMenu.vue`, `contextMenuItems.ts` with element + canvas menus |
-| Phase 5: Copy/Paste Styles | Done | `useStyleClipboard` — Cmd+Alt+C / Cmd+Alt+V |
-| Phase 6: Layer Ordering (Z-Index) | Done | `useLayerOrder` in elements/ — group-aware bringToFront/bringForward/sendBackward/sendToBack |
-| Phase 7: Font & Arrowhead Pickers | Done | `FontPicker.vue` (Virgil/Helvetica/Cascadia), `ArrowheadPicker.vue` (6 types with SVG icons) |
+| Phase                                           | Status | Notes                                                                                                  |
+| ----------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------ |
+| Phase 1: Style Defaults & Property Actions Core | Done   | `useStyleDefaults` (14 refs), `usePropertyActions` (11 methods + getFormValue)                         |
+| Phase 2: Properties Panel UI                    | Done   | `PropertiesPanel.vue`, `ButtonIconSelect.vue`, `OpacitySlider.vue`, `ColorSwatch.vue`                  |
+| Phase 3: Color Picker                           | Done   | `ColorPicker.vue`, `palette.ts` with palette grid, hex input, recent colors, keyboard quick-pick (1-5) |
+| Phase 4: Context Menu                           | Done   | `useContextMenu`, `ContextMenu.vue`, `contextMenuItems.ts` with element + canvas menus                 |
+| Phase 5: Copy/Paste Styles                      | Done   | `useStyleClipboard` — Cmd+Alt+C / Cmd+Alt+V                                                            |
+| Phase 6: Layer Ordering (Z-Index)               | Done   | `useLayerOrder` in elements/ — group-aware bringToFront/bringForward/sendBackward/sendToBack           |
+| Phase 7: Font & Arrowhead Pickers               | Done   | `FontPicker.vue` (Virgil/Helvetica/Cascadia), `ArrowheadPicker.vue` (6 types with SVG icons)           |
 
 ### Remaining stubs
 
@@ -50,10 +50,10 @@ The following context menu actions are wired up with placeholder stubs (no-ops o
 
 Excalidraw keeps **context menu** and **property editing** as two distinct UIs:
 
-| Concern | UI | Where |
-|---------|-----|-------|
-| Structural actions (copy, paste, delete, group, layer order) | **Context Menu** — right-click popup | `components/ContextMenu.tsx` + `contextMenu.ts` |
-| Style editing (colors, stroke, fill, opacity, font) | **Properties Panel** — top toolbar | `actions/actionProperties.tsx` + `components/ColorPicker/` |
+| Concern                                                      | UI                                   | Where                                                      |
+| ------------------------------------------------------------ | ------------------------------------ | ---------------------------------------------------------- |
+| Structural actions (copy, paste, delete, group, layer order) | **Context Menu** — right-click popup | `components/ContextMenu.tsx` + `contextMenu.ts`            |
+| Style editing (colors, stroke, fill, opacity, font)          | **Properties Panel** — top toolbar   | `actions/actionProperties.tsx` + `components/ColorPicker/` |
 
 Both are powered by the same **action system** (`ActionManager` + registered `Action` objects).
 
@@ -102,10 +102,10 @@ elements selected → show properties toolbar
 
 ### Element Mutation: Two Patterns
 
-| Pattern | When | How |
-|---------|------|-----|
-| `newElementWith(el, updates)` | Committed changes (action performs, undo) | Immutable copy, bumps version |
-| `mutateElement(el, updates)` | Interactive/in-progress (drag, resize) | In-place mutation, bumps version |
+| Pattern                       | When                                      | How                              |
+| ----------------------------- | ----------------------------------------- | -------------------------------- |
+| `newElementWith(el, updates)` | Committed changes (action performs, undo) | Immutable copy, bumps version    |
+| `mutateElement(el, updates)`  | Interactive/in-progress (drag, resize)    | In-place mutation, bumps version |
 
 We already have both in `app/features/elements/mutateElement.ts`.
 
@@ -126,21 +126,21 @@ We already have both in `app/features/elements/mutateElement.ts`.
 
 ### What We Already Have
 
-| Existing | Used By |
-|----------|---------|
-| `mutateElement(el, updates)` | elements/ — in-place mutation with version bump |
-| `useElements()` → `replaceElement()` | elements/ — immutable element replacement |
-| `useSelection()` → `selectedElements` | selection/ — current selection |
-| `useToolStore()` | tools/ — active tool state |
-| Element types with all style properties | elements/types.ts — re-exported from @excalidraw/element |
-| Default constants | elements/constants.ts — stroke, fill, opacity, font defaults |
+| Existing                                | Used By                                                      |
+| --------------------------------------- | ------------------------------------------------------------ |
+| `mutateElement(el, updates)`            | elements/ — in-place mutation with version bump              |
+| `useElements()` → `replaceElement()`    | elements/ — immutable element replacement                    |
+| `useSelection()` → `selectedElements`   | selection/ — current selection                               |
+| `useToolStore()`                        | tools/ — active tool state                                   |
+| Element types with all style properties | elements/types.ts — re-exported from @excalidraw/element     |
+| Default constants                       | elements/constants.ts — stroke, fill, opacity, font defaults |
 
 ### What We Need to Build
 
-| New Module | Contents |
-|------------|----------|
-| `features/context-menu/` | `ContextMenu.vue`, `useContextMenu.ts`, menu item definitions |
-| `features/properties/` | `PropertiesPanel.vue`, `ColorPicker.vue`, `ButtonIconSelect.vue`, `OpacitySlider.vue`, `usePropertyActions.ts`, `useStyleDefaults.ts` |
+| New Module               | Contents                                                                                                                              |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `features/context-menu/` | `ContextMenu.vue`, `useContextMenu.ts`, menu item definitions                                                                         |
+| `features/properties/`   | `PropertiesPanel.vue`, `ColorPicker.vue`, `ButtonIconSelect.vue`, `OpacitySlider.vue`, `usePropertyActions.ts`, `useStyleDefaults.ts` |
 
 ---
 
@@ -160,6 +160,7 @@ features/context-menu/
 ```
 
 **ContextMenu.vue** structure:
+
 ```
 <Teleport to="body">
   <div v-if="isOpen" class="context-menu" :style="positionStyle">
@@ -196,6 +197,7 @@ features/properties/
 ```
 
 **PropertiesPanel.vue** renders (conditionally based on selected element types):
+
 ```
 PropertiesPanel
   ├── ColorSwatch (stroke color)     → opens ColorPicker
@@ -263,6 +265,7 @@ type UsePropertyActionsOptions = {
 ```
 
 Each method:
+
 1. Iterates selected elements
 2. Calls `mutateElement(el, { [property]: value })` or replaces via `replaceElement`
 3. Updates `styleDefaults` (sticky)
@@ -273,26 +276,36 @@ Each method:
 ```ts
 // createGlobalState — singleton, survives component unmount
 const useStyleDefaults = createGlobalState(() => {
-  const strokeColor = ref(DEFAULT_STROKE_COLOR)
-  const backgroundColor = ref(DEFAULT_BG_COLOR)
-  const fillStyle = ref<FillStyle>(DEFAULT_FILL_STYLE)
-  const strokeWidth = ref(DEFAULT_STROKE_WIDTH)
-  const strokeStyle = ref<StrokeStyle>('solid')
-  const opacity = ref(DEFAULT_OPACITY)
-  const roughness = ref(DEFAULT_ROUGHNESS)
-  const roundness = ref<'sharp' | 'round'>('round')
-  const fontFamily = ref(DEFAULT_FONT_FAMILY)
-  const fontSize = ref(DEFAULT_FONT_SIZE)
-  const textAlign = ref<TextAlign>(DEFAULT_TEXT_ALIGN)
-  const startArrowhead = ref<Arrowhead | null>(null)
-  const endArrowhead = ref<Arrowhead | null>('arrow')
+  const strokeColor = ref(DEFAULT_STROKE_COLOR);
+  const backgroundColor = ref(DEFAULT_BG_COLOR);
+  const fillStyle = ref<FillStyle>(DEFAULT_FILL_STYLE);
+  const strokeWidth = ref(DEFAULT_STROKE_WIDTH);
+  const strokeStyle = ref<StrokeStyle>("solid");
+  const opacity = ref(DEFAULT_OPACITY);
+  const roughness = ref(DEFAULT_ROUGHNESS);
+  const roundness = ref<"sharp" | "round">("round");
+  const fontFamily = ref(DEFAULT_FONT_FAMILY);
+  const fontSize = ref(DEFAULT_FONT_SIZE);
+  const textAlign = ref<TextAlign>(DEFAULT_TEXT_ALIGN);
+  const startArrowhead = ref<Arrowhead | null>(null);
+  const endArrowhead = ref<Arrowhead | null>("arrow");
 
   return {
-    strokeColor, backgroundColor, fillStyle, strokeWidth,
-    strokeStyle, opacity, roughness, roundness,
-    fontFamily, fontSize, textAlign, startArrowhead, endArrowhead,
-  }
-})
+    strokeColor,
+    backgroundColor,
+    fillStyle,
+    strokeWidth,
+    strokeStyle,
+    opacity,
+    roughness,
+    roundness,
+    fontFamily,
+    fontSize,
+    textAlign,
+    startArrowhead,
+    endArrowhead,
+  };
+});
 ```
 
 ---
@@ -316,10 +329,10 @@ const contextMenuActions = {
   duplicate: () => elements.duplicateElements(selectedIds.value),
   group: () => groups.groupSelected(),
   ungroup: () => groups.ungroupSelected(),
-  bringToFront: () => elements.reorder(selectedIds.value, 'front'),
-  sendToBack: () => elements.reorder(selectedIds.value, 'back'),
+  bringToFront: () => elements.reorder(selectedIds.value, "front"),
+  sendToBack: () => elements.reorder(selectedIds.value, "back"),
   // etc.
-}
+};
 ```
 
 ---
@@ -342,11 +355,15 @@ User changes stroke color to red on selected rectangle
 When multiple elements are selected with different values for a property:
 
 ```ts
-function getFormValue<T>(elements: ExcalidrawElement[], property: string, fallback: T): T | 'mixed' {
-  const values = new Set(elements.map(el => el[property]))
-  if (values.size === 0) return fallback
-  if (values.size === 1) return [...values][0] as T
-  return 'mixed'
+function getFormValue<T>(
+  elements: ExcalidrawElement[],
+  property: string,
+  fallback: T,
+): T | "mixed" {
+  const values = new Set(elements.map((el) => el[property]));
+  if (values.size === 0) return fallback;
+  if (values.size === 1) return [...values][0] as T;
+  return "mixed";
 }
 ```
 
@@ -360,22 +377,22 @@ UI shows mixed state: empty color swatch, no icon highlighted, etc.
 
 ```ts
 const COLOR_PALETTE = {
-  transparent: 'transparent',
-  black: '#1e1e1e',
-  white: '#ffffff',
+  transparent: "transparent",
+  black: "#1e1e1e",
+  white: "#ffffff",
 
   // [shade0=lightest, shade1, shade2, shade3, shade4=darkest]
-  red:    ['#ffc9c9', '#ffa8a8', '#ff8787', '#ff6b6b', '#fa5252'],
-  pink:   ['#eebefa', '#e599f7', '#da77f2', '#cc5de8', '#be4bdb'],
-  grape:  ['#d0bfff', '#b197fc', '#9775fa', '#845ef7', '#7950f2'],
-  violet: ['#b4d0fe', '#91a7ff', '#748ffc', '#5c7cfa', '#4c6ef5'],
-  blue:   ['#a5d8ff', '#74c0fc', '#4dabf7', '#339af0', '#228be6'],
-  cyan:   ['#99e9f2', '#66d9e8', '#3bc9db', '#22b8cf', '#15aabf'],
-  teal:   ['#96f2d7', '#63e6be', '#38d9a9', '#20c997', '#12b886'],
-  green:  ['#b2f2bb', '#8ce99a', '#69db7c', '#51cf66', '#40c057'],
-  yellow: ['#ffec99', '#ffe066', '#ffd43b', '#fcc419', '#fab005'],
-  orange: ['#ffd8a8', '#ffc078', '#ffa94d', '#ff922b', '#fd7e14'],
-} as const
+  red: ["#ffc9c9", "#ffa8a8", "#ff8787", "#ff6b6b", "#fa5252"],
+  pink: ["#eebefa", "#e599f7", "#da77f2", "#cc5de8", "#be4bdb"],
+  grape: ["#d0bfff", "#b197fc", "#9775fa", "#845ef7", "#7950f2"],
+  violet: ["#b4d0fe", "#91a7ff", "#748ffc", "#5c7cfa", "#4c6ef5"],
+  blue: ["#a5d8ff", "#74c0fc", "#4dabf7", "#339af0", "#228be6"],
+  cyan: ["#99e9f2", "#66d9e8", "#3bc9db", "#22b8cf", "#15aabf"],
+  teal: ["#96f2d7", "#63e6be", "#38d9a9", "#20c997", "#12b886"],
+  green: ["#b2f2bb", "#8ce99a", "#69db7c", "#51cf66", "#40c057"],
+  yellow: ["#ffec99", "#ffe066", "#ffd43b", "#fcc419", "#fab005"],
+  orange: ["#ffd8a8", "#ffc078", "#ffa94d", "#ff922b", "#fd7e14"],
+} as const;
 ```
 
 ### Dark Theme Palette
@@ -392,37 +409,37 @@ Store up to 10 recently used custom colors (hex values not in the palette) in `u
 
 ### Element Context (right-click on element)
 
-| Item | Shortcut | Action |
-|------|----------|--------|
-| Cut | Cmd+X | Cut to clipboard |
-| Copy | Cmd+C | Copy to clipboard |
-| Paste | Cmd+V | Paste from clipboard |
-| — separator — | | |
-| Copy styles | Cmd+Alt+C | Copy all styles from element |
-| Paste styles | Cmd+Alt+V | Paste styles to selected elements |
-| — separator — | | |
-| Duplicate | Cmd+D | Duplicate selected |
-| Delete | Backspace / Del | Delete selected |
-| — separator — | | |
-| Bring to front | Cmd+Shift+] | Move to top of z-order |
-| Bring forward | Cmd+] | Move up one layer |
-| Send backward | Cmd+[ | Move down one layer |
-| Send to back | Cmd+Shift+[ | Move to bottom of z-order |
-| — separator — | | |
-| Group | Cmd+G | Group selected elements |
-| Ungroup | Cmd+Shift+G | Ungroup selected group |
-| — separator — | | |
-| Flip horizontal | Shift+H | Mirror horizontally |
-| Flip vertical | Shift+V | Mirror vertically |
+| Item            | Shortcut        | Action                            |
+| --------------- | --------------- | --------------------------------- |
+| Cut             | Cmd+X           | Cut to clipboard                  |
+| Copy            | Cmd+C           | Copy to clipboard                 |
+| Paste           | Cmd+V           | Paste from clipboard              |
+| — separator —   |                 |                                   |
+| Copy styles     | Cmd+Alt+C       | Copy all styles from element      |
+| Paste styles    | Cmd+Alt+V       | Paste styles to selected elements |
+| — separator —   |                 |                                   |
+| Duplicate       | Cmd+D           | Duplicate selected                |
+| Delete          | Backspace / Del | Delete selected                   |
+| — separator —   |                 |                                   |
+| Bring to front  | Cmd+Shift+]     | Move to top of z-order            |
+| Bring forward   | Cmd+]           | Move up one layer                 |
+| Send backward   | Cmd+[           | Move down one layer               |
+| Send to back    | Cmd+Shift+[     | Move to bottom of z-order         |
+| — separator —   |                 |                                   |
+| Group           | Cmd+G           | Group selected elements           |
+| Ungroup         | Cmd+Shift+G     | Ungroup selected group            |
+| — separator —   |                 |                                   |
+| Flip horizontal | Shift+H         | Mirror horizontally               |
+| Flip vertical   | Shift+V         | Mirror vertically                 |
 
 ### Canvas Context (right-click on empty canvas)
 
-| Item | Shortcut | Action |
-|------|----------|--------|
-| Paste | Cmd+V | Paste from clipboard |
-| Select all | Cmd+A | Select all elements |
-| — separator — | | |
-| Toggle grid | Cmd+' | Show/hide grid |
+| Item          | Shortcut | Action               |
+| ------------- | -------- | -------------------- |
+| Paste         | Cmd+V    | Paste from clipboard |
+| Select all    | Cmd+A    | Select all elements  |
+| — separator — |          |                      |
+| Toggle grid   | Cmd+'    | Show/hide grid       |
 
 ---
 
@@ -430,30 +447,30 @@ Store up to 10 recently used custom colors (hex values not in the palette) in `u
 
 ### Always Shown (when elements selected)
 
-| Control | Type | Values | Maps To |
-|---------|------|--------|---------|
-| Stroke color | ColorSwatch → ColorPicker | Any CSS color | `strokeColor` |
-| Background color | ColorSwatch → ColorPicker | Any CSS color | `backgroundColor` |
-| Fill style | ButtonIconSelect | hachure, cross-hatch, solid | `fillStyle` |
-| Stroke width | ButtonIconSelect | thin(1), bold(2), extra-bold(4) | `strokeWidth` |
-| Stroke style | ButtonIconSelect | solid, dashed, dotted | `strokeStyle` |
-| Edge roundness | ButtonIconSelect | sharp, round | `roundness` |
-| Opacity | Range slider | 0–100 | `opacity` |
+| Control          | Type                      | Values                          | Maps To           |
+| ---------------- | ------------------------- | ------------------------------- | ----------------- |
+| Stroke color     | ColorSwatch → ColorPicker | Any CSS color                   | `strokeColor`     |
+| Background color | ColorSwatch → ColorPicker | Any CSS color                   | `backgroundColor` |
+| Fill style       | ButtonIconSelect          | hachure, cross-hatch, solid     | `fillStyle`       |
+| Stroke width     | ButtonIconSelect          | thin(1), bold(2), extra-bold(4) | `strokeWidth`     |
+| Stroke style     | ButtonIconSelect          | solid, dashed, dotted           | `strokeStyle`     |
+| Edge roundness   | ButtonIconSelect          | sharp, round                    | `roundness`       |
+| Opacity          | Range slider              | 0–100                           | `opacity`         |
 
 ### Text-Specific (when text element selected)
 
-| Control | Type | Values | Maps To |
-|---------|------|--------|---------|
-| Font family | FontPicker dropdown | Virgil, Helvetica, Cascadia, etc. | `fontFamily` |
-| Font size | Number input | any number, common: 16, 20, 24, 28, 36 | `fontSize` |
-| Text align | ButtonIconSelect | left, center, right | `textAlign` |
+| Control     | Type                | Values                                 | Maps To      |
+| ----------- | ------------------- | -------------------------------------- | ------------ |
+| Font family | FontPicker dropdown | Virgil, Helvetica, Cascadia, etc.      | `fontFamily` |
+| Font size   | Number input        | any number, common: 16, 20, 24, 28, 36 | `fontSize`   |
+| Text align  | ButtonIconSelect    | left, center, right                    | `textAlign`  |
 
 ### Arrow-Specific (when arrow element selected)
 
-| Control | Type | Values | Maps To |
-|---------|------|--------|---------|
+| Control         | Type            | Values                                   | Maps To          |
+| --------------- | --------------- | ---------------------------------------- | ---------------- |
 | Start arrowhead | ArrowheadPicker | none, arrow, bar, dot, triangle, diamond | `startArrowhead` |
-| End arrowhead | ArrowheadPicker | none, arrow, bar, dot, triangle, diamond | `endArrowhead` |
+| End arrowhead   | ArrowheadPicker | none, arrow, bar, dot, triangle, diamond | `endArrowhead`   |
 
 ---
 
@@ -461,22 +478,22 @@ Store up to 10 recently used custom colors (hex values not in the palette) in `u
 
 ### Color Quick-Pick (when ColorPicker open)
 
-| Key | Action |
-|-----|--------|
-| 1 | Select 1st top-pick color |
-| 2 | Select 2nd top-pick color |
-| 3 | Select 3rd top-pick color |
-| 4 | Select 4th top-pick color |
-| 5 | Select 5th top-pick color |
-| Escape | Close color picker |
+| Key    | Action                    |
+| ------ | ------------------------- |
+| 1      | Select 1st top-pick color |
+| 2      | Select 2nd top-pick color |
+| 3      | Select 3rd top-pick color |
+| 4      | Select 4th top-pick color |
+| 5      | Select 5th top-pick color |
+| Escape | Close color picker        |
 
 ### Property Shortcuts (when elements selected)
 
 These are future candidates — not required for v1:
 
-| Key | Action |
-|-----|--------|
-| Cmd+Alt+C | Copy styles |
+| Key       | Action       |
+| --------- | ------------ |
+| Cmd+Alt+C | Copy styles  |
 | Cmd+Alt+V | Paste styles |
 
 ---
@@ -487,8 +504,8 @@ These are future candidates — not required for v1:
 
 **Files:** `features/properties/composables/useStyleDefaults.ts`, `features/properties/composables/usePropertyActions.ts`
 
-- `useStyleDefaults` with all currentItem* refs
-- `usePropertyActions` with all change* methods
+- `useStyleDefaults` with all currentItem\* refs
+- `usePropertyActions` with all change\* methods
 - Wire `createElement` to read from `useStyleDefaults` instead of hardcoded constants
 - Unit tests for all property change functions
 

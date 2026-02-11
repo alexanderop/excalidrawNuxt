@@ -1,5 +1,5 @@
 ---
-category: '@Math'
+category: "@Math"
 ---
 
 # useAverage
@@ -9,19 +9,19 @@ Get the average of an array reactively.
 ## Usage
 
 ```ts
-import { useAverage } from '@vueuse/math'
+import { useAverage } from "@vueuse/math";
 
-const list = ref([1, 2, 3])
-const averageValue = useAverage(list) // Ref<2>
+const list = ref([1, 2, 3]);
+const averageValue = useAverage(list); // Ref<2>
 ```
 
 ```ts
-import { useAverage } from '@vueuse/math'
+import { useAverage } from "@vueuse/math";
 
-const a = ref(1)
-const b = ref(3)
+const a = ref(1);
+const b = ref(3);
 
-const averageValue = useAverage(a, b) // Ref<2>
+const averageValue = useAverage(a, b); // Ref<2>
 ```
 
 ## Type Declarations
@@ -29,8 +29,6 @@ const averageValue = useAverage(a, b) // Ref<2>
 ```ts
 export declare function useAverage(
   array: MaybeRefOrGetter<MaybeRefOrGetter<number>[]>,
-): ComputedRef<number>
-export declare function useAverage(
-  ...args: MaybeRefOrGetter<number>[]
-): ComputedRef<number>
+): ComputedRef<number>;
+export declare function useAverage(...args: MaybeRefOrGetter<number>[]): ComputedRef<number>;
 ```

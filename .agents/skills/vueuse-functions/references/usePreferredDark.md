@@ -9,18 +9,16 @@ Reactive dark theme preference.
 ## Usage
 
 ```ts
-import { usePreferredDark } from '@vueuse/core'
+import { usePreferredDark } from "@vueuse/core";
 
-const isDark = usePreferredDark()
+const isDark = usePreferredDark();
 ```
 
 ## Component Usage
 
 ```vue
 <template>
-  <UsePreferredDark v-slot="{ prefersDark }">
-    Prefers Dark: {{ prefersDark }}
-  </UsePreferredDark>
+  <UsePreferredDark v-slot="{ prefersDark }"> Prefers Dark: {{ prefersDark }} </UsePreferredDark>
 </template>
 ```
 
@@ -35,7 +33,5 @@ const isDark = usePreferredDark()
  *
  * @__NO_SIDE_EFFECTS__
  */
-export declare function usePreferredDark(
-  options?: ConfigurableWindow,
-): ComputedRef<boolean>
+export declare function usePreferredDark(options?: ConfigurableWindow): ComputedRef<boolean>;
 ```

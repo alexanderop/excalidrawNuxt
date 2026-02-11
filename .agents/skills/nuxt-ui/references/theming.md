@@ -2,15 +2,15 @@
 
 ## Semantic colors
 
-| Color | Default | Purpose |
-|---|---|---|
-| `primary` | green | CTAs, active states, brand |
-| `secondary` | blue | Secondary actions |
-| `success` | green | Success messages |
-| `info` | blue | Informational |
-| `warning` | yellow | Warnings |
-| `error` | red | Errors, destructive actions |
-| `neutral` | slate | Text, borders, disabled |
+| Color       | Default | Purpose                     |
+| ----------- | ------- | --------------------------- |
+| `primary`   | green   | CTAs, active states, brand  |
+| `secondary` | blue    | Secondary actions           |
+| `success`   | green   | Success messages            |
+| `info`      | blue    | Informational               |
+| `warning`   | yellow  | Warnings                    |
+| `error`     | red     | Errors, destructive actions |
+| `neutral`   | slate   | Text, borders, disabled     |
 
 ## Configuring colors
 
@@ -19,23 +19,23 @@
 export default defineAppConfig({
   ui: {
     colors: {
-      primary: 'indigo',
-      secondary: 'violet',
-      success: 'emerald',
-      error: 'rose',
-      neutral: 'zinc'
-    }
-  }
-})
+      primary: "indigo",
+      secondary: "violet",
+      success: "emerald",
+      error: "rose",
+      neutral: "zinc",
+    },
+  },
+});
 ```
 
 ```ts
 // Vue — vite.config.ts
 ui({
   ui: {
-    colors: { primary: 'indigo', secondary: 'violet', neutral: 'zinc' }
-  }
-})
+    colors: { primary: "indigo", secondary: "violet", neutral: "zinc" },
+  },
+});
 ```
 
 You can only use colors that exist in your theme — either [Tailwind's default colors](https://tailwindcss.com/docs/colors) or custom colors defined with `@theme`.
@@ -74,19 +74,19 @@ If you need a new semantic color beyond the defaults (e.g., `tertiary`), registe
 export default defineNuxtConfig({
   ui: {
     theme: {
-      colors: ['primary', 'secondary', 'tertiary', 'info', 'success', 'warning', 'error']
-    }
-  }
-})
+      colors: ["primary", "secondary", "tertiary", "info", "success", "warning", "error"],
+    },
+  },
+});
 ```
 
 ```ts
 // Vue — vite.config.ts
 ui({
   theme: {
-    colors: ['primary', 'secondary', 'tertiary', 'info', 'success', 'warning', 'error']
-  }
-})
+    colors: ["primary", "secondary", "tertiary", "info", "success", "warning", "error"],
+  },
+});
 ```
 
 Then assign it: `ui: { colors: { tertiary: 'indigo' } }` and use it via the `color` prop: `<UButton color="tertiary">`.
@@ -95,33 +95,33 @@ Then assign it: `ui: { colors: { tertiary: 'indigo' } }` and use it via the `col
 
 ### Text
 
-| Class | Use | Light value | Dark value |
-|---|---|---|---|
-| `text-default` | Body text | `neutral-700` | `neutral-200` |
-| `text-muted` | Secondary text | `neutral-500` | `neutral-400` |
-| `text-dimmed` | Placeholders, hints | `neutral-400` | `neutral-500` |
-| `text-toned` | Subtitles | `neutral-600` | `neutral-300` |
-| `text-highlighted` | Headings, emphasis | `neutral-900` | `white` |
-| `text-inverted` | On dark/light backgrounds | `white` | `neutral-900` |
+| Class              | Use                       | Light value   | Dark value    |
+| ------------------ | ------------------------- | ------------- | ------------- |
+| `text-default`     | Body text                 | `neutral-700` | `neutral-200` |
+| `text-muted`       | Secondary text            | `neutral-500` | `neutral-400` |
+| `text-dimmed`      | Placeholders, hints       | `neutral-400` | `neutral-500` |
+| `text-toned`       | Subtitles                 | `neutral-600` | `neutral-300` |
+| `text-highlighted` | Headings, emphasis        | `neutral-900` | `white`       |
+| `text-inverted`    | On dark/light backgrounds | `white`       | `neutral-900` |
 
 ### Background
 
-| Class | Use | Light value | Dark value |
-|---|---|---|---|
-| `bg-default` | Page background | `white` | `neutral-900` |
-| `bg-muted` | Subtle sections | `neutral-50` | `neutral-800` |
-| `bg-elevated` | Cards, modals | `neutral-100` | `neutral-800` |
-| `bg-accented` | Hover states | `neutral-200` | `neutral-700` |
-| `bg-inverted` | Inverted sections | `neutral-900` | `white` |
+| Class         | Use               | Light value   | Dark value    |
+| ------------- | ----------------- | ------------- | ------------- |
+| `bg-default`  | Page background   | `white`       | `neutral-900` |
+| `bg-muted`    | Subtle sections   | `neutral-50`  | `neutral-800` |
+| `bg-elevated` | Cards, modals     | `neutral-100` | `neutral-800` |
+| `bg-accented` | Hover states      | `neutral-200` | `neutral-700` |
+| `bg-inverted` | Inverted sections | `neutral-900` | `white`       |
 
 ### Border
 
-| Class | Use | Light value | Dark value |
-|---|---|---|---|
-| `border-default` | Default borders | `neutral-200` | `neutral-800` |
-| `border-muted` | Subtle borders | `neutral-200` | `neutral-700` |
+| Class             | Use                | Light value   | Dark value    |
+| ----------------- | ------------------ | ------------- | ------------- |
+| `border-default`  | Default borders    | `neutral-200` | `neutral-800` |
+| `border-muted`    | Subtle borders     | `neutral-200` | `neutral-700` |
 | `border-accented` | Emphasized borders | `neutral-300` | `neutral-700` |
-| `border-inverted` | Inverted borders | `neutral-900` | `white` |
+| `border-inverted` | Inverted borders   | `neutral-900` | `white`       |
 
 ### Semantic color utilities
 
@@ -132,8 +132,12 @@ They resolve to shade **500** in light mode and shade **400** in dark mode (via 
 To adjust which shade is used, override `--ui-primary` (or any semantic color) in your `main.css`:
 
 ```css
-:root { --ui-primary: var(--ui-color-primary-600); }
-.dark { --ui-primary: var(--ui-color-primary-300); }
+:root {
+  --ui-primary: var(--ui-color-primary-600);
+}
+.dark {
+  --ui-primary: var(--ui-color-primary-300);
+}
 ```
 
 ### CSS variables
@@ -142,9 +146,9 @@ All customizable in `main.css`:
 
 ```css
 :root {
-  --ui-radius: 0.25rem;               /* base radius for all components */
-  --ui-container: 80rem;              /* UContainer max-width */
-  --ui-header-height: 4rem;            /* UHeader height */
+  --ui-radius: 0.25rem; /* base radius for all components */
+  --ui-container: 80rem; /* UContainer max-width */
+  --ui-header-height: 4rem; /* UHeader height */
   --ui-primary: var(--ui-color-primary-500); /* adjust shade used */
 }
 
@@ -156,8 +160,12 @@ All customizable in `main.css`:
 ### Solid colors (black/white)
 
 ```css
-:root { --ui-primary: black; }
-.dark { --ui-primary: white; }
+:root {
+  --ui-primary: black;
+}
+.dark {
+  --ui-primary: white;
+}
 ```
 
 ## Component theme customization
@@ -216,25 +224,27 @@ export default defineAppConfig({
   ui: {
     button: {
       slots: {
-        base: 'font-bold rounded-full'
+        base: "font-bold rounded-full",
       },
       variants: {
         size: {
-          md: { leadingIcon: 'size-4' }
-        }
+          md: { leadingIcon: "size-4" },
+        },
       },
-      compoundVariants: [{
-        color: 'neutral',
-        variant: 'outline',
-        class: { base: 'ring-2' }
-      }],
+      compoundVariants: [
+        {
+          color: "neutral",
+          variant: "outline",
+          class: { base: "ring-2" },
+        },
+      ],
       defaultVariants: {
-        color: 'neutral',
-        variant: 'outline'
-      }
-    }
-  }
-})
+        color: "neutral",
+        variant: "outline",
+      },
+    },
+  },
+});
 ```
 
 ```ts
@@ -242,11 +252,11 @@ export default defineAppConfig({
 ui({
   ui: {
     button: {
-      slots: { base: 'font-bold rounded-full' },
-      defaultVariants: { color: 'neutral', variant: 'outline' }
-    }
-  }
-})
+      slots: { base: "font-bold rounded-full" },
+      defaultVariants: { color: "neutral", variant: "outline" },
+    },
+  },
+});
 ```
 
 ### Per-instance (`ui` prop)
@@ -301,13 +311,15 @@ Always check the generated theme file to see which pattern applies.
 ## Dark mode
 
 ```ts
-const colorMode = useColorMode()
-colorMode.preference = 'dark' // 'light', 'dark', 'system'
+const colorMode = useColorMode();
+colorMode.preference = "dark"; // 'light', 'dark', 'system'
 ```
 
 ```vue
-<UColorModeButton /> <!-- Toggle -->
-<UColorModeSelect /> <!-- Dropdown -->
+<UColorModeButton />
+<!-- Toggle -->
+<UColorModeSelect />
+<!-- Dropdown -->
 ```
 
 ## Fonts
@@ -315,8 +327,8 @@ colorMode.preference = 'dark' // 'light', 'dark', 'system'
 ```css
 /* assets/css/main.css */
 @theme {
-  --font-sans: 'Public Sans', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-sans: "Public Sans", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
 }
 ```
 
@@ -362,7 +374,7 @@ Then use it: `primary: 'forest'`.
 ```css
 /* assets/css/main.css */
 @theme {
-  --font-sans: 'Quicksand', system-ui, sans-serif;
+  --font-sans: "Quicksand", system-ui, sans-serif;
 }
 ```
 
@@ -370,7 +382,7 @@ Then use it: `primary: 'forest'`.
 
 ```css
 :root {
-  --ui-radius: 0.75rem;   /* rounder = softer/playful, smaller = sharper/corporate */
+  --ui-radius: 0.75rem; /* rounder = softer/playful, smaller = sharper/corporate */
   --ui-primary: var(--ui-color-primary-600); /* adjust which shade is used */
 }
 
@@ -416,12 +428,12 @@ Check that both modes look correct. Adjust `--ui-primary` shade per mode and tes
 
 ### Quick checklist
 
-| Step | What to change | Where |
-|---|---|---|
-| Colors | `primary`, `secondary`, `neutral` | `app.config.ts` / `vite.config.ts` |
-| Custom palette | 11 shades per color | `main.css` (`@theme static`) |
-| Fonts | `--font-sans`, `--font-mono` | `main.css` (`@theme`) |
-| Radius | `--ui-radius` | `main.css` (`:root`) |
-| Primary shade | `--ui-primary` | `main.css` (`:root` + `.dark`) |
-| Component shapes | Global slot overrides | `app.config.ts` / `vite.config.ts` |
-| Dark mode | Verify contrast, adjust variables | `main.css` (`.dark`) |
+| Step             | What to change                    | Where                              |
+| ---------------- | --------------------------------- | ---------------------------------- |
+| Colors           | `primary`, `secondary`, `neutral` | `app.config.ts` / `vite.config.ts` |
+| Custom palette   | 11 shades per color               | `main.css` (`@theme static`)       |
+| Fonts            | `--font-sans`, `--font-mono`      | `main.css` (`@theme`)              |
+| Radius           | `--ui-radius`                     | `main.css` (`:root`)               |
+| Primary shade    | `--ui-primary`                    | `main.css` (`:root` + `.dark`)     |
+| Component shapes | Global slot overrides             | `app.config.ts` / `vite.config.ts` |
+| Dark mode        | Verify contrast, adjust variables | `main.css` (`.dark`)               |

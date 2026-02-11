@@ -25,6 +25,7 @@
 ## 1. Data Model
 
 > **Core sources:**
+>
 > - `element/src/types.ts` — all element type definitions
 > - `element/src/newElement.ts` — `newArrowElement()` factory with defaults
 > - `element/src/typeChecks.ts` — type guard functions
@@ -37,57 +38,57 @@
 ```typescript
 type ExcalidrawArrowElement = {
   // Identity
-  id: string
-  type: 'arrow'
+  id: string;
+  type: "arrow";
 
   // Position & geometry
-  x: number                          // Canvas X (top-left of bounding box)
-  y: number                          // Canvas Y (top-left of bounding box)
-  width: number                      // Bounding box width
-  height: number                     // Bounding box height
-  angle: Radians                     // Rotation in radians
-  points: readonly LocalPoint[]      // [x, y] offsets from (x, y)
+  x: number; // Canvas X (top-left of bounding box)
+  y: number; // Canvas Y (top-left of bounding box)
+  width: number; // Bounding box width
+  height: number; // Bounding box height
+  angle: Radians; // Rotation in radians
+  points: readonly LocalPoint[]; // [x, y] offsets from (x, y)
 
   // Rendering
-  strokeColor: string                // Hex color
-  backgroundColor: string            // Fill color
-  fillStyle: 'hachure' | 'cross-hatch' | 'solid' | 'zigzag'
-  strokeWidth: number                // Line thickness (px)
-  strokeStyle: 'solid' | 'dashed' | 'dotted'
-  roughness: number                  // Hand-drawn intensity (0=clean, 1=artist, 2=cartoonist)
-  opacity: number                    // 0–100
-  seed: number                       // Deterministic randomness for roughjs
+  strokeColor: string; // Hex color
+  backgroundColor: string; // Fill color
+  fillStyle: "hachure" | "cross-hatch" | "solid" | "zigzag";
+  strokeWidth: number; // Line thickness (px)
+  strokeStyle: "solid" | "dashed" | "dotted";
+  roughness: number; // Hand-drawn intensity (0=clean, 1=artist, 2=cartoonist)
+  opacity: number; // 0–100
+  seed: number; // Deterministic randomness for roughjs
 
   // Roundness (determines sharp vs curved)
   roundness: null | {
-    type: 1 | 2 | 3                  // 2 = PROPORTIONAL_RADIUS (used for arrows)
-    value?: number                   // Curvature proportion (default 0.25)
-  }
+    type: 1 | 2 | 3; // 2 = PROPORTIONAL_RADIUS (used for arrows)
+    value?: number; // Curvature proportion (default 0.25)
+  };
 
   // Arrowheads
-  startArrowhead: Arrowhead | null
-  endArrowhead: Arrowhead | null
+  startArrowhead: Arrowhead | null;
+  endArrowhead: Arrowhead | null;
 
   // Binding (connection to shapes)
-  startBinding: FixedPointBinding | null
-  endBinding: FixedPointBinding | null
+  startBinding: FixedPointBinding | null;
+  endBinding: FixedPointBinding | null;
 
   // Elbow-specific
-  elbowed: boolean
+  elbowed: boolean;
 
   // Metadata
-  version: number
-  versionNonce: number
-  index: FractionalIndex | null
-  isDeleted: boolean
-  groupIds: readonly string[]
-  frameId: string | null
-  boundElements: readonly BoundElement[] | null  // e.g. text labels
-  updated: number                    // Timestamp (ms)
-  link: string | null
-  locked: boolean
-  customData?: Record<string, any>
-}
+  version: number;
+  versionNonce: number;
+  index: FractionalIndex | null;
+  isDeleted: boolean;
+  groupIds: readonly string[];
+  frameId: string | null;
+  boundElements: readonly BoundElement[] | null; // e.g. text labels
+  updated: number; // Timestamp (ms)
+  link: string | null;
+  locked: boolean;
+  customData?: Record<string, any>;
+};
 ```
 
 ### ExcalidrawElbowArrowElement (extends arrow)
@@ -96,17 +97,17 @@ type ExcalidrawArrowElement = {
 
 ```typescript
 type ExcalidrawElbowArrowElement = ExcalidrawArrowElement & {
-  elbowed: true
-  fixedSegments: readonly FixedSegment[] | null  // User-anchored segments
-  startIsSpecial: boolean | null                 // Hide first segment flag
-  endIsSpecial: boolean | null                   // Hide last segment flag
-}
+  elbowed: true;
+  fixedSegments: readonly FixedSegment[] | null; // User-anchored segments
+  startIsSpecial: boolean | null; // Hide first segment flag
+  endIsSpecial: boolean | null; // Hide last segment flag
+};
 
 type FixedSegment = {
-  start: LocalPoint    // Must be purely H or V
-  end: LocalPoint
-  index: number        // Segment index in points array
-}
+  start: LocalPoint; // Must be purely H or V
+  end: LocalPoint;
+  index: number; // Segment index in points array
+};
 ```
 
 ### FixedPointBinding
@@ -115,17 +116,17 @@ type FixedSegment = {
 
 ```typescript
 type FixedPointBinding = {
-  elementId: string           // ID of bound target element
-  fixedPoint: [number, number] // Normalized [0–1, 0–1] position on target
-  mode: 'inside' | 'orbit' | 'skip'
-}
+  elementId: string; // ID of bound target element
+  fixedPoint: [number, number]; // Normalized [0–1, 0–1] position on target
+  mode: "inside" | "orbit" | "skip";
+};
 ```
 
-| Mode | Behavior |
-|------|----------|
-| `orbit` | Arrow stops at element edge (respects binding gap) |
-| `inside` | Arrow extends to fixedPoint inside the shape |
-| `skip` | Free-form (experimental) |
+| Mode     | Behavior                                           |
+| -------- | -------------------------------------------------- |
+| `orbit`  | Arrow stops at element edge (respects binding gap) |
+| `inside` | Arrow extends to fixedPoint inside the shape       |
+| `skip`   | Free-form (experimental)                           |
 
 ### Arrowhead Types
 
@@ -133,18 +134,18 @@ type FixedPointBinding = {
 
 ```typescript
 type Arrowhead =
-  | 'arrow'              // Standard triangle (solid)
-  | 'bar'                // Perpendicular line
-  | 'dot'                // Circle (legacy)
-  | 'circle'             // Circle (filled)
-  | 'circle_outline'     // Circle (hollow)
-  | 'triangle'           // Triangle (filled)
-  | 'triangle_outline'   // Triangle (hollow)
-  | 'diamond'            // Diamond (filled)
-  | 'diamond_outline'    // Diamond (hollow)
-  | 'crowfoot_one'       // ER diagram: one
-  | 'crowfoot_many'      // ER diagram: many
-  | 'crowfoot_one_or_many' // ER diagram: one-or-many
+  | "arrow" // Standard triangle (solid)
+  | "bar" // Perpendicular line
+  | "dot" // Circle (legacy)
+  | "circle" // Circle (filled)
+  | "circle_outline" // Circle (hollow)
+  | "triangle" // Triangle (filled)
+  | "triangle_outline" // Triangle (hollow)
+  | "diamond" // Diamond (filled)
+  | "diamond_outline" // Diamond (hollow)
+  | "crowfoot_one" // ER diagram: one
+  | "crowfoot_many" // ER diagram: many
+  | "crowfoot_one_or_many"; // ER diagram: one-or-many
 ```
 
 ---
@@ -152,6 +153,7 @@ type Arrowhead =
 ## 2. Arrow Subtypes
 
 > **Core sources:**
+>
 > - `element/src/typeChecks.ts` — `isArrowElement()`, `isElbowArrow()`, `isSimpleArrow()`, `isSharpArrow()`, `isCurvedArrow()`
 > - `element/src/types.ts` — `ExcalidrawLinearElementSubType`
 
@@ -173,12 +175,13 @@ Three distinct arrow behaviors determined by `elbowed` and `roundness`:
 ```
 
 Type guards:
+
 ```typescript
-isArrowElement(el)    // el.type === 'arrow'
-isElbowArrow(el)      // el.type === 'arrow' && el.elbowed
-isSimpleArrow(el)     // el.type === 'arrow' && !el.elbowed
-isSharpArrow(el)      // !elbowed && !roundness
-isCurvedArrow(el)     // !elbowed && roundness !== null
+isArrowElement(el); // el.type === 'arrow'
+isElbowArrow(el); // el.type === 'arrow' && el.elbowed
+isSimpleArrow(el); // el.type === 'arrow' && !el.elbowed
+isSharpArrow(el); // !elbowed && !roundness
+isCurvedArrow(el); // !elbowed && roundness !== null
 ```
 
 ---
@@ -186,6 +189,7 @@ isCurvedArrow(el)     // !elbowed && roundness !== null
 ## 3. Coordinate System
 
 > **Core sources:**
+>
 > - `element/src/linearElementEditor.ts` — `getPointGlobalCoordinates()` (~line 1207), `pointFromAbsoluteCoords()` (~line 1265), `createPointAt()` (~line 1317), `getNormalizedPoints()` (~line 96)
 > - `element/src/binding.ts` — `getGlobalFixedPointForBindableElement()` (~line 2337)
 > - `math/src/point.ts` — `pointRotateRads()`, `pointFrom()`
@@ -212,14 +216,14 @@ Canvas Space (Global)
 
 ```typescript
 // Local → Global (getPointGlobalCoordinates)
-globalX = arrow.x + localPoint[0]
-globalY = arrow.y + localPoint[1]
+globalX = arrow.x + localPoint[0];
+globalY = arrow.y + localPoint[1];
 // (then rotate around element center by arrow.angle)
 
 // Global → Local (pointFromAbsoluteCoords)
 // (rotate point by -arrow.angle around element center)
-localX = rotatedGlobalX - arrow.x
-localY = rotatedGlobalY - arrow.y
+localX = rotatedGlobalX - arrow.x;
+localY = rotatedGlobalY - arrow.y;
 ```
 
 **Normalization** (`getNormalizedPoints` in `linearElementEditor.ts`): When points change, first point is shifted to `[0,0]` and `arrow.x/y` is adjusted by the offset. This maintains the invariant.
@@ -247,6 +251,7 @@ globalY = element.y + fixedPoint[1] * element.height
 ## 4. Binding System
 
 > **Core sources:**
+>
 > - `element/src/binding.ts` (83KB) — the entire binding system
 >   - `getHoveredElementForBinding()` — detection during drag
 >   - `maxBindingDistance_simple()` — hover threshold
@@ -320,15 +325,15 @@ Gap = `5px + strokeWidth/2` — visual separation between arrowhead and element 
 
 <!-- Source: element/src/binding.ts — bindingStrategyForNewSimpleArrowEndpointDragging() (~line 288), getBindingStrategyForDraggingBindingElementEndpoints_simple() (~line 602) -->
 
-| Context | Start Mode | End Mode |
-|---------|-----------|----------|
-| Creating from inside shape | `inside` | `orbit` |
-| Creating from outside shape | — | `orbit` |
-| Both endpoints on same shape | `inside` | `inside` |
-| Alt key held | `inside` | `inside` |
-| Elbow arrows | always `orbit` | always `orbit` |
-| Dragging endpoint inside shape | `inside` | — |
-| Dragging endpoint outside shape | `orbit` | — |
+| Context                         | Start Mode     | End Mode       |
+| ------------------------------- | -------------- | -------------- |
+| Creating from inside shape      | `inside`       | `orbit`        |
+| Creating from outside shape     | —              | `orbit`        |
+| Both endpoints on same shape    | `inside`       | `inside`       |
+| Alt key held                    | `inside`       | `inside`       |
+| Elbow arrows                    | always `orbit` | always `orbit` |
+| Dragging endpoint inside shape  | `inside`       | —              |
+| Dragging endpoint outside shape | `orbit`        | —              |
 
 ### Intersection Calculation
 
@@ -358,6 +363,7 @@ Snapping to outline: `bindPointToSnapToElementOutline()` creates a line from the
 <!-- Source: element/src/binding.ts — updateBoundElements() (~line 1066), updateBoundPoint() (~line 1672) -->
 
 When a bound element moves:
+
 1. `updateBoundElements()` iterates `element.boundElements[]` for all arrows
 2. For each arrow, `updateBoundPoint()` recalculates endpoint from stored `fixedPoint` ratio
 3. Calls `LinearElementEditor.movePoints()` with new positions
@@ -368,6 +374,7 @@ When a bound element moves:
 ## 5. Curve Generation & Rendering
 
 > **Core sources:**
+>
 > - `element/src/shape.ts` (31KB) — `ShapeCache.generateElementShape()`, `generateRoughOptions()`, `getArrowheadShapes()`, `generateElbowArrowShape()`
 > - `element/src/renderElement.ts` (35KB) — `drawElementOnCanvas()`, `generateElementCanvas()`
 > - `math/src/curve.ts` — `curveCatmullRomCubicApproxPoints()`, `bezierEquation()`, `curveClosestPoint()`, `curveLength()`
@@ -419,6 +426,7 @@ Bezier curve: [p₁, cp1, cp2, p₂]
 ```
 
 The cubic Bezier equation (`math/src/curve.ts` — `bezierEquation()`):
+
 ```
 B(t) = (1-t)³·P₀ + 3(1-t)²t·P₁ + 3(1-t)t²·P₂ + t³·P₃
 ```
@@ -430,7 +438,7 @@ B(t) = (1-t)³·P₀ + 3(1-t)²t·P₁ + 3(1-t)t²·P₂ + t³·P₃
 Elbow corners use quadratic Bezier curves with radius = 16px:
 
 ```typescript
-cornerRadius = Math.min(16, dist_to_next / 2, dist_to_prev / 2)
+cornerRadius = Math.min(16, dist_to_next / 2, dist_to_prev / 2);
 // SVG path: L <before_corner> Q <corner_point> <after_corner>
 ```
 
@@ -457,6 +465,7 @@ cornerRadius = Math.min(16, dist_to_next / 2, dist_to_prev / 2)
 <!-- Source: element/src/shape.ts — ShapeCache class (WeakMap) -->
 
 Shapes are cached in a `WeakMap<Element, Shape>` and only regenerated when:
+
 - Element version changes
 - Zoom level changes
 - Theme changes (dark mode)
@@ -466,6 +475,7 @@ Shapes are cached in a `WeakMap<Element, Shape>` and only regenerated when:
 ## 6. Arrowhead Geometry
 
 > **Core sources:**
+>
 > - `element/src/bounds.ts` — `getArrowheadPoints()`, `getArrowheadSize()`, `getArrowheadAngle()`
 > - `element/src/shape.ts` — `getArrowheadShapes()` (renders each type via roughjs)
 
@@ -473,19 +483,19 @@ Shapes are cached in a `WeakMap<Element, Shape>` and only regenerated when:
 
 <!-- Source: element/src/bounds.ts — getArrowheadSize(), getArrowheadAngle() -->
 
-| Arrowhead | Size (px) | Angle (°) | Geometry |
-|-----------|-----------|-----------|----------|
-| `arrow` | 25 | 20 | Two lines from base to apex |
-| `bar` | 15 | 90 | Perpendicular line |
-| `circle` | 15 | — | Filled circle |
-| `circle_outline` | 15 | — | Hollow circle (bg fill) |
-| `triangle` | 15 | 25 | Filled 3-point polygon |
-| `triangle_outline` | 15 | 25 | Hollow triangle (bg fill) |
-| `diamond` | 12 | 25 | Filled 4-point polygon |
-| `diamond_outline` | 12 | 25 | Hollow diamond (bg fill) |
-| `crowfoot_one` | 20 | — | Single perpendicular line |
-| `crowfoot_many` | 20 | — | Three angled lines (crow's foot) |
-| `crowfoot_one_or_many` | 20 | — | Combined one + many |
+| Arrowhead              | Size (px) | Angle (°) | Geometry                         |
+| ---------------------- | --------- | --------- | -------------------------------- |
+| `arrow`                | 25        | 20        | Two lines from base to apex      |
+| `bar`                  | 15        | 90        | Perpendicular line               |
+| `circle`               | 15        | —         | Filled circle                    |
+| `circle_outline`       | 15        | —         | Hollow circle (bg fill)          |
+| `triangle`             | 15        | 25        | Filled 3-point polygon           |
+| `triangle_outline`     | 15        | 25        | Hollow triangle (bg fill)        |
+| `diamond`              | 12        | 25        | Filled 4-point polygon           |
+| `diamond_outline`      | 12        | 25        | Hollow diamond (bg fill)         |
+| `crowfoot_one`         | 20        | —         | Single perpendicular line        |
+| `crowfoot_many`        | 20        | —         | Three angled lines (crow's foot) |
+| `crowfoot_one_or_many` | 20        | —         | Combined one + many              |
 
 ### Size Scaling
 
@@ -494,8 +504,8 @@ Shapes are cached in a `WeakMap<Element, Shape>` and only regenerated when:
 Arrowheads scale down if the last segment is too short:
 
 ```typescript
-lengthMultiplier = (diamond | diamond_outline) ? 0.25 : 0.5
-actualSize = Math.min(arrowheadSize, lastSegmentLength * lengthMultiplier)
+lengthMultiplier = diamond | diamond_outline ? 0.25 : 0.5;
+actualSize = Math.min(arrowheadSize, lastSegmentLength * lengthMultiplier);
 ```
 
 ### Orientation Calculation
@@ -506,16 +516,16 @@ The arrowhead angle is derived from the curve tangent at t=0.3:
 
 ```typescript
 // Evaluate Bezier curve at t=0.3 (near the endpoint)
-const [x1, y1] = bezierAt(t = 0.3)
-const [x2, y2] = endpoint
+const [x1, y1] = bezierAt((t = 0.3));
+const [x2, y2] = endpoint;
 
 // Direction vector
-const nx = (x2 - x1) / distance(x1,y1, x2,y2)
-const ny = (y2 - y1) / distance(x1,y1, x2,y2)
+const nx = (x2 - x1) / distance(x1, y1, x2, y2);
+const ny = (y2 - y1) / distance(x1, y1, x2, y2);
 
 // Arrowhead base position
-const xs = x2 - nx * actualSize
-const ys = y2 - ny * actualSize
+const xs = x2 - nx * actualSize;
+const ys = y2 - ny * actualSize;
 ```
 
 ---
@@ -523,10 +533,11 @@ const ys = y2 - ny * actualSize
 ## 7. Elbow Arrow Routing
 
 > **Core sources:**
+>
 > - `element/src/elbowArrow.ts` (64KB) — the entire elbow routing system
 >   - `updateElbowArrowPoints()` (~line 906) — entry point
->   - `routeElbowArrow()` (~line 1430) — runs A* with grid
->   - `astar()` (~line 1531) — A* pathfinding implementation
+>   - `routeElbowArrow()` (~line 1430) — runs A\* with grid
+>   - `astar()` (~line 1531) — A\* pathfinding implementation
 >   - `calculateGrid()` (~line 1847) — non-uniform grid builder
 >   - `generateDynamicAABBs()` (~line 1662) — obstacle zone generation
 >   - `getDonglePosition()` (~line 1904) — element exit point
@@ -545,7 +556,7 @@ const ys = y2 - ny * actualSize
 >   - `vectorToHeading()` — vector → cardinal direction
 >   - `flipHeading()`, `compareHeading()`, `headingIsHorizontal()`
 
-### Algorithm: Modified A* Pathfinding
+### Algorithm: Modified A\* Pathfinding
 
 <!-- Source: element/src/elbowArrow.ts — routeElbowArrow() (~line 1430), astar() (~line 1531) -->
 
@@ -590,18 +601,19 @@ const ys = y2 - ny * actualSize
 <!-- Source: element/src/heading.ts — HEADING_* constants (lines 31-35) -->
 
 ```typescript
-HEADING_RIGHT = [1, 0]
-HEADING_DOWN  = [0, 1]
-HEADING_LEFT  = [-1, 0]
-HEADING_UP    = [0, -1]
+HEADING_RIGHT = [1, 0];
+HEADING_DOWN = [0, 1];
+HEADING_LEFT = [-1, 0];
+HEADING_UP = [0, -1];
 ```
 
 Exit/entry direction determined by `headingForPointFromElement()` (`heading.ts` ~line 231):
+
 - Uses triangle "search cones" from element center (SEARCH_CONE_MULTIPLIER = 2)
 - Cross-product test determines which quadrant the target is in
 - Returns the edge direction toward that quadrant
 
-### A* Cost Function
+### A\* Cost Function
 
 <!-- Source: element/src/elbowArrow.ts — astar() (~line 1531), cost calculation lines 1600-1620 -->
 
@@ -645,9 +657,9 @@ hScore = manhattan_dist(neighbor, end)
 // Every segment must be orthogonal:
 for (let i = 1; i < points.length; i++) {
   assert(
-    points[i-1][0] === points[i][0] ||  // Same X (vertical)
-    points[i-1][1] === points[i][1]     // Same Y (horizontal)
-  )
+    points[i - 1][0] === points[i][0] || // Same X (vertical)
+      points[i - 1][1] === points[i][1], // Same Y (horizontal)
+  );
 }
 ```
 
@@ -656,6 +668,7 @@ for (let i = 1; i < points.length; i++) {
 ## 8. Linear Element Editor (Interaction)
 
 > **Core sources:**
+>
 > - `element/src/linearElementEditor.ts` (71KB) — the entire interactive editor
 >   - Class definition with state fields (~top of file)
 >   - `handlePointerDown()` (~line 959) — click on points/segments
@@ -680,48 +693,48 @@ for (let i = 1; i < points.length; i++) {
 
 ```typescript
 type LinearElementEditor = {
-  elementId: string
-  selectedPointsIndices: readonly number[] | null
-  isDragging: boolean
-  lastUncommittedPoint: LocalPoint | null
-  hoverPointIndex: number                       // -1 = none
-  segmentMidPointHoveredCoords: GlobalPoint | null
-  elbowed: boolean
-  customLineAngle: number | null                // Shift-locked angle
-  isEditing: boolean
+  elementId: string;
+  selectedPointsIndices: readonly number[] | null;
+  isDragging: boolean;
+  lastUncommittedPoint: LocalPoint | null;
+  hoverPointIndex: number; // -1 = none
+  segmentMidPointHoveredCoords: GlobalPoint | null;
+  elbowed: boolean;
+  customLineAngle: number | null; // Shift-locked angle
+  isEditing: boolean;
 
   // Binding visualization
-  hoveredFocusPointBinding: 'start' | 'end' | null
-  draggedFocusPointBinding: 'start' | 'end' | null
+  hoveredFocusPointBinding: "start" | "end" | null;
+  draggedFocusPointBinding: "start" | "end" | null;
 
   // Interaction state (initialState)
   initialState: {
-    prevSelectedPointsIndices: readonly number[] | null
-    lastClickedPoint: number
-    origin: GlobalPoint | null
+    prevSelectedPointsIndices: readonly number[] | null;
+    lastClickedPoint: number;
+    origin: GlobalPoint | null;
     segmentMidpoint: {
-      value: GlobalPoint | null
-      index: number | null
-      added: boolean
-    }
-    arrowStartIsInside: boolean
-    altFocusPoint: GlobalPoint | null
-  }
-}
+      value: GlobalPoint | null;
+      index: number | null;
+      added: boolean;
+    };
+    arrowStartIsInside: boolean;
+    altFocusPoint: GlobalPoint | null;
+  };
+};
 ```
 
 ### Point Manipulation
 
 <!-- Source: element/src/linearElementEditor.ts — various functions referenced below -->
 
-| Operation | Mechanism | Source |
-|-----------|-----------|--------|
-| **Select point** | Click within `(POINT_HANDLE_SIZE + 1) / zoom` ≈ 11px | `getPointIndexUnderCursor()` ~line 1289 |
-| **Multi-select** | Shift+click toggles individual points | `handlePointerDown()` ~line 1076 |
-| **Drag point** | Updates position, recalculates bindings | `handlePointDragging()` ~line 427 |
-| **Add midpoint** | Hover segment center, drag when beyond threshold | `shouldAddMidpoint()` ~line 1586, `addMidpoint()` ~line 1631 |
-| **Delete point** | Keyboard delete, filters point from array | `deletePoints()` ~line 1432 |
-| **Shift+drag** | Locks angle to 15° increments | `_getShiftLockedDelta()` |
+| Operation        | Mechanism                                            | Source                                                       |
+| ---------------- | ---------------------------------------------------- | ------------------------------------------------------------ |
+| **Select point** | Click within `(POINT_HANDLE_SIZE + 1) / zoom` ≈ 11px | `getPointIndexUnderCursor()` ~line 1289                      |
+| **Multi-select** | Shift+click toggles individual points                | `handlePointerDown()` ~line 1076                             |
+| **Drag point**   | Updates position, recalculates bindings              | `handlePointDragging()` ~line 427                            |
+| **Add midpoint** | Hover segment center, drag when beyond threshold     | `shouldAddMidpoint()` ~line 1586, `addMidpoint()` ~line 1631 |
+| **Delete point** | Keyboard delete, filters point from array            | `deletePoints()` ~line 1432                                  |
+| **Shift+drag**   | Locks angle to 15° increments                        | `_getShiftLockedDelta()`                                     |
 
 ### Last Uncommitted Point
 
@@ -748,6 +761,7 @@ Elbow arrows restrict selection to endpoints only (middle points auto-computed �
 ## 9. Creation Interaction Flow
 
 > **Core sources:**
+>
 > - `excalidraw/components/App.tsx` — `handleLinearElementOnPointerDown()` (~line 8502), pointer event handlers
 > - `element/src/linearElementEditor.ts` — `handlePointerMove()` (~line 290), `handlePointerUp()` (~line 643)
 > - `element/src/sizeHelpers.ts` — `getLockedLinearCursorAlignSize()` (~line 156), angle snapping
@@ -788,21 +802,21 @@ DRAGGING_ENDPOINT
 
 ### Single-Segment vs Multi-Segment
 
-| Type | Interaction | Result |
-|------|-------------|--------|
-| Single-segment | Drag: pointerDown → move → pointerUp | 2 points |
-| Multi-segment | Click-click-click-doubleclick | N points |
-| Elbow | Drag only (auto-finalizes at 2 points) | 2 points + auto-routed middle |
+| Type           | Interaction                            | Result                        |
+| -------------- | -------------------------------------- | ----------------------------- |
+| Single-segment | Drag: pointerDown → move → pointerUp   | 2 points                      |
+| Multi-segment  | Click-click-click-doubleclick          | N points                      |
+| Elbow          | Drag only (auto-finalizes at 2 points) | 2 points + auto-routed middle |
 
 ### Keyboard Modifiers
 
 <!-- Source: element/src/sizeHelpers.ts — getLockedLinearCursorAlignSize() (~line 156), SHIFT_LOCKING_ANGLE = π/12 -->
 
-| Key | During Creation | During Editing |
-|-----|----------------|----------------|
-| **Shift** | Lock angle to 15° increments (`getLockedLinearCursorAlignSize()` in `sizeHelpers.ts`) | Lock drag to 15° angles |
-| **Ctrl/Cmd** | Disable grid snap + binding | Disable grid snap |
-| **Alt** | Mark arrow as starting inside shape (`arrowStartIsInside`) | Add/move uncommitted point |
+| Key          | During Creation                                                                       | During Editing             |
+| ------------ | ------------------------------------------------------------------------------------- | -------------------------- |
+| **Shift**    | Lock angle to 15° increments (`getLockedLinearCursorAlignSize()` in `sizeHelpers.ts`) | Lock drag to 15° angles    |
+| **Ctrl/Cmd** | Disable grid snap + binding                                                           | Disable grid snap          |
+| **Alt**      | Mark arrow as starting inside shape (`arrowStartIsInside`)                            | Add/move uncommitted point |
 
 ### Finalization
 
@@ -818,6 +832,7 @@ DRAGGING_ENDPOINT
 ## 10. Hit Testing
 
 > **Core sources:**
+>
 > - `element/src/collision.ts` (23KB) — `hitElementItself()`, `isPointOnElementOutline()`
 > - `element/src/distance.ts` (5KB) — `distanceToLinearOrFreeDraElement()`
 > - `math/src/curve.ts` — `curveClosestPoint()`, `curvePointDistance()`
@@ -859,7 +874,7 @@ Stage 2 (Precise): Distance calculation (isPointOnElementOutline → distanceToE
 <!-- Source: element/src/linearElementEditor.ts — getPointIndexUnderCursor() (~line 1289) -->
 
 ```typescript
-tolerance = (POINT_HANDLE_SIZE + 1) / zoom.value  // ~11px at 100%
+tolerance = (POINT_HANDLE_SIZE + 1) / zoom.value; // ~11px at 100%
 // Iterate points BACKWARD (frontmost wins — line 1304)
 // Return index if pointDistance(cursor, point) ≤ tolerance
 ```
@@ -876,45 +891,45 @@ tolerance = (POINT_HANDLE_SIZE + 1) / zoom.value  // ~11px at 100%
 
 ## 11. Constants Reference
 
-| Constant | Value | Source |
-|----------|-------|--------|
-| `BASE_BINDING_GAP` | 5px | `element/src/binding.ts` ~line 121 |
-| `BASE_BINDING_GAP_ELBOW` | 5px | `element/src/binding.ts` ~line 121 |
-| `maxBindingDistance` | 15–30px | `element/src/binding.ts` — `maxBindingDistance_simple()` |
-| `LINE_CONFIRM_THRESHOLD` | 8px | `common/src/constants.ts` |
-| `SHIFT_LOCKING_ANGLE` | π/12 (15°) | `common/src/constants.ts` |
-| `DRAGGING_THRESHOLD` | 5px | `common/src/constants.ts` |
-| `POINT_HANDLE_SIZE` | 10px | `element/src/linearElementEditor.ts` |
-| `BASE_PADDING` | 40px | `element/src/elbowArrow.ts` ~line 111 |
-| `DEDUP_THRESHOLD` | 1px | `element/src/elbowArrow.ts` ~line 110 |
-| `ELBOW_CORNER_RADIUS` | 16px | `element/src/shape.ts` — `generateElbowArrowShape()` |
-| `DEFAULT_PROPORTIONAL_RADIUS` | 0.25 | `element/src/types.ts` |
-| `CATMULL_ROM_TENSION` | 0.5 | `math/src/curve.ts` — `curveCatmullRomCubicApproxPoints()` |
-| `ARROWHEAD_TANGENT_T` | 0.3 | `element/src/bounds.ts` — `getArrowheadPoints()` |
-| `SEARCH_CONE_MULTIPLIER` | 2 | `element/src/heading.ts` |
+| Constant                      | Value      | Source                                                     |
+| ----------------------------- | ---------- | ---------------------------------------------------------- |
+| `BASE_BINDING_GAP`            | 5px        | `element/src/binding.ts` ~line 121                         |
+| `BASE_BINDING_GAP_ELBOW`      | 5px        | `element/src/binding.ts` ~line 121                         |
+| `maxBindingDistance`          | 15–30px    | `element/src/binding.ts` — `maxBindingDistance_simple()`   |
+| `LINE_CONFIRM_THRESHOLD`      | 8px        | `common/src/constants.ts`                                  |
+| `SHIFT_LOCKING_ANGLE`         | π/12 (15°) | `common/src/constants.ts`                                  |
+| `DRAGGING_THRESHOLD`          | 5px        | `common/src/constants.ts`                                  |
+| `POINT_HANDLE_SIZE`           | 10px       | `element/src/linearElementEditor.ts`                       |
+| `BASE_PADDING`                | 40px       | `element/src/elbowArrow.ts` ~line 111                      |
+| `DEDUP_THRESHOLD`             | 1px        | `element/src/elbowArrow.ts` ~line 110                      |
+| `ELBOW_CORNER_RADIUS`         | 16px       | `element/src/shape.ts` — `generateElbowArrowShape()`       |
+| `DEFAULT_PROPORTIONAL_RADIUS` | 0.25       | `element/src/types.ts`                                     |
+| `CATMULL_ROM_TENSION`         | 0.5        | `math/src/curve.ts` — `curveCatmullRomCubicApproxPoints()` |
+| `ARROWHEAD_TANGENT_T`         | 0.3        | `element/src/bounds.ts` — `getArrowheadPoints()`           |
+| `SEARCH_CONE_MULTIPLIER`      | 2          | `element/src/heading.ts`                                   |
 
 ### Arrowhead Size Table
 
 <!-- Source: element/src/bounds.ts — getArrowheadSize(), getArrowheadAngle() -->
 
-| Type | Size | Angle | Scale Factor |
-|------|------|-------|-------------|
-| `arrow` | 25px | 20° | 0.5 |
-| `bar` | 15px | 90° | 0.5 |
-| `circle` / `circle_outline` | 15px | — | 0.5 |
-| `triangle` / `triangle_outline` | 15px | 25° | 0.5 |
-| `diamond` / `diamond_outline` | 12px | 25° | 0.25 |
-| `crowfoot_*` | 20px | — | 0.5 |
+| Type                            | Size | Angle | Scale Factor |
+| ------------------------------- | ---- | ----- | ------------ |
+| `arrow`                         | 25px | 20°   | 0.5          |
+| `bar`                           | 15px | 90°   | 0.5          |
+| `circle` / `circle_outline`     | 15px | —     | 0.5          |
+| `triangle` / `triangle_outline` | 15px | 25°   | 0.5          |
+| `diamond` / `diamond_outline`   | 12px | 25°   | 0.25         |
+| `crowfoot_*`                    | 20px | —     | 0.5          |
 
 ### Roughness Levels
 
 <!-- Source: common/src/constants.ts — ROUGHNESS -->
 
-| Level | Value | Name | Effect |
-|-------|-------|------|--------|
-| 0 | 0 | Architect | Clean, precise lines |
-| 1 | 1 | Artist | Slight hand-drawn wobble |
-| 2 | 2 | Cartoonist | Heavy hand-drawn effect |
+| Level | Value | Name       | Effect                   |
+| ----- | ----- | ---------- | ------------------------ |
+| 0     | 0     | Architect  | Clean, precise lines     |
+| 1     | 1     | Artist     | Slight hand-drawn wobble |
+| 2     | 2     | Cartoonist | Heavy hand-drawn effect  |
 
 ---
 
@@ -922,28 +937,28 @@ tolerance = (POINT_HANDLE_SIZE + 1) / zoom.value  // ~11px at 100%
 
 > All paths relative to `excalidraw/packages/`. Browse these files directly for implementation details.
 
-| File | Size | Purpose |
-|------|------|---------|
-| `element/src/types.ts` | 13KB | Type definitions for all elements |
-| `element/src/newElement.ts` | 14KB | Element creation with defaults |
-| `element/src/typeChecks.ts` | 10KB | Type guard functions |
-| `element/src/binding.ts` | 83KB | Binding system (detection, update, unbind) |
-| `element/src/linearElementEditor.ts` | 71KB | Interactive point editor |
-| `element/src/elbowArrow.ts` | 64KB | A* routing for elbow arrows |
-| `element/src/shape.ts` | 31KB | Shape generation from element data |
-| `element/src/renderElement.ts` | 35KB | Canvas rendering |
-| `element/src/bounds.ts` | 34KB | Bounding box & arrowhead math |
-| `element/src/collision.ts` | 23KB | Hit testing |
-| `element/src/distance.ts` | 5KB | Distance calculations |
-| `element/src/heading.ts` | 7KB | Cardinal direction system |
-| `element/src/arrows/focus.ts` | 15KB | Focus point calculation |
-| `element/src/arrows/helpers.ts` | 1.4KB | Arrow utility functions |
-| `element/src/sizeHelpers.ts` | 7KB | Angle snapping (`getLockedLinearCursorAlignSize`) |
-| `element/src/dragElements.ts` | 10KB | Element dragging |
-| `element/src/resizeElements.ts` | 42KB | Resize & endpoint dragging |
-| `math/src/curve.ts` | — | Bezier curve math (Catmull-Rom, closest point, length) |
-| `math/src/point.ts` | — | Point math (rotate, distance, scale) |
-| `math/src/vector.ts` | — | Vector math (normalize, scale, fromPoint) |
-| `math/src/segment.ts` | — | Line segment operations |
-| `common/src/constants.ts` | — | Shared constants (thresholds, angles) |
-| `excalidraw/components/App.tsx` | — | Main app pointer event handling |
+| File                                 | Size  | Purpose                                                |
+| ------------------------------------ | ----- | ------------------------------------------------------ |
+| `element/src/types.ts`               | 13KB  | Type definitions for all elements                      |
+| `element/src/newElement.ts`          | 14KB  | Element creation with defaults                         |
+| `element/src/typeChecks.ts`          | 10KB  | Type guard functions                                   |
+| `element/src/binding.ts`             | 83KB  | Binding system (detection, update, unbind)             |
+| `element/src/linearElementEditor.ts` | 71KB  | Interactive point editor                               |
+| `element/src/elbowArrow.ts`          | 64KB  | A\* routing for elbow arrows                           |
+| `element/src/shape.ts`               | 31KB  | Shape generation from element data                     |
+| `element/src/renderElement.ts`       | 35KB  | Canvas rendering                                       |
+| `element/src/bounds.ts`              | 34KB  | Bounding box & arrowhead math                          |
+| `element/src/collision.ts`           | 23KB  | Hit testing                                            |
+| `element/src/distance.ts`            | 5KB   | Distance calculations                                  |
+| `element/src/heading.ts`             | 7KB   | Cardinal direction system                              |
+| `element/src/arrows/focus.ts`        | 15KB  | Focus point calculation                                |
+| `element/src/arrows/helpers.ts`      | 1.4KB | Arrow utility functions                                |
+| `element/src/sizeHelpers.ts`         | 7KB   | Angle snapping (`getLockedLinearCursorAlignSize`)      |
+| `element/src/dragElements.ts`        | 10KB  | Element dragging                                       |
+| `element/src/resizeElements.ts`      | 42KB  | Resize & endpoint dragging                             |
+| `math/src/curve.ts`                  | —     | Bezier curve math (Catmull-Rom, closest point, length) |
+| `math/src/point.ts`                  | —     | Point math (rotate, distance, scale)                   |
+| `math/src/vector.ts`                 | —     | Vector math (normalize, scale, fromPoint)              |
+| `math/src/segment.ts`                | —     | Line segment operations                                |
+| `common/src/constants.ts`            | —     | Shared constants (thresholds, angles)                  |
+| `excalidraw/components/App.tsx`      | —     | Main app pointer event handling                        |

@@ -22,8 +22,8 @@
 14. [Testing Strategy](#14-testing-strategy)
 15. [Parallelization Plan (Agent Swarm)](#15-parallelization-plan)
 16. [Implementation Order](#16-implementation-order)
-13. [File Map](#13-file-map)
-14. [Implementation Order](#14-implementation-order)
+17. [File Map](#13-file-map)
+18. [Implementation Order](#14-implementation-order)
 
 ---
 
@@ -48,20 +48,20 @@ Canvas Foundation          Element System              Tool System
 
 ### What's Missing for Phase 3
 
-| Component | Status | Needed For |
-|-----------|--------|------------|
-| Hit detection (point-in-shape) | Not built | Clicking to select |
-| Bounding box calculation | Not built | Selection borders, handles |
-| Selection state (`useSelection`) | Not built | Tracking what's selected |
-| Transform handles (positions) | Not built | Resize/rotate affordances |
-| Handle hit detection | Not built | Knowing which handle was clicked |
-| Drag-to-move logic | Not built | Moving elements |
-| Resize logic | Not built | Changing element dimensions |
-| Interactive canvas rendering | Callbacks exist but empty | Drawing selection UI |
-| Box-select (marquee) | Not built | Multi-select by dragging empty space |
-| Cursor changes on hover | Partial (crosshair/grab) | Resize cursors, move cursor |
-| Delete selected | Not built | Removing elements |
-| Arrow key movement | Not built | Nudging elements |
+| Component                        | Status                    | Needed For                           |
+| -------------------------------- | ------------------------- | ------------------------------------ |
+| Hit detection (point-in-shape)   | Not built                 | Clicking to select                   |
+| Bounding box calculation         | Not built                 | Selection borders, handles           |
+| Selection state (`useSelection`) | Not built                 | Tracking what's selected             |
+| Transform handles (positions)    | Not built                 | Resize/rotate affordances            |
+| Handle hit detection             | Not built                 | Knowing which handle was clicked     |
+| Drag-to-move logic               | Not built                 | Moving elements                      |
+| Resize logic                     | Not built                 | Changing element dimensions          |
+| Interactive canvas rendering     | Callbacks exist but empty | Drawing selection UI                 |
+| Box-select (marquee)             | Not built                 | Multi-select by dragging empty space |
+| Cursor changes on hover          | Partial (crosshair/grab)  | Resize cursors, move cursor          |
+| Delete selected                  | Not built                 | Removing elements                    |
+| Arrow key movement               | Not built                 | Nudging elements                     |
 
 ---
 
@@ -92,6 +92,7 @@ Phase 2: Precise Shape Test (expensive)
 **Key files**: `packages/element/src/collision.ts` (lines 117-193)
 
 Shape-specific intersection tests:
+
 - **Rectangles**: Decompose into sides + rounded-corner Bezier curves
 - **Ellipses**: Mathematical `(x/rx)² + (y/ry)² ≤ 1`
 - **Diamonds**: 4-vertex polygon intersection
@@ -101,8 +102,8 @@ Shape-specific intersection tests:
 
 ```typescript
 // Excalidraw's approach (React state)
-selectedElementIds: Record<string, true>   // O(1) lookup via object keys
-selectedGroupIds: Record<string, boolean>  // group-level selection
+selectedElementIds: Record<string, true>; // O(1) lookup via object keys
+selectedGroupIds: Record<string, boolean>; // group-level selection
 ```
 
 Element selection is tracked as an **ID set** (object with `true` values). This makes toggle/add/remove O(1) and serializable.
@@ -204,15 +205,15 @@ Hovering over canvas (selection tool active):
 
 ### What We Simplify vs. Excalidraw
 
-| Excalidraw Has | Our MVP | Reason |
-|----------------|---------|--------|
-| Groups, frames, bound text | Skip | Complexity; add later |
-| Lasso selection | Skip | Box-select is sufficient for MVP |
-| Object snapping | Skip | Nice-to-have, not essential |
-| Rotation handle | **Include** | High value, low complexity for simple shapes |
-| Multi-element resize | Skip | Single-element resize first |
-| Elbow arrows, bindings | Skip | Phase 4+ |
-| Per-element canvas cache | Already have shape cache | Sufficient for MVP |
+| Excalidraw Has             | Our MVP                  | Reason                                       |
+| -------------------------- | ------------------------ | -------------------------------------------- |
+| Groups, frames, bound text | Skip                     | Complexity; add later                        |
+| Lasso selection            | Skip                     | Box-select is sufficient for MVP             |
+| Object snapping            | Skip                     | Nice-to-have, not essential                  |
+| Rotation handle            | **Include**              | High value, low complexity for simple shapes |
+| Multi-element resize       | Skip                     | Single-element resize first                  |
+| Elbow arrows, bindings     | Skip                     | Phase 4+                                     |
+| Per-element canvas cache   | Already have shape cache | Sufficient for MVP                           |
 
 ---
 
@@ -227,11 +228,7 @@ Hovering over canvas (selection tool active):
  * Tests if a scene-space point hits an element.
  * Two-phase: fast bounding-box reject, then precise shape test.
  */
-function hitTest(
-  point: Point,
-  element: ExcalidrawElement,
-  zoom: number,
-): boolean
+function hitTest(point: Point, element: ExcalidrawElement, zoom: number): boolean;
 
 /**
  * Returns the topmost (highest z-index) element at a scene position.
@@ -241,7 +238,7 @@ function getElementAtPosition(
   scenePoint: Point,
   elements: readonly ExcalidrawElement[],
   zoom: number,
-): ExcalidrawElement | null
+): ExcalidrawElement | null;
 ```
 
 ### 4.2 Algorithm — Rectangle
@@ -249,22 +246,22 @@ function getElementAtPosition(
 ```typescript
 function hitTestRectangle(point: Point, el: ExcalidrawElement, threshold: number): boolean {
   // 1. Inverse-rotate point around element center
-  const cx = el.x + el.width / 2
-  const cy = el.y + el.height / 2
-  const rotated = rotatePoint(point, { x: cx, y: cy }, -el.angle)
+  const cx = el.x + el.width / 2;
+  const cy = el.y + el.height / 2;
+  const rotated = rotatePoint(point, { x: cx, y: cy }, -el.angle);
 
   // 2. If filled → test inside
-  if (el.backgroundColor !== 'transparent') {
+  if (el.backgroundColor !== "transparent") {
     return (
       rotated.x >= el.x - threshold &&
       rotated.x <= el.x + el.width + threshold &&
       rotated.y >= el.y - threshold &&
       rotated.y <= el.y + el.height + threshold
-    )
+    );
   }
 
   // 3. If outline-only → test distance to each edge
-  return isPointNearRectOutline(rotated, el, threshold)
+  return isPointNearRectOutline(rotated, el, threshold);
 }
 ```
 
@@ -272,33 +269,33 @@ function hitTestRectangle(point: Point, el: ExcalidrawElement, threshold: number
 
 ```typescript
 function hitTestEllipse(point: Point, el: ExcalidrawElement, threshold: number): boolean {
-  const cx = el.x + el.width / 2
-  const cy = el.y + el.height / 2
-  const rotated = rotatePoint(point, { x: cx, y: cy }, -el.angle)
+  const cx = el.x + el.width / 2;
+  const cy = el.y + el.height / 2;
+  const rotated = rotatePoint(point, { x: cx, y: cy }, -el.angle);
 
-  const rx = el.width / 2
-  const ry = el.height / 2
-  const dx = rotated.x - cx
-  const dy = rotated.y - cy
+  const rx = el.width / 2;
+  const ry = el.height / 2;
+  const dx = rotated.x - cx;
+  const dy = rotated.y - cy;
 
   // Normalized distance from center
-  const normalizedDist = (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry)
+  const normalizedDist = (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry);
 
-  if (el.backgroundColor !== 'transparent') {
+  if (el.backgroundColor !== "transparent") {
     // Filled: point inside ellipse (with threshold for stroke)
-    const outerRx = rx + threshold
-    const outerRy = ry + threshold
-    return (dx * dx) / (outerRx * outerRx) + (dy * dy) / (outerRy * outerRy) <= 1
+    const outerRx = rx + threshold;
+    const outerRy = ry + threshold;
+    return (dx * dx) / (outerRx * outerRx) + (dy * dy) / (outerRy * outerRy) <= 1;
   }
 
   // Outline-only: point near the ellipse boundary
-  const innerRx = Math.max(0, rx - threshold)
-  const innerRy = Math.max(0, ry - threshold)
-  const outerRx = rx + threshold
-  const outerRy = ry + threshold
-  const outerDist = (dx * dx) / (outerRx * outerRx) + (dy * dy) / (outerRy * outerRy)
-  const innerDist = (dx * dx) / (innerRx * innerRx) + (dy * dy) / (innerRy * innerRy)
-  return outerDist <= 1 && innerDist >= 1
+  const innerRx = Math.max(0, rx - threshold);
+  const innerRy = Math.max(0, ry - threshold);
+  const outerRx = rx + threshold;
+  const outerRy = ry + threshold;
+  const outerDist = (dx * dx) / (outerRx * outerRx) + (dy * dy) / (outerRy * outerRy);
+  const innerDist = (dx * dx) / (innerRx * innerRx) + (dy * dy) / (innerRy * innerRy);
+  return outerDist <= 1 && innerDist >= 1;
 }
 ```
 
@@ -306,22 +303,22 @@ function hitTestEllipse(point: Point, el: ExcalidrawElement, threshold: number):
 
 ```typescript
 function hitTestDiamond(point: Point, el: ExcalidrawElement, threshold: number): boolean {
-  const cx = el.x + el.width / 2
-  const cy = el.y + el.height / 2
-  const rotated = rotatePoint(point, { x: cx, y: cy }, -el.angle)
+  const cx = el.x + el.width / 2;
+  const cy = el.y + el.height / 2;
+  const rotated = rotatePoint(point, { x: cx, y: cy }, -el.angle);
 
   // Diamond vertices: top, right, bottom, left
   const vertices: Point[] = [
-    { x: cx, y: el.y },                    // top
-    { x: el.x + el.width, y: cy },         // right
-    { x: cx, y: el.y + el.height },        // bottom
-    { x: el.x, y: cy },                    // left
-  ]
+    { x: cx, y: el.y }, // top
+    { x: el.x + el.width, y: cy }, // right
+    { x: cx, y: el.y + el.height }, // bottom
+    { x: el.x, y: cy }, // left
+  ];
 
-  if (el.backgroundColor !== 'transparent') {
-    return isPointInPolygon(rotated, vertices, threshold)
+  if (el.backgroundColor !== "transparent") {
+    return isPointInPolygon(rotated, vertices, threshold);
   }
-  return isPointNearPolygonOutline(rotated, vertices, threshold)
+  return isPointNearPolygonOutline(rotated, vertices, threshold);
 }
 ```
 
@@ -329,7 +326,7 @@ function hitTestDiamond(point: Point, el: ExcalidrawElement, threshold: number):
 
 ```typescript
 function getHitThreshold(element: ExcalidrawElement, zoom: number): number {
-  return Math.max(element.strokeWidth / 2 + 0.1, 10 / zoom)
+  return Math.max(element.strokeWidth / 2 + 0.1, 10 / zoom);
 }
 ```
 
@@ -346,33 +343,31 @@ This ensures elements are always clickable — even thin strokes at low zoom.
 
 function useSelection(elements: ShallowRef<readonly ExcalidrawElement[]>) {
   // Core state: set of selected element IDs
-  const selectedIds = shallowRef<ReadonlySet<string>>(new Set())
+  const selectedIds = shallowRef<ReadonlySet<string>>(new Set());
 
   // Derived: array of selected elements (non-deleted)
   const selectedElements = computed(() =>
-    elements.value.filter(el => selectedIds.value.has(el.id) && !el.isDeleted)
-  )
+    elements.value.filter((el) => selectedIds.value.has(el.id) && !el.isDeleted),
+  );
 
   // Derived: common bounding box of all selected elements
   const selectionBounds = computed(() =>
-    selectedElements.value.length > 0
-      ? getCommonBounds(selectedElements.value)
-      : null
-  )
+    selectedElements.value.length > 0 ? getCommonBounds(selectedElements.value) : null,
+  );
 
   // Actions
-  function select(id: string): void           // Replace selection with single ID
-  function addToSelection(id: string): void    // Add to existing selection
-  function removeFromSelection(id: string): void
-  function toggleSelection(id: string): void   // Toggle (for shift-click)
-  function clearSelection(): void
-  function selectAll(): void
-  function isSelected(id: string): boolean
+  function select(id: string): void; // Replace selection with single ID
+  function addToSelection(id: string): void; // Add to existing selection
+  function removeFromSelection(id: string): void;
+  function toggleSelection(id: string): void; // Toggle (for shift-click)
+  function clearSelection(): void;
+  function selectAll(): void;
+  function isSelected(id: string): boolean;
 
   return {
-    selectedIds,          // readonly
-    selectedElements,     // computed
-    selectionBounds,      // computed [x1, y1, x2, y2] | null
+    selectedIds, // readonly
+    selectedElements, // computed
+    selectionBounds, // computed [x1, y1, x2, y2] | null
     select,
     addToSelection,
     removeFromSelection,
@@ -380,13 +375,14 @@ function useSelection(elements: ShallowRef<readonly ExcalidrawElement[]>) {
     clearSelection,
     selectAll,
     isSelected,
-  }
+  };
 }
 ```
 
 ### 5.2 Why `Set<string>` over `Record<string, true>`
 
 Excalidraw uses `Record<string, true>` (a React/Redux convention). We use `Set` because:
+
 - Cleaner API: `.has()`, `.add()`, `.delete()` vs. `obj[key] = true`, `delete obj[key]`
 - Better TypeScript support
 - Same O(1) performance
@@ -401,57 +397,57 @@ Excalidraw uses `Record<string, true>` (a React/Redux convention). We use `Set` 
 ```typescript
 // features/selection/transformHandles.ts
 
-type TransformHandleDirection = 'n' | 's' | 'e' | 'w' | 'nw' | 'ne' | 'sw' | 'se'
-type TransformHandleType = TransformHandleDirection | 'rotation'
+type TransformHandleDirection = "n" | "s" | "e" | "w" | "nw" | "ne" | "sw" | "se";
+type TransformHandleType = TransformHandleDirection | "rotation";
 
 // A handle is defined by its center point and dimensions [x, y, width, height]
-type TransformHandle = [x: number, y: number, width: number, height: number]
-type TransformHandles = Partial<Record<TransformHandleType, TransformHandle>>
+type TransformHandle = [x: number, y: number, width: number, height: number];
+type TransformHandles = Partial<Record<TransformHandleType, TransformHandle>>;
 ```
 
 ### 6.2 Handle Position Calculation
 
 ```typescript
-const HANDLE_SIZE = 8                 // px (screen space, divided by zoom for scene space)
-const HANDLE_MARGIN = 4               // gap between element border and handle
-const ROTATION_HANDLE_OFFSET = 20     // distance above element for rotation handle
+const HANDLE_SIZE = 8; // px (screen space, divided by zoom for scene space)
+const HANDLE_MARGIN = 4; // gap between element border and handle
+const ROTATION_HANDLE_OFFSET = 20; // distance above element for rotation handle
 
 function getTransformHandles(
   element: ExcalidrawElement,
   zoom: number,
   omitSides?: Set<TransformHandleType>,
 ): TransformHandles {
-  const size = HANDLE_SIZE / zoom
-  const margin = HANDLE_MARGIN / zoom
-  const halfSize = size / 2
+  const size = HANDLE_SIZE / zoom;
+  const margin = HANDLE_MARGIN / zoom;
+  const halfSize = size / 2;
 
-  const [x1, y1, x2, y2] = getElementBounds(element)
-  const cx = (x1 + x2) / 2
-  const cy = (y1 + y2) / 2
-  const w = x2 - x1
-  const h = y2 - y1
+  const [x1, y1, x2, y2] = getElementBounds(element);
+  const cx = (x1 + x2) / 2;
+  const cy = (y1 + y2) / 2;
+  const w = x2 - x1;
+  const h = y2 - y1;
 
-  const handles: TransformHandles = {}
+  const handles: TransformHandles = {};
 
   // Corner handles (always shown)
-  handles.nw = [x1 - margin - size, y1 - margin - size, size, size]
-  handles.ne = [x2 + margin,        y1 - margin - size, size, size]
-  handles.sw = [x1 - margin - size, y2 + margin,        size, size]
-  handles.se = [x2 + margin,        y2 + margin,        size, size]
+  handles.nw = [x1 - margin - size, y1 - margin - size, size, size];
+  handles.ne = [x2 + margin, y1 - margin - size, size, size];
+  handles.sw = [x1 - margin - size, y2 + margin, size, size];
+  handles.se = [x2 + margin, y2 + margin, size, size];
 
   // Side handles (only if element large enough: > 5 * handleSize)
   if (w > 5 * size) {
-    handles.n = [cx - halfSize, y1 - margin - size, size, size]
-    handles.s = [cx - halfSize, y2 + margin,        size, size]
+    handles.n = [cx - halfSize, y1 - margin - size, size, size];
+    handles.s = [cx - halfSize, y2 + margin, size, size];
   }
   if (h > 5 * size) {
-    handles.w = [x1 - margin - size, cy - halfSize, size, size]
-    handles.e = [x2 + margin,        cy - halfSize, size, size]
+    handles.w = [x1 - margin - size, cy - halfSize, size, size];
+    handles.e = [x2 + margin, cy - halfSize, size, size];
   }
 
   // Rotation handle (above element)
-  const rotOffset = ROTATION_HANDLE_OFFSET / zoom
-  handles.rotation = [cx - halfSize, y1 - margin - size - rotOffset, size, size]
+  const rotOffset = ROTATION_HANDLE_OFFSET / zoom;
+  handles.rotation = [cx - halfSize, y1 - margin - size - rotOffset, size, size];
 
   // Rotate all handle positions by element.angle around element center
   if (element.angle !== 0) {
@@ -459,18 +455,18 @@ function getTransformHandles(
       const handleCenter = {
         x: handle[0] + handle[2] / 2,
         y: handle[1] + handle[3] / 2,
-      }
-      const rotated = rotatePoint(handleCenter, { x: cx, y: cy }, element.angle)
+      };
+      const rotated = rotatePoint(handleCenter, { x: cx, y: cy }, element.angle);
       handles[key as TransformHandleType] = [
         rotated.x - handle[2] / 2,
         rotated.y - handle[3] / 2,
         handle[2],
         handle[3],
-      ]
+      ];
     }
   }
 
-  return handles
+  return handles;
 }
 ```
 
@@ -482,17 +478,19 @@ function getTransformHandleAtPosition(
   element: ExcalidrawElement,
   zoom: number,
 ): TransformHandleType | null {
-  const handles = getTransformHandles(element, zoom)
+  const handles = getTransformHandles(element, zoom);
 
   for (const [type, [hx, hy, hw, hh]] of Object.entries(handles)) {
     if (
-      scenePoint.x >= hx && scenePoint.x <= hx + hw &&
-      scenePoint.y >= hy && scenePoint.y <= hy + hh
+      scenePoint.x >= hx &&
+      scenePoint.x <= hx + hw &&
+      scenePoint.y >= hy &&
+      scenePoint.y <= hy + hh
     ) {
-      return type as TransformHandleType
+      return type as TransformHandleType;
     }
   }
-  return null
+  return null;
 }
 ```
 
@@ -507,20 +505,17 @@ function getTransformHandleAtPosition(
 
 interface DragState {
   /** Scene-space pointer position at drag start */
-  origin: Point
+  origin: Point;
   /** Snapshot of each selected element's position at drag start */
-  originalPositions: Map<string, Point>
+  originalPositions: Map<string, Point>;
 }
 
-function startDrag(
-  scenePoint: Point,
-  selectedElements: readonly ExcalidrawElement[],
-): DragState {
-  const originalPositions = new Map<string, Point>()
+function startDrag(scenePoint: Point, selectedElements: readonly ExcalidrawElement[]): DragState {
+  const originalPositions = new Map<string, Point>();
   for (const el of selectedElements) {
-    originalPositions.set(el.id, { x: el.x, y: el.y })
+    originalPositions.set(el.id, { x: el.x, y: el.y });
   }
-  return { origin: scenePoint, originalPositions }
+  return { origin: scenePoint, originalPositions };
 }
 
 function continueDrag(
@@ -528,16 +523,16 @@ function continueDrag(
   dragState: DragState,
   selectedElements: readonly ExcalidrawElement[],
 ): void {
-  const dx = scenePoint.x - dragState.origin.x
-  const dy = scenePoint.y - dragState.origin.y
+  const dx = scenePoint.x - dragState.origin.x;
+  const dy = scenePoint.y - dragState.origin.y;
 
   for (const el of selectedElements) {
-    const original = dragState.originalPositions.get(el.id)
-    if (!original) continue
+    const original = dragState.originalPositions.get(el.id);
+    if (!original) continue;
     mutateElement(el, {
       x: original.x + dx,
       y: original.y + dy,
-    })
+    });
   }
 }
 ```
@@ -551,9 +546,9 @@ When Shift is held, lock movement to the dominant axis:
 ```typescript
 function getConstrainedDelta(dx: number, dy: number): Point {
   if (Math.abs(dx) > Math.abs(dy)) {
-    return { x: dx, y: 0 }
+    return { x: dx, y: 0 };
   }
-  return { x: 0, y: dy }
+  return { x: 0, y: dy };
 }
 ```
 
@@ -567,11 +562,11 @@ function getConstrainedDelta(dx: number, dy: number): Point {
 // features/selection/resizeElement.ts
 
 interface ResizeState {
-  handleType: TransformHandleDirection
+  handleType: TransformHandleDirection;
   /** Original element bounds at resize start */
-  originalBounds: { x: number; y: number; width: number; height: number }
+  originalBounds: { x: number; y: number; width: number; height: number };
   /** Scene-space pointer position at resize start */
-  origin: Point
+  origin: Point;
 }
 
 function resizeElement(
@@ -580,51 +575,67 @@ function resizeElement(
   element: ExcalidrawElement,
   shiftKey: boolean,
 ): void {
-  const { handleType, originalBounds: ob, origin } = resizeState
+  const { handleType, originalBounds: ob, origin } = resizeState;
 
   // Work in unrotated coordinate space
-  const center = { x: ob.x + ob.width / 2, y: ob.y + ob.height / 2 }
-  const unrotatedPointer = rotatePoint(scenePoint, center, -element.angle)
-  const unrotatedOrigin = rotatePoint(origin, center, -element.angle)
-  const dx = unrotatedPointer.x - unrotatedOrigin.x
-  const dy = unrotatedPointer.y - unrotatedOrigin.y
+  const center = { x: ob.x + ob.width / 2, y: ob.y + ob.height / 2 };
+  const unrotatedPointer = rotatePoint(scenePoint, center, -element.angle);
+  const unrotatedOrigin = rotatePoint(origin, center, -element.angle);
+  const dx = unrotatedPointer.x - unrotatedOrigin.x;
+  const dy = unrotatedPointer.y - unrotatedOrigin.y;
 
-  let { x, y, width, height } = ob
+  let { x, y, width, height } = ob;
 
   // Apply delta based on which handle is being dragged
-  if (handleType.includes('e')) { width += dx }
-  if (handleType.includes('w')) { x += dx; width -= dx }
-  if (handleType.includes('s')) { height += dy }
-  if (handleType.includes('n')) { y += dy; height -= dy }
+  if (handleType.includes("e")) {
+    width += dx;
+  }
+  if (handleType.includes("w")) {
+    x += dx;
+    width -= dx;
+  }
+  if (handleType.includes("s")) {
+    height += dy;
+  }
+  if (handleType.includes("n")) {
+    y += dy;
+    height -= dy;
+  }
 
   // Shift: lock aspect ratio
   if (shiftKey) {
-    const aspectRatio = ob.width / ob.height
-    if (handleType === 'n' || handleType === 's') {
-      width = height * aspectRatio
-    } else if (handleType === 'e' || handleType === 'w') {
-      height = width / aspectRatio
+    const aspectRatio = ob.width / ob.height;
+    if (handleType === "n" || handleType === "s") {
+      width = height * aspectRatio;
+    } else if (handleType === "e" || handleType === "w") {
+      height = width / aspectRatio;
     } else {
       // Corner: use the dominant axis
-      const newAspect = Math.abs(width) / Math.abs(height)
+      const newAspect = Math.abs(width) / Math.abs(height);
       if (newAspect > aspectRatio) {
-        height = Math.sign(height) * Math.abs(width) / aspectRatio
+        height = (Math.sign(height) * Math.abs(width)) / aspectRatio;
       } else {
-        width = Math.sign(width) * Math.abs(height) * aspectRatio
+        width = Math.sign(width) * Math.abs(height) * aspectRatio;
       }
     }
   }
 
   // Enforce minimum size
-  const MIN_SIZE = 1
-  if (Math.abs(width) < MIN_SIZE) width = Math.sign(width) * MIN_SIZE || MIN_SIZE
-  if (Math.abs(height) < MIN_SIZE) height = Math.sign(height) * MIN_SIZE || MIN_SIZE
+  const MIN_SIZE = 1;
+  if (Math.abs(width) < MIN_SIZE) width = Math.sign(width) * MIN_SIZE || MIN_SIZE;
+  if (Math.abs(height) < MIN_SIZE) height = Math.sign(height) * MIN_SIZE || MIN_SIZE;
 
   // Handle negative dimensions (dragging past opposite edge)
-  if (width < 0) { x += width; width = Math.abs(width) }
-  if (height < 0) { y += height; height = Math.abs(height) }
+  if (width < 0) {
+    x += width;
+    width = Math.abs(width);
+  }
+  if (height < 0) {
+    y += height;
+    height = Math.abs(height);
+  }
 
-  mutateElement(element, { x, y, width, height })
+  mutateElement(element, { x, y, width, height });
 }
 ```
 
@@ -662,73 +673,73 @@ Interactive Canvas renders:
 ```typescript
 // features/rendering/renderInteractive.ts
 
-const SELECTION_COLOR = '#4a90d9'       // Blue
-const SELECTION_LINE_WIDTH = 1           // px (screen space)
-const SELECTION_PADDING = 4              // gap around element
+const SELECTION_COLOR = "#4a90d9"; // Blue
+const SELECTION_LINE_WIDTH = 1; // px (screen space)
+const SELECTION_PADDING = 4; // gap around element
 
 function renderSelectionBorder(
   ctx: CanvasRenderingContext2D,
   element: ExcalidrawElement,
   zoom: number,
 ): void {
-  const padding = SELECTION_PADDING / zoom
-  const lineWidth = SELECTION_LINE_WIDTH / zoom
+  const padding = SELECTION_PADDING / zoom;
+  const lineWidth = SELECTION_LINE_WIDTH / zoom;
 
-  ctx.save()
-  ctx.strokeStyle = SELECTION_COLOR
-  ctx.lineWidth = lineWidth
-  ctx.setLineDash([8 / zoom, 4 / zoom])
+  ctx.save();
+  ctx.strokeStyle = SELECTION_COLOR;
+  ctx.lineWidth = lineWidth;
+  ctx.setLineDash([8 / zoom, 4 / zoom]);
 
-  const cx = element.x + element.width / 2
-  const cy = element.y + element.height / 2
+  const cx = element.x + element.width / 2;
+  const cy = element.y + element.height / 2;
 
-  ctx.translate(cx, cy)
-  ctx.rotate(element.angle)
+  ctx.translate(cx, cy);
+  ctx.rotate(element.angle);
 
   ctx.strokeRect(
     -element.width / 2 - padding,
     -element.height / 2 - padding,
     element.width + padding * 2,
     element.height + padding * 2,
-  )
+  );
 
-  ctx.restore()
+  ctx.restore();
 }
 ```
 
 ### 9.3 Rendering Transform Handles
 
 ```typescript
-const HANDLE_FILL = '#ffffff'
-const HANDLE_STROKE = SELECTION_COLOR
+const HANDLE_FILL = "#ffffff";
+const HANDLE_STROKE = SELECTION_COLOR;
 
 function renderTransformHandles(
   ctx: CanvasRenderingContext2D,
   handles: TransformHandles,
   zoom: number,
 ): void {
-  const lineWidth = 1 / zoom
-  const cornerRadius = 2 / zoom
+  const lineWidth = 1 / zoom;
+  const cornerRadius = 2 / zoom;
 
-  ctx.save()
-  ctx.fillStyle = HANDLE_FILL
-  ctx.strokeStyle = HANDLE_STROKE
-  ctx.lineWidth = lineWidth
+  ctx.save();
+  ctx.fillStyle = HANDLE_FILL;
+  ctx.strokeStyle = HANDLE_STROKE;
+  ctx.lineWidth = lineWidth;
 
   for (const [type, [x, y, w, h]] of Object.entries(handles)) {
-    ctx.beginPath()
-    if (type === 'rotation') {
+    ctx.beginPath();
+    if (type === "rotation") {
       // Rotation handle: circle
-      ctx.arc(x + w / 2, y + h / 2, w / 2, 0, Math.PI * 2)
+      ctx.arc(x + w / 2, y + h / 2, w / 2, 0, Math.PI * 2);
     } else {
       // Resize handle: rounded rectangle
-      ctx.roundRect(x, y, w, h, cornerRadius)
+      ctx.roundRect(x, y, w, h, cornerRadius);
     }
-    ctx.fill()
-    ctx.stroke()
+    ctx.fill();
+    ctx.stroke();
   }
 
-  ctx.restore()
+  ctx.restore();
 }
 ```
 
@@ -740,15 +751,15 @@ function renderSelectionBox(
   box: { x: number; y: number; width: number; height: number },
   zoom: number,
 ): void {
-  ctx.save()
-  ctx.fillStyle = 'rgba(74, 144, 217, 0.1)'     // Light blue fill
-  ctx.strokeStyle = SELECTION_COLOR
-  ctx.lineWidth = 1 / zoom
-  ctx.setLineDash([])
+  ctx.save();
+  ctx.fillStyle = "rgba(74, 144, 217, 0.1)"; // Light blue fill
+  ctx.strokeStyle = SELECTION_COLOR;
+  ctx.lineWidth = 1 / zoom;
+  ctx.setLineDash([]);
 
-  ctx.fillRect(box.x, box.y, box.width, box.height)
-  ctx.strokeRect(box.x, box.y, box.width, box.height)
-  ctx.restore()
+  ctx.fillRect(box.x, box.y, box.width, box.height);
+  ctx.strokeRect(box.x, box.y, box.width, box.height);
+  ctx.restore();
 }
 ```
 
@@ -767,27 +778,27 @@ function getSelectionCursor(
 ): string {
   // 1. Check if hovering over a transform handle of any selected element
   for (const el of selectedElements) {
-    const handleType = getTransformHandleAtPosition(scenePoint, el, zoom)
+    const handleType = getTransformHandleAtPosition(scenePoint, el, zoom);
     if (handleType) {
-      return getResizeCursor(handleType, el.angle)
+      return getResizeCursor(handleType, el.angle);
     }
   }
 
   // 2. Check if hovering over a selected element → move cursor
   for (const el of selectedElements) {
     if (hitTest(scenePoint, el, zoom)) {
-      return 'move'
+      return "move";
     }
   }
 
   // 3. Check if hovering over any element → pointer
-  const hitElement = getElementAtPosition(scenePoint, allElements, zoom)
+  const hitElement = getElementAtPosition(scenePoint, allElements, zoom);
   if (hitElement) {
-    return 'default'
+    return "default";
   }
 
   // 4. Empty space → default
-  return 'default'
+  return "default";
 }
 ```
 
@@ -795,19 +806,19 @@ function getSelectionCursor(
 
 ```typescript
 const RESIZE_CURSORS: Record<TransformHandleDirection, string> = {
-  n:  'ns-resize',
-  s:  'ns-resize',
-  e:  'ew-resize',
-  w:  'ew-resize',
-  nw: 'nwse-resize',
-  se: 'nwse-resize',
-  ne: 'nesw-resize',
-  sw: 'nesw-resize',
-}
+  n: "ns-resize",
+  s: "ns-resize",
+  e: "ew-resize",
+  w: "ew-resize",
+  nw: "nwse-resize",
+  se: "nwse-resize",
+  ne: "nesw-resize",
+  sw: "nesw-resize",
+};
 
 function getResizeCursor(handleType: TransformHandleType, angle: number): string {
-  if (handleType === 'rotation') return 'grab'
-  return RESIZE_CURSORS[handleType]
+  if (handleType === "rotation") return "grab";
+  return RESIZE_CURSORS[handleType];
   // Note: for rotated elements, the cursor should also rotate.
   // MVP: skip cursor rotation. Enhancement: use CSS custom cursors.
 }
@@ -819,13 +830,13 @@ function getResizeCursor(handleType: TransformHandleType, angle: number): string
 
 ### 11.1 Selection-Related Shortcuts
 
-| Shortcut | Action | Implementation |
-|----------|--------|----------------|
-| `Delete` / `Backspace` | Delete selected elements | `mutateElement(el, { isDeleted: true })` for each |
-| `Escape` | Clear selection + revert to selection tool | `clearSelection()`, `setTool('selection')` |
-| `Ctrl+A` | Select all non-deleted elements | `selectAll()` |
-| `Arrow keys` | Move selected by 1px | `moveSelected(dx, dy)` |
-| `Shift+Arrow` | Move selected by 10px | `moveSelected(dx*10, dy*10)` |
+| Shortcut               | Action                                     | Implementation                                    |
+| ---------------------- | ------------------------------------------ | ------------------------------------------------- |
+| `Delete` / `Backspace` | Delete selected elements                   | `mutateElement(el, { isDeleted: true })` for each |
+| `Escape`               | Clear selection + revert to selection tool | `clearSelection()`, `setTool('selection')`        |
+| `Ctrl+A`               | Select all non-deleted elements            | `selectAll()`                                     |
+| `Arrow keys`           | Move selected by 1px                       | `moveSelected(dx, dy)`                            |
+| `Shift+Arrow`          | Move selected by 10px                      | `moveSelected(dx*10, dy*10)`                      |
 
 ### 11.2 Arrow Key Movement
 
@@ -839,7 +850,7 @@ function moveSelected(
     mutateElement(el, {
       x: el.x + dx,
       y: el.y + dy,
-    })
+    });
   }
 }
 ```
@@ -890,59 +901,57 @@ function moveSelected(
 
 ```typescript
 type InteractionState =
-  | { type: 'idle' }
-  | { type: 'dragging'; dragState: DragState }
-  | { type: 'resizing'; resizeState: ResizeState }
-  | { type: 'boxSelecting'; startPoint: Point }
+  | { type: "idle" }
+  | { type: "dragging"; dragState: DragState }
+  | { type: "resizing"; resizeState: ResizeState }
+  | { type: "boxSelecting"; startPoint: Point };
 
 function onPointerDown(scenePoint: Point, event: PointerEvent): InteractionState {
-  const selectedElements = getSelectedElements()
+  const selectedElements = getSelectedElements();
 
   // 1. Check transform handles on selected elements (single selection only)
   if (selectedElements.length === 1) {
-    const handleType = getTransformHandleAtPosition(
-      scenePoint, selectedElements[0], zoom.value
-    )
-    if (handleType && handleType !== 'rotation') {
+    const handleType = getTransformHandleAtPosition(scenePoint, selectedElements[0], zoom.value);
+    if (handleType && handleType !== "rotation") {
       return {
-        type: 'resizing',
+        type: "resizing",
         resizeState: {
           handleType,
           originalBounds: { ...selectedElements[0] },
           origin: scenePoint,
         },
-      }
+      };
     }
     // Rotation handle → future enhancement
   }
 
   // 2. Check if clicking on an element
-  const hitElement = getElementAtPosition(scenePoint, elements.value, zoom.value)
+  const hitElement = getElementAtPosition(scenePoint, elements.value, zoom.value);
 
   if (hitElement) {
     if (event.shiftKey) {
       // Shift+click: toggle in/out of selection
-      toggleSelection(hitElement.id)
+      toggleSelection(hitElement.id);
     } else if (!isSelected(hitElement.id)) {
       // Click unselected element: select it exclusively
-      select(hitElement.id)
+      select(hitElement.id);
     }
     // else: clicking already-selected element — start drag
 
     return {
-      type: 'dragging',
+      type: "dragging",
       dragState: startDrag(scenePoint, getSelectedElements()),
-    }
+    };
   }
 
   // 3. Clicked empty space
   if (!event.shiftKey) {
-    clearSelection()
+    clearSelection();
   }
   return {
-    type: 'boxSelecting',
+    type: "boxSelecting",
     startPoint: scenePoint,
-  }
+  };
 }
 ```
 
@@ -951,27 +960,27 @@ function onPointerDown(scenePoint: Point, event: PointerEvent): InteractionState
 ```typescript
 function onPointerMove(scenePoint: Point, state: InteractionState): void {
   switch (state.type) {
-    case 'dragging':
-      continueDrag(scenePoint, state.dragState, getSelectedElements())
-      markStaticDirty()
-      markInteractiveDirty()
-      break
+    case "dragging":
+      continueDrag(scenePoint, state.dragState, getSelectedElements());
+      markStaticDirty();
+      markInteractiveDirty();
+      break;
 
-    case 'resizing':
-      resizeElement(scenePoint, state.resizeState, getSelectedElements()[0], shiftKey)
-      markStaticDirty()
-      markInteractiveDirty()
-      break
+    case "resizing":
+      resizeElement(scenePoint, state.resizeState, getSelectedElements()[0], shiftKey);
+      markStaticDirty();
+      markInteractiveDirty();
+      break;
 
-    case 'boxSelecting': {
+    case "boxSelecting": {
       // Update marquee rectangle
-      const box = normalizeBox(state.startPoint, scenePoint)
-      setSelectionBox(box)
+      const box = normalizeBox(state.startPoint, scenePoint);
+      setSelectionBox(box);
       // Live-update selection: select elements fully inside box
-      const enclosed = getElementsInBox(box, elements.value)
-      setSelectionFromBox(enclosed)
-      markInteractiveDirty()
-      break
+      const enclosed = getElementsInBox(box, elements.value);
+      setSelectionFromBox(enclosed);
+      markInteractiveDirty();
+      break;
     }
   }
 }
@@ -982,24 +991,24 @@ function onPointerMove(scenePoint: Point, state: InteractionState): void {
 ```typescript
 function onPointerUp(scenePoint: Point, state: InteractionState): void {
   switch (state.type) {
-    case 'dragging':
+    case "dragging":
       // Only snapshot if actually moved
       if (hasMoved(state.dragState, scenePoint)) {
-        snapshot() // undo history
+        snapshot(); // undo history
       }
-      break
+      break;
 
-    case 'resizing':
-      snapshot()
-      break
+    case "resizing":
+      snapshot();
+      break;
 
-    case 'boxSelecting':
-      setSelectionBox(null)
-      break
+    case "boxSelecting":
+      setSelectionBox(null);
+      break;
   }
 
-  markStaticDirty()
-  markInteractiveDirty()
+  markStaticDirty();
+  markInteractiveDirty();
   // Return to idle (state machine resets)
 }
 ```
@@ -1056,10 +1065,12 @@ app/features/tools/components/
 ### 14.1 Testing Infrastructure
 
 We use **Vitest** with two project configs:
+
 - **Unit tests** (`*.unit.test.ts`) — Node environment, fast, pure logic
 - **Browser tests** (`*.browser.test.ts`) — Playwright/Chromium, real DOM + pointer events
 
 Existing test utilities:
+
 - `app/__test-utils__/factories/element.ts` — `createTestElement(overrides)`
 - `app/__test-utils__/factories/viewport.ts` — `createViewport(overrides)`
 - `app/__test-utils__/factories/point.ts` — `createTestPoint(overrides)`
@@ -1085,330 +1096,396 @@ These test pure functions with zero DOM dependency. Fast, parallelizable, high c
 #### `hitTest.unit.test.ts` — Point-in-shape collision
 
 ```typescript
-describe('hitTest', () => {
-  describe('rectangle', () => {
-    it('hits center of filled rectangle', () => {
-      const el = createTestElement({ type: 'rectangle', x: 10, y: 10, width: 100, height: 50, backgroundColor: '#ff0000' })
-      expect(hitTest({ x: 60, y: 35 }, el, 1)).toBe(true)
-    })
+describe("hitTest", () => {
+  describe("rectangle", () => {
+    it("hits center of filled rectangle", () => {
+      const el = createTestElement({
+        type: "rectangle",
+        x: 10,
+        y: 10,
+        width: 100,
+        height: 50,
+        backgroundColor: "#ff0000",
+      });
+      expect(hitTest({ x: 60, y: 35 }, el, 1)).toBe(true);
+    });
 
-    it('misses interior of outline-only rectangle', () => {
-      const el = createTestElement({ type: 'rectangle', x: 10, y: 10, width: 100, height: 50, backgroundColor: 'transparent' })
-      expect(hitTest({ x: 60, y: 35 }, el, 1)).toBe(false) // center of outline rect
-    })
+    it("misses interior of outline-only rectangle", () => {
+      const el = createTestElement({
+        type: "rectangle",
+        x: 10,
+        y: 10,
+        width: 100,
+        height: 50,
+        backgroundColor: "transparent",
+      });
+      expect(hitTest({ x: 60, y: 35 }, el, 1)).toBe(false); // center of outline rect
+    });
 
-    it('hits stroke of outline-only rectangle', () => {
-      const el = createTestElement({ type: 'rectangle', x: 10, y: 10, width: 100, height: 50, backgroundColor: 'transparent' })
-      expect(hitTest({ x: 10, y: 35 }, el, 1)).toBe(true) // left edge
-    })
+    it("hits stroke of outline-only rectangle", () => {
+      const el = createTestElement({
+        type: "rectangle",
+        x: 10,
+        y: 10,
+        width: 100,
+        height: 50,
+        backgroundColor: "transparent",
+      });
+      expect(hitTest({ x: 10, y: 35 }, el, 1)).toBe(true); // left edge
+    });
 
-    it('respects rotation — point outside AABB but inside rotated rect', () => {
-      const el = createTestElement({ type: 'rectangle', x: 0, y: 0, width: 100, height: 20, angle: Math.PI / 4, backgroundColor: '#ff0000' })
+    it("respects rotation — point outside AABB but inside rotated rect", () => {
+      const el = createTestElement({
+        type: "rectangle",
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 20,
+        angle: Math.PI / 4,
+        backgroundColor: "#ff0000",
+      });
       // Point along the diagonal of the rotated rect
-      const insideRotated = rotatePoint({ x: 50, y: 10 }, { x: 50, y: 10 }, Math.PI / 4)
-      expect(hitTest(insideRotated, el, 1)).toBe(true)
-    })
+      const insideRotated = rotatePoint({ x: 50, y: 10 }, { x: 50, y: 10 }, Math.PI / 4);
+      expect(hitTest(insideRotated, el, 1)).toBe(true);
+    });
 
-    it('threshold grows at low zoom (easier to click)', () => {
-      const el = createTestElement({ type: 'rectangle', x: 10, y: 10, width: 100, height: 50, backgroundColor: 'transparent' })
+    it("threshold grows at low zoom (easier to click)", () => {
+      const el = createTestElement({
+        type: "rectangle",
+        x: 10,
+        y: 10,
+        width: 100,
+        height: 50,
+        backgroundColor: "transparent",
+      });
       // Point 15px from edge — misses at zoom=1 (threshold ~10px)
-      expect(hitTest({ x: -5, y: 35 }, el, 1)).toBe(false)
+      expect(hitTest({ x: -5, y: 35 }, el, 1)).toBe(false);
       // But hits at zoom=0.2 (threshold = 10/0.2 = 50px)
-      expect(hitTest({ x: -5, y: 35 }, el, 0.2)).toBe(true)
-    })
-  })
+      expect(hitTest({ x: -5, y: 35 }, el, 0.2)).toBe(true);
+    });
+  });
 
-  describe('ellipse', () => {
-    it('hits inside filled ellipse', () => { /* ... */ })
-    it('misses inside outline-only ellipse', () => { /* ... */ })
-    it('hits ellipse boundary within threshold', () => { /* ... */ })
-  })
+  describe("ellipse", () => {
+    it("hits inside filled ellipse", () => {
+      /* ... */
+    });
+    it("misses inside outline-only ellipse", () => {
+      /* ... */
+    });
+    it("hits ellipse boundary within threshold", () => {
+      /* ... */
+    });
+  });
 
-  describe('diamond', () => {
-    it('hits inside filled diamond', () => { /* ... */ })
-    it('misses corner region (outside diamond shape)', () => { /* ... */ })
-    it('hits diamond edge within threshold', () => { /* ... */ })
-  })
+  describe("diamond", () => {
+    it("hits inside filled diamond", () => {
+      /* ... */
+    });
+    it("misses corner region (outside diamond shape)", () => {
+      /* ... */
+    });
+    it("hits diamond edge within threshold", () => {
+      /* ... */
+    });
+  });
 
-  describe('getElementAtPosition', () => {
-    it('returns topmost element (last in array) when overlapping', () => {
-      const bottom = createTestElement({ id: 'a', x: 0, y: 0, width: 100, height: 100, backgroundColor: '#f00' })
-      const top = createTestElement({ id: 'b', x: 50, y: 50, width: 100, height: 100, backgroundColor: '#00f' })
-      expect(getElementAtPosition({ x: 75, y: 75 }, [bottom, top], 1)?.id).toBe('b')
-    })
+  describe("getElementAtPosition", () => {
+    it("returns topmost element (last in array) when overlapping", () => {
+      const bottom = createTestElement({
+        id: "a",
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        backgroundColor: "#f00",
+      });
+      const top = createTestElement({
+        id: "b",
+        x: 50,
+        y: 50,
+        width: 100,
+        height: 100,
+        backgroundColor: "#00f",
+      });
+      expect(getElementAtPosition({ x: 75, y: 75 }, [bottom, top], 1)?.id).toBe("b");
+    });
 
-    it('skips deleted elements', () => {
-      const el = createTestElement({ isDeleted: true, x: 0, y: 0, width: 100, height: 100, backgroundColor: '#f00' })
-      expect(getElementAtPosition({ x: 50, y: 50 }, [el], 1)).toBeNull()
-    })
+    it("skips deleted elements", () => {
+      const el = createTestElement({
+        isDeleted: true,
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        backgroundColor: "#f00",
+      });
+      expect(getElementAtPosition({ x: 50, y: 50 }, [el], 1)).toBeNull();
+    });
 
-    it('returns null when clicking empty space', () => {
-      const el = createTestElement({ x: 0, y: 0, width: 50, height: 50, backgroundColor: '#f00' })
-      expect(getElementAtPosition({ x: 200, y: 200 }, [el], 1)).toBeNull()
-    })
-  })
-})
+    it("returns null when clicking empty space", () => {
+      const el = createTestElement({ x: 0, y: 0, width: 50, height: 50, backgroundColor: "#f00" });
+      expect(getElementAtPosition({ x: 200, y: 200 }, [el], 1)).toBeNull();
+    });
+  });
+});
 ```
 
 #### `bounds.unit.test.ts` — Bounding box calculations
 
 ```typescript
-describe('bounds', () => {
-  describe('getElementBounds', () => {
-    it('returns [x, y, x+w, y+h] for axis-aligned element', () => {
-      const el = createTestElement({ x: 10, y: 20, width: 100, height: 50 })
-      expect(getElementBounds(el)).toEqual([10, 20, 110, 70])
-    })
+describe("bounds", () => {
+  describe("getElementBounds", () => {
+    it("returns [x, y, x+w, y+h] for axis-aligned element", () => {
+      const el = createTestElement({ x: 10, y: 20, width: 100, height: 50 });
+      expect(getElementBounds(el)).toEqual([10, 20, 110, 70]);
+    });
 
-    it('expands bounds for rotated element', () => {
-      const el = createTestElement({ x: 0, y: 0, width: 100, height: 0, angle: Math.PI / 4 })
-      const [x1, y1, x2, y2] = getElementBounds(el)
+    it("expands bounds for rotated element", () => {
+      const el = createTestElement({ x: 0, y: 0, width: 100, height: 0, angle: Math.PI / 4 });
+      const [x1, y1, x2, y2] = getElementBounds(el);
       // 100px wide line rotated 45° — bounds should be ~70x70
-      expect(x2 - x1).toBeCloseTo(70.71, 1)
-      expect(y2 - y1).toBeCloseTo(70.71, 1)
-    })
-  })
+      expect(x2 - x1).toBeCloseTo(70.71, 1);
+      expect(y2 - y1).toBeCloseTo(70.71, 1);
+    });
+  });
 
-  describe('getCommonBounds', () => {
-    it('returns bounding box encompassing all elements', () => {
-      const a = createTestElement({ x: 0, y: 0, width: 50, height: 50 })
-      const b = createTestElement({ x: 100, y: 100, width: 50, height: 50 })
-      expect(getCommonBounds([a, b])).toEqual([0, 0, 150, 150])
-    })
+  describe("getCommonBounds", () => {
+    it("returns bounding box encompassing all elements", () => {
+      const a = createTestElement({ x: 0, y: 0, width: 50, height: 50 });
+      const b = createTestElement({ x: 100, y: 100, width: 50, height: 50 });
+      expect(getCommonBounds([a, b])).toEqual([0, 0, 150, 150]);
+    });
 
-    it('returns null for empty array', () => {
-      expect(getCommonBounds([])).toBeNull()
-    })
-  })
-})
+    it("returns null for empty array", () => {
+      expect(getCommonBounds([])).toBeNull();
+    });
+  });
+});
 ```
 
 #### `transformHandles.unit.test.ts` — Handle positions + detection
 
 ```typescript
-describe('transformHandles', () => {
-  describe('getTransformHandles', () => {
-    it('returns all 8 handles + rotation for large element', () => {
-      const el = createTestElement({ x: 0, y: 0, width: 200, height: 200 })
-      const handles = getTransformHandles(el, 1)
+describe("transformHandles", () => {
+  describe("getTransformHandles", () => {
+    it("returns all 8 handles + rotation for large element", () => {
+      const el = createTestElement({ x: 0, y: 0, width: 200, height: 200 });
+      const handles = getTransformHandles(el, 1);
       expect(Object.keys(handles)).toEqual(
-        expect.arrayContaining(['nw', 'ne', 'sw', 'se', 'n', 's', 'e', 'w', 'rotation'])
-      )
-    })
+        expect.arrayContaining(["nw", "ne", "sw", "se", "n", "s", "e", "w", "rotation"]),
+      );
+    });
 
-    it('omits side handles for small elements', () => {
-      const el = createTestElement({ x: 0, y: 0, width: 20, height: 20 })
-      const handles = getTransformHandles(el, 1)
-      expect(handles.n).toBeUndefined()
-      expect(handles.s).toBeUndefined()
-      expect(handles.se).toBeDefined() // corners always present
-    })
+    it("omits side handles for small elements", () => {
+      const el = createTestElement({ x: 0, y: 0, width: 20, height: 20 });
+      const handles = getTransformHandles(el, 1);
+      expect(handles.n).toBeUndefined();
+      expect(handles.s).toBeUndefined();
+      expect(handles.se).toBeDefined(); // corners always present
+    });
 
-    it('rotates handle positions with element angle', () => {
-      const el = createTestElement({ x: 0, y: 0, width: 100, height: 100, angle: Math.PI / 2 })
-      const handles = getTransformHandles(el, 1)
+    it("rotates handle positions with element angle", () => {
+      const el = createTestElement({ x: 0, y: 0, width: 100, height: 100, angle: Math.PI / 2 });
+      const handles = getTransformHandles(el, 1);
       // After 90° rotation, "ne" handle should be where "se" was
-      expect(handles.ne).toBeDefined()
-    })
-  })
+      expect(handles.ne).toBeDefined();
+    });
+  });
 
-  describe('getTransformHandleAtPosition', () => {
-    it('detects pointer inside SE handle', () => {
-      const el = createTestElement({ x: 0, y: 0, width: 100, height: 100 })
-      const handles = getTransformHandles(el, 1)
+  describe("getTransformHandleAtPosition", () => {
+    it("detects pointer inside SE handle", () => {
+      const el = createTestElement({ x: 0, y: 0, width: 100, height: 100 });
+      const handles = getTransformHandles(el, 1);
       const seCenter = {
         x: handles.se![0] + handles.se![2] / 2,
         y: handles.se![1] + handles.se![3] / 2,
-      }
-      expect(getTransformHandleAtPosition(seCenter, el, 1)).toBe('se')
-    })
+      };
+      expect(getTransformHandleAtPosition(seCenter, el, 1)).toBe("se");
+    });
 
-    it('returns null when not on any handle', () => {
-      const el = createTestElement({ x: 0, y: 0, width: 100, height: 100 })
-      expect(getTransformHandleAtPosition({ x: 50, y: 50 }, el, 1)).toBeNull()
-    })
-  })
-})
+    it("returns null when not on any handle", () => {
+      const el = createTestElement({ x: 0, y: 0, width: 100, height: 100 });
+      expect(getTransformHandleAtPosition({ x: 50, y: 50 }, el, 1)).toBeNull();
+    });
+  });
+});
 ```
 
 #### `useSelection.unit.test.ts` — Composable state
 
 ```typescript
-describe('useSelection', () => {
-  it('starts with empty selection', () => {
-    using sel = withSetup(() => useSelection(shallowRef([])))
-    expect(sel.selectedIds.value.size).toBe(0)
-    expect(sel.selectedElements.value).toEqual([])
-  })
+describe("useSelection", () => {
+  it("starts with empty selection", () => {
+    using sel = withSetup(() => useSelection(shallowRef([])));
+    expect(sel.selectedIds.value.size).toBe(0);
+    expect(sel.selectedElements.value).toEqual([]);
+  });
 
-  it('select() replaces selection with single element', () => {
+  it("select() replaces selection with single element", () => {
+    const elements = shallowRef([createTestElement({ id: "a" }), createTestElement({ id: "b" })]);
+    using sel = withSetup(() => useSelection(elements));
+    sel.select("a");
+    expect(sel.selectedIds.value.has("a")).toBe(true);
+    expect(sel.selectedIds.value.size).toBe(1);
+  });
+
+  it("toggleSelection() adds on first click, removes on second", () => {
+    const elements = shallowRef([createTestElement({ id: "a" })]);
+    using sel = withSetup(() => useSelection(elements));
+    sel.toggleSelection("a");
+    expect(sel.isSelected("a")).toBe(true);
+    sel.toggleSelection("a");
+    expect(sel.isSelected("a")).toBe(false);
+  });
+
+  it("selectedElements excludes deleted", () => {
     const elements = shallowRef([
-      createTestElement({ id: 'a' }),
-      createTestElement({ id: 'b' }),
-    ])
-    using sel = withSetup(() => useSelection(elements))
-    sel.select('a')
-    expect(sel.selectedIds.value.has('a')).toBe(true)
-    expect(sel.selectedIds.value.size).toBe(1)
-  })
+      createTestElement({ id: "a", isDeleted: false }),
+      createTestElement({ id: "b", isDeleted: true }),
+    ]);
+    using sel = withSetup(() => useSelection(elements));
+    sel.select("a");
+    sel.addToSelection("b");
+    expect(sel.selectedElements.value.map((e) => e.id)).toEqual(["a"]);
+  });
 
-  it('toggleSelection() adds on first click, removes on second', () => {
-    const elements = shallowRef([createTestElement({ id: 'a' })])
-    using sel = withSetup(() => useSelection(elements))
-    sel.toggleSelection('a')
-    expect(sel.isSelected('a')).toBe(true)
-    sel.toggleSelection('a')
-    expect(sel.isSelected('a')).toBe(false)
-  })
-
-  it('selectedElements excludes deleted', () => {
+  it("selectionBounds computes common bounding box", () => {
     const elements = shallowRef([
-      createTestElement({ id: 'a', isDeleted: false }),
-      createTestElement({ id: 'b', isDeleted: true }),
-    ])
-    using sel = withSetup(() => useSelection(elements))
-    sel.select('a')
-    sel.addToSelection('b')
-    expect(sel.selectedElements.value.map(e => e.id)).toEqual(['a'])
-  })
-
-  it('selectionBounds computes common bounding box', () => {
-    const elements = shallowRef([
-      createTestElement({ id: 'a', x: 0, y: 0, width: 50, height: 50 }),
-      createTestElement({ id: 'b', x: 100, y: 100, width: 50, height: 50 }),
-    ])
-    using sel = withSetup(() => useSelection(elements))
-    sel.select('a')
-    sel.addToSelection('b')
-    expect(sel.selectionBounds.value).toEqual([0, 0, 150, 150])
-  })
-})
+      createTestElement({ id: "a", x: 0, y: 0, width: 50, height: 50 }),
+      createTestElement({ id: "b", x: 100, y: 100, width: 50, height: 50 }),
+    ]);
+    using sel = withSetup(() => useSelection(elements));
+    sel.select("a");
+    sel.addToSelection("b");
+    expect(sel.selectionBounds.value).toEqual([0, 0, 150, 150]);
+  });
+});
 ```
 
 #### `dragElements.unit.test.ts` — Move logic
 
 ```typescript
-describe('dragElements', () => {
-  it('moves single element by pointer delta', () => {
-    const el = createTestElement({ x: 100, y: 100, width: 50, height: 50 })
-    const drag = startDrag({ x: 110, y: 110 }, [el])
-    continueDrag({ x: 160, y: 210 }, drag, [el])
-    expect(el.x).toBe(150)  // 100 + (160-110)
-    expect(el.y).toBe(200)  // 100 + (210-110)
-  })
+describe("dragElements", () => {
+  it("moves single element by pointer delta", () => {
+    const el = createTestElement({ x: 100, y: 100, width: 50, height: 50 });
+    const drag = startDrag({ x: 110, y: 110 }, [el]);
+    continueDrag({ x: 160, y: 210 }, drag, [el]);
+    expect(el.x).toBe(150); // 100 + (160-110)
+    expect(el.y).toBe(200); // 100 + (210-110)
+  });
 
-  it('moves multiple elements preserving relative positions', () => {
-    const a = createTestElement({ x: 0, y: 0, width: 50, height: 50 })
-    const b = createTestElement({ x: 100, y: 100, width: 50, height: 50 })
-    const drag = startDrag({ x: 25, y: 25 }, [a, b])
-    continueDrag({ x: 75, y: 75 }, drag, [a, b])
-    expect(a.x).toBe(50)
-    expect(b.x).toBe(150)
-    expect(b.x - a.x).toBe(100)  // relative position preserved
-  })
+  it("moves multiple elements preserving relative positions", () => {
+    const a = createTestElement({ x: 0, y: 0, width: 50, height: 50 });
+    const b = createTestElement({ x: 100, y: 100, width: 50, height: 50 });
+    const drag = startDrag({ x: 25, y: 25 }, [a, b]);
+    continueDrag({ x: 75, y: 75 }, drag, [a, b]);
+    expect(a.x).toBe(50);
+    expect(b.x).toBe(150);
+    expect(b.x - a.x).toBe(100); // relative position preserved
+  });
 
-  it('origin-based: no float drift after many moves', () => {
-    const el = createTestElement({ x: 0, y: 0, width: 50, height: 50 })
-    const drag = startDrag({ x: 0, y: 0 }, [el])
+  it("origin-based: no float drift after many moves", () => {
+    const el = createTestElement({ x: 0, y: 0, width: 50, height: 50 });
+    const drag = startDrag({ x: 0, y: 0 }, [el]);
     // Simulate many small increments that would cause drift with +=
     for (let i = 1; i <= 1000; i++) {
-      continueDrag({ x: i * 0.1, y: i * 0.1 }, drag, [el])
+      continueDrag({ x: i * 0.1, y: i * 0.1 }, drag, [el]);
     }
-    expect(el.x).toBeCloseTo(100, 10)  // 1000 * 0.1 = exactly 100
-    expect(el.y).toBeCloseTo(100, 10)
-  })
+    expect(el.x).toBeCloseTo(100, 10); // 1000 * 0.1 = exactly 100
+    expect(el.y).toBeCloseTo(100, 10);
+  });
 
-  it('shift-constrains to horizontal axis', () => {
-    const delta = getConstrainedDelta(50, 10)
-    expect(delta).toEqual({ x: 50, y: 0 })
-  })
+  it("shift-constrains to horizontal axis", () => {
+    const delta = getConstrainedDelta(50, 10);
+    expect(delta).toEqual({ x: 50, y: 0 });
+  });
 
-  it('shift-constrains to vertical axis', () => {
-    const delta = getConstrainedDelta(5, 80)
-    expect(delta).toEqual({ x: 0, y: 80 })
-  })
-})
+  it("shift-constrains to vertical axis", () => {
+    const delta = getConstrainedDelta(5, 80);
+    expect(delta).toEqual({ x: 0, y: 80 });
+  });
+});
 ```
 
 #### `resizeElement.unit.test.ts` — Resize logic
 
 ```typescript
-describe('resizeElement', () => {
-  it('SE handle: increases width and height', () => {
-    const el = createTestElement({ x: 0, y: 0, width: 100, height: 100 })
+describe("resizeElement", () => {
+  it("SE handle: increases width and height", () => {
+    const el = createTestElement({ x: 0, y: 0, width: 100, height: 100 });
     const state: ResizeState = {
-      handleType: 'se',
+      handleType: "se",
       originalBounds: { x: 0, y: 0, width: 100, height: 100 },
       origin: { x: 100, y: 100 },
-    }
-    resizeElement({ x: 150, y: 130 }, state, el, false)
-    expect(el.width).toBe(150)
-    expect(el.height).toBe(130)
-    expect(el.x).toBe(0)  // SE doesn't move origin
-    expect(el.y).toBe(0)
-  })
+    };
+    resizeElement({ x: 150, y: 130 }, state, el, false);
+    expect(el.width).toBe(150);
+    expect(el.height).toBe(130);
+    expect(el.x).toBe(0); // SE doesn't move origin
+    expect(el.y).toBe(0);
+  });
 
-  it('NW handle: moves origin and shrinks', () => {
-    const el = createTestElement({ x: 0, y: 0, width: 100, height: 100 })
+  it("NW handle: moves origin and shrinks", () => {
+    const el = createTestElement({ x: 0, y: 0, width: 100, height: 100 });
     const state: ResizeState = {
-      handleType: 'nw',
+      handleType: "nw",
       originalBounds: { x: 0, y: 0, width: 100, height: 100 },
       origin: { x: 0, y: 0 },
-    }
-    resizeElement({ x: 20, y: 30 }, state, el, false)
-    expect(el.x).toBe(20)
-    expect(el.y).toBe(30)
-    expect(el.width).toBe(80)
-    expect(el.height).toBe(70)
-  })
+    };
+    resizeElement({ x: 20, y: 30 }, state, el, false);
+    expect(el.x).toBe(20);
+    expect(el.y).toBe(30);
+    expect(el.width).toBe(80);
+    expect(el.height).toBe(70);
+  });
 
-  it('E handle: only changes width', () => {
-    const el = createTestElement({ x: 0, y: 0, width: 100, height: 100 })
+  it("E handle: only changes width", () => {
+    const el = createTestElement({ x: 0, y: 0, width: 100, height: 100 });
     const state: ResizeState = {
-      handleType: 'e',
+      handleType: "e",
       originalBounds: { x: 0, y: 0, width: 100, height: 100 },
       origin: { x: 100, y: 50 },
-    }
-    resizeElement({ x: 200, y: 80 }, state, el, false)
-    expect(el.width).toBe(200)
-    expect(el.height).toBe(100)  // unchanged
-  })
+    };
+    resizeElement({ x: 200, y: 80 }, state, el, false);
+    expect(el.width).toBe(200);
+    expect(el.height).toBe(100); // unchanged
+  });
 
-  it('shift locks aspect ratio', () => {
-    const el = createTestElement({ x: 0, y: 0, width: 100, height: 50 })
+  it("shift locks aspect ratio", () => {
+    const el = createTestElement({ x: 0, y: 0, width: 100, height: 50 });
     const state: ResizeState = {
-      handleType: 'se',
+      handleType: "se",
       originalBounds: { x: 0, y: 0, width: 100, height: 50 },
       origin: { x: 100, y: 50 },
-    }
-    resizeElement({ x: 200, y: 80 }, state, el, true)
-    expect(el.width / el.height).toBeCloseTo(2, 5)  // 100/50 = 2:1 preserved
-  })
+    };
+    resizeElement({ x: 200, y: 80 }, state, el, true);
+    expect(el.width / el.height).toBeCloseTo(2, 5); // 100/50 = 2:1 preserved
+  });
 
-  it('negative drag flips to positive dimensions', () => {
-    const el = createTestElement({ x: 50, y: 50, width: 100, height: 100 })
+  it("negative drag flips to positive dimensions", () => {
+    const el = createTestElement({ x: 50, y: 50, width: 100, height: 100 });
     const state: ResizeState = {
-      handleType: 'se',
+      handleType: "se",
       originalBounds: { x: 50, y: 50, width: 100, height: 100 },
       origin: { x: 150, y: 150 },
-    }
-    resizeElement({ x: 30, y: 30 }, state, el, false)
-    expect(el.width).toBeGreaterThan(0)
-    expect(el.height).toBeGreaterThan(0)
-  })
+    };
+    resizeElement({ x: 30, y: 30 }, state, el, false);
+    expect(el.width).toBeGreaterThan(0);
+    expect(el.height).toBeGreaterThan(0);
+  });
 
-  it('enforces minimum size of 1x1', () => {
-    const el = createTestElement({ x: 0, y: 0, width: 100, height: 100 })
+  it("enforces minimum size of 1x1", () => {
+    const el = createTestElement({ x: 0, y: 0, width: 100, height: 100 });
     const state: ResizeState = {
-      handleType: 'se',
+      handleType: "se",
       originalBounds: { x: 0, y: 0, width: 100, height: 100 },
       origin: { x: 100, y: 100 },
-    }
-    resizeElement({ x: 0.1, y: 0.1 }, state, el, false)
-    expect(el.width).toBeGreaterThanOrEqual(1)
-    expect(el.height).toBeGreaterThanOrEqual(1)
-  })
-})
+    };
+    resizeElement({ x: 0.1, y: 0.1 }, state, el, false);
+    expect(el.width).toBeGreaterThanOrEqual(1);
+    expect(el.height).toBeGreaterThanOrEqual(1);
+  });
+});
 ```
 
 ### 14.4 Browser Integration Tests (`*.browser.test.ts`)
@@ -1420,128 +1497,128 @@ These test **real user interactions** with the full Vue component tree and point
 ```typescript
 // features/tools/composables/SelectionInteraction.browser.test.ts
 
-describe('Selection interaction', () => {
+describe("Selection interaction", () => {
   // Setup helper: renders CanvasContainer and draws a rectangle at known position
   async function setupWithRectangle() {
-    const screen = render(CanvasContainer)
-    const canvas = screen.getByTestId('interactive-canvas')
+    const screen = render(CanvasContainer);
+    const canvas = screen.getByTestId("interactive-canvas");
 
     // Switch to rectangle tool and draw a 100x100 rect at (200, 200)
-    await userEvent.keyboard('r')
+    await userEvent.keyboard("r");
     await userEvent.pointer([
-      { target: canvas, coords: { x: 200, y: 200 }, keys: '[MouseLeft>]' },
+      { target: canvas, coords: { x: 200, y: 200 }, keys: "[MouseLeft>]" },
       { target: canvas, coords: { x: 300, y: 300 } },
-      { target: canvas, keys: '[/MouseLeft]' },
-    ])
+      { target: canvas, keys: "[/MouseLeft]" },
+    ]);
 
     // Tool auto-reverts to selection
-    return { screen, canvas }
+    return { screen, canvas };
   }
 
-  describe('click-to-select', () => {
-    it('clicking on an element selects it', async () => {
-      const { canvas } = await setupWithRectangle()
+  describe("click-to-select", () => {
+    it("clicking on an element selects it", async () => {
+      const { canvas } = await setupWithRectangle();
       // Click inside the drawn rectangle
-      await userEvent.click(canvas, { position: { x: 250, y: 250 } })
+      await userEvent.click(canvas, { position: { x: 250, y: 250 } });
       // Verify: interactive canvas should render selection border
       // (Check via exposed composable state or data-testid)
-    })
+    });
 
-    it('clicking empty space deselects', async () => {
-      const { canvas } = await setupWithRectangle()
-      await userEvent.click(canvas, { position: { x: 250, y: 250 } })  // select
-      await userEvent.click(canvas, { position: { x: 50, y: 50 } })    // deselect
+    it("clicking empty space deselects", async () => {
+      const { canvas } = await setupWithRectangle();
+      await userEvent.click(canvas, { position: { x: 250, y: 250 } }); // select
+      await userEvent.click(canvas, { position: { x: 50, y: 50 } }); // deselect
       // Verify: no selection
-    })
+    });
 
-    it('shift+click adds to selection', async () => {
+    it("shift+click adds to selection", async () => {
       // Draw two rectangles, shift-click both
-    })
-  })
+    });
+  });
 
-  describe('drag-to-move', () => {
-    it('dragging selected element moves it', async () => {
-      const { canvas } = await setupWithRectangle()
+  describe("drag-to-move", () => {
+    it("dragging selected element moves it", async () => {
+      const { canvas } = await setupWithRectangle();
       // Select the rect
-      await userEvent.click(canvas, { position: { x: 250, y: 250 } })
+      await userEvent.click(canvas, { position: { x: 250, y: 250 } });
       // Drag it 50px right, 50px down
       await userEvent.pointer([
-        { target: canvas, coords: { x: 250, y: 250 }, keys: '[MouseLeft>]' },
+        { target: canvas, coords: { x: 250, y: 250 }, keys: "[MouseLeft>]" },
         { target: canvas, coords: { x: 300, y: 300 } },
-        { target: canvas, keys: '[/MouseLeft]' },
-      ])
+        { target: canvas, keys: "[/MouseLeft]" },
+      ]);
       // Verify: element.x and element.y updated
-    })
-  })
+    });
+  });
 
-  describe('resize', () => {
-    it('dragging SE handle resizes element', async () => {
-      const { canvas } = await setupWithRectangle()
+  describe("resize", () => {
+    it("dragging SE handle resizes element", async () => {
+      const { canvas } = await setupWithRectangle();
       // Select
-      await userEvent.click(canvas, { position: { x: 250, y: 250 } })
+      await userEvent.click(canvas, { position: { x: 250, y: 250 } });
       // Drag from SE handle position (~304, ~304 with margin)
       await userEvent.pointer([
-        { target: canvas, coords: { x: 304, y: 304 }, keys: '[MouseLeft>]' },
+        { target: canvas, coords: { x: 304, y: 304 }, keys: "[MouseLeft>]" },
         { target: canvas, coords: { x: 400, y: 400 } },
-        { target: canvas, keys: '[/MouseLeft]' },
-      ])
+        { target: canvas, keys: "[/MouseLeft]" },
+      ]);
       // Verify: element.width and element.height increased
-    })
-  })
+    });
+  });
 
-  describe('box-select', () => {
-    it('dragging on empty space creates selection marquee', async () => {
+  describe("box-select", () => {
+    it("dragging on empty space creates selection marquee", async () => {
       // Draw two rectangles
       // Drag marquee around both
       // Verify both selected
-    })
+    });
 
-    it('only fully enclosed elements get selected', async () => {
+    it("only fully enclosed elements get selected", async () => {
       // Draw rect, drag marquee that partially overlaps
       // Verify not selected
-    })
-  })
-})
+    });
+  });
+});
 ```
 
 #### `SelectionKeyboard.browser.test.ts` — Keyboard interaction flows
 
 ```typescript
-describe('Selection keyboard shortcuts', () => {
-  it('Delete key removes selected element', async () => {
-    const { canvas } = await setupWithRectangle()
-    await userEvent.click(canvas, { position: { x: 250, y: 250 } })
-    await userEvent.keyboard('{Delete}')
+describe("Selection keyboard shortcuts", () => {
+  it("Delete key removes selected element", async () => {
+    const { canvas } = await setupWithRectangle();
+    await userEvent.click(canvas, { position: { x: 250, y: 250 } });
+    await userEvent.keyboard("{Delete}");
     // Verify: element.isDeleted === true
-  })
+  });
 
-  it('Escape clears selection', async () => {
-    const { canvas } = await setupWithRectangle()
-    await userEvent.click(canvas, { position: { x: 250, y: 250 } })
-    await userEvent.keyboard('{Escape}')
+  it("Escape clears selection", async () => {
+    const { canvas } = await setupWithRectangle();
+    await userEvent.click(canvas, { position: { x: 250, y: 250 } });
+    await userEvent.keyboard("{Escape}");
     // Verify: no selection
-  })
+  });
 
-  it('Ctrl+A selects all elements', async () => {
+  it("Ctrl+A selects all elements", async () => {
     // Draw two rectangles
-    await userEvent.keyboard('{Control>}a{/Control}')
+    await userEvent.keyboard("{Control>}a{/Control}");
     // Verify: both selected
-  })
+  });
 
-  it('Arrow keys nudge selected element by 1px', async () => {
-    const { canvas } = await setupWithRectangle()
-    await userEvent.click(canvas, { position: { x: 250, y: 250 } })
-    await userEvent.keyboard('{ArrowRight}')
+  it("Arrow keys nudge selected element by 1px", async () => {
+    const { canvas } = await setupWithRectangle();
+    await userEvent.click(canvas, { position: { x: 250, y: 250 } });
+    await userEvent.keyboard("{ArrowRight}");
     // Verify: element.x increased by 1
-  })
+  });
 
-  it('Shift+Arrow nudges by 10px', async () => {
-    const { canvas } = await setupWithRectangle()
-    await userEvent.click(canvas, { position: { x: 250, y: 250 } })
-    await userEvent.keyboard('{Shift>}{ArrowRight}{/Shift}')
+  it("Shift+Arrow nudges by 10px", async () => {
+    const { canvas } = await setupWithRectangle();
+    await userEvent.click(canvas, { position: { x: 250, y: 250 } });
+    await userEvent.keyboard("{Shift>}{ArrowRight}{/Shift}");
     // Verify: element.x increased by 10
-  })
-})
+  });
+});
 ```
 
 ### 14.5 End-to-End Flow Tests (browser)
@@ -1549,103 +1626,103 @@ describe('Selection keyboard shortcuts', () => {
 #### `DrawSelectMoveResize.browser.test.ts` — Full user journey
 
 ```typescript
-describe('Full interaction flow: draw → select → move → resize → delete', () => {
-  it('complete editing lifecycle', async () => {
-    const screen = render(CanvasContainer)
-    const canvas = screen.getByTestId('interactive-canvas')
+describe("Full interaction flow: draw → select → move → resize → delete", () => {
+  it("complete editing lifecycle", async () => {
+    const screen = render(CanvasContainer);
+    const canvas = screen.getByTestId("interactive-canvas");
 
     // 1. Draw a rectangle
-    await userEvent.keyboard('r')
+    await userEvent.keyboard("r");
     await userEvent.pointer([
-      { target: canvas, coords: { x: 100, y: 100 }, keys: '[MouseLeft>]' },
+      { target: canvas, coords: { x: 100, y: 100 }, keys: "[MouseLeft>]" },
       { target: canvas, coords: { x: 200, y: 200 } },
-      { target: canvas, keys: '[/MouseLeft]' },
-    ])
+      { target: canvas, keys: "[/MouseLeft]" },
+    ]);
 
     // 2. Verify it exists (auto-selected after draw)
     // Tool should have reverted to selection
 
     // 3. Click somewhere else to deselect
-    await userEvent.click(canvas, { position: { x: 50, y: 50 } })
+    await userEvent.click(canvas, { position: { x: 50, y: 50 } });
 
     // 4. Click back on the rect to re-select
-    await userEvent.click(canvas, { position: { x: 150, y: 150 } })
+    await userEvent.click(canvas, { position: { x: 150, y: 150 } });
 
     // 5. Drag to move
     await userEvent.pointer([
-      { target: canvas, coords: { x: 150, y: 150 }, keys: '[MouseLeft>]' },
+      { target: canvas, coords: { x: 150, y: 150 }, keys: "[MouseLeft>]" },
       { target: canvas, coords: { x: 250, y: 250 } },
-      { target: canvas, keys: '[/MouseLeft]' },
-    ])
+      { target: canvas, keys: "[/MouseLeft]" },
+    ]);
 
     // 6. Resize via SE handle
     await userEvent.pointer([
-      { target: canvas, coords: { x: 304, y: 304 }, keys: '[MouseLeft>]' },
+      { target: canvas, coords: { x: 304, y: 304 }, keys: "[MouseLeft>]" },
       { target: canvas, coords: { x: 350, y: 350 } },
-      { target: canvas, keys: '[/MouseLeft]' },
-    ])
+      { target: canvas, keys: "[/MouseLeft]" },
+    ]);
 
     // 7. Delete
-    await userEvent.keyboard('{Delete}')
+    await userEvent.keyboard("{Delete}");
 
     // 8. Verify element is gone (isDeleted)
-  })
+  });
 
-  it('draw multiple shapes and box-select all', async () => {
-    const screen = render(CanvasContainer)
-    const canvas = screen.getByTestId('interactive-canvas')
+  it("draw multiple shapes and box-select all", async () => {
+    const screen = render(CanvasContainer);
+    const canvas = screen.getByTestId("interactive-canvas");
 
     // Draw rect
-    await userEvent.keyboard('r')
+    await userEvent.keyboard("r");
     await userEvent.pointer([
-      { target: canvas, coords: { x: 50, y: 50 }, keys: '[MouseLeft>]' },
+      { target: canvas, coords: { x: 50, y: 50 }, keys: "[MouseLeft>]" },
       { target: canvas, coords: { x: 100, y: 100 } },
-      { target: canvas, keys: '[/MouseLeft]' },
-    ])
+      { target: canvas, keys: "[/MouseLeft]" },
+    ]);
 
     // Draw ellipse
-    await userEvent.keyboard('o')
+    await userEvent.keyboard("o");
     await userEvent.pointer([
-      { target: canvas, coords: { x: 200, y: 200 }, keys: '[MouseLeft>]' },
+      { target: canvas, coords: { x: 200, y: 200 }, keys: "[MouseLeft>]" },
       { target: canvas, coords: { x: 300, y: 300 } },
-      { target: canvas, keys: '[/MouseLeft]' },
-    ])
+      { target: canvas, keys: "[/MouseLeft]" },
+    ]);
 
     // Box-select all (drag from top-left past both)
     await userEvent.pointer([
-      { target: canvas, coords: { x: 10, y: 10 }, keys: '[MouseLeft>]' },
+      { target: canvas, coords: { x: 10, y: 10 }, keys: "[MouseLeft>]" },
       { target: canvas, coords: { x: 350, y: 350 } },
-      { target: canvas, keys: '[/MouseLeft]' },
-    ])
+      { target: canvas, keys: "[/MouseLeft]" },
+    ]);
 
     // Verify: both elements selected
 
     // Move all
     await userEvent.pointer([
-      { target: canvas, coords: { x: 150, y: 150 }, keys: '[MouseLeft>]' },
+      { target: canvas, coords: { x: 150, y: 150 }, keys: "[MouseLeft>]" },
       { target: canvas, coords: { x: 200, y: 200 } },
-      { target: canvas, keys: '[/MouseLeft]' },
-    ])
+      { target: canvas, keys: "[/MouseLeft]" },
+    ]);
 
     // Verify: both elements moved by (50, 50), relative positions preserved
-  })
-})
+  });
+});
 ```
 
 ### 14.6 Test Matrix Summary
 
-| File | Type | Tests | What It Verifies |
-|------|------|-------|-----------------|
-| `hitTest.unit.test.ts` | Unit | ~12 | Point-in-shape for rect/ellipse/diamond, rotation, threshold, z-order |
-| `bounds.unit.test.ts` | Unit | ~6 | Single + multi element bounds, rotation expansion |
-| `transformHandles.unit.test.ts` | Unit | ~8 | Handle positions, visibility rules, hit detection |
-| `useSelection.unit.test.ts` | Unit | ~8 | Select/toggle/clear, computed bounds, deleted filtering |
-| `dragElements.unit.test.ts` | Unit | ~5 | Single/multi move, origin-based drift-free, shift constraint |
-| `resizeElement.unit.test.ts` | Unit | ~7 | All 8 handles, aspect lock, negative flip, min size |
-| `SelectionInteraction.browser.test.ts` | Browser | ~6 | Click/drag/resize/box-select with real pointer events |
-| `SelectionKeyboard.browser.test.ts` | Browser | ~5 | Delete/Escape/Ctrl+A/Arrow keys |
-| `DrawSelectMoveResize.browser.test.ts` | Browser | ~2 | Full lifecycle: draw → select → move → resize → delete |
-| **Total** | | **~59** | |
+| File                                   | Type    | Tests   | What It Verifies                                                      |
+| -------------------------------------- | ------- | ------- | --------------------------------------------------------------------- |
+| `hitTest.unit.test.ts`                 | Unit    | ~12     | Point-in-shape for rect/ellipse/diamond, rotation, threshold, z-order |
+| `bounds.unit.test.ts`                  | Unit    | ~6      | Single + multi element bounds, rotation expansion                     |
+| `transformHandles.unit.test.ts`        | Unit    | ~8      | Handle positions, visibility rules, hit detection                     |
+| `useSelection.unit.test.ts`            | Unit    | ~8      | Select/toggle/clear, computed bounds, deleted filtering               |
+| `dragElements.unit.test.ts`            | Unit    | ~5      | Single/multi move, origin-based drift-free, shift constraint          |
+| `resizeElement.unit.test.ts`           | Unit    | ~7      | All 8 handles, aspect lock, negative flip, min size                   |
+| `SelectionInteraction.browser.test.ts` | Browser | ~6      | Click/drag/resize/box-select with real pointer events                 |
+| `SelectionKeyboard.browser.test.ts`    | Browser | ~5      | Delete/Escape/Ctrl+A/Arrow keys                                       |
+| `DrawSelectMoveResize.browser.test.ts` | Browser | ~2      | Full lifecycle: draw → select → move → resize → delete                |
+| **Total**                              |         | **~59** |                                                                       |
 
 ---
 
@@ -1720,6 +1797,7 @@ We split into **4 parallel agents** plus a **lead agent** that coordinates.
 ```
 
 #### Agent A: Geometry (hit testing + bounds)
+
 **Files**: `bounds.ts`, `hitTest.ts`, + unit tests
 **Depends on**: `constants.ts` (created by lead), `shared/math.ts` (exists)
 **Blocked by**: Nothing after constants
@@ -1734,6 +1812,7 @@ Tasks:
 ```
 
 #### Agent B: Selection State (composable + drag)
+
 **Files**: `useSelection.ts`, `dragElements.ts`, + unit tests
 **Depends on**: `bounds.ts` (Agent A — for selectionBounds computed)
 **Blocked by**: Agent A's `bounds.ts` (needs `getCommonBounds`)
@@ -1748,6 +1827,7 @@ Tasks:
 ```
 
 #### Agent C: Interactive Rendering (selection visuals)
+
 **Files**: `renderInteractive.ts`, `transformHandles.ts`, + unit tests
 **Depends on**: `constants.ts`, `bounds.ts` (for handle positioning)
 **Blocked by**: Agent A's `bounds.ts`
@@ -1762,6 +1842,7 @@ Tasks:
 ```
 
 #### Agent D: Resize + Keyboard
+
 **Files**: `resizeElement.ts`, keyboard shortcut wiring, + unit tests
 **Depends on**: `transformHandles.ts` (Agent C — for handle types)
 **Blocked by**: Agent C's handle types
@@ -1878,17 +1959,17 @@ Manual smoke test ← Draw, select, move, resize, delete works visually
 
 ## Appendix: Key Differences from Excalidraw
 
-| Aspect | Excalidraw | Our Approach |
-|--------|-----------|--------------|
-| Framework | React setState | Vue shallowRef + mutateElement |
-| Selection IDs | `Record<string, true>` | `Set<string>` in `shallowRef` |
-| Drag calculation | Origin-based (same) | Origin-based (same) |
-| Resize | Supports multi-element | Single-element only (MVP) |
-| Rotation | Full rotation support | Include rotation handle (single element) |
-| Hit detection | Two-phase (same) | Two-phase (same) |
-| Shape cache | WeakMap on element ref | Map keyed by `id + versionNonce` |
-| Interaction state | Implicit in pointerDownState | Explicit discriminated union |
-| Rendering | React component lifecycle | RAF dirty-flag loop (already built) |
-| Groups/frames | Full support | Skipped for MVP |
-| Snapping | Object + grid snapping | Skipped for MVP |
-| Lasso select | Yes | Skipped for MVP |
+| Aspect            | Excalidraw                   | Our Approach                             |
+| ----------------- | ---------------------------- | ---------------------------------------- |
+| Framework         | React setState               | Vue shallowRef + mutateElement           |
+| Selection IDs     | `Record<string, true>`       | `Set<string>` in `shallowRef`            |
+| Drag calculation  | Origin-based (same)          | Origin-based (same)                      |
+| Resize            | Supports multi-element       | Single-element only (MVP)                |
+| Rotation          | Full rotation support        | Include rotation handle (single element) |
+| Hit detection     | Two-phase (same)             | Two-phase (same)                         |
+| Shape cache       | WeakMap on element ref       | Map keyed by `id + versionNonce`         |
+| Interaction state | Implicit in pointerDownState | Explicit discriminated union             |
+| Rendering         | React component lifecycle    | RAF dirty-flag loop (already built)      |
+| Groups/frames     | Full support                 | Skipped for MVP                          |
+| Snapping          | Object + grid snapping       | Skipped for MVP                          |
+| Lasso select      | Yes                          | Skipped for MVP                          |

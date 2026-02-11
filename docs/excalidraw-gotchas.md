@@ -21,24 +21,30 @@ Dark mode is implemented natively. `resolveColor(color, theme)` passes through i
 Canvas must be configured for devicePixelRatio on mount (window unavailable during SSR/setup):
 
 ```ts
-const dpr = ref(1)
+const dpr = ref(1);
 
 onMounted(() => {
-  dpr.value = window.devicePixelRatio || 1
-})
+  dpr.value = window.devicePixelRatio || 1;
+});
 
-function bootstrapCanvas(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, dpr: number, w: number, h: number) {
+function bootstrapCanvas(
+  ctx: CanvasRenderingContext2D,
+  canvas: HTMLCanvasElement,
+  dpr: number,
+  w: number,
+  h: number,
+) {
   // Physical size (actual pixels)
-  canvas.width = w * dpr
-  canvas.height = h * dpr
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
 
   // CSS size (logical pixels)
-  canvas.style.width = `${w}px`
-  canvas.style.height = `${h}px`
+  canvas.style.width = `${w}px`;
+  canvas.style.height = `${h}px`;
 
   // Reset then scale for HiDPI
-  ctx.setTransform(1, 0, 0, 1, 0, 0)
-  ctx.scale(dpr, dpr)
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.scale(dpr, dpr);
 }
 ```
 
@@ -54,13 +60,13 @@ ESLint `vue/prefer-use-template-ref` triggers false positives when a `shallowRef
 
 <!-- Script — ❌ triggers lint error -->
 <script setup>
-const staticCanvas = shallowRef(null)
+const staticCanvas = shallowRef(null);
 </script>
 
 <!-- Script — ✅ use different names -->
 <script setup>
-const staticCanvasRef = useTemplateRef('staticCanvas')
-const staticCtx = shallowRef(null)
+const staticCanvasRef = useTemplateRef("staticCanvas");
+const staticCtx = shallowRef(null);
 </script>
 ```
 
@@ -137,15 +143,16 @@ Use `pruneShapeCache()` (called by scene renderer) to remove cache entries for d
 ## Canvas Contexts Must Be Wrapped with markRaw
 
 `useCanvasLayers` wraps both `CanvasRenderingContext2D` and `RoughCanvas` in `markRaw()` before storing in `shallowRef`. Vue's reactivity proxy wrapping native canvas contexts causes:
+
 - Performance degradation from proxy traps on every draw call
 - Potential errors when native methods check `this` identity
 
 ```ts
 // ❌ Causes proxy wrapping
-ctxRef.value = canvas.getContext('2d')
+ctxRef.value = canvas.getContext("2d");
 
 // ✅ Prevent reactivity tracking
-ctxRef.value = markRaw(canvas.getContext('2d'))
+ctxRef.value = markRaw(canvas.getContext("2d"));
 ```
 
 **Rule**: Always `markRaw()` native browser objects (CanvasRenderingContext2D, RoughCanvas, WebGL contexts) before storing in Vue refs.
@@ -181,14 +188,14 @@ When mutating the inner object of a `shallowRef` (rather than replacing the ref 
 
 ```ts
 // shallowRef only tracks reference identity
-const editingElement = shallowRef<ExcalidrawArrowElement | null>(null)
+const editingElement = shallowRef<ExcalidrawArrowElement | null>(null);
 
 // ❌ mutateElement changes the object in-place — shallowRef doesn't notice
-mutateElement(editingElement.value, { points: newPoints })
+mutateElement(editingElement.value, { points: newPoints });
 
 // ✅ Force reactivity update
-mutateElement(editingElement.value, { points: newPoints })
-triggerRef(editingElement)
+mutateElement(editingElement.value, { points: newPoints });
+triggerRef(editingElement);
 ```
 
 This pattern appears in `useLinearEditor` and `useMultiPointCreation` — every `mutateElement()` call on the editing element is followed by `triggerRef()`.
@@ -198,10 +205,10 @@ This pattern appears in `useLinearEditor` and `useMultiPointCreation` — every 
 All interactive overlays (selection borders, transform handles, point handles, grid dots, binding highlights, dash patterns) use `size / zoom` to maintain constant screen-space size regardless of zoom level.
 
 ```ts
-const lineWidth = SELECTION_LINE_WIDTH / zoom
-ctx.setLineDash([8 / zoom, 4 / zoom])
-const threshold = POINT_HIT_THRESHOLD / zoom
-const dotRadius = GRID_DOT_RADIUS / zoom
+const lineWidth = SELECTION_LINE_WIDTH / zoom;
+ctx.setLineDash([8 / zoom, 4 / zoom]);
+const threshold = POINT_HIT_THRESHOLD / zoom;
+const dotRadius = GRID_DOT_RADIUS / zoom;
 ```
 
 **Bug pattern**: Using a fixed pixel size for any interactive visual element. At zoom < 1, it becomes too large; at zoom > 10, it becomes invisible.
@@ -211,6 +218,7 @@ const dotRadius = GRID_DOT_RADIUS / zoom
 ## Binding Is Bidirectional: Must Update Both Sides
 
 Arrow-shape binding mutates both objects:
+
 - **Arrow side**: `startBinding` / `endBinding` with `{elementId, fixedPoint}`
 - **Shape side**: entry in `boundElements[]` with `{id: arrowId, type: 'arrow'}`
 
@@ -231,15 +239,35 @@ flowchart LR
 Hit testing, resizing, binding proximity detection, and transform handle positioning all handle rotation by unrotating the test point around the element center first, then checking against axis-aligned geometry.
 
 ```ts
-const cx = el.x + el.width / 2
-const cy = el.y + el.height / 2
-const unrotated = rotatePoint(point, { x: cx, y: cy }, -el.angle)
+const cx = el.x + el.width / 2;
+const cy = el.y + el.height / 2;
+const unrotated = rotatePoint(point, { x: cx, y: cy }, -el.angle);
 // Now check against unrotated (axis-aligned) element bounds
 ```
 
 **Bug pattern**: Checking a point against `el.x, el.y, el.width, el.height` without unrotating when `el.angle !== 0` gives wrong results. The bug is silent — it only manifests when users rotate elements.
 
 **Rule**: Any geometric test against an element must check `element.angle` and unrotate accordingly.
+
+## Rotation: Translate-Rotate-Translate for Rendering
+
+When rendering rotated elements on canvas, apply transforms around the element center:
+
+```ts
+const cx = element.x + element.width / 2;
+const cy = element.y + element.height / 2;
+
+ctx.translate(cx, cy);
+ctx.rotate(element.angle);
+ctx.translate(-element.width / 2, -element.height / 2);
+// Now draw shape at local origin (0, 0)
+```
+
+**Bug pattern**: Using `ctx.translate(element.x, element.y)` without rotation causes elements to render unrotated even when `element.angle` is set. The interactive layer (selection border) may rotate correctly while the static layer stays axis-aligned — a confusing visual mismatch.
+
+**Rule**: Any canvas rendering of a rotated element must translate to center, rotate, then translate back before drawing.
+
+**Files affected**: `renderElement.ts` (`renderRoughShape`, `renderTextElement`), `renderInteractive.ts` (`renderSelectionBorder`), `renderImageElement.ts`.
 
 ## useTheme Is a Global State Singleton
 
@@ -254,8 +282,8 @@ The `$reset()` method exists for testing teardown.
 `useViewport.panBy(dx, dy)` divides by zoom because `scrollX`/`scrollY` are in **scene coordinates**, not screen pixels:
 
 ```ts
-scrollX.value += dx / zoom.value
-scrollY.value += dy / zoom.value
+scrollX.value += dx / zoom.value;
+scrollY.value += dy / zoom.value;
 ```
 
 **Bug pattern**: Passing scene-space deltas to `panBy()` (which expects screen-space pixel deltas) causes panning speed to scale inversely with zoom.
@@ -275,6 +303,7 @@ Element `groupIds` are ordered inner-to-outer. `getOutermostGroupId()` returns `
 ## Group Cleanup After Element Deletion
 
 After deleting elements, groups may become orphans (fewer than 2 members). `cleanupAfterDelete()` must be called to:
+
 1. Find groups with < 2 active members
 2. Remove those groupIds from all remaining elements
 
@@ -283,6 +312,7 @@ After deleting elements, groups may become orphans (fewer than 2 members). `clea
 ## Resize Operates in Unrotated Coordinate Space
 
 `resizeElement()` unrotates the pointer around the element center before computing deltas. It also handles:
+
 - **Negative dimensions**: When dragging past the opposite edge, it flips `x`/`width` (or `y`/`height`)
 - **Minimum size**: Enforced via `MIN_ELEMENT_SIZE` constant
 - **Aspect ratio lock**: Shift-key constrains to original aspect ratio
@@ -326,15 +356,15 @@ flowchart LR
 **Fix**: Seed BOTH sources in test setup:
 
 ```ts
-import { reseed as excalidrawReseed } from '@excalidraw/common'
+import { reseed as excalidrawReseed } from "@excalidraw/common";
 
 export function reseed(seed = 12_345): void {
   // Seed Math.random (for any code using it directly)
-  originalRandom = Math.random
-  Math.random = mulberry32(seed)
+  originalRandom = Math.random;
+  Math.random = mulberry32(seed);
 
   // Seed @excalidraw/common's PRNG (for element seeds)
-  excalidrawReseed(seed)
+  excalidrawReseed(seed);
 }
 ```
 
@@ -357,6 +387,7 @@ flowchart LR
 **Symptom**: Editor opens and closes instantly on click — no error, no console warning.
 
 **Current implementations differ:**
+
 - `useTextInteraction.ts` calls `textarea.focus()` synchronously (works because the text editor container is separate from the canvas pointer target)
 - `useCodeInteraction.ts` defers with `requestAnimationFrame(() => textarea.focus())` to avoid the focus-steal race
 
@@ -364,8 +395,8 @@ flowchart LR
 
 ```ts
 // In pointerdown handler:
-setTool('selection')  // Switch BEFORE opening
-openEditor(element)   // Editor sets editingElement ref
+setTool("selection"); // Switch BEFORE opening
+openEditor(element); // Editor sets editingElement ref
 ```
 
 **Reference**: See `useTextInteraction.ts` (line ~329) and `useCodeInteraction.ts` (line ~162).
@@ -376,24 +407,24 @@ When adding a new element type branch in `createElement.ts`, **always spread `..
 
 ```ts
 // ❌ Bug: overrides from base get overwritten by type-specific defaults
-if (type === 'image') {
+if (type === "image") {
   return {
-    ...base,           // base includes ...overrides
-    type: 'image',
-    fileId: null,      // overwrites caller's fileId!
-    status: 'pending',
-  } as SupportedElement
+    ...base, // base includes ...overrides
+    type: "image",
+    fileId: null, // overwrites caller's fileId!
+    status: "pending",
+  } as SupportedElement;
 }
 
 // ✅ Correct: spread overrides again after defaults
-if (type === 'image') {
+if (type === "image") {
   return {
     ...base,
-    type: 'image',
+    type: "image",
     fileId: null,
-    status: 'pending',
-    ...overrides,      // caller overrides win
-  } as SupportedElement
+    status: "pending",
+    ...overrides, // caller overrides win
+  } as SupportedElement;
 }
 ```
 

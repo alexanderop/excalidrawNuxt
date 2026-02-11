@@ -12,53 +12,57 @@ Debounce execution of a function.
 ## Usage
 
 ```ts
-import { useDebounceFn, useEventListener } from '@vueuse/core'
+import { useDebounceFn, useEventListener } from "@vueuse/core";
 
 const debouncedFn = useDebounceFn(() => {
   // do something
-}, 1000)
+}, 1000);
 
-useEventListener(window, 'resize', debouncedFn)
+useEventListener(window, "resize", debouncedFn);
 ```
 
 You can also pass a 3rd parameter to this, with a maximum wait time, similar to [lodash debounce](https://lodash.com/docs/4.17.15#debounce)
 
 ```ts
-import { useDebounceFn, useEventListener } from '@vueuse/core'
+import { useDebounceFn, useEventListener } from "@vueuse/core";
 
 // If no invokation after 5000ms due to repeated input,
 // the function will be called anyway.
-const debouncedFn = useDebounceFn(() => {
-  // do something
-}, 1000, { maxWait: 5000 })
+const debouncedFn = useDebounceFn(
+  () => {
+    // do something
+  },
+  1000,
+  { maxWait: 5000 },
+);
 
-useEventListener(window, 'resize', debouncedFn)
+useEventListener(window, "resize", debouncedFn);
 ```
 
 Optionally, you can get the return value of the function using promise operations.
 
 ```ts
-import { useDebounceFn } from '@vueuse/core'
+import { useDebounceFn } from "@vueuse/core";
 
-const debouncedRequest = useDebounceFn(() => 'response', 1000)
+const debouncedRequest = useDebounceFn(() => "response", 1000);
 
 debouncedRequest().then((value) => {
-  console.log(value) // 'response'
-})
+  console.log(value); // 'response'
+});
 
 // or use async/await
 async function doRequest() {
-  const value = await debouncedRequest()
-  console.log(value) // 'response'
+  const value = await debouncedRequest();
+  console.log(value); // 'response'
 }
 ```
 
 Since unhandled rejection error is quite annoying when developer doesn't need the return value, the promise will **NOT** be rejected if the function is canceled **by default**. You need to specify the option `rejectOnCancel: true` to capture the rejection.
 
 ```ts
-import { useDebounceFn } from '@vueuse/core'
+import { useDebounceFn } from "@vueuse/core";
 
-const debouncedRequest = useDebounceFn(() => 'response', 1000, { rejectOnCancel: true })
+const debouncedRequest = useDebounceFn(() => "response", 1000, { rejectOnCancel: true });
 
 debouncedRequest()
   .then((value) => {
@@ -66,10 +70,10 @@ debouncedRequest()
   })
   .catch(() => {
     // do something when canceled
-  })
+  });
 
 // calling it again will cancel the previous request and gets rejected
-setTimeout(debouncedRequest, 500)
+setTimeout(debouncedRequest, 500);
 ```
 
 ## Recommended Reading
@@ -79,7 +83,7 @@ setTimeout(debouncedRequest, 500)
 ## Type Declarations
 
 ```ts
-export type UseDebounceFnReturn<T extends FunctionArgs> = PromisifyFn<T>
+export type UseDebounceFnReturn<T extends FunctionArgs> = PromisifyFn<T>;
 /**
  * Debounce execution of a function.
  *
@@ -96,5 +100,5 @@ export declare function useDebounceFn<T extends FunctionArgs>(
   fn: T,
   ms?: MaybeRefOrGetter<number>,
   options?: DebounceFilterOptions,
-): UseDebounceFnReturn<T>
+): UseDebounceFnReturn<T>;
 ```

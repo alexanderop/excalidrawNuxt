@@ -9,15 +9,15 @@ Call function on every `requestAnimationFrame`. With controls of pausing and res
 ## Usage
 
 ```ts
-import { useRafFn } from '@vueuse/core'
-import { shallowRef } from 'vue'
+import { useRafFn } from "@vueuse/core";
+import { shallowRef } from "vue";
 
-const count = shallowRef(0)
+const count = shallowRef(0);
 
 const { pause, resume } = useRafFn(() => {
-  count.value++
-  console.log(count.value)
-})
+  count.value++;
+  console.log(count.value);
+});
 ```
 
 ## Type Declarations
@@ -27,11 +27,11 @@ export interface UseRafFnCallbackArguments {
   /**
    * Time elapsed between this and the last frame.
    */
-  delta: number
+  delta: number;
   /**
    * Time elapsed since the creation of the web page. See {@link https://developer.mozilla.org/en-US/docs/Web/API/DOMHighResTimeStamp#the_time_origin Time origin}.
    */
-  timestamp: DOMHighResTimeStamp
+  timestamp: DOMHighResTimeStamp;
 }
 export interface UseRafFnOptions extends ConfigurableWindow {
   /**
@@ -39,20 +39,20 @@ export interface UseRafFnOptions extends ConfigurableWindow {
    *
    * @default true
    */
-  immediate?: boolean
+  immediate?: boolean;
   /**
    * The maximum frame per second to execute the function.
    * Set to `undefined` to disable the limit.
    *
    * @default undefined
    */
-  fpsLimit?: MaybeRefOrGetter<number>
+  fpsLimit?: MaybeRefOrGetter<number>;
   /**
    * After the requestAnimationFrame loop executed once, it will be automatically stopped.
    *
    * @default false
    */
-  once?: boolean
+  once?: boolean;
 }
 /**
  * Call function on every `requestAnimationFrame`. With controls of pausing and resuming.
@@ -64,5 +64,5 @@ export interface UseRafFnOptions extends ConfigurableWindow {
 export declare function useRafFn(
   fn: (args: UseRafFnCallbackArguments) => void,
   options?: UseRafFnOptions,
-): Pausable
+): Pausable;
 ```

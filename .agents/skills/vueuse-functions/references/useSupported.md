@@ -9,21 +9,19 @@ SSR compatibility `isSupported`
 ## Usage
 
 ```ts
-import { useSupported } from '@vueuse/core'
+import { useSupported } from "@vueuse/core";
 
-const isSupported = useSupported(() => navigator && 'getBattery' in navigator)
+const isSupported = useSupported(() => navigator && "getBattery" in navigator);
 
 if (isSupported.value) {
   // do something
-  navigator.getBattery
+  navigator.getBattery;
 }
 ```
 
 ## Type Declarations
 
 ```ts
-export declare function useSupported(
-  callback: () => unknown,
-): ComputedRef<boolean>
-export type UseSupportedReturn = ReturnType<typeof useSupported>
+export declare function useSupported(callback: () => unknown): ComputedRef<boolean>;
+export type UseSupportedReturn = ReturnType<typeof useSupported>;
 ```

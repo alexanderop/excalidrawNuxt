@@ -15,25 +15,25 @@ You can pass the `symmetric` option to get the [Symmetric difference](https://en
 ### Use with reactive array
 
 ```ts
-import { useArrayDifference } from '@vueuse/core'
+import { useArrayDifference } from "@vueuse/core";
 
-const list1 = ref([0, 1, 2, 3, 4, 5])
-const list2 = ref([4, 5, 6])
-const result = useArrayDifference(list1, list2)
+const list1 = ref([0, 1, 2, 3, 4, 5]);
+const list2 = ref([4, 5, 6]);
+const result = useArrayDifference(list1, list2);
 // result.value: [0, 1, 2, 3]
-list2.value = [0, 1, 2]
+list2.value = [0, 1, 2];
 // result.value: [3, 4, 5]
 ```
 
 ### Use with reactive array and use function comparison
 
 ```ts
-import { useArrayDifference } from '@vueuse/core'
+import { useArrayDifference } from "@vueuse/core";
 
-const list1 = ref([{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }])
-const list2 = ref([{ id: 4 }, { id: 5 }, { id: 6 }])
+const list1 = ref([{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }]);
+const list2 = ref([{ id: 4 }, { id: 5 }, { id: 6 }]);
 
-const result = useArrayDifference(list1, list2, (value, othVal) => value.id === othVal.id)
+const result = useArrayDifference(list1, list2, (value, othVal) => value.id === othVal.id);
 // result.value: [{ id: 1 }, { id: 2 }, { id: 3 }]
 ```
 
@@ -42,17 +42,14 @@ const result = useArrayDifference(list1, list2, (value, othVal) => value.id === 
 This composable also supports [Symmetric difference](https://en.wikipedia.org/wiki/Symmetric_difference) by passing the `symmetric` option.
 
 ```ts {10}
-import { useArrayDifference } from '@vueuse/core'
+import { useArrayDifference } from "@vueuse/core";
 
-const list1 = ref([{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }])
-const list2 = ref([{ id: 4 }, { id: 5 }, { id: 6 }])
+const list1 = ref([{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }]);
+const list2 = ref([{ id: 4 }, { id: 5 }, { id: 6 }]);
 
-const result = useArrayDifference(
-  list1,
-  list2,
-  (value, othVal) => value.id === othVal.id,
-  { symmetric: true }
-)
+const result = useArrayDifference(list1, list2, (value, othVal) => value.id === othVal.id, {
+  symmetric: true,
+});
 // result.value: [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 6 }]
 ```
 
@@ -66,19 +63,19 @@ export interface UseArrayDifferenceOptions {
    * @see https://en.wikipedia.org/wiki/Symmetric_difference
    * @default false
    */
-  symmetric?: boolean
+  symmetric?: boolean;
 }
-export type UseArrayDifferenceReturn<T = any> = ComputedRef<T[]>
+export type UseArrayDifferenceReturn<T = any> = ComputedRef<T[]>;
 export declare function useArrayDifference<T>(
   list: MaybeRefOrGetter<T[]>,
   values: MaybeRefOrGetter<T[]>,
   key?: keyof T,
   options?: UseArrayDifferenceOptions,
-): UseArrayDifferenceReturn<T>
+): UseArrayDifferenceReturn<T>;
 export declare function useArrayDifference<T>(
   list: MaybeRefOrGetter<T[]>,
   values: MaybeRefOrGetter<T[]>,
   compareFn?: (value: T, othVal: T) => boolean,
   options?: UseArrayDifferenceOptions,
-): UseArrayDifferenceReturn<T>
+): UseArrayDifferenceReturn<T>;
 ```

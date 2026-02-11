@@ -76,11 +76,11 @@ graph TD
 
 ## Testing Pyramid (Canvas App)
 
-| Layer | Target % | What | How |
-|-------|---------|------|-----|
-| Unit (node) | 60% | Pure functions, composables | `*.unit.test.ts`, fast, no DOM |
-| Integration (browser) | 30% | Event wiring, DOM classes, component mounting | `*.browser.test.ts`, real Chromium |
-| Visual | 10% | Canvas pixel output | Screenshot comparison via `__screenshots__/` |
+| Layer                 | Target % | What                                          | How                                          |
+| --------------------- | -------- | --------------------------------------------- | -------------------------------------------- |
+| Unit (node)           | 60%      | Pure functions, composables                   | `*.unit.test.ts`, fast, no DOM               |
+| Integration (browser) | 30%      | Event wiring, DOM classes, component mounting | `*.browser.test.ts`, real Chromium           |
+| Visual                | 10%      | Canvas pixel output                           | Screenshot comparison via `__screenshots__/` |
 
 ## Naming Conventions
 
@@ -106,49 +106,49 @@ graph TD
 
 ## Test Coverage by Feature
 
-| Feature | Unit Tests | Browser Tests |
-|---------|------------|---------------|
-| **shared/math** | `math.unit.test.ts` | -- |
-| **shared/random** | `random.unit.test.ts` | -- |
-| **canvas/coords** | `coords.unit.test.ts` | -- |
-| **canvas/useViewport** | `useViewport.unit.test.ts` | -- |
-| **canvas/useAnimationController** | `useAnimationController.unit.test.ts` | -- |
-| **canvas/CanvasContainer** | -- | `CanvasContainer.browser.test.ts` |
-| **elements/createElement** | `createElement.unit.test.ts` | -- |
-| **elements/mutateElement** | `mutateElement.unit.test.ts` | -- |
-| **elements/useElements** | `useElements.unit.test.ts` | -- |
-| **elements/elementSnapshot** | `elementSnapshot.unit.test.ts` | -- |
-| **rendering/shapeGenerator** | `shapeGenerator.unit.test.ts` | -- |
-| **rendering/renderGrid** | `renderGrid.unit.test.ts` | -- |
-| **rendering/renderElement** | `renderElement.unit.test.ts` | -- |
-| **rendering/renderScene** | `renderScene.unit.test.ts` | -- |
-| **rendering/renderPerformance** | `renderPerformance.unit.test.ts` | -- |
-| **rendering** | -- | `rendering.browser.test.ts` |
-| **selection/bounds** | `bounds.unit.test.ts` | -- |
-| **selection/hitTest** | `hitTest.unit.test.ts` | -- |
-| **selection/transformHandles** | `transformHandles.unit.test.ts` | -- |
-| **selection/dragElements** | `dragElements.unit.test.ts` | -- |
-| **selection/resizeElement** | `resizeElement.unit.test.ts` | -- |
-| **selection/useSelection** | `useSelection.unit.test.ts` | -- |
-| **selection** | -- | `selection.browser.test.ts` |
-| **tools/types** | `types.unit.test.ts` | -- |
-| **tools/useTool** | `useTool.unit.test.ts` | -- |
-| **tools/useDrawingInteraction** | `useDrawingInteraction.unit.test.ts` | -- |
-| **tools/arrowTool** | `arrowTool.unit.test.ts` | -- |
-| **tools/DrawingToolbar** | -- | `DrawingToolbar.browser.test.ts` |
-| **tools/arrowToolReset** | -- | `arrowToolReset.browser.test.ts` |
-| **tools/textTool** | -- | `textTool.browser.test.ts` |
-| **tools/boundText** | -- | `boundText.browser.test.ts` |
-| **tools/drawing** | -- | `drawing.browser.test.ts` |
-| **tools/userWorkflows** | -- | `userWorkflows.browser.test.ts` |
-| **linear-editor/pointHandles** | `pointHandles.unit.test.ts` | -- |
-| **linear-editor/useLinearEditor** | `useLinearEditor.unit.test.ts` | -- |
-| **linear-editor/useMultiPointCreation** | `useMultiPointCreation.unit.test.ts` | -- |
-| **linear-editor** | -- | `linearEditor.browser.test.ts`, `multiPoint.browser.test.ts` |
-| **binding/bindUnbind** | `bindUnbind.unit.test.ts` | -- |
-| **binding/updateBoundPoints** | `updateBoundPoints.unit.test.ts` | -- |
-| **binding/proximity** | `proximity.unit.test.ts` | -- |
-| **code** | -- | `code.browser.test.ts` |
-| **theme/colors** | `colors.unit.test.ts` | -- |
-| **theme** | -- | `theme.browser.test.ts` |
-| **groups/groupUtils** | `groupUtils.unit.test.ts` | -- |
+| Feature                                 | Unit Tests                            | Browser Tests                                                |
+| --------------------------------------- | ------------------------------------- | ------------------------------------------------------------ |
+| **shared/math**                         | `math.unit.test.ts`                   | --                                                           |
+| **shared/random**                       | `random.unit.test.ts`                 | --                                                           |
+| **canvas/coords**                       | `coords.unit.test.ts`                 | --                                                           |
+| **canvas/useViewport**                  | `useViewport.unit.test.ts`            | --                                                           |
+| **canvas/useAnimationController**       | `useAnimationController.unit.test.ts` | --                                                           |
+| **canvas/CanvasContainer**              | --                                    | `CanvasContainer.browser.test.ts`                            |
+| **elements/createElement**              | `createElement.unit.test.ts`          | --                                                           |
+| **elements/mutateElement**              | `mutateElement.unit.test.ts`          | --                                                           |
+| **elements/useElements**                | `useElements.unit.test.ts`            | --                                                           |
+| **elements/elementSnapshot**            | `elementSnapshot.unit.test.ts`        | --                                                           |
+| **rendering/shapeGenerator**            | `shapeGenerator.unit.test.ts`         | --                                                           |
+| **rendering/renderGrid**                | `renderGrid.unit.test.ts`             | --                                                           |
+| **rendering/renderElement**             | `renderElement.unit.test.ts`          | --                                                           |
+| **rendering/renderScene**               | `renderScene.unit.test.ts`            | --                                                           |
+| **rendering/renderPerformance**         | `renderPerformance.unit.test.ts`      | --                                                           |
+| **rendering**                           | --                                    | `rendering.browser.test.ts`                                  |
+| **selection/bounds**                    | `bounds.unit.test.ts`                 | --                                                           |
+| **selection/hitTest**                   | `hitTest.unit.test.ts`                | --                                                           |
+| **selection/transformHandles**          | `transformHandles.unit.test.ts`       | --                                                           |
+| **selection/dragElements**              | `dragElements.unit.test.ts`           | --                                                           |
+| **selection/resizeElement**             | `resizeElement.unit.test.ts`          | --                                                           |
+| **selection/useSelection**              | `useSelection.unit.test.ts`           | --                                                           |
+| **selection**                           | --                                    | `selection.browser.test.ts`                                  |
+| **tools/types**                         | `types.unit.test.ts`                  | --                                                           |
+| **tools/useTool**                       | `useTool.unit.test.ts`                | --                                                           |
+| **tools/useDrawingInteraction**         | `useDrawingInteraction.unit.test.ts`  | --                                                           |
+| **tools/arrowTool**                     | `arrowTool.unit.test.ts`              | --                                                           |
+| **tools/DrawingToolbar**                | --                                    | `DrawingToolbar.browser.test.ts`                             |
+| **tools/arrowToolReset**                | --                                    | `arrowToolReset.browser.test.ts`                             |
+| **tools/textTool**                      | --                                    | `textTool.browser.test.ts`                                   |
+| **tools/boundText**                     | --                                    | `boundText.browser.test.ts`                                  |
+| **tools/drawing**                       | --                                    | `drawing.browser.test.ts`                                    |
+| **tools/userWorkflows**                 | --                                    | `userWorkflows.browser.test.ts`                              |
+| **linear-editor/pointHandles**          | `pointHandles.unit.test.ts`           | --                                                           |
+| **linear-editor/useLinearEditor**       | `useLinearEditor.unit.test.ts`        | --                                                           |
+| **linear-editor/useMultiPointCreation** | `useMultiPointCreation.unit.test.ts`  | --                                                           |
+| **linear-editor**                       | --                                    | `linearEditor.browser.test.ts`, `multiPoint.browser.test.ts` |
+| **binding/bindUnbind**                  | `bindUnbind.unit.test.ts`             | --                                                           |
+| **binding/updateBoundPoints**           | `updateBoundPoints.unit.test.ts`      | --                                                           |
+| **binding/proximity**                   | `proximity.unit.test.ts`              | --                                                           |
+| **code**                                | --                                    | `code.browser.test.ts`                                       |
+| **theme/colors**                        | `colors.unit.test.ts`                 | --                                                           |
+| **theme**                               | --                                    | `theme.browser.test.ts`                                      |
+| **groups/groupUtils**                   | `groupUtils.unit.test.ts`             | --                                                           |

@@ -86,12 +86,12 @@ bun test:browser      # Browser tests only
 // vitest.config.unit.ts
 export default defineConfig({
   test: {
-    name: 'unit',
-    include: ['app/**/*.unit.test.ts'],
-    environment: 'node',     // no DOM, no browser
+    name: "unit",
+    include: ["app/**/*.unit.test.ts"],
+    environment: "node", // no DOM, no browser
     globals: true,
   },
-})
+});
 ```
 
 ### Browser config
@@ -101,17 +101,17 @@ export default defineConfig({
 export default defineConfig({
   plugins: [vue(), tailwindcss()],
   test: {
-    name: 'browser',
-    include: ['app/**/*.browser.test.ts'],
+    name: "browser",
+    include: ["app/**/*.browser.test.ts"],
     browser: {
       enabled: true,
       provider: playwright(),
-      instances: [{ browser: 'chromium' }],
+      instances: [{ browser: "chromium" }],
       commands: { canvasDrag, canvasClick, canvasDblClick, showGridOverlay },
     },
-    setupFiles: ['app/__test-utils__/setup-browser.ts'],
+    setupFiles: ["app/__test-utils__/setup-browser.ts"],
   },
-})
+});
 ```
 
 The `commands` field registers custom browser commands that dispatch
@@ -213,6 +213,7 @@ Layer 0: @testing-library/react     Layer 0: Browser commands (iframe)
 ```
 
 Key differences:
+
 - Our helpers are **async** (real browser events are async)
 - We have `globalThis.__h` (analogous to Excalidraw's `window.h`) for direct
   reactive state access via the `API` class
@@ -407,8 +408,9 @@ where on the canvas the interaction happens. Reading `canvasDrag(SEL, 200, 80, 7
 tells you nothing without a calculator.
 
 Debug overlay:
+
 ```typescript
-await ui.grid.showOverlay()  // shows red semi-transparent grid for 5s
+await ui.grid.showOverlay(); // shows red semi-transparent grid for 5s
 ```
 
 ---
@@ -421,12 +423,12 @@ Unit tests run in Node with no DOM. They test pure logic:
 
 ```typescript
 // useViewport.unit.test.ts
-it('adjusts scroll by dx and dy', () => {
-  using vp = withSetup(() => useViewport())
-  vp.panBy(100, 50)
-  expect(vp.scrollX.value).toBe(100)
+it("adjusts scroll by dx and dy", () => {
+  using vp = withSetup(() => useViewport());
+  vp.panBy(100, 50);
+  expect(vp.scrollX.value).toBe(100);
   // scope.stop() called automatically via Symbol.dispose
-})
+});
 ```
 
 **vs Excalidraw**: They use `beforeEach` + mutable state everywhere. We prefer
@@ -438,8 +440,8 @@ it('adjusts scroll by dx and dy', () => {
 
 ```typescript
 // factories/element.ts
-const el = createTestElement({ type: 'rectangle', x: 42, width: 200 })
-const arrow = createTestArrowElement({ endArrowhead: 'arrow' })
+const el = createTestElement({ type: "rectangle", x: 42, width: 200 });
+const arrow = createTestArrowElement({ endArrowhead: "arrow" });
 ```
 
 **vs Excalidraw's `API.createElement`**: Same idea -- factory with smart
@@ -453,20 +455,20 @@ separate "create an element object" (unit) from "draw an element on canvas"
 For composables that use `useEventListener`:
 
 ```typescript
-const eventHandlers = new Map<string, EventHandler[]>()
+const eventHandlers = new Map<string, EventHandler[]>();
 
-vi.mock('@vueuse/core', () => ({
+vi.mock("@vueuse/core", () => ({
   useEventListener: (_target, event, handler) => {
-    const handlers = eventHandlers.get(event) ?? []
-    handlers.push(handler)
-    eventHandlers.set(event, handlers)
+    const handlers = eventHandlers.get(event) ?? [];
+    handlers.push(handler);
+    eventHandlers.set(event, handlers);
   },
-}))
+}));
 
 function fire(type, overrides = {}) {
-  const handlers = eventHandlers.get(type)
-  const e = { offsetX: 0, offsetY: 0, pointerId: 1, ...overrides }
-  for (const handler of handlers) handler(e)
+  const handlers = eventHandlers.get(type);
+  const e = { offsetX: 0, offsetY: 0, pointerId: 1, ...overrides };
+  for (const handler of handlers) handler(e);
 }
 ```
 
@@ -483,18 +485,18 @@ Browser tests render real Vue components in real Chromium:
 ### Drawing a rectangle (full workflow)
 
 ```typescript
-it('creates a rectangle on drag', async () => {
-  const screen = render(CanvasContainer)
-  await waitForCanvasReady()
-  const ui = new UI(screen)
+it("creates a rectangle on drag", async () => {
+  const screen = render(CanvasContainer);
+  await waitForCanvasReady();
+  const ui = new UI(screen);
 
-  await ui.createElementAtCells('rectangle', [2, 2], [5, 5])
+  await ui.createElementAtCells("rectangle", [2, 2], [5, 5]);
 
-  expect(API.elements).toHaveLength(1)
-  expect(API.elements[0]!.type).toBe('rectangle')
-  expect(API.elements[0]!.width).toBeGreaterThan(0)
-  expect(API.activeTool).toBe('selection')
-})
+  expect(API.elements).toHaveLength(1);
+  expect(API.elements[0]!.type).toBe("rectangle");
+  expect(API.elements[0]!.width).toBeGreaterThan(0);
+  expect(API.activeTool).toBe("selection");
+});
 ```
 
 **vs Excalidraw**: They check `h.state.activeTool.type`. We check
@@ -505,53 +507,52 @@ toolbar buttons for DOM-level assertions.
 ### Using the grid for readability
 
 ```typescript
-it('draws a rectangle at grid cells', async () => {
-  const screen = render(CanvasContainer)
-  const ui = new UI(screen)
+it("draws a rectangle at grid cells", async () => {
+  const screen = render(CanvasContainer);
+  const ui = new UI(screen);
 
-  await ui.createElementAtCells('rectangle', [2, 2], [5, 5])
+  await ui.createElementAtCells("rectangle", [2, 2], [5, 5]);
 
   // Assert via DOM
-  const selectionBtn = screen.getByRole('button', { name: 'Selection' })
-  await expect.element(selectionBtn).toHaveAttribute('aria-pressed', 'true')
-})
+  const selectionBtn = screen.getByRole("button", { name: "Selection" });
+  await expect.element(selectionBtn).toHaveAttribute("aria-pressed", "true");
+});
 ```
 
 ### Bound text editing
 
 ```typescript
-it('double-click on rectangle creates bound text', async () => {
-  const screen = render(CanvasContainer)
-  await waitForCanvasReady()
+it("double-click on rectangle creates bound text", async () => {
+  const screen = render(CanvasContainer);
+  await waitForCanvasReady();
 
-  await userEvent.keyboard('2')
-  await commands.canvasDrag(SEL, 80, 80, 250, 200)
-  await waitForPaint()
+  await userEvent.keyboard("2");
+  await commands.canvasDrag(SEL, 80, 80, 250, 200);
+  await waitForPaint();
 
   // Double-click at center opens text editor
-  await userEvent.keyboard('1')
-  await commands.canvasDblClick(SEL, 165, 140)
+  await userEvent.keyboard("1");
+  await commands.canvasDblClick(SEL, 165, 140);
 
-  const textarea = screen.getByRole('textbox')
-  await expect.element(textarea).toBeVisible()
-})
+  const textarea = screen.getByRole("textbox");
+  await expect.element(textarea).toBeVisible();
+});
 ```
 
 ### Screenshot tests (visual regression)
 
 ```typescript
-describe('visual rendering', () => {
-  beforeEach(() => reseed())      // deterministic Math.random
-  afterEach(() => restoreSeed())
+describe("visual rendering", () => {
+  beforeEach(() => reseed()); // deterministic Math.random
+  afterEach(() => restoreSeed());
 
-  it('renders shapes correctly', async () => {
-    render(CanvasContainer)
-    await waitForCanvasReady()
+  it("renders shapes correctly", async () => {
+    render(CanvasContainer);
+    await waitForCanvasReady();
     // ... draw shapes ...
-    await expect(page.getByTestId('canvas-container'))
-      .toMatchScreenshot('shapes')
-  })
-})
+    await expect(page.getByTestId("canvas-container")).toMatchScreenshot("shapes");
+  });
+});
 ```
 
 **This is what Excalidraw cannot do.** Their `vitest-canvas-mock` provides a
@@ -590,16 +591,21 @@ Tests must wait for this pipeline. Both waiters live in
 // Wait for canvas to be ready (bootstrapCanvas sets style.width)
 // Note: checks style.width, NOT canvas.width (which defaults to 300)
 export async function waitForCanvasReady() {
-  await expect.poll(() => {
-    const canvas = document.querySelector<HTMLCanvasElement>(CANVAS_SELECTOR)
-    return canvas?.style.width ?? ''
-  }, { timeout: 5000 }).not.toBe('')
-  await new Promise<void>(r => requestAnimationFrame(() => r()))
+  await expect
+    .poll(
+      () => {
+        const canvas = document.querySelector<HTMLCanvasElement>(CANVAS_SELECTOR);
+        return canvas?.style.width ?? "";
+      },
+      { timeout: 5000 },
+    )
+    .not.toBe("");
+  await new Promise<void>((r) => requestAnimationFrame(() => r()));
 }
 
 // Wait one frame for paint to complete
 export async function waitForPaint() {
-  await new Promise<void>(r => requestAnimationFrame(() => r()))
+  await new Promise<void>((r) => requestAnimationFrame(() => r()));
 }
 ```
 
@@ -618,19 +624,19 @@ every run.
 ```typescript
 // deterministicSeed.ts
 function mulberry32(seed) {
-  let a = seed | 0
+  let a = seed | 0;
   return () => {
-    a = (a + 0x6D2B79F5) | 0
-    let t = Math.imul(a ^ (a >>> 15), 1 | a)
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
-    return ((t ^ (t >>> 14)) >>> 0) / 4_294_967_296
-  }
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4_294_967_296;
+  };
 }
 
 export function reseed(seed = 12_345) {
-  originalRandom = Math.random
-  Math.random = mulberry32(seed)
-  excalidrawReseed(seed)  // also seed @excalidraw/common's randomInteger
+  originalRandom = Math.random;
+  Math.random = mulberry32(seed);
+  excalidrawReseed(seed); // also seed @excalidraw/common's randomInteger
 }
 ```
 
@@ -644,25 +650,27 @@ tests. Same mechanism, higher stakes.
 
 ```typescript
 // setup-browser.ts
-import { expect } from 'vitest'
-import '~/assets/css/main.css'
+import { expect } from "vitest";
+import "~/assets/css/main.css";
 
 // vitest-browser-vue mounts into <div> under <body>.
 // Ensure full height chain for useElementSize to work.
-const style = document.createElement('style')
+const style = document.createElement("style");
 style.textContent = [
-  'html, body { height: 100%; width: 100%; margin: 0; padding: 0; overflow: hidden; }',
-  'body > div { height: 100%; width: 100%; }',
-].join('\n')
-document.head.append(style)
+  "html, body { height: 100%; width: 100%; margin: 0; padding: 0; overflow: hidden; }",
+  "body > div { height: 100%; width: 100%; }",
+].join("\n");
+document.head.append(style);
 
 // Float snapshot serializer — prevents float precision flakiness in snapshots.
 expect.addSnapshotSerializer({
-  serialize(val: number) { return val.toFixed(5) },
-  test(val: unknown) {
-    return typeof val === 'number' && Number.isFinite(val) && !Number.isInteger(val)
+  serialize(val: number) {
+    return val.toFixed(5);
   },
-})
+  test(val: unknown) {
+    return typeof val === "number" && Number.isFinite(val) && !Number.isInteger(val);
+  },
+});
 ```
 
 **vs Excalidraw's `setupTests.ts`**: Theirs is 120 lines of mocks for
@@ -780,43 +788,43 @@ Rules of thumb:
 
 ## What We Took From Excalidraw
 
-| Pattern | Their Version | Our Version |
-|---------|--------------|-------------|
-| Test hook (`window.h`) | Global `h` on `window` | `globalThis.__h` + `API` class |
-| Pointer class | Sync, tracks position, fires `fireEvent` | Async, tracks position, delegates to `canvasDrag` command |
-| Keyboard helper | `withModifierKeys()` scoped context | `withModifierKeys()` + per-call options |
-| UI high-level helper | `UI.createElement()` returns Proxy | `UI.createElement()` returns `{ id, get }` accessor |
-| Element factory | `API.createElement()` 400-line factory | `createTestElement()` 67-line spread |
-| Deterministic seeds | `reseed(7)` for IDs | `reseed(12345)` for IDs + pixels |
-| Float serializer | Snapshot serializer (5 decimals) | Snapshot serializer in setup-browser.ts (5 decimals) |
-| `assertElements` | Order + property + selection check | Same pattern in `matchers/assertElements.ts` |
-| `toCloselyEqualPoints` | Custom matcher for geometry | Same pattern in `matchers/toCloselyEqualPoints.ts` |
-| Checkpoint snapshots | `checkpoint()` for named state dumps | `checkpoint()` in `browser/checkpoint.ts` |
-| Custom queries | `getByToolName` via `buildQueries` | `getByRole` with aria attributes |
-| `waitFor` init | `waitFor(() => canvas && !isLoading)` | `waitForCanvasReady()` polling `style.width` |
-| Canvas element ref | `GlobalTestState.interactiveCanvas` | `CANVAS_SELECTOR` constant |
+| Pattern                | Their Version                            | Our Version                                               |
+| ---------------------- | ---------------------------------------- | --------------------------------------------------------- |
+| Test hook (`window.h`) | Global `h` on `window`                   | `globalThis.__h` + `API` class                            |
+| Pointer class          | Sync, tracks position, fires `fireEvent` | Async, tracks position, delegates to `canvasDrag` command |
+| Keyboard helper        | `withModifierKeys()` scoped context      | `withModifierKeys()` + per-call options                   |
+| UI high-level helper   | `UI.createElement()` returns Proxy       | `UI.createElement()` returns `{ id, get }` accessor       |
+| Element factory        | `API.createElement()` 400-line factory   | `createTestElement()` 67-line spread                      |
+| Deterministic seeds    | `reseed(7)` for IDs                      | `reseed(12345)` for IDs + pixels                          |
+| Float serializer       | Snapshot serializer (5 decimals)         | Snapshot serializer in setup-browser.ts (5 decimals)      |
+| `assertElements`       | Order + property + selection check       | Same pattern in `matchers/assertElements.ts`              |
+| `toCloselyEqualPoints` | Custom matcher for geometry              | Same pattern in `matchers/toCloselyEqualPoints.ts`        |
+| Checkpoint snapshots   | `checkpoint()` for named state dumps     | `checkpoint()` in `browser/checkpoint.ts`                 |
+| Custom queries         | `getByToolName` via `buildQueries`       | `getByRole` with aria attributes                          |
+| `waitFor` init         | `waitFor(() => canvas && !isLoading)`    | `waitForCanvasReady()` polling `style.width`              |
+| Canvas element ref     | `GlobalTestState.interactiveCanvas`      | `CANVAS_SELECTOR` constant                                |
 
 ## What We Added
 
-| Pattern | Why |
-|---------|-----|
-| **CanvasGrid** | Human-readable cell coordinates instead of raw pixels |
-| **`withSetup` + `using`** | Automatic effectScope cleanup without `afterEach` |
-| **Screenshot tests** | Visual regression that Excalidraw can't do with mocked canvas |
-| **`canvasDrag`/`canvasClick` commands** | Bridge iframe coordinate gap in Vitest browser mode |
-| **Flat test philosophy** | Each `it()` self-contained, no shared mutable state |
-| **`showGridOverlay` debug command** | Visual debugging for canvas test coordinates |
-| **Separate unit/browser configs** | Unit tests stay fast in Node; browser tests only when needed |
+| Pattern                                 | Why                                                           |
+| --------------------------------------- | ------------------------------------------------------------- |
+| **CanvasGrid**                          | Human-readable cell coordinates instead of raw pixels         |
+| **`withSetup` + `using`**               | Automatic effectScope cleanup without `afterEach`             |
+| **Screenshot tests**                    | Visual regression that Excalidraw can't do with mocked canvas |
+| **`canvasDrag`/`canvasClick` commands** | Bridge iframe coordinate gap in Vitest browser mode           |
+| **Flat test philosophy**                | Each `it()` self-contained, no shared mutable state           |
+| **`showGridOverlay` debug command**     | Visual debugging for canvas test coordinates                  |
+| **Separate unit/browser configs**       | Unit tests stay fast in Node; browser tests only when needed  |
 
 ## What We Intentionally Don't Have
 
-| Excalidraw Pattern | Why We Skip It |
-|---|---|
-| Element Proxy pattern | Vue reactivity handles staleness. No immutable-update problem. We return `{ id, get }` instead. |
-| jsdom canvas mock | We have a real canvas. No mock needed. |
-| Clipboard/DataTransfer polyfills | Real browser has these natively. |
-| `act()` wrappers everywhere | No React batching model. Vue's reactivity is synchronous. |
-| Font/matchMedia/IndexedDB mocks | Real browser provides all of these. |
+| Excalidraw Pattern               | Why We Skip It                                                                                  |
+| -------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Element Proxy pattern            | Vue reactivity handles staleness. No immutable-update problem. We return `{ id, get }` instead. |
+| jsdom canvas mock                | We have a real canvas. No mock needed.                                                          |
+| Clipboard/DataTransfer polyfills | Real browser has these natively.                                                                |
+| `act()` wrappers everywhere      | No React batching model. Vue's reactivity is synchronous.                                       |
+| Font/matchMedia/IndexedDB mocks  | Real browser provides all of these.                                                             |
 
 ---
 

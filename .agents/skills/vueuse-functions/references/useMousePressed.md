@@ -9,36 +9,34 @@ Reactive mouse pressing state. Triggered by `mousedown` `touchstart` on target e
 ## Basic Usage
 
 ```ts
-import { useMousePressed } from '@vueuse/core'
+import { useMousePressed } from "@vueuse/core";
 
-const { pressed } = useMousePressed()
+const { pressed } = useMousePressed();
 ```
 
 Touching is enabled by default. To make it only detects mouse changes, set `touch` to `false`
 
 ```ts
-import { useMousePressed } from '@vueuse/core'
+import { useMousePressed } from "@vueuse/core";
 // ---cut---
-const { pressed } = useMousePressed({ touch: false })
+const { pressed } = useMousePressed({ touch: false });
 ```
 
 To only capture `mousedown` and `touchstart` on specific element, you can specify `target` by passing a ref of the element.
 
 ```vue
 <script setup lang="ts">
-import { useMousePressed } from '@vueuse/core'
+import { useMousePressed } from "@vueuse/core";
 // ---cut---
-import { useTemplateRef } from 'vue'
+import { useTemplateRef } from "vue";
 
-const el = useTemplateRef('el')
+const el = useTemplateRef("el");
 
-const { pressed } = useMousePressed({ target: el })
+const { pressed } = useMousePressed({ target: el });
 </script>
 
 <template>
-  <div ref="el">
-    Only clicking on this element will trigger the update.
-  </div>
+  <div ref="el">Only clicking on this element will trigger the update.</div>
 </template>
 ```
 
@@ -46,9 +44,7 @@ const { pressed } = useMousePressed({ target: el })
 
 ```vue
 <template>
-  <UseMousePressed v-slot="{ pressed }">
-    Is Pressed: {{ pressed }}
-  </UseMousePressed>
+  <UseMousePressed v-slot="{ pressed }"> Is Pressed: {{ pressed }} </UseMousePressed>
 </template>
 ```
 
@@ -61,42 +57,42 @@ export interface MousePressedOptions extends ConfigurableWindow {
    *
    * @default true
    */
-  touch?: boolean
+  touch?: boolean;
   /**
    * Listen to `dragstart` `drop` and `dragend` events
    *
    * @default true
    */
-  drag?: boolean
+  drag?: boolean;
   /**
    * Add event listeners with the `capture` option set to `true`
    * (see [MDN](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener#capture))
    *
    * @default false
    */
-  capture?: boolean
+  capture?: boolean;
   /**
    * Initial values
    *
    * @default false
    */
-  initialValue?: boolean
+  initialValue?: boolean;
   /**
    * Element target to be capture the click
    */
-  target?: MaybeComputedElementRef
+  target?: MaybeComputedElementRef;
   /**
    * Callback to be called when the mouse is pressed
    *
    * @param event
    */
-  onPressed?: (event: MouseEvent | TouchEvent | DragEvent) => void
+  onPressed?: (event: MouseEvent | TouchEvent | DragEvent) => void;
   /**
    * Callback to be called when the mouse is released
    *
    * @param event
    */
-  onReleased?: (event: MouseEvent | TouchEvent | DragEvent) => void
+  onReleased?: (event: MouseEvent | TouchEvent | DragEvent) => void;
 }
 /**
  * Reactive mouse pressing state.
@@ -105,8 +101,8 @@ export interface MousePressedOptions extends ConfigurableWindow {
  * @param options
  */
 export declare function useMousePressed(options?: MousePressedOptions): {
-  pressed: ShallowRef<boolean, boolean>
-  sourceType: ShallowRef<UseMouseSourceType, UseMouseSourceType>
-}
-export type UseMousePressedReturn = ReturnType<typeof useMousePressed>
+  pressed: ShallowRef<boolean, boolean>;
+  sourceType: ShallowRef<UseMouseSourceType, UseMouseSourceType>;
+};
+export type UseMousePressedReturn = ReturnType<typeof useMousePressed>;
 ```

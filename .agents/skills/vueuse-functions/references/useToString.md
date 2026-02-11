@@ -9,13 +9,13 @@ Reactively convert a ref to string.
 ## Usage
 
 ```ts
-import { useToString } from '@vueuse/core'
-import { shallowRef } from 'vue'
+import { useToString } from "@vueuse/core";
+import { shallowRef } from "vue";
 
-const number = shallowRef(3.14)
-const str = useToString(number)
+const number = shallowRef(3.14);
+const str = useToString(number);
 
-str.value // '3.14'
+str.value; // '3.14'
 ```
 
 ## Type Declarations
@@ -28,7 +28,5 @@ str.value // '3.14'
  *
  * @__NO_SIDE_EFFECTS__
  */
-export declare function useToString(
-  value: MaybeRefOrGetter<unknown>,
-): ComputedRef<string>
+export declare function useToString(value: MaybeRefOrGetter<unknown>): ComputedRef<string>;
 ```

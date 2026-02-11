@@ -1,52 +1,52 @@
 <script setup lang="ts">
-import { shallowRef, useTemplateRef, computed } from 'vue'
-import { useElementSize, useEventListener, useActiveElement } from '@vueuse/core'
-import { useViewport } from '../composables/useViewport'
-import { useCanvasLayers } from '../composables/useCanvasLayers'
-import { useSceneRenderer } from '../composables/useSceneRenderer'
-import { usePanning } from '../composables/usePanning'
-import { createDirtyFlags } from '../composables/createDirtyFlags'
-import type { ExcalidrawElement } from '~/features/elements/types'
-import { useElements } from '~/features/elements/useElements'
-import { useLayerOrder } from '~/features/elements/composables/useLayerOrder'
-import { mutateElement } from '~/features/elements/mutateElement'
-import type { ToolType } from '~/features/tools/types'
-import { useToolStore } from '~/features/tools/useTool'
-import { useDrawingInteraction } from '~/features/tools/useDrawingInteraction'
-import { useTextInteraction } from '~/features/tools/useTextInteraction'
-import { useCodeInteraction } from '~/features/code'
-import { useImageInteraction } from '~/features/image'
-import { useSelection, useSelectionInteraction, getElementAtPosition } from '~/features/selection'
-import { useMultiPointCreation } from '~/features/linear-editor/useMultiPointCreation'
-import { useLinearEditor } from '~/features/linear-editor/useLinearEditor'
-import { updateBoundTextAfterContainerChange } from '~/features/binding'
-import { useGroups } from '~/features/groups/composables/useGroups'
-import { cleanupAfterDelete } from '~/features/groups/groupUtils'
-import { useCommandPalette } from '~/features/command-palette'
-import { useContextMenu } from '~/features/context-menu'
-import type { ContextMenuContext } from '~/features/context-menu'
-import { useTheme } from '~/features/theme'
-import { PropertiesPanel } from '~/features/properties'
-import { useStyleClipboard } from '~/features/properties/composables/useStyleClipboard'
-import DrawingToolbar from '~/features/tools/components/DrawingToolbar.vue'
-import { isTypingElement } from '~/shared/isTypingElement'
+import { shallowRef, useTemplateRef, computed } from "vue";
+import { useElementSize, useEventListener, useActiveElement } from "@vueuse/core";
+import { useViewport } from "../composables/useViewport";
+import { useCanvasLayers } from "../composables/useCanvasLayers";
+import { useSceneRenderer } from "../composables/useSceneRenderer";
+import { usePanning } from "../composables/usePanning";
+import { createDirtyFlags } from "../composables/createDirtyFlags";
+import type { ExcalidrawElement } from "~/features/elements/types";
+import { useElements } from "~/features/elements/useElements";
+import { useLayerOrder } from "~/features/elements/composables/useLayerOrder";
+import { mutateElement } from "~/features/elements/mutateElement";
+import type { ToolType } from "~/features/tools/types";
+import { useToolStore } from "~/features/tools/useTool";
+import { useDrawingInteraction } from "~/features/tools/useDrawingInteraction";
+import { useTextInteraction } from "~/features/tools/useTextInteraction";
+import { useCodeInteraction } from "~/features/code";
+import { useImageInteraction } from "~/features/image";
+import { useSelection, useSelectionInteraction, getElementAtPosition } from "~/features/selection";
+import { useMultiPointCreation } from "~/features/linear-editor/useMultiPointCreation";
+import { useLinearEditor } from "~/features/linear-editor/useLinearEditor";
+import { updateBoundTextAfterContainerChange } from "~/features/binding";
+import { useGroups } from "~/features/groups/composables/useGroups";
+import { cleanupAfterDelete } from "~/features/groups/groupUtils";
+import { useCommandPalette } from "~/features/command-palette";
+import { useContextMenu } from "~/features/context-menu";
+import type { ContextMenuContext } from "~/features/context-menu";
+import { useTheme } from "~/features/theme";
+import { PropertiesPanel } from "~/features/properties";
+import { useStyleClipboard } from "~/features/properties/composables/useStyleClipboard";
+import DrawingToolbar from "~/features/tools/components/DrawingToolbar.vue";
+import { isTypingElement } from "~/shared/isTypingElement";
 
-defineExpose({})
+defineExpose({});
 
 // Template refs
-const containerRef = useTemplateRef<HTMLDivElement>('container')
-const staticCanvasRef = useTemplateRef<HTMLCanvasElement>('staticCanvas')
-const newElementCanvasRef = useTemplateRef<HTMLCanvasElement>('newElementCanvas')
-const interactiveCanvasRef = useTemplateRef<HTMLCanvasElement>('interactiveCanvas')
-const textEditorContainerRef = useTemplateRef<HTMLDivElement>('textEditorContainer')
+const containerRef = useTemplateRef<HTMLDivElement>("container");
+const staticCanvasRef = useTemplateRef<HTMLCanvasElement>("staticCanvas");
+const newElementCanvasRef = useTemplateRef<HTMLCanvasElement>("newElementCanvas");
+const interactiveCanvasRef = useTemplateRef<HTMLCanvasElement>("interactiveCanvas");
+const textEditorContainerRef = useTemplateRef<HTMLDivElement>("textEditorContainer");
 
 // Viewport & size
-const { width, height } = useElementSize(containerRef)
-const { scrollX, scrollY, zoom, zoomBy, panBy, toScene } = useViewport()
+const { width, height } = useElementSize(containerRef);
+const { scrollX, scrollY, zoom, zoomBy, panBy, toScene } = useViewport();
 
 // Domain state
-const { elements, elementMap, addElement, replaceElements, getElementById } = useElements()
-const { activeTool, setTool, onBeforeToolChange } = useToolStore()
+const { elements, elementMap, addElement, replaceElements, getElementById } = useElements();
+const { activeTool, setTool, onBeforeToolChange } = useToolStore();
 
 const {
   selectedIds,
@@ -58,26 +58,21 @@ const {
   replaceSelection,
   selectAll,
   isSelected,
-} = useSelection(elements)
+} = useSelection(elements);
 
-const suggestedBindings = shallowRef<readonly ExcalidrawElement[]>([])
+const suggestedBindings = shallowRef<readonly ExcalidrawElement[]>([]);
 
 // Canvas layers (contexts + RoughCanvas init)
 const { staticCtx, newElementCtx, interactiveCtx, staticRc, newElementRc } = useCanvasLayers({
   staticCanvasRef,
   newElementCanvasRef,
   interactiveCanvasRef,
-})
+});
 
 // Stable deferred dirty callbacks — safe no-ops until bind()
-const dirty = createDirtyFlags()
+const dirty = createDirtyFlags();
 
-const {
-  selectedGroupIds,
-  groupSelection,
-  ungroupSelection,
-  expandSelectionForGroups,
-} = useGroups({
+const { selectedGroupIds, groupSelection, ungroupSelection, expandSelectionForGroups } = useGroups({
   elements,
   selectedIds,
   selectedElements: () => selectedElements.value,
@@ -85,28 +80,28 @@ const {
   replaceElements,
   markStaticDirty: dirty.markStaticDirty,
   markInteractiveDirty: dirty.markInteractiveDirty,
-})
+});
 
 // Layer order
-const layerOrder = useLayerOrder({ elements, replaceElements })
+const layerOrder = useLayerOrder({ elements, replaceElements });
 
 function applyLayerAction(action: (ids: ReadonlySet<string>) => void): void {
-  action(selectedIds.value)
-  dirty.markStaticDirty()
-  dirty.markInteractiveDirty()
+  action(selectedIds.value);
+  dirty.markStaticDirty();
+  dirty.markInteractiveDirty();
 }
 
 function handleDeleteFromPanel(): void {
-  const selected = selectedElements.value
-  if (selected.length === 0) return
+  const selected = selectedElements.value;
+  if (selected.length === 0) return;
   for (const el of selected) {
-    mutateElement(el, { isDeleted: true })
+    mutateElement(el, { isDeleted: true });
   }
-  const deletedIds = new Set(selected.map(el => el.id))
-  cleanupAfterDelete(elements.value, deletedIds)
-  clearSelection()
-  dirty.markStaticDirty()
-  dirty.markInteractiveDirty()
+  const deletedIds = new Set(selected.map((el) => el.id));
+  cleanupAfterDelete(elements.value, deletedIds);
+  clearSelection();
+  dirty.markStaticDirty();
+  dirty.markInteractiveDirty();
 }
 
 // Context menu
@@ -117,54 +112,53 @@ function getContextMenuContext(): ContextMenuContext {
     hasGroups: selectedGroupIds.value.size > 0,
     isMultiSelect: selectedIds.value.size > 1,
     markDirty: dirty.markStaticDirty,
-  }
+  };
 }
 
-const {
-  menuType: contextMenuType,
-  items: contextMenuItems,
-} = useContextMenu({ context: getContextMenuContext })
+const { menuType: contextMenuType, items: contextMenuItems } = useContextMenu({
+  context: getContextMenuContext,
+});
 
 function handleContextMenu(e: MouseEvent): void {
-  const scenePoint = toScene(e.offsetX, e.offsetY)
-  const hitElement = getElementAtPosition(scenePoint, elements.value, zoom.value)
+  const scenePoint = toScene(e.offsetX, e.offsetY);
+  const hitElement = getElementAtPosition(scenePoint, elements.value, zoom.value);
 
   if (hitElement) {
     if (!isSelected(hitElement.id)) {
-      select(hitElement.id)
-      expandSelectionForGroups()
-      dirty.markInteractiveDirty()
+      select(hitElement.id);
+      expandSelectionForGroups();
+      dirty.markInteractiveDirty();
     }
-    contextMenuType.value = 'element'
-    return
+    contextMenuType.value = "element";
+    return;
   }
 
-  clearSelection()
-  dirty.markInteractiveDirty()
-  contextMenuType.value = 'canvas'
+  clearSelection();
+  dirty.markInteractiveDirty();
+  contextMenuType.value = "canvas";
 }
 
 // Style clipboard keyboard shortcuts (Cmd+Alt+C / Cmd+Alt+V)
-const { copyStyles, pasteStyles, hasStoredStyles } = useStyleClipboard()
-const activeEl = useActiveElement()
-useEventListener(document, 'keydown', (e: KeyboardEvent) => {
-  if (isTypingElement(activeEl.value)) return
-  if (!e.metaKey || !e.altKey) return
+const { copyStyles, pasteStyles, hasStoredStyles } = useStyleClipboard();
+const activeEl = useActiveElement();
+useEventListener(document, "keydown", (e: KeyboardEvent) => {
+  if (isTypingElement(activeEl.value)) return;
+  if (!e.metaKey || !e.altKey) return;
 
-  if (e.code === 'KeyC') {
-    if (selectedElements.value.length === 0) return
-    e.preventDefault()
-    copyStyles(selectedElements.value[0]!)
-    return
+  if (e.code === "KeyC") {
+    if (selectedElements.value.length === 0) return;
+    e.preventDefault();
+    copyStyles(selectedElements.value[0]!);
+    return;
   }
 
-  if (e.code === 'KeyV') {
-    if (selectedElements.value.length === 0) return
-    if (!hasStoredStyles.value) return
-    e.preventDefault()
-    pasteStyles([...selectedElements.value], dirty.markStaticDirty)
+  if (e.code === "KeyV") {
+    if (selectedElements.value.length === 0) return;
+    if (!hasStoredStyles.value) return;
+    e.preventDefault();
+    pasteStyles([...selectedElements.value], dirty.markStaticDirty);
   }
-})
+});
 
 // Panning (only needs canvasRef, panBy, zoomBy, activeTool — all available early)
 const { cursorClass, spaceHeld, isPanning } = usePanning({
@@ -172,7 +166,7 @@ const { cursorClass, spaceHeld, isPanning } = usePanning({
   panBy,
   zoomBy,
   activeTool,
-})
+});
 
 // Shared context threaded into multiple composables
 const shared = {
@@ -183,18 +177,14 @@ const shared = {
   suggestedBindings,
   markStaticDirty: dirty.markStaticDirty,
   markInteractiveDirty: dirty.markInteractiveDirty,
-}
+};
 
-const {
-  multiElement,
-  lastCursorPoint,
-  finalizeMultiPoint,
-} = useMultiPointCreation({
+const { multiElement, lastCursorPoint, finalizeMultiPoint } = useMultiPointCreation({
   ...shared,
   onFinalize() {
-    setTool('selection')
+    setTool("selection");
   },
-})
+});
 
 const {
   editingElement: editingLinearElement,
@@ -205,7 +195,7 @@ const {
 } = useLinearEditor({
   ...shared,
   select,
-})
+});
 
 // Text editing
 const { editingTextElement, submitTextEditor } = useTextInteraction({
@@ -226,7 +216,7 @@ const { editingTextElement, submitTextEditor } = useTextInteraction({
   markInteractiveDirty: dirty.markInteractiveDirty,
   spaceHeld,
   isPanning,
-})
+});
 
 // Code editing
 const { editingCodeElement, submitCodeEditor } = useCodeInteraction({
@@ -247,7 +237,7 @@ const { editingCodeElement, submitCodeEditor } = useCodeInteraction({
   markInteractiveDirty: dirty.markInteractiveDirty,
   spaceHeld,
   isPanning,
-})
+});
 
 // Image insertion (file dialog, drop zone, paste)
 useImageInteraction({
@@ -262,15 +252,15 @@ useImageInteraction({
   select,
   markStaticDirty: dirty.markStaticDirty,
   markInteractiveDirty: dirty.markInteractiveDirty,
-})
+});
 
 // Finalize in-progress operations when user switches tools
 onBeforeToolChange(() => {
-  if (multiElement.value) finalizeMultiPoint()
-  if (editingLinearElement.value) exitLinearEditor()
-  if (editingTextElement.value) submitTextEditor()
-  if (editingCodeElement.value) submitCodeEditor()
-})
+  if (multiElement.value) finalizeMultiPoint();
+  if (editingLinearElement.value) exitLinearEditor();
+  if (editingTextElement.value) submitTextEditor();
+  if (editingCodeElement.value) submitCodeEditor();
+});
 
 // Drawing & selection own their refs internally
 const { newElement } = useDrawingInteraction({
@@ -281,12 +271,12 @@ const { newElement } = useDrawingInteraction({
   isPanning,
   multiElement,
   onElementCreated(el) {
-    addElement(el)
-    select(el.id)
-    dirty.markInteractiveDirty()
+    addElement(el);
+    select(el.id);
+    dirty.markInteractiveDirty();
   },
   markNewElementDirty: dirty.markNewElementDirty,
-})
+});
 
 const { selectionBox, cursorStyle } = useSelectionInteraction({
   ...shared,
@@ -309,7 +299,7 @@ const { selectionBox, cursorStyle } = useSelectionInteraction({
   onDeleteCleanup: (deletedIds) => cleanupAfterDelete(elements.value, deletedIds),
   elementMap,
   onContainerChanged: (container) => updateBoundTextAfterContainerChange(container, elementMap),
-})
+});
 
 // Scene renderer (render callbacks + dirty watcher + animation controller)
 const { markStaticDirty, markNewElementDirty, markInteractiveDirty } = useSceneRenderer({
@@ -330,73 +320,102 @@ const { markStaticDirty, markNewElementDirty, markInteractiveDirty } = useSceneR
   selectedGroupIds,
   editingTextElement,
   editingCodeElement,
-})
+});
 
 // Bind real renderer callbacks to deferred dirty flags
-dirty.bind({ markStaticDirty, markInteractiveDirty, markNewElementDirty })
+dirty.bind({ markStaticDirty, markInteractiveDirty, markNewElementDirty });
 
 // Register command palette actions
-const { toggleTheme } = useTheme()
-const { registerActions } = useCommandPalette()
-const TOOL_TYPES: ToolType[] = ['selection', 'hand', 'rectangle', 'diamond', 'ellipse', 'arrow', 'text', 'code', 'line', 'image']
+const { toggleTheme } = useTheme();
+const { registerActions } = useCommandPalette();
+const TOOL_TYPES: ToolType[] = [
+  "selection",
+  "hand",
+  "rectangle",
+  "diamond",
+  "ellipse",
+  "arrow",
+  "text",
+  "code",
+  "line",
+  "image",
+];
 
 registerActions([
   // Tools
-  ...TOOL_TYPES.map(type => ({ id: `tool:${type}`, handler: () => setTool(type) })),
+  ...TOOL_TYPES.map((type) => ({ id: `tool:${type}`, handler: () => setTool(type) })),
   // Actions
-  { id: 'action:delete', handler: handleDeleteFromPanel },
-  { id: 'action:select-all', handler: selectAll },
-  { id: 'action:group', handler: groupSelection },
-  { id: 'action:ungroup', handler: ungroupSelection },
+  { id: "action:delete", handler: handleDeleteFromPanel },
+  { id: "action:select-all", handler: selectAll },
+  { id: "action:group", handler: groupSelection },
+  { id: "action:ungroup", handler: ungroupSelection },
   // Layers
-  { id: 'layer:bring-to-front', handler: () => applyLayerAction(layerOrder.bringToFront) },
-  { id: 'layer:bring-forward', handler: () => applyLayerAction(layerOrder.bringForward) },
-  { id: 'layer:send-backward', handler: () => applyLayerAction(layerOrder.sendBackward) },
-  { id: 'layer:send-to-back', handler: () => applyLayerAction(layerOrder.sendToBack) },
+  { id: "layer:bring-to-front", handler: () => applyLayerAction(layerOrder.bringToFront) },
+  { id: "layer:bring-forward", handler: () => applyLayerAction(layerOrder.bringForward) },
+  { id: "layer:send-backward", handler: () => applyLayerAction(layerOrder.sendBackward) },
+  { id: "layer:send-to-back", handler: () => applyLayerAction(layerOrder.sendToBack) },
   // Settings
-  { id: 'settings:toggle-theme', handler: toggleTheme },
+  { id: "settings:toggle-theme", handler: toggleTheme },
   {
-    id: 'style:copy-styles',
+    id: "style:copy-styles",
     handler: () => {
       if (selectedElements.value.length > 0) {
-        copyStyles(selectedElements.value[0]!)
+        copyStyles(selectedElements.value[0]!);
       }
     },
   },
   {
-    id: 'style:paste-styles',
+    id: "style:paste-styles",
     handler: () => {
       if (selectedElements.value.length > 0 && hasStoredStyles.value) {
-        pasteStyles([...selectedElements.value], dirty.markStaticDirty)
+        pasteStyles([...selectedElements.value], dirty.markStaticDirty);
       }
     },
   },
-])
+]);
 
 // Test hook — expose reactive state for browser tests (Excalidraw's window.h pattern).
 // Always available (SSR disabled, zero overhead — just window property assignments).
-;(globalThis as unknown as Record<string, unknown>).__h = {
-  elements, elementMap, addElement, replaceElements, getElementById,
-  selectedIds, selectedElements, select, addToSelection,
-  clearSelection, replaceSelection, isSelected,
-  activeTool, setTool,
-  scrollX, scrollY, zoom, panBy, zoomBy, toScene,
-  newElement, multiElement, editingTextElement,
-  markStaticDirty, markInteractiveDirty,
-}
+(globalThis as unknown as Record<string, unknown>).__h = {
+  elements,
+  elementMap,
+  addElement,
+  replaceElements,
+  getElementById,
+  selectedIds,
+  selectedElements,
+  select,
+  addToSelection,
+  clearSelection,
+  replaceSelection,
+  isSelected,
+  activeTool,
+  setTool,
+  scrollX,
+  scrollY,
+  zoom,
+  panBy,
+  zoomBy,
+  toScene,
+  newElement,
+  multiElement,
+  editingTextElement,
+  markStaticDirty,
+  markInteractiveDirty,
+};
 
-const CROSSHAIR_TOOLS = new Set<ToolType>(['text', 'code', 'image'])
+const CROSSHAIR_TOOLS = new Set<ToolType>(["text", "code", "image"]);
 
 const combinedCursorClass = computed(() => {
-  if (cursorClass.value !== 'cursor-default') return cursorClass.value
-  if (multiElement.value) return 'cursor-crosshair'
-  if (editingLinearElement.value) return 'cursor-pointer'
-  if (CROSSHAIR_TOOLS.has(activeTool.value)) return 'cursor-crosshair'
-  if (activeTool.value === 'selection' && cursorStyle.value !== 'default') {
-    return `cursor-${cursorStyle.value}`
+  if (cursorClass.value !== "cursor-default") return cursorClass.value;
+  if (multiElement.value) return "cursor-crosshair";
+  if (editingLinearElement.value) return "cursor-pointer";
+  if (CROSSHAIR_TOOLS.has(activeTool.value)) return "cursor-crosshair";
+  if (activeTool.value === "selection" && cursorStyle.value !== "default") {
+    return `cursor-${cursorStyle.value}`;
   }
-  return 'cursor-default'
-})
+  return "cursor-default";
+});
 </script>
 
 <template>
@@ -406,14 +425,8 @@ const combinedCursorClass = computed(() => {
     class="relative h-full w-full overflow-hidden"
     :class="combinedCursorClass"
   >
-    <canvas
-      ref="staticCanvas"
-      class="pointer-events-none absolute inset-0 z-[1]"
-    />
-    <canvas
-      ref="newElementCanvas"
-      class="pointer-events-none absolute inset-0 z-[1]"
-    />
+    <canvas ref="staticCanvas" class="pointer-events-none absolute inset-0 z-[1]" />
+    <canvas ref="newElementCanvas" class="pointer-events-none absolute inset-0 z-[1]" />
     <UContextMenu :items="contextMenuItems">
       <canvas
         ref="interactiveCanvas"
@@ -422,10 +435,7 @@ const combinedCursorClass = computed(() => {
         @contextmenu="handleContextMenu"
       />
     </UContextMenu>
-    <div
-      ref="textEditorContainer"
-      class="pointer-events-none absolute inset-0 z-[3]"
-    />
+    <div ref="textEditorContainer" class="pointer-events-none absolute inset-0 z-[3]" />
     <DrawingToolbar />
     <PropertiesPanel
       v-if="selectedElements.length > 0"

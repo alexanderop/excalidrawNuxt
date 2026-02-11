@@ -10,26 +10,24 @@ Reactive utility to track if an element or one of its decendants has focus. It i
 
 ```vue
 <script setup lang="ts">
-import { useFocusWithin } from '@vueuse/core'
-import { ref, watch } from 'vue'
+import { useFocusWithin } from "@vueuse/core";
+import { ref, watch } from "vue";
 
-const target = ref()
-const { focused } = useFocusWithin(target)
+const target = ref();
+const { focused } = useFocusWithin(target);
 
 watch(focused, (focused) => {
-  if (focused)
-    console.log('Target contains the focused element')
-  else
-    console.log('Target does NOT contain the focused element')
-})
+  if (focused) console.log("Target contains the focused element");
+  else console.log("Target does NOT contain the focused element");
+});
 </script>
 
 <template>
   <form ref="target">
-    <input type="text" placeholder="First Name">
-    <input type="text" placeholder="Last Name">
-    <input type="text" placeholder="Email">
-    <input type="text" placeholder="Password">
+    <input type="text" placeholder="First Name" />
+    <input type="text" placeholder="Last Name" />
+    <input type="text" placeholder="Email" />
+    <input type="text" placeholder="Password" />
   </form>
 </template>
 ```
@@ -41,7 +39,7 @@ export interface UseFocusWithinReturn {
   /**
    * True if the element or any of its descendants are focused
    */
-  focused: ComputedRef<boolean>
+  focused: ComputedRef<boolean>;
 }
 /**
  * Track if focus is contained within the target element
@@ -53,5 +51,5 @@ export interface UseFocusWithinReturn {
 export declare function useFocusWithin(
   target: MaybeElementRef,
   options?: ConfigurableWindow,
-): UseFocusWithinReturn
+): UseFocusWithinReturn;
 ```

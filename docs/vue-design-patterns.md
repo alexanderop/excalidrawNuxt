@@ -7,12 +7,14 @@ Concise reference for component design, refactoring, and planning. Based on Mich
 Global reactive state in a composable. Expose only what consumers need via `toRefs` and `readonly`.
 
 ```ts
-const state = reactive({ darkMode: false, theme: 'nord' })
+const state = reactive({ darkMode: false, theme: "nord" });
 
 export function useSettings() {
-  const { darkMode } = toRefs(state)
-  const changeTheme = (t: string) => { state.theme = t }
-  return { darkMode, theme: readonly(toRef(state, 'theme')), changeTheme }
+  const { darkMode } = toRefs(state);
+  const changeTheme = (t: string) => {
+    state.theme = t;
+  };
+  return { darkMode, theme: readonly(toRef(state, "theme")), changeTheme };
 }
 ```
 
@@ -24,13 +26,17 @@ Separate reactivity from business logic. The composable is a thin reactive wrapp
 
 ```ts
 // pure function — easy to unit test
-export function convertToFahrenheit(c: number): number { return c * 9 / 5 + 32 }
+export function convertToFahrenheit(c: number): number {
+  return (c * 9) / 5 + 32;
+}
 
 // thin composable — only wiring
 export function useTemperatureConverter(celsius: Ref<number>) {
-  const fahrenheit = ref(convertToFahrenheit(celsius.value))
-  watch(celsius, (c) => { fahrenheit.value = convertToFahrenheit(c) })
-  return { fahrenheit }
+  const fahrenheit = ref(convertToFahrenheit(celsius.value));
+  watch(celsius, (c) => {
+    fahrenheit.value = convertToFahrenheit(c);
+  });
+  return { fahrenheit };
 }
 ```
 
@@ -42,8 +48,8 @@ Components that only render props and emit events. Zero business logic.
 
 ```vue
 <script setup lang="ts">
-defineProps<{ label: string; active: boolean }>()
-defineEmits<{ select: [] }>()
+defineProps<{ label: string; active: boolean }>();
+defineEmits<{ select: [] }>();
 </script>
 <template>
   <button :class="{ active }" @click="$emit('select')">{{ label }}</button>
@@ -105,8 +111,8 @@ Orchestrators that wire composables (logic) to Humble Components (UI). No templa
 
 ```vue
 <script setup lang="ts">
-import { useTasks } from '~/features/tasks/composables/useTasks'
-const { tasks, addTask, removeTask } = useTasks()
+import { useTasks } from "~/features/tasks/composables/useTasks";
+const { tasks, addTask, removeTask } = useTasks();
 </script>
 <template>
   <TaskInput @add="addTask" />
@@ -140,7 +146,7 @@ Split a component when different call-sites use mutually exclusive subsets of it
 
 ## 11. Insider Trading (Inline Child)
 
-If a child component receives *all* of its parent's props and re-emits *all* events, it adds no value — inline it back into the parent.
+If a child component receives _all_ of its parent's props and re-emits _all_ events, it adds no value — inline it back into the parent.
 
 **When:** A child is just a pass-through wrapper with no independent logic or reuse.
 
@@ -185,6 +191,7 @@ export function usePanning(options: UsePanningOptions): UsePanningReturn { ... }
 ```
 
 In `CanvasContainer.vue`, shared deps are spread into multiple composables:
+
 ```ts
 const shared = { canvasRef, toScene, zoom, elements, suggestedBindings, markStaticDirty, markInteractiveDirty }
 const { ... } = useMultiPointCreation({ ...shared, onFinalize() { setTool('selection') } })
@@ -199,10 +206,10 @@ VueUse's `createGlobalState` wraps a composable so the first call initializes st
 
 ```ts
 export const useToolStore = createGlobalState(() => {
-  const activeTool = shallowRef<ToolType>('selection')
+  const activeTool = shallowRef<ToolType>("selection");
   // ...keyboard shortcuts via useEventListener
-  return { activeTool, setTool, onBeforeToolChange, $reset }
-})
+  return { activeTool, setTool, onBeforeToolChange, $reset };
+});
 ```
 
 **Where:** `useToolStore`, `useTheme`, `useShikiHighlighter`.
@@ -234,9 +241,11 @@ dirty.bind({ markStaticDirty, ... })  // Late-bind real fns
 VueUse's `createEventHook` provides pub/sub within composables. Used for lifecycle signals that cross composable boundaries.
 
 ```ts
-const { on: onBeforeToolChange, trigger: triggerBeforeChange } = createEventHook<void>()
+const { on: onBeforeToolChange, trigger: triggerBeforeChange } = createEventHook<void>();
 // Consumer subscribes:
-onBeforeToolChange(() => { /* finalize in-progress operations */ })
+onBeforeToolChange(() => {
+  /* finalize in-progress operations */
+});
 ```
 
 **Where:** `useToolStore.onBeforeToolChange` — subscribed in `CanvasContainer.vue` to finalize multi-point, linear editor, and text editing before tool switch.
@@ -245,15 +254,15 @@ onBeforeToolChange(() => { /* finalize in-progress operations */ })
 
 ## Mapping to Our Codebase
 
-| Pattern | Where we use it |
-|---|---|
-| Data Store | `useElements`, `useSelection`, `useViewport`, `useGroups` |
-| Thin Composable | Pure math in `app/shared/math.ts`, coord transforms in `canvas/coords.ts`, composables wrap them |
-| Humble Component | `DrawingToolbar.vue` |
-| Controller Component | `CanvasContainer.vue` (orchestrates 10+ composables) |
-| Strategy Pattern | Not currently used (rendering is via pure canvas functions) |
-| Extract Composable | Every `use*.ts` in `features/*/composables/` and `features/*/` |
-| Options Object | All composables: `useRenderer`, `usePanning`, `useDrawingInteraction`, etc. |
-| Global Singleton | `useToolStore`, `useTheme`, `useShikiHighlighter` (via `createGlobalState`) |
-| Deferred Binding | `createDirtyFlags` in canvas composables |
-| Event Hook | `onBeforeToolChange` in `useToolStore` |
+| Pattern              | Where we use it                                                                                  |
+| -------------------- | ------------------------------------------------------------------------------------------------ |
+| Data Store           | `useElements`, `useSelection`, `useViewport`, `useGroups`                                        |
+| Thin Composable      | Pure math in `app/shared/math.ts`, coord transforms in `canvas/coords.ts`, composables wrap them |
+| Humble Component     | `DrawingToolbar.vue`                                                                             |
+| Controller Component | `CanvasContainer.vue` (orchestrates 10+ composables)                                             |
+| Strategy Pattern     | Not currently used (rendering is via pure canvas functions)                                      |
+| Extract Composable   | Every `use*.ts` in `features/*/composables/` and `features/*/`                                   |
+| Options Object       | All composables: `useRenderer`, `usePanning`, `useDrawingInteraction`, etc.                      |
+| Global Singleton     | `useToolStore`, `useTheme`, `useShikiHighlighter` (via `createGlobalState`)                      |
+| Deferred Binding     | `createDirtyFlags` in canvas composables                                                         |
+| Event Hook           | `onBeforeToolChange` in `useToolStore`                                                           |

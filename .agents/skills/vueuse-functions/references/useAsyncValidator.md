@@ -1,5 +1,5 @@
 ---
-category: '@Integrations'
+category: "@Integrations"
 ---
 
 # useAsyncValidator
@@ -15,46 +15,46 @@ npm i async-validator@^4
 ## Usage
 
 ```ts
-import { useAsyncValidator } from '@vueuse/integrations/useAsyncValidator'
+import { useAsyncValidator } from "@vueuse/integrations/useAsyncValidator";
 ```
 
 ## Type Declarations
 
 ```ts
 export type AsyncValidatorError = Error & {
-  errors: ValidateError[]
-  fields: Record<string, ValidateError[]>
-}
+  errors: ValidateError[];
+  fields: Record<string, ValidateError[]>;
+};
 export interface UseAsyncValidatorExecuteReturn {
-  pass: boolean
-  errors: AsyncValidatorError["errors"] | undefined
-  errorInfo: AsyncValidatorError | null
-  errorFields: AsyncValidatorError["fields"] | undefined
+  pass: boolean;
+  errors: AsyncValidatorError["errors"] | undefined;
+  errorInfo: AsyncValidatorError | null;
+  errorFields: AsyncValidatorError["fields"] | undefined;
 }
 export interface UseAsyncValidatorReturn {
-  pass: ShallowRef<boolean>
-  isFinished: ShallowRef<boolean>
-  errors: ComputedRef<AsyncValidatorError["errors"] | undefined>
-  errorInfo: ShallowRef<AsyncValidatorError | null>
-  errorFields: ComputedRef<AsyncValidatorError["fields"] | undefined>
-  execute: () => Promise<UseAsyncValidatorExecuteReturn>
+  pass: ShallowRef<boolean>;
+  isFinished: ShallowRef<boolean>;
+  errors: ComputedRef<AsyncValidatorError["errors"] | undefined>;
+  errorInfo: ShallowRef<AsyncValidatorError | null>;
+  errorFields: ComputedRef<AsyncValidatorError["fields"] | undefined>;
+  execute: () => Promise<UseAsyncValidatorExecuteReturn>;
 }
 export interface UseAsyncValidatorOptions {
   /**
    * @see https://github.com/yiminghe/async-validator#options
    */
-  validateOption?: ValidateOption
+  validateOption?: ValidateOption;
   /**
    * The validation will be triggered right away for the first time.
    * Only works when `manual` is not set to true.
    *
    * @default true
    */
-  immediate?: boolean
+  immediate?: boolean;
   /**
    * If set to true, the validation will not be triggered automatically.
    */
-  manual?: boolean
+  manual?: boolean;
 }
 /**
  * Wrapper for async-validator.
@@ -66,5 +66,5 @@ export declare function useAsyncValidator(
   value: MaybeRefOrGetter<Record<string, any>>,
   rules: MaybeRefOrGetter<Rules>,
   options?: UseAsyncValidatorOptions,
-): UseAsyncValidatorReturn & PromiseLike<UseAsyncValidatorReturn>
+): UseAsyncValidatorReturn & PromiseLike<UseAsyncValidatorReturn>;
 ```

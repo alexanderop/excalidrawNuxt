@@ -4,10 +4,6 @@
     "types": ["vitest/globals", "@vitest/browser/context"],
     "composite": true
   },
-  "include": [
-    "app/**/*.ts",
-    "app/**/*.vue",
-    "app/__test-utils__/**/*"
-  ],
+  "include": ["app/**/*.ts", "app/**/*.vue", "app/__test-utils__/**/*"],
   "exclude": []
 }

@@ -11,11 +11,11 @@ Reactive [Modifier State](https://developer.mozilla.org/en-US/docs/Web/API/Keybo
 ## Usage
 
 ```ts
-import { useKeyModifier } from '@vueuse/core'
+import { useKeyModifier } from "@vueuse/core";
 
-const capsLockState = useKeyModifier('CapsLock')
+const capsLockState = useKeyModifier("CapsLock");
 
-console.log(capsLockState.value)
+console.log(capsLockState.value);
 ```
 
 ## Events
@@ -23,17 +23,17 @@ console.log(capsLockState.value)
 You can customize which events will prompt the state to update. By default, these are `mouseup`, `mousedown`, `keyup`, `keydown`. To customize these events:
 
 ```ts
-import { useKeyModifier } from '@vueuse/core'
+import { useKeyModifier } from "@vueuse/core";
 
-const capsLockState = useKeyModifier('CapsLock', { events: ['mouseup', 'mousedown'] })
+const capsLockState = useKeyModifier("CapsLock", { events: ["mouseup", "mousedown"] });
 
-console.log(capsLockState) // null
+console.log(capsLockState); // null
 
 // Caps Lock turned on with key press
-console.log(capsLockState) // null
+console.log(capsLockState); // null
 
 // Mouse button clicked
-console.log(capsLockState) // true
+console.log(capsLockState); // true
 ```
 
 ## Initial State
@@ -41,10 +41,10 @@ console.log(capsLockState) // true
 By default, the returned ref will be `Ref<null>` until the first event is received. You can explicitly pass the initial state to it via:
 
 ```ts
-import { useKeyModifier } from '@vueuse/core'
+import { useKeyModifier } from "@vueuse/core";
 // ---cut---
-const capsLockState1 = useKeyModifier('CapsLock') // Ref<boolean | null>
-const capsLockState2 = useKeyModifier('CapsLock', { initial: false }) // Ref<boolean>
+const capsLockState1 = useKeyModifier("CapsLock"); // Ref<boolean | null>
+const capsLockState2 = useKeyModifier("CapsLock", { initial: false }); // Ref<boolean>
 ```
 
 ## Type Declarations
@@ -62,26 +62,26 @@ export type KeyModifier =
   | "ScrollLock"
   | "Shift"
   | "Symbol"
-  | "SymbolLock"
+  | "SymbolLock";
 export interface UseModifierOptions<Initial> extends ConfigurableDocument {
   /**
    * Event names that will prompt update to modifier states
    *
    * @default ['mousedown', 'mouseup', 'keydown', 'keyup']
    */
-  events?: WindowEventName[]
+  events?: WindowEventName[];
   /**
    * Initial value of the returned ref
    *
    * @default null
    */
-  initial?: Initial
+  initial?: Initial;
 }
 export type UseKeyModifierReturn<Initial> = ShallowRef<
   Initial extends boolean ? boolean : boolean | null
->
+>;
 export declare function useKeyModifier<Initial extends boolean | null>(
   modifier: KeyModifier,
   options?: UseModifierOptions<Initial>,
-): UseKeyModifierReturn<Initial>
+): UseKeyModifierReturn<Initial>;
 ```

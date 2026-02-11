@@ -69,11 +69,11 @@ flowchart TD
 
 From `app/features/canvas/composables/useViewport.ts`:
 
-| Operation | Formula | Description |
-|-----------|---------|-------------|
-| `panBy(dx, dy)` | `scrollX += dx / zoom`<br/>`scrollY += dy / zoom` | Pan converts screen-pixel deltas to scene units |
-| `zoomTo(newZoom, center?)` | Clamp to `[0.1, 30]`, recompute scroll to keep center point stable | Zoom anchored to a screen point |
-| `zoomBy(delta, center?)` | `zoomTo(zoom * (1 + delta), center)` | Relative zoom (e.g. wheel scroll) |
+| Operation                  | Formula                                                            | Description                                     |
+| -------------------------- | ------------------------------------------------------------------ | ----------------------------------------------- |
+| `panBy(dx, dy)`            | `scrollX += dx / zoom`<br/>`scrollY += dy / zoom`                  | Pan converts screen-pixel deltas to scene units |
+| `zoomTo(newZoom, center?)` | Clamp to `[0.1, 30]`, recompute scroll to keep center point stable | Zoom anchored to a screen point                 |
+| `zoomBy(delta, center?)`   | `zoomTo(zoom * (1 + delta), center)`                               | Relative zoom (e.g. wheel scroll)               |
 
 ## Zoom-Anchored Scroll Adjustment
 

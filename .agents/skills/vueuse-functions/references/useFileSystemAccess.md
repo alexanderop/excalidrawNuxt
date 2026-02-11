@@ -9,7 +9,7 @@ Create and read and write local files with [FileSystemAccessAPI](https://develop
 ## Usage
 
 ```ts
-import { useFileSystemAccess } from '@vueuse/core'
+import { useFileSystemAccess } from "@vueuse/core";
 
 const {
   isSupported,
@@ -23,8 +23,8 @@ const {
   open,
   save,
   saveAs,
-  updateData
-} = useFileSystemAccess()
+  updateData,
+} = useFileSystemAccess();
 ```
 
 ## Type Declarations
@@ -35,32 +35,32 @@ const {
  * @see https://developer.mozilla.org/en-US/docs/Web/API/window/showOpenFilePicker#parameters
  */
 export interface FileSystemAccessShowOpenFileOptions {
-  multiple?: boolean
+  multiple?: boolean;
   types?: Array<{
-    description?: string
-    accept: Record<string, string[]>
-  }>
-  excludeAcceptAllOption?: boolean
+    description?: string;
+    accept: Record<string, string[]>;
+  }>;
+  excludeAcceptAllOption?: boolean;
 }
 /**
  * window.showSaveFilePicker parameters
  * @see https://developer.mozilla.org/en-US/docs/Web/API/window/showSaveFilePicker#parameters
  */
 export interface FileSystemAccessShowSaveFileOptions {
-  suggestedName?: string
+  suggestedName?: string;
   types?: Array<{
-    description?: string
-    accept: Record<string, string[]>
-  }>
-  excludeAcceptAllOption?: boolean
+    description?: string;
+    accept: Record<string, string[]>;
+  }>;
+  excludeAcceptAllOption?: boolean;
 }
 /**
  * FileHandle
  * @see https://developer.mozilla.org/en-US/docs/Web/API/FileSystemFileHandle
  */
 export interface FileSystemFileHandle {
-  getFile: () => Promise<File>
-  createWritable: () => FileSystemWritableFileStream
+  getFile: () => Promise<File>;
+  createWritable: () => FileSystemWritableFileStream;
 }
 /**
  * @see https://developer.mozilla.org/en-US/docs/Web/API/FileSystemWritableFileStream
@@ -69,29 +69,25 @@ interface FileSystemWritableFileStream extends WritableStream {
   /**
    * @see https://developer.mozilla.org/en-US/docs/Web/API/FileSystemWritableFileStream/write
    */
-  write: FileSystemWritableFileStreamWrite
+  write: FileSystemWritableFileStreamWrite;
   /**
    * @see https://developer.mozilla.org/en-US/docs/Web/API/FileSystemWritableFileStream/seek
    */
-  seek: (position: number) => Promise<void>
+  seek: (position: number) => Promise<void>;
   /**
    * @see https://developer.mozilla.org/en-US/docs/Web/API/FileSystemWritableFileStream/truncate
    */
-  truncate: (size: number) => Promise<void>
+  truncate: (size: number) => Promise<void>;
 }
 /**
  * FileStream.write
  * @see https://developer.mozilla.org/en-US/docs/Web/API/FileSystemWritableFileStream/write
  */
 interface FileSystemWritableFileStreamWrite {
-  (data: string | BufferSource | Blob): Promise<void>
-  (options: {
-    type: "write"
-    position: number
-    data: string | BufferSource | Blob
-  }): Promise<void>
-  (options: { type: "seek"; position: number }): Promise<void>
-  (options: { type: "truncate"; size: number }): Promise<void>
+  (data: string | BufferSource | Blob): Promise<void>;
+  (options: { type: "write"; position: number; data: string | BufferSource | Blob }): Promise<void>;
+  (options: { type: "seek"; position: number }): Promise<void>;
+  (options: { type: "truncate"; size: number }): Promise<void>;
 }
 /**
  * FileStream.write
@@ -100,63 +96,63 @@ interface FileSystemWritableFileStreamWrite {
 export type FileSystemAccessWindow = Window & {
   showSaveFilePicker: (
     options: FileSystemAccessShowSaveFileOptions,
-  ) => Promise<FileSystemFileHandle>
+  ) => Promise<FileSystemFileHandle>;
   showOpenFilePicker: (
     options: FileSystemAccessShowOpenFileOptions,
-  ) => Promise<FileSystemFileHandle[]>
-}
+  ) => Promise<FileSystemFileHandle[]>;
+};
 export type UseFileSystemAccessCommonOptions = Pick<
   FileSystemAccessShowOpenFileOptions,
   "types" | "excludeAcceptAllOption"
->
+>;
 export type UseFileSystemAccessShowSaveFileOptions = Pick<
   FileSystemAccessShowSaveFileOptions,
   "suggestedName"
->
+>;
 export type UseFileSystemAccessOptions = ConfigurableWindow &
   UseFileSystemAccessCommonOptions & {
     /**
      * file data type
      */
-    dataType?: MaybeRefOrGetter<"Text" | "ArrayBuffer" | "Blob">
-  }
+    dataType?: MaybeRefOrGetter<"Text" | "ArrayBuffer" | "Blob">;
+  };
 /**
  * Create and read and write local files.
  * @see https://vueuse.org/useFileSystemAccess
  */
 export declare function useFileSystemAccess(): UseFileSystemAccessReturn<
   string | ArrayBuffer | Blob
->
+>;
 export declare function useFileSystemAccess(
   options: UseFileSystemAccessOptions & {
-    dataType: "Text"
+    dataType: "Text";
   },
-): UseFileSystemAccessReturn<string>
+): UseFileSystemAccessReturn<string>;
 export declare function useFileSystemAccess(
   options: UseFileSystemAccessOptions & {
-    dataType: "ArrayBuffer"
+    dataType: "ArrayBuffer";
   },
-): UseFileSystemAccessReturn<ArrayBuffer>
+): UseFileSystemAccessReturn<ArrayBuffer>;
 export declare function useFileSystemAccess(
   options: UseFileSystemAccessOptions & {
-    dataType: "Blob"
+    dataType: "Blob";
   },
-): UseFileSystemAccessReturn<Blob>
+): UseFileSystemAccessReturn<Blob>;
 export declare function useFileSystemAccess(
   options: UseFileSystemAccessOptions,
-): UseFileSystemAccessReturn<string | ArrayBuffer | Blob>
+): UseFileSystemAccessReturn<string | ArrayBuffer | Blob>;
 export interface UseFileSystemAccessReturn<T = string> {
-  isSupported: ComputedRef<boolean>
-  data: ShallowRef<T | undefined>
-  file: ShallowRef<File | undefined>
-  fileName: ComputedRef<string>
-  fileMIME: ComputedRef<string>
-  fileSize: ComputedRef<number>
-  fileLastModified: ComputedRef<number>
-  open: (_options?: UseFileSystemAccessCommonOptions) => Awaitable<void>
-  create: (_options?: UseFileSystemAccessShowSaveFileOptions) => Awaitable<void>
-  save: (_options?: UseFileSystemAccessShowSaveFileOptions) => Awaitable<void>
-  saveAs: (_options?: UseFileSystemAccessShowSaveFileOptions) => Awaitable<void>
-  updateData: () => Awaitable<void>
+  isSupported: ComputedRef<boolean>;
+  data: ShallowRef<T | undefined>;
+  file: ShallowRef<File | undefined>;
+  fileName: ComputedRef<string>;
+  fileMIME: ComputedRef<string>;
+  fileSize: ComputedRef<number>;
+  fileLastModified: ComputedRef<number>;
+  open: (_options?: UseFileSystemAccessCommonOptions) => Awaitable<void>;
+  create: (_options?: UseFileSystemAccessShowSaveFileOptions) => Awaitable<void>;
+  save: (_options?: UseFileSystemAccessShowSaveFileOptions) => Awaitable<void>;
+  saveAs: (_options?: UseFileSystemAccessShowSaveFileOptions) => Awaitable<void>;
+  updateData: () => Awaitable<void>;
 }
 ```

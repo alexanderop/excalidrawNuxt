@@ -14,11 +14,11 @@ Shorthand for `useRefHistory` with debounced filter.
 This function takes a snapshot of your counter after 1000ms when the value of it starts to change.
 
 ```ts
-import { useDebouncedRefHistory } from '@vueuse/core'
-import { shallowRef } from 'vue'
+import { useDebouncedRefHistory } from "@vueuse/core";
+import { shallowRef } from "vue";
 
-const counter = shallowRef(0)
-const { history, undo, redo } = useDebouncedRefHistory(counter, { deep: true, debounce: 1000 })
+const counter = shallowRef(0);
+const { history, undo, redo } = useDebouncedRefHistory(counter, { deep: true, debounce: 1000 });
 ```
 
 ## Type Declarations
@@ -34,7 +34,7 @@ const { history, undo, redo } = useDebouncedRefHistory(counter, { deep: true, de
 export declare function useDebouncedRefHistory<Raw, Serialized = Raw>(
   source: Ref<Raw>,
   options?: Omit<UseRefHistoryOptions<Raw, Serialized>, "eventFilter"> & {
-    debounce?: MaybeRefOrGetter<number>
+    debounce?: MaybeRefOrGetter<number>;
   },
-): UseRefHistoryReturn<Raw, Serialized>
+): UseRefHistoryReturn<Raw, Serialized>;
 ```

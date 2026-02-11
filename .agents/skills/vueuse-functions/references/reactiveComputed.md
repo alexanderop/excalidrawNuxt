@@ -9,26 +9,26 @@ Computed reactive object. Instead of returning a ref that `computed` does, `reac
 ## Usage
 
 ```ts
-import { reactiveComputed } from '@vueuse/core'
+import { reactiveComputed } from "@vueuse/core";
 
 const state = reactiveComputed(() => {
   return {
-    foo: 'bar',
-    bar: 'baz',
-  }
-})
+    foo: "bar",
+    bar: "baz",
+  };
+});
 
-state.bar // 'baz'
+state.bar; // 'baz'
 ```
 
 ## Type Declarations
 
 ```ts
-export type ReactiveComputedReturn<T extends object> = UnwrapNestedRefs<T>
+export type ReactiveComputedReturn<T extends object> = UnwrapNestedRefs<T>;
 /**
  * Computed reactive object.
  */
 export declare function reactiveComputed<T extends object>(
   fn: ComputedGetter<T>,
-): ReactiveComputedReturn<T>
+): ReactiveComputedReturn<T>;
 ```

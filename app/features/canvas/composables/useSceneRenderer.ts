@@ -1,66 +1,73 @@
-import { computed, watch } from 'vue'
-import type { Ref, ShallowRef, ComputedRef } from 'vue'
-import type { RoughCanvas } from 'roughjs/bin/canvas'
-import { useRenderer } from './useRenderer'
-import { useAnimationController } from './useAnimationController'
-import type { UseAnimationControllerReturn } from './useAnimationController'
-import { renderGrid } from '~/features/rendering/renderGrid'
-import { renderScene } from '~/features/rendering/renderScene'
-import { renderElement } from '~/features/rendering/renderElement'
-import { renderInteractiveScene } from '~/features/rendering/renderInteractive'
-import type { LinearEditorRenderState, MultiPointRenderState } from '~/features/rendering/renderInteractive'
-import type { ExcalidrawElement, ExcalidrawLinearElement, ExcalidrawTextElement } from '~/features/elements/types'
-import type { Box, GlobalPoint } from '~/shared/math'
-import { useTheme, resolveColor } from '~/features/theme'
-import { useImageCache } from '~/features/image/useImageCache'
+import { computed, watch } from "vue";
+import type { Ref, ShallowRef, ComputedRef } from "vue";
+import type { RoughCanvas } from "roughjs/bin/canvas";
+import { useRenderer } from "./useRenderer";
+import { useAnimationController } from "./useAnimationController";
+import type { UseAnimationControllerReturn } from "./useAnimationController";
+import { renderGrid } from "~/features/rendering/renderGrid";
+import { renderScene } from "~/features/rendering/renderScene";
+import { renderElement } from "~/features/rendering/renderElement";
+import { renderInteractiveScene } from "~/features/rendering/renderInteractive";
+import type {
+  LinearEditorRenderState,
+  MultiPointRenderState,
+} from "~/features/rendering/renderInteractive";
+import type {
+  ExcalidrawElement,
+  ExcalidrawLinearElement,
+  ExcalidrawTextElement,
+} from "~/features/elements/types";
+import type { Box, GlobalPoint } from "~/shared/math";
+import { useTheme, resolveColor } from "~/features/theme";
+import { useImageCache } from "~/features/image/useImageCache";
 
 interface UseSceneRendererOptions {
   layers: {
-    staticCtx: ShallowRef<CanvasRenderingContext2D | null>
-    newElementCtx: ShallowRef<CanvasRenderingContext2D | null>
-    interactiveCtx: ShallowRef<CanvasRenderingContext2D | null>
-    staticRc: ShallowRef<RoughCanvas | null>
-    newElementRc: ShallowRef<RoughCanvas | null>
-  }
+    staticCtx: ShallowRef<CanvasRenderingContext2D | null>;
+    newElementCtx: ShallowRef<CanvasRenderingContext2D | null>;
+    interactiveCtx: ShallowRef<CanvasRenderingContext2D | null>;
+    staticRc: ShallowRef<RoughCanvas | null>;
+    newElementRc: ShallowRef<RoughCanvas | null>;
+  };
   canvasRefs: {
-    staticCanvasRef: Readonly<Ref<HTMLCanvasElement | null>>
-    newElementCanvasRef: Readonly<Ref<HTMLCanvasElement | null>>
-    interactiveCanvasRef: Readonly<Ref<HTMLCanvasElement | null>>
-  }
+    staticCanvasRef: Readonly<Ref<HTMLCanvasElement | null>>;
+    newElementCanvasRef: Readonly<Ref<HTMLCanvasElement | null>>;
+    interactiveCanvasRef: Readonly<Ref<HTMLCanvasElement | null>>;
+  };
   viewport: {
-    scrollX: Ref<number>
-    scrollY: Ref<number>
-    zoom: Ref<number>
-    width: Ref<number>
-    height: Ref<number>
-  }
-  elements: ShallowRef<readonly ExcalidrawElement[]>
-  selectedElements: ComputedRef<ExcalidrawElement[]>
-  selectedIds: ShallowRef<ReadonlySet<string>>
-  newElement: ShallowRef<ExcalidrawElement | null>
-  selectionBox: ShallowRef<Box | null>
+    scrollX: Ref<number>;
+    scrollY: Ref<number>;
+    zoom: Ref<number>;
+    width: Ref<number>;
+    height: Ref<number>;
+  };
+  elements: ShallowRef<readonly ExcalidrawElement[]>;
+  selectedElements: ComputedRef<ExcalidrawElement[]>;
+  selectedIds: ShallowRef<ReadonlySet<string>>;
+  newElement: ShallowRef<ExcalidrawElement | null>;
+  selectionBox: ShallowRef<Box | null>;
   // Linear editor state
-  editingLinearElement?: ShallowRef<ExcalidrawLinearElement | null>
-  editingPointIndices?: ShallowRef<ReadonlySet<number>>
-  editingHoveredMidpoint?: ShallowRef<number | null>
+  editingLinearElement?: ShallowRef<ExcalidrawLinearElement | null>;
+  editingPointIndices?: ShallowRef<ReadonlySet<number>>;
+  editingHoveredMidpoint?: ShallowRef<number | null>;
   // Multi-point creation state
-  multiElement?: ShallowRef<ExcalidrawLinearElement | null>
-  lastCursorPoint?: ShallowRef<GlobalPoint | null>
+  multiElement?: ShallowRef<ExcalidrawLinearElement | null>;
+  lastCursorPoint?: ShallowRef<GlobalPoint | null>;
   // Binding highlights
-  suggestedBindings?: ShallowRef<readonly ExcalidrawElement[]>
+  suggestedBindings?: ShallowRef<readonly ExcalidrawElement[]>;
   // Group selection
-  selectedGroupIds?: ShallowRef<ReadonlySet<string>>
+  selectedGroupIds?: ShallowRef<ReadonlySet<string>>;
   // Text editing — hide element being edited (textarea overlay replaces canvas-drawn text)
-  editingTextElement?: ShallowRef<ExcalidrawTextElement | null>
+  editingTextElement?: ShallowRef<ExcalidrawTextElement | null>;
   // Code editing — hide element being edited (editor overlay replaces canvas-drawn code)
-  editingCodeElement?: ShallowRef<ExcalidrawElement | null>
+  editingCodeElement?: ShallowRef<ExcalidrawElement | null>;
 }
 
 interface UseSceneRendererReturn {
-  markStaticDirty: () => void
-  markNewElementDirty: () => void
-  markInteractiveDirty: () => void
-  animations: UseAnimationControllerReturn
+  markStaticDirty: () => void;
+  markNewElementDirty: () => void;
+  markInteractiveDirty: () => void;
+  animations: UseAnimationControllerReturn;
 }
 
 function buildLinearEditorState(
@@ -68,25 +75,25 @@ function buildLinearEditorState(
   pointIndices: ShallowRef<ReadonlySet<number>> | undefined,
   hoveredMidpoint: ShallowRef<number | null> | undefined,
 ): LinearEditorRenderState | null {
-  const el = editingElement?.value
-  if (!el) return null
+  const el = editingElement?.value;
+  if (!el) return null;
 
   return {
     element: el,
     selectedPointIndices: pointIndices?.value ?? new Set(),
     hoveredMidpointIndex: hoveredMidpoint?.value ?? null,
-  }
+  };
 }
 
 function buildMultiPointState(
   multiElement: ShallowRef<ExcalidrawLinearElement | null> | undefined,
   lastCursorPoint: ShallowRef<GlobalPoint | null> | undefined,
 ): MultiPointRenderState | null {
-  const el = multiElement?.value
-  const cursor = lastCursorPoint?.value
-  if (!el || !cursor) return null
+  const el = multiElement?.value;
+  const cursor = lastCursorPoint?.value;
+  if (!el || !cursor) return null;
 
-  return { element: el, cursorPoint: cursor }
+  return { element: el, cursorPoint: cursor };
 }
 
 /**
@@ -124,13 +131,13 @@ export function useSceneRenderer(options: UseSceneRendererOptions): UseSceneRend
     selectedGroupIds,
     editingTextElement,
     editingCodeElement,
-  } = options
-  const { scrollX, scrollY, zoom, width, height } = viewport
+  } = options;
+  const { scrollX, scrollY, zoom, width, height } = viewport;
 
-  const { theme } = useTheme()
-  const { cache: imageCache } = useImageCache()
-  const CANVAS_BG = '#ffffff'
-  const bgColor = computed(() => resolveColor(CANVAS_BG, theme.value))
+  const { theme } = useTheme();
+  const { cache: imageCache } = useImageCache();
+  const CANVAS_BG = "#ffffff";
+  const bgColor = computed(() => resolveColor(CANVAS_BG, theme.value));
 
   const { markStaticDirty, markNewElementDirty, markInteractiveDirty, markAllDirty } = useRenderer({
     staticLayer: { ctx: layers.staticCtx, canvas: canvasRefs.staticCanvasRef },
@@ -143,32 +150,51 @@ export function useSceneRenderer(options: UseSceneRendererOptions): UseSceneRend
     zoom,
     bgColor,
     onRenderStatic(ctx) {
-      renderGrid(ctx, scrollX.value, scrollY.value, zoom.value, width.value, height.value, theme.value)
-      const rc = layers.staticRc.value
+      renderGrid(
+        ctx,
+        scrollX.value,
+        scrollY.value,
+        zoom.value,
+        width.value,
+        height.value,
+        theme.value,
+      );
+      const rc = layers.staticRc.value;
       if (rc) {
-        const editingTextId = editingTextElement?.value?.id
-        const editingCodeId = editingCodeElement?.value?.id
-        const hiddenId = editingTextId ?? editingCodeId
+        const editingTextId = editingTextElement?.value?.id;
+        const editingCodeId = editingCodeElement?.value?.id;
+        const hiddenId = editingTextId ?? editingCodeId;
         const visibleElements = hiddenId
-          ? elements.value.filter(el => el.id !== hiddenId)
-          : elements.value
-        renderScene(ctx, rc, visibleElements, scrollX.value, scrollY.value, zoom.value, width.value, height.value, theme.value, imageCache.value)
+          ? elements.value.filter((el) => el.id !== hiddenId)
+          : elements.value;
+        renderScene(
+          ctx,
+          rc,
+          visibleElements,
+          scrollX.value,
+          scrollY.value,
+          zoom.value,
+          width.value,
+          height.value,
+          theme.value,
+          imageCache.value,
+        );
       }
     },
     onRenderNewElement(ctx) {
-      const el = newElement.value
-      const rc = layers.newElementRc.value
-      if (!el || !rc) return
-      ctx.save()
-      ctx.scale(zoom.value, zoom.value)
-      ctx.translate(scrollX.value, scrollY.value)
-      renderElement(ctx, rc, el, theme.value, imageCache.value)
-      ctx.restore()
+      const el = newElement.value;
+      const rc = layers.newElementRc.value;
+      if (!el || !rc) return;
+      ctx.save();
+      ctx.scale(zoom.value, zoom.value);
+      ctx.translate(scrollX.value, scrollY.value);
+      renderElement(ctx, rc, el, theme.value, imageCache.value);
+      ctx.restore();
     },
     onRenderInteractive(ctx) {
-      ctx.save()
-      ctx.scale(zoom.value, zoom.value)
-      ctx.translate(scrollX.value, scrollY.value)
+      ctx.save();
+      ctx.scale(zoom.value, zoom.value);
+      ctx.translate(scrollX.value, scrollY.value);
 
       renderInteractiveScene({
         ctx,
@@ -176,19 +202,23 @@ export function useSceneRenderer(options: UseSceneRendererOptions): UseSceneRend
         zoom: zoom.value,
         selectionBox: selectionBox.value,
         theme: theme.value,
-        linearEditorState: buildLinearEditorState(editingLinearElement, editingPointIndices, editingHoveredMidpoint),
+        linearEditorState: buildLinearEditorState(
+          editingLinearElement,
+          editingPointIndices,
+          editingHoveredMidpoint,
+        ),
         multiPointState: buildMultiPointState(multiElement, lastCursorPoint),
         suggestedBindings: suggestedBindings?.value ?? null,
         selectedGroupIds: selectedGroupIds?.value,
-      })
-      ctx.restore()
+      });
+      ctx.restore();
     },
-  })
+  });
 
-  const animations = useAnimationController({ markInteractiveDirty })
+  const animations = useAnimationController({ markInteractiveDirty });
 
-  watch(selectedIds, markInteractiveDirty)
-  watch(theme, markAllDirty)
+  watch(selectedIds, markInteractiveDirty);
+  watch(theme, markAllDirty);
 
-  return { markStaticDirty, markNewElementDirty, markInteractiveDirty, animations }
+  return { markStaticDirty, markNewElementDirty, markInteractiveDirty, animations };
 }

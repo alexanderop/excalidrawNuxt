@@ -9,9 +9,9 @@ Reactive [Geolocation API](https://developer.mozilla.org/en-US/docs/Web/API/Geol
 ## Usage
 
 ```ts
-import { useGeolocation } from '@vueuse/core'
+import { useGeolocation } from "@vueuse/core";
 
-const { coords, locatedAt, error, resume, pause } = useGeolocation()
+const { coords, locatedAt, error, resume, pause } = useGeolocation();
 ```
 
 | State     | Type                                                                          | Description                                                              |
@@ -31,8 +31,7 @@ const { coords, locatedAt, error, resume, pause } = useGeolocation()
 ```vue
 <template>
   <UseGeolocation v-slot="{ coords: { latitude, longitude } }">
-    Latitude: {{ latitude }}
-    Longitude: {{ longitude }}
+    Latitude: {{ latitude }} Longitude: {{ longitude }}
   </UseGeolocation>
 </template>
 ```
@@ -40,9 +39,8 @@ const { coords, locatedAt, error, resume, pause } = useGeolocation()
 ## Type Declarations
 
 ```ts
-export interface UseGeolocationOptions
-  extends Partial<PositionOptions>, ConfigurableNavigator {
-  immediate?: boolean
+export interface UseGeolocationOptions extends Partial<PositionOptions>, ConfigurableNavigator {
+  immediate?: boolean;
 }
 /**
  * Reactive Geolocation API.
@@ -51,35 +49,32 @@ export interface UseGeolocationOptions
  * @param options
  */
 export declare function useGeolocation(options?: UseGeolocationOptions): {
-  isSupported: ComputedRef<boolean>
+  isSupported: ComputedRef<boolean>;
   coords: Ref<
     {
-      readonly accuracy: number
-      readonly altitude: number | null
-      readonly altitudeAccuracy: number | null
-      readonly heading: number | null
-      readonly latitude: number
-      readonly longitude: number
-      readonly speed: number | null
+      readonly accuracy: number;
+      readonly altitude: number | null;
+      readonly altitudeAccuracy: number | null;
+      readonly heading: number | null;
+      readonly latitude: number;
+      readonly longitude: number;
+      readonly speed: number | null;
     },
     | Omit<GeolocationCoordinates, "toJSON">
     | {
-        readonly accuracy: number
-        readonly altitude: number | null
-        readonly altitudeAccuracy: number | null
-        readonly heading: number | null
-        readonly latitude: number
-        readonly longitude: number
-        readonly speed: number | null
+        readonly accuracy: number;
+        readonly altitude: number | null;
+        readonly altitudeAccuracy: number | null;
+        readonly heading: number | null;
+        readonly latitude: number;
+        readonly longitude: number;
+        readonly speed: number | null;
       }
-  >
-  locatedAt: ShallowRef<number | null, number | null>
-  error: ShallowRef<
-    GeolocationPositionError | null,
-    GeolocationPositionError | null
-  >
-  resume: () => void
-  pause: () => void
-}
-export type UseGeolocationReturn = ReturnType<typeof useGeolocation>
+  >;
+  locatedAt: ShallowRef<number | null, number | null>;
+  error: ShallowRef<GeolocationPositionError | null, GeolocationPositionError | null>;
+  resume: () => void;
+  pause: () => void;
+};
+export type UseGeolocationReturn = ReturnType<typeof useGeolocation>;
 ```

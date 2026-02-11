@@ -10,18 +10,15 @@ Reactive size of an HTML element. [ResizeObserver MDN](https://developer.mozilla
 
 ```vue
 <script setup lang="ts">
-import { useElementSize } from '@vueuse/core'
-import { useTemplateRef } from 'vue'
+import { useElementSize } from "@vueuse/core";
+import { useTemplateRef } from "vue";
 
-const el = useTemplateRef('el')
-const { width, height } = useElementSize(el)
+const el = useTemplateRef("el");
+const { width, height } = useElementSize(el);
 </script>
 
 <template>
-  <div ref="el">
-    Height: {{ height }}
-    Width: {{ width }}
-  </div>
+  <div ref="el">Height: {{ height }} Width: {{ width }}</div>
 </template>
 ```
 
@@ -39,10 +36,10 @@ const { width, height } = useElementSize(el)
 
 ```vue
 <script setup lang="ts">
-import { vElementSize } from '@vueuse/components'
+import { vElementSize } from "@vueuse/components";
 
-function onResize({ width, height }: { width: number, height: number }) {
-  console.log(width, height)
+function onResize({ width, height }: { width: number; height: number }) {
+  console.log(width, height);
 }
 </script>
 
@@ -57,8 +54,8 @@ function onResize({ width, height }: { width: number, height: number }) {
 
 ```ts
 export interface ElementSize {
-  width: number
-  height: number
+  width: number;
+  height: number;
 }
 /**
  * Reactive size of an HTML element.
@@ -70,9 +67,9 @@ export declare function useElementSize(
   initialSize?: ElementSize,
   options?: UseResizeObserverOptions,
 ): {
-  width: ShallowRef<number, number>
-  height: ShallowRef<number, number>
-  stop: () => void
-}
-export type UseElementSizeReturn = ReturnType<typeof useElementSize>
+  width: ShallowRef<number, number>;
+  height: ShallowRef<number, number>;
+  stop: () => void;
+};
+export type UseElementSizeReturn = ReturnType<typeof useElementSize>;
 ```

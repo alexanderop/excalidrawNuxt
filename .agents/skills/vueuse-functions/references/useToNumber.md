@@ -9,13 +9,13 @@ Reactively convert a string ref to number.
 ## Usage
 
 ```ts
-import { useToNumber } from '@vueuse/core'
-import { shallowRef } from 'vue'
+import { useToNumber } from "@vueuse/core";
+import { shallowRef } from "vue";
 
-const str = shallowRef('123')
-const number = useToNumber(str)
+const str = shallowRef("123");
+const number = useToNumber(str);
 
-number.value // 123
+number.value; // 123
 ```
 
 ## Type Declarations
@@ -29,18 +29,18 @@ export interface UseToNumberOptions {
    *
    * @default 'parseFloat'
    */
-  method?: "parseFloat" | "parseInt" | ((value: string | number) => number)
+  method?: "parseFloat" | "parseInt" | ((value: string | number) => number);
   /**
    * The base in mathematical numeral systems passed to `parseInt`.
    * Only works with `method: 'parseInt'`
    */
-  radix?: number
+  radix?: number;
   /**
    * Replace NaN with zero
    *
    * @default false
    */
-  nanToZero?: boolean
+  nanToZero?: boolean;
 }
 /**
  * Reactively convert a string ref to number.
@@ -50,5 +50,5 @@ export interface UseToNumberOptions {
 export declare function useToNumber(
   value: MaybeRefOrGetter<number | string>,
   options?: UseToNumberOptions,
-): ComputedRef<number>
+): ComputedRef<number>;
 ```

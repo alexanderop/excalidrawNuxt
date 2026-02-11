@@ -9,33 +9,30 @@ Reactive [Network status](https://developer.mozilla.org/en-US/docs/Web/API/Netwo
 ## Usage
 
 ```ts
-import { useNetwork } from '@vueuse/core'
+import { useNetwork } from "@vueuse/core";
 
-const { isOnline, offlineAt, downlink, downlinkMax, effectiveType, saveData, type } = useNetwork()
+const { isOnline, offlineAt, downlink, downlinkMax, effectiveType, saveData, type } = useNetwork();
 
-console.log(isOnline.value)
+console.log(isOnline.value);
 ```
 
 To use as an object, wrap it with `reactive()`
 
 ```ts
-import { useNetwork } from '@vueuse/core'
+import { useNetwork } from "@vueuse/core";
 // ---cut---
-import { reactive } from 'vue'
+import { reactive } from "vue";
 
-const network = reactive(useNetwork())
+const network = reactive(useNetwork());
 
-console.log(network.isOnline)
+console.log(network.isOnline);
 ```
 
 ## Component Usage
 
 ```vue
 <template>
-  <UseNetwork v-slot="{ isOnline, type }">
-    Is Online: {{ isOnline }}
-    Type: {{ type }}
-  </UseNetwork>
+  <UseNetwork v-slot="{ isOnline, type }"> Is Online: {{ isOnline }} Type: {{ type }} </UseNetwork>
 </template>
 ```
 
@@ -50,46 +47,46 @@ export type NetworkType =
   | "wifi"
   | "wimax"
   | "other"
-  | "unknown"
-export type NetworkEffectiveType = "slow-2g" | "2g" | "3g" | "4g" | undefined
+  | "unknown";
+export type NetworkEffectiveType = "slow-2g" | "2g" | "3g" | "4g" | undefined;
 export interface NetworkState {
-  isSupported: ComputedRef<boolean>
+  isSupported: ComputedRef<boolean>;
   /**
    * If the user is currently connected.
    */
-  isOnline: Readonly<ShallowRef<boolean>>
+  isOnline: Readonly<ShallowRef<boolean>>;
   /**
    * The time since the user was last connected.
    */
-  offlineAt: Readonly<ShallowRef<number | undefined>>
+  offlineAt: Readonly<ShallowRef<number | undefined>>;
   /**
    * At this time, if the user is offline and reconnects
    */
-  onlineAt: Readonly<ShallowRef<number | undefined>>
+  onlineAt: Readonly<ShallowRef<number | undefined>>;
   /**
    * The download speed in Mbps.
    */
-  downlink: Readonly<ShallowRef<number | undefined>>
+  downlink: Readonly<ShallowRef<number | undefined>>;
   /**
    * The max reachable download speed in Mbps.
    */
-  downlinkMax: Readonly<ShallowRef<number | undefined>>
+  downlinkMax: Readonly<ShallowRef<number | undefined>>;
   /**
    * The detected effective speed type.
    */
-  effectiveType: Readonly<ShallowRef<NetworkEffectiveType | undefined>>
+  effectiveType: Readonly<ShallowRef<NetworkEffectiveType | undefined>>;
   /**
    * The estimated effective round-trip time of the current connection.
    */
-  rtt: Readonly<ShallowRef<number | undefined>>
+  rtt: Readonly<ShallowRef<number | undefined>>;
   /**
    * If the user activated data saver mode.
    */
-  saveData: Readonly<ShallowRef<boolean | undefined>>
+  saveData: Readonly<ShallowRef<boolean | undefined>>;
   /**
    * The detected connection/network type.
    */
-  type: Readonly<ShallowRef<NetworkType>>
+  type: Readonly<ShallowRef<NetworkType>>;
 }
 /**
  * Reactive Network status.
@@ -99,8 +96,6 @@ export interface NetworkState {
  *
  * @__NO_SIDE_EFFECTS__
  */
-export declare function useNetwork(
-  options?: ConfigurableWindow,
-): Readonly<NetworkState>
-export type UseNetworkReturn = ReturnType<typeof useNetwork>
+export declare function useNetwork(options?: ConfigurableWindow): Readonly<NetworkState>;
+export type UseNetworkReturn = ReturnType<typeof useNetwork>;
 ```

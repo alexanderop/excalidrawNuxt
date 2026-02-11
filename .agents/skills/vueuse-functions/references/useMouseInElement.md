@@ -10,12 +10,12 @@ Reactive mouse position related to an element
 
 ```vue
 <script setup lang="ts">
-import { useMouseInElement } from '@vueuse/core'
-import { useTemplateRef } from 'vue'
+import { useMouseInElement } from "@vueuse/core";
+import { useTemplateRef } from "vue";
 
-const target = useTemplateRef('target')
+const target = useTemplateRef("target");
 
-const { x, y, isOutside } = useMouseInElement(target)
+const { x, y, isOutside } = useMouseInElement(target);
 </script>
 
 <template>
@@ -30,9 +30,7 @@ const { x, y, isOutside } = useMouseInElement(target)
 ```vue
 <template>
   <UseMouseInElement v-slot="{ elementX, elementY, isOutside }">
-    x: {{ elementX }}
-    y: {{ elementY }}
-    Is Outside: {{ isOutside }}
+    x: {{ elementX }} y: {{ elementY }} Is Outside: {{ isOutside }}
   </UseMouseInElement>
 </template>
 ```
@@ -41,27 +39,49 @@ const { x, y, isOutside } = useMouseInElement(target)
 
 ```vue
 <script setup lang="ts">
-import { vMouseInElement } from '@vueuse/components'
-import { UseMouseSourceType } from '@vueuse/core'
+import { vMouseInElement } from "@vueuse/components";
+import { UseMouseSourceType } from "@vueuse/core";
 
 interface MouseInElementType {
-  x: number
-  y: number
-  sourceType: UseMouseSourceType
-  elementX: number
-  elementY: number
-  elementPositionX: number
-  elementPositionY: number
-  elementHeight: number
-  elementWidth: number
-  isOutside: boolean
+  x: number;
+  y: number;
+  sourceType: UseMouseSourceType;
+  elementX: number;
+  elementY: number;
+  elementPositionX: number;
+  elementPositionY: number;
+  elementHeight: number;
+  elementWidth: number;
+  isOutside: boolean;
 }
 
 const options = {
-  handleOutside: true
-}
-function onMouseInElement({ x, y, sourceType, elementX, elementY, elementPositionX, elementPositionY, elementHeight, elementWidth, isOutside }: MouseInElementType) {
-  console.log(x, y, sourceType, elementX, elementY, elementPositionX, elementPositionY, elementHeight, elementWidth, isOutside)
+  handleOutside: true,
+};
+function onMouseInElement({
+  x,
+  y,
+  sourceType,
+  elementX,
+  elementY,
+  elementPositionX,
+  elementPositionY,
+  elementHeight,
+  elementWidth,
+  isOutside,
+}: MouseInElementType) {
+  console.log(
+    x,
+    y,
+    sourceType,
+    elementX,
+    elementY,
+    elementPositionX,
+    elementPositionY,
+    elementHeight,
+    elementWidth,
+    isOutside,
+  );
 }
 </script>
 
@@ -82,19 +102,19 @@ export interface MouseInElementOptions extends UseMouseOptions {
    *
    * @default true
    */
-  handleOutside?: boolean
+  handleOutside?: boolean;
   /**
    * Listen to window resize event
    *
    * @default true
    */
-  windowScroll?: boolean
+  windowScroll?: boolean;
   /**
    * Listen to window scroll event
    *
    * @default true
    */
-  windowResize?: boolean
+  windowResize?: boolean;
 }
 /**
  * Reactive mouse position related to an element.
@@ -107,17 +127,17 @@ export declare function useMouseInElement(
   target?: MaybeElementRef,
   options?: MouseInElementOptions,
 ): {
-  x: ShallowRef<number, number>
-  y: ShallowRef<number, number>
-  sourceType: ShallowRef<UseMouseSourceType, UseMouseSourceType>
-  elementX: ShallowRef<number, number>
-  elementY: ShallowRef<number, number>
-  elementPositionX: ShallowRef<number, number>
-  elementPositionY: ShallowRef<number, number>
-  elementHeight: ShallowRef<number, number>
-  elementWidth: ShallowRef<number, number>
-  isOutside: ShallowRef<boolean, boolean>
-  stop: () => void
-}
-export type UseMouseInElementReturn = ReturnType<typeof useMouseInElement>
+  x: ShallowRef<number, number>;
+  y: ShallowRef<number, number>;
+  sourceType: ShallowRef<UseMouseSourceType, UseMouseSourceType>;
+  elementX: ShallowRef<number, number>;
+  elementY: ShallowRef<number, number>;
+  elementPositionX: ShallowRef<number, number>;
+  elementPositionY: ShallowRef<number, number>;
+  elementHeight: ShallowRef<number, number>;
+  elementWidth: ShallowRef<number, number>;
+  isOutside: ShallowRef<boolean, boolean>;
+  stop: () => void;
+};
+export type UseMouseInElementReturn = ReturnType<typeof useMouseInElement>;
 ```

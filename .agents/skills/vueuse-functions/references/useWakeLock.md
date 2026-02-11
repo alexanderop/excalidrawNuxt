@@ -9,9 +9,9 @@ Reactive [Screen Wake Lock API](https://developer.mozilla.org/en-US/docs/Web/API
 ## Usage
 
 ```ts
-import { useWakeLock } from '@vueuse/core'
+import { useWakeLock } from "@vueuse/core";
 
-const { isSupported, isActive, forceRequest, request, release } = useWakeLock()
+const { isSupported, isActive, forceRequest, request, release } = useWakeLock();
 ```
 
 When `request` is called, the wake lock will be requested if the document is visible. Otherwise, the request will be queued until the document becomes visible. If the request is successful, `isActive` will be **true**. Whenever the document is hidden, the `isActive` will be **false**.
@@ -23,13 +23,13 @@ To request a wake lock immediately, even if the document is hidden, use `forceRe
 ## Type Declarations
 
 ```ts
-type WakeLockType = "screen"
+type WakeLockType = "screen";
 export interface WakeLockSentinel extends EventTarget {
-  type: WakeLockType
-  released: boolean
-  release: () => Promise<void>
+  type: WakeLockType;
+  released: boolean;
+  release: () => Promise<void>;
 }
-export type UseWakeLockOptions = ConfigurableNavigator & ConfigurableDocument
+export type UseWakeLockOptions = ConfigurableNavigator & ConfigurableDocument;
 /**
  * Reactive Screen Wake Lock API.
  *
@@ -39,12 +39,12 @@ export type UseWakeLockOptions = ConfigurableNavigator & ConfigurableDocument
  * @__NO_SIDE_EFFECTS__
  */
 export declare function useWakeLock(options?: UseWakeLockOptions): {
-  sentinel: ShallowRef<WakeLockSentinel | null, WakeLockSentinel | null>
-  isSupported: ComputedRef<boolean>
-  isActive: ComputedRef<boolean>
-  request: (type: WakeLockType) => Promise<void>
-  forceRequest: (type: WakeLockType) => Promise<void>
-  release: () => Promise<void>
-}
-export type UseWakeLockReturn = ReturnType<typeof useWakeLock>
+  sentinel: ShallowRef<WakeLockSentinel | null, WakeLockSentinel | null>;
+  isSupported: ComputedRef<boolean>;
+  isActive: ComputedRef<boolean>;
+  request: (type: WakeLockType) => Promise<void>;
+  forceRequest: (type: WakeLockType) => Promise<void>;
+  release: () => Promise<void>;
+};
+export type UseWakeLockReturn = ReturnType<typeof useWakeLock>;
 ```

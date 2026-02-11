@@ -1,19 +1,19 @@
-import type { BrowserCommand } from 'vitest/node'
+import type { BrowserCommand } from "vitest/node";
 
 interface ModifierKeys {
-  shiftKey?: boolean
-  metaKey?: boolean
-  altKey?: boolean
+  shiftKey?: boolean;
+  metaKey?: boolean;
+  altKey?: boolean;
 }
 
-declare module 'vitest/browser' {
+declare module "vitest/browser" {
   interface BrowserCommands {
     canvasDblClick: (
       selector: string,
       x: number,
       y: number,
       options?: ModifierKeys,
-    ) => Promise<void>
+    ) => Promise<void>;
   }
 }
 
@@ -24,20 +24,17 @@ declare module 'vitest/browser' {
  * Coordinates are relative to the element (not the viewport).
  * Dispatches: pointerdown → pointerup → pointerdown → pointerup → dblclick
  */
-export const canvasDblClick: BrowserCommand<[
-  selector: string,
-  x: number,
-  y: number,
-  options?: ModifierKeys,
-]> = async (ctx, selector, x, y, options) => {
+export const canvasDblClick: BrowserCommand<
+  [selector: string, x: number, y: number, options?: ModifierKeys]
+> = async (ctx, selector, x, y, options) => {
   // @ts-expect-error -- vitest browser command context exposes frame() at runtime
-  const frame = await ctx.frame()
+  const frame = await ctx.frame();
 
   await frame.evaluate(
     ({ sel, px, py, opts }: { sel: string; px: number; py: number; opts: ModifierKeys }) => {
-      const el = document.querySelector(sel)
-      if (!el) throw new Error(`Element "${sel}" not found`)
-      const rect = el.getBoundingClientRect()
+      const el = document.querySelector(sel);
+      if (!el) throw new Error(`Element "${sel}" not found`);
+      const rect = el.getBoundingClientRect();
 
       const shared = {
         clientX: rect.left + px,
@@ -46,31 +43,33 @@ export const canvasDblClick: BrowserCommand<[
         bubbles: true,
         cancelable: true,
         pointerId: 1,
-        pointerType: 'mouse' as const,
+        pointerType: "mouse" as const,
         isPrimary: true,
         shiftKey: opts.shiftKey ?? false,
         metaKey: opts.metaKey ?? false,
         altKey: opts.altKey ?? false,
-      }
+      };
 
       // First click
-      el.dispatchEvent(new PointerEvent('pointerdown', { ...shared, buttons: 1 }))
-      el.dispatchEvent(new PointerEvent('pointerup', { ...shared, buttons: 0 }))
+      el.dispatchEvent(new PointerEvent("pointerdown", { ...shared, buttons: 1 }));
+      el.dispatchEvent(new PointerEvent("pointerup", { ...shared, buttons: 0 }));
       // Second click
-      el.dispatchEvent(new PointerEvent('pointerdown', { ...shared, buttons: 1 }))
-      el.dispatchEvent(new PointerEvent('pointerup', { ...shared, buttons: 0 }))
+      el.dispatchEvent(new PointerEvent("pointerdown", { ...shared, buttons: 1 }));
+      el.dispatchEvent(new PointerEvent("pointerup", { ...shared, buttons: 0 }));
       // dblclick event (MouseEvent, not PointerEvent)
-      el.dispatchEvent(new MouseEvent('dblclick', {
-        clientX: shared.clientX,
-        clientY: shared.clientY,
-        button: 0,
-        bubbles: true,
-        cancelable: true,
-        shiftKey: shared.shiftKey,
-        metaKey: shared.metaKey,
-        altKey: shared.altKey,
-      }))
+      el.dispatchEvent(
+        new MouseEvent("dblclick", {
+          clientX: shared.clientX,
+          clientY: shared.clientY,
+          button: 0,
+          bubbles: true,
+          cancelable: true,
+          shiftKey: shared.shiftKey,
+          metaKey: shared.metaKey,
+          altKey: shared.altKey,
+        }),
+      );
     },
     { sel: selector, px: x, py: y, opts: options ?? {} },
-  )
-}
+  );
+};

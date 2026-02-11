@@ -79,17 +79,17 @@ graph LR
 
 ## Feature Summary
 
-| Feature | Purpose | Key Exports |
-|---------|---------|-------------|
-| **canvas** | Canvas stack, viewport, render loop, dirty flags, scene orchestration | `useViewport`, `useRenderer`, `useSceneRenderer`, `useCanvasLayers`, `usePanning`, `createDirtyFlags`, `useAnimationController` |
-| **context-menu** | Right-click context menu with element/canvas actions | `useContextMenu`, `ContextMenu.vue`, `contextMenuItems` |
-| **elements** | Element data model, creation, mutation, z-order | `useElements`, `createElement`, `mutateElement`, `useLayerOrder` |
-| **rendering** | Grid, shape generation, scene/element/interactive rendering, text measurement | `renderGrid`, `renderScene`, `renderElement`, `generateShape`, `textMeasurement` |
-| **tools** | Tool state, drawing interaction, text editing interaction | `useToolStore`, `useDrawingInteraction`, `useTextInteraction` |
-| **selection** | Hit testing, bounds, drag/resize, selection state machine | `useSelection`, `useSelectionInteraction`, `hitTest`, `dragElements`, `resizeElement` |
-| **linear-editor** | Multi-point arrow creation, point editing | `useMultiPointCreation`, `useLinearEditor`, `pointHandles` |
-| **binding** | Arrow-to-shape binding, proximity detection, bound text | `bindArrowToElement`, `proximity`, `updateBoundPoints`, `renderSuggestedBinding`, `boundText` |
-| **code** | Code element with syntax highlighting via Shiki | `useCodeInteraction`, `useShikiHighlighter`, `renderCodeElement`, `buildEditorDom`, `measureCode` |
-| **properties** | Element style editing panel with color picker, sticky defaults, copy/paste styles | `useStyleDefaults`, `usePropertyActions`, `useStyleClipboard`, `PropertiesPanel.vue`, `ColorPicker.vue`, `palette` |
-| **theme** | Light/dark mode, color resolution | `useTheme`, `resolveColor`, `applyDarkModeFilter` |
-| **groups** | Element grouping, group selection expansion | `useGroups`, `groupUtils` (pure functions), `cleanupAfterDelete` |
+| Feature           | Purpose                                                                           | Key Exports                                                                                                                     |
+| ----------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| **canvas**        | Canvas stack, viewport, render loop, dirty flags, scene orchestration             | `useViewport`, `useRenderer`, `useSceneRenderer`, `useCanvasLayers`, `usePanning`, `createDirtyFlags`, `useAnimationController` |
+| **context-menu**  | Right-click context menu with element/canvas actions                              | `useContextMenu`, `ContextMenu.vue`, `contextMenuItems`                                                                         |
+| **elements**      | Element data model, creation, mutation, z-order                                   | `useElements`, `createElement`, `mutateElement`, `useLayerOrder`                                                                |
+| **rendering**     | Grid, shape generation, scene/element/interactive rendering, text measurement     | `renderGrid`, `renderScene`, `renderElement`, `generateShape`, `textMeasurement`                                                |
+| **tools**         | Tool state, drawing interaction, text editing interaction                         | `useToolStore`, `useDrawingInteraction`, `useTextInteraction`                                                                   |
+| **selection**     | Hit testing, bounds, drag/resize, selection state machine                         | `useSelection`, `useSelectionInteraction`, `hitTest`, `dragElements`, `resizeElement`                                           |
+| **linear-editor** | Multi-point arrow creation, point editing                                         | `useMultiPointCreation`, `useLinearEditor`, `pointHandles`                                                                      |
+| **binding**       | Arrow-to-shape binding, proximity detection, bound text                           | `bindArrowToElement`, `proximity`, `updateBoundPoints`, `renderSuggestedBinding`, `boundText`                                   |
+| **code**          | Code element with syntax highlighting via Shiki                                   | `useCodeInteraction`, `useShikiHighlighter`, `renderCodeElement`, `buildEditorDom`, `measureCode`                               |
+| **properties**    | Element style editing panel with color picker, sticky defaults, copy/paste styles | `useStyleDefaults`, `usePropertyActions`, `useStyleClipboard`, `PropertiesPanel.vue`, `ColorPicker.vue`, `palette`              |
+| **theme**         | Light/dark mode, color resolution                                                 | `useTheme`, `resolveColor`, `applyDarkModeFilter`                                                                               |
+| **groups**        | Element grouping, group selection expansion                                       | `useGroups`, `groupUtils` (pure functions), `cleanupAfterDelete`                                                                |

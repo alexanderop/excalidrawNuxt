@@ -1,5 +1,5 @@
 ---
-category: '@Integrations'
+category: "@Integrations"
 ---
 
 # useNProgress
@@ -15,12 +15,12 @@ npm i nprogress@^0
 ## Usage
 
 ```ts {6}
-import { useNProgress } from '@vueuse/integrations/useNProgress'
+import { useNProgress } from "@vueuse/integrations/useNProgress";
 
-const { isLoading } = useNProgress()
+const { isLoading } = useNProgress();
 
 function toggle() {
-  isLoading.value = !isLoading.value
+  isLoading.value = !isLoading.value;
 }
 ```
 
@@ -29,12 +29,12 @@ function toggle() {
 You can pass a percentage to indicate where the bar should start from.
 
 ```ts {3}
-import { useNProgress } from '@vueuse/integrations/useNProgress'
+import { useNProgress } from "@vueuse/integrations/useNProgress";
 
-const { progress } = useNProgress(0.5)
+const { progress } = useNProgress(0.5);
 
 function done() {
-  progress.value = 1.0
+  progress.value = 1.0;
 }
 ```
 
@@ -47,18 +47,18 @@ Just edit [nprogress.css](https://github.com/rstacruz/nprogress/blob/master/npro
 You can [configure](https://github.com/rstacruz/nprogress#configuration) it by passing an object as a second parameter.
 
 ```ts {4}
-import { useNProgress } from '@vueuse/integrations/useNProgress'
+import { useNProgress } from "@vueuse/integrations/useNProgress";
 
 useNProgress(null, {
   minimum: 0.1,
   // ...
-})
+});
 ```
 
 ## Type Declarations
 
 ```ts
-export type UseNProgressOptions = Partial<NProgressOptions>
+export type UseNProgressOptions = Partial<NProgressOptions>;
 /**
  * Reactive progress bar.
  *
@@ -68,11 +68,11 @@ export declare function useNProgress(
   currentProgress?: MaybeRefOrGetter<number | null | undefined>,
   options?: UseNProgressOptions,
 ): {
-  isLoading: WritableComputedRef<boolean, boolean>
-  progress: Ref<number | null | undefined, number | null | undefined>
-  start: () => nprogress.NProgress
-  done: (force?: boolean) => nprogress.NProgress
-  remove: () => void
-}
-export type UseNProgressReturn = ReturnType<typeof useNProgress>
+  isLoading: WritableComputedRef<boolean, boolean>;
+  progress: Ref<number | null | undefined, number | null | undefined>;
+  start: () => nprogress.NProgress;
+  done: (force?: boolean) => nprogress.NProgress;
+  remove: () => void;
+};
+export type UseNProgressReturn = ReturnType<typeof useNProgress>;
 ```

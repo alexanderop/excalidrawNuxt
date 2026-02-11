@@ -9,27 +9,27 @@ SSR compatible and reactive [`CSS.supports`](https://developer.mozilla.org/docs/
 ## Usage
 
 ```ts
-import { useCssSupports } from '@vueuse/core'
+import { useCssSupports } from "@vueuse/core";
 
-const { isSupported } = useCssSupports('container-type', 'scroll-state')
+const { isSupported } = useCssSupports("container-type", "scroll-state");
 ```
 
 ## Type Declarations
 
 ```ts
 export interface UseCssSupportsOptions extends ConfigurableWindow {
-  ssrValue?: boolean
+  ssrValue?: boolean;
 }
 export interface UseCssSupportsReturn {
-  isSupported: ComputedRef<boolean>
+  isSupported: ComputedRef<boolean>;
 }
 export declare function useCssSupports(
   property: MaybeRefOrGetter<string>,
   value: MaybeRefOrGetter<string>,
   options?: UseCssSupportsOptions,
-): UseCssSupportsReturn
+): UseCssSupportsReturn;
 export declare function useCssSupports(
   conditionText: MaybeRefOrGetter<string>,
   options?: UseCssSupportsOptions,
-): UseCssSupportsReturn
+): UseCssSupportsReturn;
 ```

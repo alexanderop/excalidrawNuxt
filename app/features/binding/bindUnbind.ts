@@ -1,8 +1,12 @@
-import type { ExcalidrawElement, ExcalidrawArrowElement, FixedPointBinding } from '~/features/elements/types'
-import { isArrowElement } from '~/features/elements/types'
-import { mutateElement } from '~/features/elements/mutateElement'
-import type { BindableElement, BindingEndpoint } from './types'
-import { isBindableElement } from './types'
+import type {
+  ExcalidrawElement,
+  ExcalidrawArrowElement,
+  FixedPointBinding,
+} from "~/features/elements/types";
+import { isArrowElement } from "~/features/elements/types";
+import { mutateElement } from "~/features/elements/mutateElement";
+import type { BindableElement, BindingEndpoint } from "./types";
+import { isBindableElement } from "./types";
 
 /**
  * Bind one endpoint of an arrow to a target shape.
@@ -19,18 +23,18 @@ export function bindArrowToElement(
     fixedPoint: [fixedPoint[0], fixedPoint[1]],
     focus: 0,
     gap: 0,
-  }
+  };
 
-  const field = endpoint === 'start' ? { startBinding: binding } : { endBinding: binding }
-  mutateElement(arrow, field)
+  const field = endpoint === "start" ? { startBinding: binding } : { endBinding: binding };
+  mutateElement(arrow, field);
 
   // Add arrow to shape's boundElements if not already present
-  const existing = target.boundElements ?? []
-  const alreadyBound = existing.some(be => be.id === arrow.id)
+  const existing = target.boundElements ?? [];
+  const alreadyBound = existing.some((be) => be.id === arrow.id);
   if (!alreadyBound) {
     mutateElement(target, {
-      boundElements: [...existing, { id: arrow.id, type: 'arrow' as const }],
-    })
+      boundElements: [...existing, { id: arrow.id, type: "arrow" as const }],
+    });
   }
 }
 
@@ -43,20 +47,20 @@ export function unbindArrowEndpoint(
   endpoint: BindingEndpoint,
   elements: readonly ExcalidrawElement[],
 ): void {
-  const binding = endpoint === 'start' ? arrow.startBinding : arrow.endBinding
-  if (!binding) return
+  const binding = endpoint === "start" ? arrow.startBinding : arrow.endBinding;
+  if (!binding) return;
 
   // Clear the arrow's binding
-  const clearField = endpoint === 'start' ? { startBinding: null } : { endBinding: null }
-  mutateElement(arrow, clearField)
+  const clearField = endpoint === "start" ? { startBinding: null } : { endBinding: null };
+  mutateElement(arrow, clearField);
 
   // Remove arrow from shape's boundElements
-  const shape = elements.find(el => el.id === binding.elementId)
-  if (!shape) return
+  const shape = elements.find((el) => el.id === binding.elementId);
+  if (!shape) return;
 
   mutateElement(shape, {
-    boundElements: (shape.boundElements ?? []).filter(be => be.id !== arrow.id),
-  })
+    boundElements: (shape.boundElements ?? []).filter((be) => be.id !== arrow.id),
+  });
 }
 
 /**
@@ -67,22 +71,22 @@ export function unbindAllArrowsFromShape(
   shape: ExcalidrawElement,
   elements: readonly ExcalidrawElement[],
 ): void {
-  const bound = shape.boundElements ?? []
-  if (bound.length === 0) return
+  const bound = shape.boundElements ?? [];
+  if (bound.length === 0) return;
 
   for (const entry of bound) {
-    const arrow = elements.find(el => el.id === entry.id)
-    if (!arrow || !isArrowElement(arrow)) continue
+    const arrow = elements.find((el) => el.id === entry.id);
+    if (!arrow || !isArrowElement(arrow)) continue;
 
     if (arrow.startBinding?.elementId === shape.id) {
-      mutateElement(arrow, { startBinding: null })
+      mutateElement(arrow, { startBinding: null });
     }
     if (arrow.endBinding?.elementId === shape.id) {
-      mutateElement(arrow, { endBinding: null })
+      mutateElement(arrow, { endBinding: null });
     }
   }
 
-  mutateElement(shape, { boundElements: [] })
+  mutateElement(shape, { boundElements: [] });
 }
 
 /**
@@ -92,8 +96,8 @@ export function unbindArrow(
   arrow: ExcalidrawArrowElement,
   elements: readonly ExcalidrawElement[],
 ): void {
-  unbindArrowEndpoint(arrow, 'start', elements)
-  unbindArrowEndpoint(arrow, 'end', elements)
+  unbindArrowEndpoint(arrow, "start", elements);
+  unbindArrowEndpoint(arrow, "end", elements);
 }
 
 /**
@@ -103,7 +107,7 @@ export function findBindableElement(
   elementId: string,
   elements: readonly ExcalidrawElement[],
 ): BindableElement | null {
-  const el = elements.find(e => e.id === elementId)
-  if (!el || el.isDeleted || !isBindableElement(el)) return null
-  return el
+  const el = elements.find((e) => e.id === elementId);
+  if (!el || el.isDeleted || !isBindableElement(el)) return null;
+  return el;
 }

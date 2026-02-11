@@ -30,6 +30,7 @@ pie title Arrow Feature Coverage
 **Status:** The `roundness` field already exists on `_ExcalidrawElementBase` in `@excalidraw/element/types`. Our `createElement.ts` defaults it to `null`. No custom type needed.
 
 **Remaining work:**
+
 - [x] `roundness` field exists on element type (from official package)
 - [x] Default `roundness: null` in `createElement` (already there)
 - [ ] Add `PROPORTIONAL_RADIUS = 2` and `DEFAULT_ROUNDNESS_VALUE = 0.25` constants (only needed when implementing curved arrows)
@@ -39,6 +40,7 @@ pie title Arrow Feature Coverage
 **Status:** The `elbowed` field exists on `ExcalidrawArrowElement` in `@excalidraw/element/types`. Our `createElement.ts` sets `elbowed: false` for arrows. Type guards `isElbowArrow()` and `isLineElement()` are re-exported from the official package in `elements/types.ts`.
 
 **Remaining work:**
+
 - [x] `elbowed: boolean` on arrow type (from official package)
 - [x] Default `elbowed: false` in `createElement`
 - [x] `isElbowArrow()` type guard (re-exported from `@excalidraw/element`)
@@ -48,6 +50,7 @@ pie title Arrow Feature Coverage
 **Status:** The `strokeStyle` field already exists on `_ExcalidrawElementBase` in `@excalidraw/element/types` and the `StrokeStyle` type is re-exported. Our `createElement.ts` defaults it to `'solid'`.
 
 **Remaining work:**
+
 - [x] `StrokeStyle` type and `strokeStyle` field on element (from official package)
 - [x] Default `strokeStyle: 'solid'` in `createElement`
 - [ ] Add dash array constants for RoughJS rendering (only needed when implementing stroke style rendering)
@@ -57,6 +60,7 @@ pie title Arrow Feature Coverage
 **Status:** The official `Arrowhead` type in `@excalidraw/element/types` already includes all 12 types: `'arrow' | 'bar' | 'dot' | 'circle' | 'circle_outline' | 'triangle' | 'triangle_outline' | 'diamond' | 'diamond_outline' | 'crowfoot_one' | 'crowfoot_many' | 'crowfoot_one_or_many'`. Re-exported as `Arrowhead` in our `elements/types.ts`.
 
 **Remaining work:**
+
 - [x] Full `Arrowhead` type available (from official package)
 - [ ] Add arrowhead size/angle constants per type (see tech spec Section 6)
 - [ ] Implement **rendering** for each arrowhead type (currently only `arrow` and `triangle` are rendered in `rendering/arrowhead.ts`)
@@ -66,6 +70,7 @@ pie title Arrow Feature Coverage
 **Why:** The Excalidraw source code uses `mode: 'inside' | 'orbit' | 'skip'` on bindings internally, but this is **NOT exposed in the official `@excalidraw/element/types` npm package**. The official `FixedPointBinding` type only has `elementId`, `focus`, `gap`, and `fixedPoint`.
 
 **Decision needed:** Either:
+
 - (a) Extend the official `FixedPointBinding` with a custom `mode` field via module augmentation
 - (b) Add a separate mapping from binding → mode stored elsewhere
 - (c) Defer until the official package adds the `mode` field
@@ -73,6 +78,7 @@ pie title Arrow Feature Coverage
 **Note:** Our current `FixedPointBinding` usage from the official package has `elementId`, `focus`, `gap`, `fixedPoint`. Our `bindUnbind.ts` creates bindings without a `mode` field, which is correct for the current official type.
 
 **Tasks:**
+
 - [ ] Decide on approach for binding modes
 - [ ] Implement orbit/inside behavior in `getPointFromFixedPoint()`
 - [ ] Set `'inside'` when creating arrow from inside a shape (Alt key)
@@ -88,6 +94,7 @@ pie title Arrow Feature Coverage
 **Why:** Core math for converting point arrays into cubic Bezier curves.
 
 **Files:**
+
 - New: `app/shared/curve.ts`
 
 **Reference:** `arrow-tech-spec.md` Section 5 — Catmull-Rom Cubic Approximation
@@ -101,6 +108,7 @@ pie title Arrow Feature Coverage
 ```
 
 **Tasks:**
+
 - [ ] Implement `curveCatmullRomToBezier(points, tension)` — returns `CubicBezier[]`
 - [ ] Implement `bezierPoint(curve, t)` — evaluate point at parameter t
 - [ ] Implement `bezierClosestPoint(curve, point)` — ternary search for nearest point
@@ -113,9 +121,11 @@ pie title Arrow Feature Coverage
 **Why:** RoughJS `generator.curve()` instead of `generator.linearPath()` for curved arrows.
 
 **Files:**
+
 - `app/features/rendering/shapeGenerator.ts` — branch on `roundness`
 
 **Tasks:**
+
 - [ ] Check `element.roundness` in `generateShape()`
 - [ ] Use `generator.curve(points)` when `roundness !== null`
 - [ ] Use `generator.linearPath(points)` when `roundness === null` (existing)
@@ -126,12 +136,14 @@ pie title Arrow Feature Coverage
 **Why:** Current hit test uses distance-to-line-segment. Curved arrows need distance-to-Bezier.
 
 **Files:**
+
 - `app/features/selection/hitTest.ts` — add `hitTestCurvedArrow()`
 - `app/shared/curve.ts` — `distanceToBezier()` from 2.1
 
 **Reference:** `arrow-tech-spec.md` Section 10 — Ternary Search
 
 **Tasks:**
+
 - [ ] Add `hitTestCurvedArrow()` that decomposes arrow into Bezier segments
 - [ ] Use `bezierClosestPoint()` for each segment, return min distance
 - [ ] Branch in `hitTestArrow()`: if `roundness !== null` → curved path, else → line segments
@@ -142,9 +154,11 @@ pie title Arrow Feature Coverage
 **Why:** Linear editor midpoints should be on the curve, not the straight line between points.
 
 **Files:**
+
 - `app/features/linear-editor/pointHandles.ts` — update `getMidpointPositions()`
 
 **Tasks:**
+
 - [ ] When element has `roundness`, compute midpoint at 50% curve length instead of linear interpolation
 - [ ] Use `bezierPoint(curve, 0.5)` for each segment
 
@@ -159,11 +173,13 @@ pie title Arrow Feature Coverage
 **Why:** Current code supports only `arrow` (two lines) and `triangle` (filled polygon). Need bar, circle, diamond, and outline variants.
 
 **Files:**
+
 - `app/features/rendering/arrowhead.ts` — expand `drawArrowhead()`
 
 **Reference:** `arrow-tech-spec.md` Section 6 — Arrowhead Geometry
 
 **Tasks:**
+
 - [ ] Add `getArrowheadSize(type)` — returns size in px per type (see constant table)
 - [ ] Add `getArrowheadAngle(type)` — returns angle in degrees per type
 - [ ] Implement `bar` arrowhead: perpendicular line, 15px, 90deg
@@ -180,11 +196,12 @@ pie title Arrow Feature Coverage
 **Reference:** `arrow-tech-spec.md` Section 6 — Size Scaling
 
 ```typescript
-lengthMultiplier = isDiamond ? 0.25 : 0.5
-actualSize = Math.min(arrowheadSize, lastSegmentLength * lengthMultiplier)
+lengthMultiplier = isDiamond ? 0.25 : 0.5;
+actualSize = Math.min(arrowheadSize, lastSegmentLength * lengthMultiplier);
 ```
 
 **Tasks:**
+
 - [ ] Compute last segment length in `drawArrowhead()`
 - [ ] Scale arrowhead size down when segment is too short
 - [ ] Ensure arrowhead never exceeds segment length
@@ -196,6 +213,7 @@ actualSize = Math.min(arrowheadSize, lastSegmentLength * lengthMultiplier)
 **Reference:** `arrow-tech-spec.md` Section 6 — Orientation Calculation
 
 **Tasks:**
+
 - [ ] For curved arrows, evaluate Bezier at t=0.3 near the endpoint
 - [ ] Use direction vector from t=0.3 point to endpoint for arrowhead angle
 - [ ] For straight arrows, keep existing angle calculation (endpoint-to-previous-point)
@@ -209,6 +227,7 @@ actualSize = Math.min(arrowheadSize, lastSegmentLength * lengthMultiplier)
 ### 4.1 RoughJS stroke style options `TODO`
 
 **Files:**
+
 - `app/features/rendering/shapeGenerator.ts` — pass `strokeLineDash` to RoughJS
 
 **Reference:** `arrow-tech-spec.md` Section 5 — RoughJS Options
@@ -225,6 +244,7 @@ strokeWidth: strokeStyle === 'solid' ? sw : sw + 0.5
 ```
 
 **Tasks:**
+
 - [ ] Read `element.strokeStyle` in shape generator
 - [ ] Map to `strokeLineDash` array for RoughJS
 - [ ] Set `disableMultiStroke: true` for non-solid styles
@@ -236,9 +256,11 @@ strokeWidth: strokeStyle === 'solid' ? sw : sw + 0.5
 **Why:** Arrowhead strokes should match the arrow's stroke style.
 
 **Files:**
+
 - `app/features/rendering/arrowhead.ts` — apply dash pattern to arrowhead strokes
 
 **Tasks:**
+
 - [ ] Pass `strokeStyle` into `drawArrowhead()`
 - [ ] Apply `ctx.setLineDash()` for bar and outline arrowheads
 - [ ] Filled arrowheads (triangle, circle, diamond) ignore dash pattern
@@ -254,12 +276,14 @@ strokeWidth: strokeStyle === 'solid' ? sw : sw + 0.5
 **Why:** `orbit` mode stops the arrow at the element edge (with gap). `inside` mode extends to the fixedPoint location within the shape.
 
 **Files:**
+
 - `app/features/binding/proximity.ts` — update `getPointFromFixedPoint()`
 - `app/features/binding/updateBoundPoints.ts` — respect mode in `updateArrowEndpoint()`
 
 **Reference:** `arrow-tech-spec.md` Section 4 — Binding Modes by Context
 
 **Tasks:**
+
 - [ ] `orbit` mode: compute intersection of line (adjacent-point → fixedPoint) with shape edge, offset by binding gap
 - [ ] `inside` mode: arrow endpoint goes directly to the fixedPoint global position (no edge snap)
 - [ ] Apply mode context rules:
@@ -273,6 +297,7 @@ strokeWidth: strokeStyle === 'solid' ? sw : sw + 0.5
 **Why:** Binding detection distance should scale with zoom to maintain consistent feel.
 
 **Files:**
+
 - `app/features/binding/proximity.ts` — update threshold in `getHoveredElementForBinding()`
 - `app/features/binding/constants.ts` — add zoom formula
 
@@ -287,6 +312,7 @@ maxBindingDistance(zoom) {
 ```
 
 **Tasks:**
+
 - [ ] Replace fixed `BASE_BINDING_DISTANCE = 15` with zoom-adjusted formula
 - [ ] Ensure binding feels consistent at all zoom levels
 - [ ] Unit test: binding distance at zoom 0.5, 1.0, 2.0
@@ -296,11 +322,13 @@ maxBindingDistance(zoom) {
 **Why:** Current `getPointFromFixedPoint()` uses a simplified projection. The spec describes a ray-intersection approach for more accurate edge snapping.
 
 **Files:**
+
 - `app/features/binding/proximity.ts` — improve edge calculation
 
 **Reference:** `arrow-tech-spec.md` Section 4 — Intersection Calculation
 
 **Tasks:**
+
 - [ ] Cast a ray from the adjacent arrow point through the fixedPoint
 - [ ] Find intersection with the shape boundary (rectangle edges, ellipse curve, diamond diagonals)
 - [ ] Offset intersection point outward by binding gap
@@ -311,13 +339,14 @@ maxBindingDistance(zoom) {
 **Why:** When two bound elements are very close (<40px apart), switch to `inside` mode to avoid visual glitches.
 
 **Tasks:**
+
 - [ ] In `updateBoundArrowEndpoints()`, check distance between bound shapes
 - [ ] If distance < 40px, temporarily override both endpoints to `inside` mode
 - [ ] Add constant `SHORT_ARROW_THRESHOLD = 40`
 
 ---
 
-## Phase 6 — Elbow Arrows (A* Routing)
+## Phase 6 — Elbow Arrows (A\* Routing)
 
 > Orthogonal arrows that route around obstacles with 90deg corners.
 
@@ -326,19 +355,21 @@ maxBindingDistance(zoom) {
 **Why:** Elbow arrows need to know which edge of a shape to exit/enter from.
 
 **Files:**
+
 - New: `app/features/binding/heading.ts`
 
 **Reference:** `arrow-tech-spec.md` Section 7 — Heading System
 
 ```typescript
-type Heading = readonly [number, number]
-const HEADING_RIGHT: Heading = [1, 0]
-const HEADING_DOWN:  Heading = [0, 1]
-const HEADING_LEFT:  Heading = [-1, 0]
-const HEADING_UP:    Heading = [0, -1]
+type Heading = readonly [number, number];
+const HEADING_RIGHT: Heading = [1, 0];
+const HEADING_DOWN: Heading = [0, 1];
+const HEADING_LEFT: Heading = [-1, 0];
+const HEADING_UP: Heading = [0, -1];
 ```
 
 **Tasks:**
+
 - [ ] Implement `headingForPointFromElement(point, element)` — returns exit direction
 - [ ] Implement `vectorToHeading(vector)` — cardinal direction snapping
 - [ ] Implement `flipHeading()`, `compareHeading()`, `headingIsHorizontal()`
@@ -347,24 +378,28 @@ const HEADING_UP:    Heading = [0, -1]
 ### 6.2 Non-uniform grid `TODO`
 
 **Files:**
+
 - New: `app/features/elbow/grid.ts`
 
 **Reference:** `arrow-tech-spec.md` Section 7 — Grid System
 
 **Tasks:**
+
 - [ ] Build grid from obstacle AABB edges
 - [ ] Add start/end constraint points based on heading
 - [ ] Variable-resolution grid that snaps to obstacle boundaries
 
-### 6.3 A* pathfinding `TODO`
+### 6.3 A\* pathfinding `TODO`
 
 **Files:**
+
 - New: `app/features/elbow/astar.ts`
 
-**Reference:** `arrow-tech-spec.md` Section 7 — A* Cost Function
+**Reference:** `arrow-tech-spec.md` Section 7 — A\* Cost Function
 
 **Tasks:**
-- [ ] Implement A* with Manhattan distance heuristic
+
+- [ ] Implement A\* with Manhattan distance heuristic
 - [ ] Add heavy bend penalty (bendMultiplier^3) for direction changes → straighter paths
 - [ ] Obstacle collision: midpoint test against dynamic AABBs
 - [ ] No backtracking (reverse direction forbidden)
@@ -373,16 +408,18 @@ const HEADING_UP:    Heading = [0, -1]
 ### 6.4 Elbow arrow shape generation `TODO`
 
 **Files:**
+
 - `app/features/rendering/shapeGenerator.ts` — generate SVG path with quadratic corner curves
 
 **Reference:** `arrow-tech-spec.md` Section 5 — Elbow Arrow Shape
 
 ```typescript
-cornerRadius = Math.min(16, distToNext / 2, distToPrev / 2)
+cornerRadius = Math.min(16, distToNext / 2, distToPrev / 2);
 // SVG path: L <before_corner> Q <corner_point> <after_corner>
 ```
 
 **Tasks:**
+
 - [ ] Convert elbow points to SVG path string with Q (quadratic) curves at corners
 - [ ] Use `generator.path(svgPath)` for RoughJS rendering
 - [ ] Add `ELBOW_CORNER_RADIUS = 16` constant
@@ -392,6 +429,7 @@ cornerRadius = Math.min(16, distToNext / 2, distToPrev / 2)
 **Reference:** `arrow-tech-spec.md` Section 7 — Validation
 
 **Tasks:**
+
 - [ ] `validateElbowPoints()` — every segment must be purely horizontal or vertical
 - [ ] `removeShortSegments()` — filter segments shorter than 1px
 - [ ] `getCornerPoints()` — keep only points where direction changes
@@ -403,6 +441,7 @@ cornerRadius = Math.min(16, distToNext / 2, distToPrev / 2)
 **Reference:** `arrow-tech-spec.md` Section 7 — Fixed Segments
 
 **Tasks:**
+
 - [ ] Add `fixedSegments` to `ExcalidrawElbowArrowElement` type
 - [ ] First and last segments cannot be fixed
 - [ ] Each fixed segment must be purely H or V
@@ -420,11 +459,13 @@ cornerRadius = Math.min(16, distToNext / 2, distToPrev / 2)
 **Why:** Single drag creates a 2-point arrow. Clicks add points for multi-segment arrows. Need `LINE_CONFIRM_THRESHOLD` to distinguish.
 
 **Files:**
+
 - `app/features/tools/useDrawingInteraction.ts` — add distance check
 
 **Reference:** `arrow-tech-spec.md` Section 9 — State Machine
 
 **Tasks:**
+
 - [ ] Add `LINE_CONFIRM_THRESHOLD = 8` constant
 - [ ] On pointerDown during multi-point mode: if distance to last point < 8px → finalize, else → add point
 - [ ] On pointerDown on binding target → finalize with binding
@@ -437,17 +478,19 @@ cornerRadius = Math.min(16, distToNext / 2, distToPrev / 2)
 **Reference:** `arrow-tech-spec.md` Section 9 — Keyboard Modifiers
 
 **Tasks:**
+
 - [ ] Track Alt key state in `useDrawingInteraction`
 - [ ] When Alt held at creation start and pointer is inside a shape → set `startBinding.mode = 'inside'`
 - [ ] Arrow extends from the interior fixedPoint, not the edge
 
 ### 7.3 Elbow arrow auto-finalize `TODO`
 
-**Why:** Elbow arrows always have exactly 2 user-set points (start + end). Middle points are auto-computed by A*.
+**Why:** Elbow arrows always have exactly 2 user-set points (start + end). Middle points are auto-computed by A\*.
 
 **Tasks:**
+
 - [ ] When tool is `arrow` with elbow subtype, finalize on first pointerUp (no multi-point)
-- [ ] Run A* routing after finalization to compute middle points
+- [ ] Run A\* routing after finalization to compute middle points
 - [ ] Re-route on any subsequent drag of the elbow arrow
 
 ---
@@ -461,14 +504,16 @@ cornerRadius = Math.min(16, distToNext / 2, distToPrev / 2)
 **Why:** Users need to choose between sharp, curved, and elbow arrows.
 
 **Files:**
+
 - `app/features/tools/components/DrawingToolbar.vue` — add subtype options
 - `app/features/tools/types.ts` — add `ArrowSubtype`
 
 ```typescript
-type ArrowSubtype = 'sharp' | 'curved' | 'elbow'
+type ArrowSubtype = "sharp" | "curved" | "elbow";
 ```
 
 **Tasks:**
+
 - [ ] Add arrow subtype state to tool store
 - [ ] Render subtype options when arrow tool is active
 - [ ] Set `roundness` and `elbowed` based on selected subtype
@@ -479,6 +524,7 @@ type ArrowSubtype = 'sharp' | 'curved' | 'elbow'
 **Why:** Users need to choose start/end arrowhead types.
 
 **Tasks:**
+
 - [ ] Add arrowhead picker dropdown to toolbar (when arrow tool active or arrow selected)
 - [ ] Separate pickers for start and end arrowheads
 - [ ] Show visual preview of each arrowhead type
@@ -489,6 +535,7 @@ type ArrowSubtype = 'sharp' | 'curved' | 'elbow'
 **Why:** Users need to toggle between solid, dashed, and dotted.
 
 **Tasks:**
+
 - [ ] Add stroke style toggle to toolbar (applies to all element types)
 - [ ] Visual preview of each style
 - [ ] Apply to `strokeStyle` property
@@ -510,6 +557,7 @@ type ArrowSubtype = 'sharp' | 'curved' | 'elbow'
 **Reference:** `arrow-tech-spec.md` Section 5 — Shape Caching
 
 **Tasks:**
+
 - [ ] Include zoom level in cache key (or zoom bucket)
 - [ ] Implement `adjustRoughness(roughness, size)` — reduce roughness for small elements
 - [ ] `preserveVertices: roughness < 2` in RoughJS options
@@ -525,6 +573,7 @@ type ArrowSubtype = 'sharp' | 'curved' | 'elbow'
 **Why:** Excalidraw allows text labels on arrows that auto-position at the midpoint.
 
 **Tasks:**
+
 - [ ] Add `boundElements: readonly BoundElement[] | null` to arrow type (already partly there)
 - [ ] Implement text element that can be bound to an arrow
 - [ ] Position text at arrow midpoint (50% arc length for curves)
@@ -563,33 +612,33 @@ flowchart TD
 
 ### Recommended Priority
 
-| Priority | Phase | Effort | Impact |
-|----------|-------|--------|--------|
-| **P0** | Phase 1 — Data Model | Low | Unblocks everything |
-| **P1** | Phase 4 — Stroke Styles | Low | Quick win, applies to all elements |
-| **P1** | Phase 3 — Arrowheads | Medium | Visible improvement, self-contained |
-| **P2** | Phase 5 — Binding Modes | Medium | Better arrow-shape connections |
-| **P2** | Phase 2 — Curved Arrows | High | Major feature, needs new math |
-| **P3** | Phase 8 — Toolbar UI | Medium | Expose new features to users |
-| **P3** | Phase 7 — Creation Flow | Medium | UX polish |
-| **P4** | Phase 6 — Elbow Arrows | Very High | Complex A* system, can defer |
-| **P4** | Phase 9 — Cache | Low | Performance optimization |
-| **P5** | Phase 10 — Text Labels | High | Requires text element system |
+| Priority | Phase                   | Effort    | Impact                              |
+| -------- | ----------------------- | --------- | ----------------------------------- |
+| **P0**   | Phase 1 — Data Model    | Low       | Unblocks everything                 |
+| **P1**   | Phase 4 — Stroke Styles | Low       | Quick win, applies to all elements  |
+| **P1**   | Phase 3 — Arrowheads    | Medium    | Visible improvement, self-contained |
+| **P2**   | Phase 5 — Binding Modes | Medium    | Better arrow-shape connections      |
+| **P2**   | Phase 2 — Curved Arrows | High      | Major feature, needs new math       |
+| **P3**   | Phase 8 — Toolbar UI    | Medium    | Expose new features to users        |
+| **P3**   | Phase 7 — Creation Flow | Medium    | UX polish                           |
+| **P4**   | Phase 6 — Elbow Arrows  | Very High | Complex A\* system, can defer       |
+| **P4**   | Phase 9 — Cache         | Low       | Performance optimization            |
+| **P5**   | Phase 10 — Text Labels  | High      | Requires text element system        |
 
 ### Estimated File Changes per Phase
 
-| Phase | New Files | Modified Files |
-|-------|-----------|----------------|
-| 1. Data Model | 0 | 4 |
-| 2. Curved Arrows | 1 (`shared/curve.ts`) | 3 |
-| 3. Arrowheads | 0 | 2 |
-| 4. Stroke Styles | 0 | 2 |
-| 5. Binding | 0 | 3 |
-| 6. Elbow Arrows | 3 (`elbow/` feature) | 3 |
-| 7. Creation Flow | 0 | 2 |
-| 8. Toolbar UI | 0 | 3 |
-| 9. Cache | 0 | 1 |
-| 10. Text Labels | 2+ | 4+ |
+| Phase            | New Files             | Modified Files |
+| ---------------- | --------------------- | -------------- |
+| 1. Data Model    | 0                     | 4              |
+| 2. Curved Arrows | 1 (`shared/curve.ts`) | 3              |
+| 3. Arrowheads    | 0                     | 2              |
+| 4. Stroke Styles | 0                     | 2              |
+| 5. Binding       | 0                     | 3              |
+| 6. Elbow Arrows  | 3 (`elbow/` feature)  | 3              |
+| 7. Creation Flow | 0                     | 2              |
+| 8. Toolbar UI    | 0                     | 3              |
+| 9. Cache         | 0                     | 1              |
+| 10. Text Labels  | 2+                    | 4+             |
 
 ---
 
@@ -597,34 +646,34 @@ flowchart TD
 
 These features are fully implemented and match the spec:
 
-| Feature | Status | Key Files |
-|---------|--------|-----------|
-| Arrow data model (basic) | `DONE` | `elements/types.ts` (re-export from `@excalidraw/element/types`), `createElement.ts` |
-| Line element type | `DONE` | `elements/types.ts`, `createElement.ts` (type `'line'`, `endArrowhead: null`) |
-| Single-segment creation (drag) | `DONE` | `tools/useDrawingInteraction.ts` |
-| Multi-point creation (click-click) | `DONE` | `linear-editor/useMultiPointCreation.ts` |
-| Linear editor (point manipulation) | `DONE` | `linear-editor/useLinearEditor.ts` |
-| Point handles + midpoints | `DONE` | `linear-editor/pointHandles.ts` |
-| Rubber band preview | `DONE` | `linear-editor/renderLinearEditor.ts` |
-| Binding detection | `DONE` | `binding/proximity.ts` |
-| Bind/unbind lifecycle | `DONE` | `binding/bindUnbind.ts` |
-| Binding maintenance on move | `DONE` | `binding/updateBoundPoints.ts` |
-| Binding highlight rendering | `DONE` | `binding/renderBindingHighlight.ts` |
-| Bound text for shapes | `DONE` | `binding/boundText.ts`, `tools/useTextInteraction.ts` |
-| Hit testing (straight segments) | `DONE` | `selection/hitTest.ts` |
-| Selection border + handles | `DONE` | `rendering/renderInteractive.ts` |
-| RoughJS shape generation (straight) | `DONE` | `rendering/shapeGenerator.ts` |
-| Arrow arrowheads (arrow + triangle) | `DONE` | `rendering/arrowhead.ts` |
-| Shift angle snapping | `DONE` | `tools/useDrawingInteraction.ts` |
-| Keyboard shortcuts (A, 5) | `DONE` | `tools/useTool.ts` |
-| Point normalization (first=[0,0]) | `DONE` | `linear-editor/pointHandles.ts` |
-| Version-based shape cache | `DONE` | `rendering/shapeGenerator.ts` |
-| Grouping support | `DONE` | `groups/groupUtils.ts`, `groups/composables/useGroups.ts` |
-| Data model: `roundness` | `DONE` | Official `@excalidraw/element/types`, `createElement.ts` defaults `null` |
-| Data model: `elbowed` | `DONE` | Official `@excalidraw/element/types`, `createElement.ts` defaults `false` |
-| Data model: `strokeStyle` | `DONE` | Official `@excalidraw/element/types`, `createElement.ts` defaults `'solid'` |
-| Data model: `Arrowhead` (all 12 types) | `DONE` | Official `@excalidraw/element/types` (rendering only supports 2) |
-| Binding in linear editor | `DONE` | `linear-editor/useLinearEditor.ts` (endpoint drag rebinds, arrows only) |
+| Feature                                | Status | Key Files                                                                            |
+| -------------------------------------- | ------ | ------------------------------------------------------------------------------------ |
+| Arrow data model (basic)               | `DONE` | `elements/types.ts` (re-export from `@excalidraw/element/types`), `createElement.ts` |
+| Line element type                      | `DONE` | `elements/types.ts`, `createElement.ts` (type `'line'`, `endArrowhead: null`)        |
+| Single-segment creation (drag)         | `DONE` | `tools/useDrawingInteraction.ts`                                                     |
+| Multi-point creation (click-click)     | `DONE` | `linear-editor/useMultiPointCreation.ts`                                             |
+| Linear editor (point manipulation)     | `DONE` | `linear-editor/useLinearEditor.ts`                                                   |
+| Point handles + midpoints              | `DONE` | `linear-editor/pointHandles.ts`                                                      |
+| Rubber band preview                    | `DONE` | `linear-editor/renderLinearEditor.ts`                                                |
+| Binding detection                      | `DONE` | `binding/proximity.ts`                                                               |
+| Bind/unbind lifecycle                  | `DONE` | `binding/bindUnbind.ts`                                                              |
+| Binding maintenance on move            | `DONE` | `binding/updateBoundPoints.ts`                                                       |
+| Binding highlight rendering            | `DONE` | `binding/renderBindingHighlight.ts`                                                  |
+| Bound text for shapes                  | `DONE` | `binding/boundText.ts`, `tools/useTextInteraction.ts`                                |
+| Hit testing (straight segments)        | `DONE` | `selection/hitTest.ts`                                                               |
+| Selection border + handles             | `DONE` | `rendering/renderInteractive.ts`                                                     |
+| RoughJS shape generation (straight)    | `DONE` | `rendering/shapeGenerator.ts`                                                        |
+| Arrow arrowheads (arrow + triangle)    | `DONE` | `rendering/arrowhead.ts`                                                             |
+| Shift angle snapping                   | `DONE` | `tools/useDrawingInteraction.ts`                                                     |
+| Keyboard shortcuts (A, 5)              | `DONE` | `tools/useTool.ts`                                                                   |
+| Point normalization (first=[0,0])      | `DONE` | `linear-editor/pointHandles.ts`                                                      |
+| Version-based shape cache              | `DONE` | `rendering/shapeGenerator.ts`                                                        |
+| Grouping support                       | `DONE` | `groups/groupUtils.ts`, `groups/composables/useGroups.ts`                            |
+| Data model: `roundness`                | `DONE` | Official `@excalidraw/element/types`, `createElement.ts` defaults `null`             |
+| Data model: `elbowed`                  | `DONE` | Official `@excalidraw/element/types`, `createElement.ts` defaults `false`            |
+| Data model: `strokeStyle`              | `DONE` | Official `@excalidraw/element/types`, `createElement.ts` defaults `'solid'`          |
+| Data model: `Arrowhead` (all 12 types) | `DONE` | Official `@excalidraw/element/types` (rendering only supports 2)                     |
+| Binding in linear editor               | `DONE` | `linear-editor/useLinearEditor.ts` (endpoint drag rebinds, arrows only)              |
 
 ---
 
@@ -633,13 +682,15 @@ These features are fully implemented and match the spec:
 ### Testing Strategy
 
 Each phase should include:
-- **Unit tests** for new pure functions (curve math, grid, A*, arrowhead geometry)
+
+- **Unit tests** for new pure functions (curve math, grid, A\*, arrowhead geometry)
 - **Unit tests** for composable behavior changes (binding modes, creation flow)
 - **Browser tests** for full interaction flows (create curved arrow, bind with mode, elbow routing)
 
 ### Excalidraw Source Reference
 
 Always browse the original Excalidraw source before implementing. Key files:
+
 - `excalidraw/packages/element/src/shape.ts` — shape generation
 - `excalidraw/packages/element/src/binding.ts` — binding system
 - `excalidraw/packages/element/src/elbowArrow.ts` — elbow routing

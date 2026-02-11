@@ -1,10 +1,10 @@
-export { Pointer } from './Pointer'
-export type { ModifierKeys } from './Pointer'
-export { Keyboard } from './Keyboard'
-export { UI } from './UI'
-export { CanvasGrid } from './CanvasGrid'
-export type { Cell } from './CanvasGrid'
-export { API } from './api'
-export { checkpoint } from './checkpoint'
-export { waitForCanvasReady, waitForPaint } from './waiters'
-export { CanvasPage } from './pageObjects'
+export { Pointer } from "./Pointer";
+export type { ModifierKeys } from "./Pointer";
+export { Keyboard } from "./Keyboard";
+export { UI } from "./UI";
+export { CanvasGrid } from "./CanvasGrid";
+export type { Cell } from "./CanvasGrid";
+export { API } from "./api";
+export { checkpoint } from "./checkpoint";
+export { waitForCanvasReady, waitForPaint } from "./waiters";
+export { CanvasPage } from "./pageObjects";

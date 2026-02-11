@@ -1,19 +1,14 @@
-import type { BrowserCommand } from 'vitest/node'
+import type { BrowserCommand } from "vitest/node";
 
 interface ModifierKeys {
-  shiftKey?: boolean
-  metaKey?: boolean
-  altKey?: boolean
+  shiftKey?: boolean;
+  metaKey?: boolean;
+  altKey?: boolean;
 }
 
-declare module 'vitest/browser' {
+declare module "vitest/browser" {
   interface BrowserCommands {
-    canvasClick: (
-      selector: string,
-      x: number,
-      y: number,
-      options?: ModifierKeys,
-    ) => Promise<void>
+    canvasClick: (selector: string, x: number, y: number, options?: ModifierKeys) => Promise<void>;
   }
 }
 
@@ -24,41 +19,40 @@ declare module 'vitest/browser' {
  * Coordinates are relative to the element (not the viewport).
  * Dispatches pointerdown followed by pointerup.
  */
-export const canvasClick: BrowserCommand<[
-  selector: string,
-  x: number,
-  y: number,
-  options?: ModifierKeys,
-]> = async (ctx, selector, x, y, options) => {
+export const canvasClick: BrowserCommand<
+  [selector: string, x: number, y: number, options?: ModifierKeys]
+> = async (ctx, selector, x, y, options) => {
   // @ts-expect-error -- vitest browser command context exposes frame() at runtime
-  const frame = await ctx.frame()
+  const frame = await ctx.frame();
 
   await frame.evaluate(
     ({ sel, px, py, opts }: { sel: string; px: number; py: number; opts: ModifierKeys }) => {
-      const el = document.querySelector(sel)
-      if (!el) throw new Error(`Element "${sel}" not found`)
-      const rect = el.getBoundingClientRect()
+      const el = document.querySelector(sel);
+      if (!el) throw new Error(`Element "${sel}" not found`);
+      const rect = el.getBoundingClientRect();
 
       function fire(type: string, buttons: number): void {
-        el!.dispatchEvent(new PointerEvent(type, {
-          clientX: rect.left + px,
-          clientY: rect.top + py,
-          button: 0,
-          buttons,
-          bubbles: true,
-          cancelable: true,
-          pointerId: 1,
-          pointerType: 'mouse',
-          isPrimary: true,
-          shiftKey: opts.shiftKey ?? false,
-          metaKey: opts.metaKey ?? false,
-          altKey: opts.altKey ?? false,
-        }))
+        el!.dispatchEvent(
+          new PointerEvent(type, {
+            clientX: rect.left + px,
+            clientY: rect.top + py,
+            button: 0,
+            buttons,
+            bubbles: true,
+            cancelable: true,
+            pointerId: 1,
+            pointerType: "mouse",
+            isPrimary: true,
+            shiftKey: opts.shiftKey ?? false,
+            metaKey: opts.metaKey ?? false,
+            altKey: opts.altKey ?? false,
+          }),
+        );
       }
 
-      fire('pointerdown', 1)
-      fire('pointerup', 0)
+      fire("pointerdown", 1);
+      fire("pointerup", 0);
     },
     { sel: selector, px: x, py: y, opts: options ?? {} },
-  )
-}
+  );
+};

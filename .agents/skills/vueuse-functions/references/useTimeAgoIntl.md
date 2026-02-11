@@ -9,9 +9,9 @@ Reactive time ago with i18n supported. Automatically update the time ago string 
 ## Usage
 
 ```js
-import { useTimeAgoIntl } from '@vueuse/core'
+import { useTimeAgoIntl } from "@vueuse/core";
 
-const timeAgoIntl = useTimeAgoIntl(new Date(2021, 0, 1))
+const timeAgoIntl = useTimeAgoIntl(new Date(2021, 0, 1));
 ```
 
 ## Non-Reactivity Usage
@@ -19,15 +19,15 @@ const timeAgoIntl = useTimeAgoIntl(new Date(2021, 0, 1))
 In case you don't need the reactivity, you can use the `formatTimeAgo` function to get the formatted string instead of a Ref.
 
 ```js
-import { formatTimeAgoIntl } from '@vueuse/core'
+import { formatTimeAgoIntl } from "@vueuse/core";
 
-const timeAgoIntl = formatTimeAgoIntl(new Date(2021, 0, 1)) // string
+const timeAgoIntl = formatTimeAgoIntl(new Date(2021, 0, 1)); // string
 ```
 
 ## Type Declarations
 
 ```ts
-type Locale = Intl.UnicodeBCP47LocaleIdentifier | Intl.Locale
+type Locale = Intl.UnicodeBCP47LocaleIdentifier | Intl.Locale;
 export interface FormatTimeAgoIntlOptions {
   /**
    * The locale to format with
@@ -35,11 +35,11 @@ export interface FormatTimeAgoIntlOptions {
    * @default undefined
    * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/RelativeTimeFormat/RelativeTimeFormat#locales
    */
-  locale?: Locale
+  locale?: Locale;
   /**
    * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/RelativeTimeFormat/RelativeTimeFormat#options
    */
-  relativeTimeFormatOptions?: Intl.RelativeTimeFormatOptions
+  relativeTimeFormatOptions?: Intl.RelativeTimeFormatOptions;
   /**
    * Whether to insert spaces between parts.
    *
@@ -47,7 +47,7 @@ export interface FormatTimeAgoIntlOptions {
    *
    * @default true
    */
-  insertSpace?: boolean
+  insertSpace?: boolean;
   /**
    * Custom function to join the parts returned by `Intl.RelativeTimeFormat.formatToParts`.
    *
@@ -56,11 +56,11 @@ export interface FormatTimeAgoIntlOptions {
   joinParts?: (
     parts: Intl.RelativeTimeFormatPart[],
     locale?: Intl.UnicodeBCP47LocaleIdentifier | Intl.Locale,
-  ) => string
+  ) => string;
   /**
    * Custom units
    */
-  units?: TimeAgoUnit[]
+  units?: TimeAgoUnit[];
 }
 export interface UseTimeAgoIntlOptions<Controls extends boolean>
   extends FormatTimeAgoIntlOptions, ConfigurableScheduler {
@@ -69,24 +69,24 @@ export interface UseTimeAgoIntlOptions<Controls extends boolean>
    *
    * @default false
    */
-  controls?: Controls
+  controls?: Controls;
   /**
    * Update interval in milliseconds, set 0 to disable auto update
    *
    * @deprecated Please use `scheduler` option instead
    * @default 30_000
    */
-  updateInterval?: number
+  updateInterval?: number;
 }
 type UseTimeAgoReturn<Controls extends boolean = false> = Controls extends true
   ? {
-      timeAgoIntl: ComputedRef<string>
-      parts: ComputedRef<Intl.RelativeTimeFormatPart[]>
+      timeAgoIntl: ComputedRef<string>;
+      parts: ComputedRef<Intl.RelativeTimeFormatPart[]>;
     } & Pausable
-  : ComputedRef<string>
+  : ComputedRef<string>;
 export interface TimeAgoUnit {
-  name: Intl.RelativeTimeFormatUnit
-  ms: number
+  name: Intl.RelativeTimeFormatUnit;
+  ms: number;
 }
 /**
  * A reactive wrapper for `Intl.RelativeTimeFormat`.
@@ -94,11 +94,11 @@ export interface TimeAgoUnit {
 export declare function useTimeAgoIntl(
   time: MaybeRefOrGetter<Date | number | string>,
   options?: UseTimeAgoIntlOptions<false>,
-): UseTimeAgoReturn<false>
+): UseTimeAgoReturn<false>;
 export declare function useTimeAgoIntl(
   time: MaybeRefOrGetter<Date | number | string>,
   options: UseTimeAgoIntlOptions<true>,
-): UseTimeAgoReturn<true>
+): UseTimeAgoReturn<true>;
 /**
  * Non-reactive version of useTimeAgoIntl
  */
@@ -106,12 +106,12 @@ export declare function formatTimeAgoIntl(
   from: Date,
   options?: FormatTimeAgoIntlOptions,
   now?: Date | number,
-): string
+): string;
 /**
  * Format parts into a string
  */
 export declare function formatTimeAgoIntlParts(
   parts: Intl.RelativeTimeFormatPart[],
   options?: FormatTimeAgoIntlOptions,
-): string
+): string;
 ```

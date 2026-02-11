@@ -1,42 +1,42 @@
-import type { ExcalidrawElement } from '~/features/elements/types'
-import type { Cell } from '../CanvasGrid'
-import { API } from '../api'
-import { assertSelectedElements } from '../../matchers/assertSelectedElements'
-import type { CanvasPO } from './CanvasPO'
+import type { ExcalidrawElement } from "~/features/elements/types";
+import type { Cell } from "../CanvasGrid";
+import { API } from "../api";
+import { assertSelectedElements } from "../../matchers/assertSelectedElements";
+import type { CanvasPO } from "./CanvasPO";
 
 export class SelectionPO {
   constructor(private canvas: CanvasPO) {}
 
   async clickElement(el: ExcalidrawElement): Promise<void> {
-    await this.canvas.pointer.clickOn(el)
+    await this.canvas.pointer.clickOn(el);
   }
 
   async shiftClickElement(el: ExcalidrawElement): Promise<void> {
-    await this.canvas.pointer.clickOn(el, { shiftKey: true })
+    await this.canvas.pointer.clickOn(el, { shiftKey: true });
   }
 
   async boxSelect(start: Cell, end: Cell): Promise<void> {
-    await this.canvas.grid.drag(start, end)
+    await this.canvas.grid.drag(start, end);
   }
 
   async selectElements(...els: ExcalidrawElement[]): Promise<void> {
-    await this.canvas.pointer.select(els)
+    await this.canvas.pointer.select(els);
   }
 
   /** Programmatically set selected elements (no pointer interaction). */
   setSelected(...els: ExcalidrawElement[]): void {
-    API.setSelectedElements(els)
+    API.setSelectedElements(els);
   }
 
   clear(): void {
-    API.clearSelection()
+    API.clearSelection();
   }
 
   expectSelected(...ids: string[]): void {
-    assertSelectedElements(...ids)
+    assertSelectedElements(...ids);
   }
 
   expectNoneSelected(): void {
-    assertSelectedElements()
+    assertSelectedElements();
   }
 }

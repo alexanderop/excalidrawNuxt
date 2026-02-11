@@ -1,7 +1,7 @@
-import { generateId, randomInteger, randomVersionNonce } from '~/shared/random'
-import { pointFrom } from '~/shared/math'
-import type { LocalPoint, Radians } from '~/shared/math'
-import type { SupportedElement } from './types'
+import { generateId, randomInteger, randomVersionNonce } from "~/shared/random";
+import { pointFrom } from "~/shared/math";
+import type { LocalPoint, Radians } from "~/shared/math";
+import type { SupportedElement } from "./types";
 import {
   DEFAULT_BG_COLOR,
   DEFAULT_FILL_STYLE,
@@ -13,9 +13,9 @@ import {
   DEFAULT_STROKE_COLOR,
   DEFAULT_STROKE_WIDTH,
   DEFAULT_TEXT_ALIGN,
-} from './constants'
+} from "./constants";
 
-type SupportedElementType = SupportedElement['type']
+type SupportedElementType = SupportedElement["type"];
 
 export function createElement(
   type: SupportedElementType,
@@ -34,7 +34,7 @@ export function createElement(
     backgroundColor: DEFAULT_BG_COLOR,
     fillStyle: DEFAULT_FILL_STYLE,
     strokeWidth: DEFAULT_STROKE_WIDTH,
-    strokeStyle: 'solid' as const,
+    strokeStyle: "solid" as const,
     roughness: DEFAULT_ROUGHNESS,
     opacity: DEFAULT_OPACITY,
     seed: randomInteger(),
@@ -51,43 +51,43 @@ export function createElement(
     roundness: null,
     customData: undefined,
     ...overrides,
-  }
+  };
 
-  if (type === 'text') {
+  if (type === "text") {
     return {
       ...base,
-      type: 'text',
-      text: '',
-      originalText: '',
+      type: "text",
+      text: "",
+      originalText: "",
       fontSize: DEFAULT_FONT_SIZE,
       fontFamily: DEFAULT_FONT_FAMILY,
       textAlign: DEFAULT_TEXT_ALIGN,
-      verticalAlign: 'top',
+      verticalAlign: "top",
       containerId: null,
-      lineHeight: DEFAULT_LINE_HEIGHT as number & { _brand: 'unitlessLineHeight' },
+      lineHeight: DEFAULT_LINE_HEIGHT as number & { _brand: "unitlessLineHeight" },
       autoResize: true,
       ...overrides,
-    } as SupportedElement
+    } as SupportedElement;
   }
 
-  if (type === 'arrow') {
+  if (type === "arrow") {
     return {
       ...base,
-      type: 'arrow',
+      type: "arrow",
       points: [pointFrom<LocalPoint>(0, 0)],
       lastCommittedPoint: null,
       startArrowhead: null,
-      endArrowhead: 'arrow',
+      endArrowhead: "arrow",
       startBinding: null,
       endBinding: null,
       elbowed: false,
-    } as SupportedElement
+    } as SupportedElement;
   }
 
-  if (type === 'line') {
+  if (type === "line") {
     return {
       ...base,
-      type: 'line',
+      type: "line",
       points: [pointFrom<LocalPoint>(0, 0)],
       lastCommittedPoint: null,
       startArrowhead: null,
@@ -95,24 +95,24 @@ export function createElement(
       startBinding: null,
       endBinding: null,
       polygon: false,
-    } as SupportedElement
+    } as SupportedElement;
   }
 
-  if (type === 'rectangle' || type === 'ellipse' || type === 'diamond') {
-    return { ...base, type } as SupportedElement
+  if (type === "rectangle" || type === "ellipse" || type === "diamond") {
+    return { ...base, type } as SupportedElement;
   }
 
-  if (type === 'image') {
+  if (type === "image") {
     return {
       ...base,
-      type: 'image',
+      type: "image",
       fileId: null,
-      status: 'pending',
+      status: "pending",
       scale: [1, 1],
       crop: null,
       ...overrides,
-    } as SupportedElement
+    } as SupportedElement;
   }
 
-  throw new Error(`Unhandled element type: ${String(type)}`)
+  throw new Error(`Unhandled element type: ${String(type)}`);
 }

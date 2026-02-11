@@ -1,22 +1,22 @@
-import { RoughGenerator } from 'roughjs/bin/generator'
-import type { Drawable, Options } from 'roughjs/bin/core'
-import type { ExcalidrawElement } from '~/features/elements/types'
-import type { Theme } from '~/features/theme/types'
-import { resolveColor } from '~/features/theme/colors'
-import { isCodeElement } from '~/features/code'
+import { RoughGenerator } from "roughjs/bin/generator";
+import type { Drawable, Options } from "roughjs/bin/core";
+import type { ExcalidrawElement } from "~/features/elements/types";
+import type { Theme } from "~/features/theme/types";
+import { resolveColor } from "~/features/theme/colors";
+import { isCodeElement } from "~/features/code";
 
-const generator = new RoughGenerator()
+const generator = new RoughGenerator();
 
 interface CacheEntry {
-  nonce: number
-  theme: Theme
-  drawable: Drawable
+  nonce: number;
+  theme: Theme;
+  drawable: Drawable;
 }
 
-const shapeCache = new Map<string, CacheEntry>()
+const shapeCache = new Map<string, CacheEntry>();
 
 export function clearShapeCache(): void {
-  shapeCache.clear()
+  shapeCache.clear();
 }
 
 function elementToRoughOptions(element: ExcalidrawElement, theme: Theme): Options {
@@ -26,44 +26,44 @@ function elementToRoughOptions(element: ExcalidrawElement, theme: Theme): Option
     stroke: resolveColor(element.strokeColor, theme),
     strokeWidth: element.strokeWidth,
     fillStyle: element.fillStyle,
+  };
+
+  if (element.backgroundColor !== "transparent") {
+    options.fill = resolveColor(element.backgroundColor, theme);
   }
 
-  if (element.backgroundColor !== 'transparent') {
-    options.fill = resolveColor(element.backgroundColor, theme)
-  }
-
-  return options
+  return options;
 }
 
 function generateDrawable(element: ExcalidrawElement, theme: Theme): Drawable {
-  if (element.type === 'text') {
-    throw new Error('Text elements should not use RoughJS shape generation')
+  if (element.type === "text") {
+    throw new Error("Text elements should not use RoughJS shape generation");
   }
   if (isCodeElement(element)) {
-    throw new Error('Code elements should not use RoughJS shape generation')
+    throw new Error("Code elements should not use RoughJS shape generation");
   }
-  if (element.type === 'image') {
-    throw new Error('Image elements should not use RoughJS shape generation')
-  }
-
-  const { width, height } = element
-  const options = elementToRoughOptions(element, theme)
-
-  if (element.type === 'arrow' || element.type === 'line') {
-    const { points } = element
-    const pts = points.map(p => [p[0], p[1]] satisfies [number, number])
-    return generator.linearPath(pts, options)
+  if (element.type === "image") {
+    throw new Error("Image elements should not use RoughJS shape generation");
   }
 
-  if (element.type === 'rectangle') {
-    return generator.rectangle(0, 0, width, height, options)
+  const { width, height } = element;
+  const options = elementToRoughOptions(element, theme);
+
+  if (element.type === "arrow" || element.type === "line") {
+    const { points } = element;
+    const pts = points.map((p) => [p[0], p[1]] satisfies [number, number]);
+    return generator.linearPath(pts, options);
   }
 
-  if (element.type === 'ellipse') {
-    return generator.ellipse(width / 2, height / 2, width, height, options)
+  if (element.type === "rectangle") {
+    return generator.rectangle(0, 0, width, height, options);
   }
 
-  if (element.type === 'diamond') {
+  if (element.type === "ellipse") {
+    return generator.ellipse(width / 2, height / 2, width, height, options);
+  }
+
+  if (element.type === "diamond") {
     return generator.polygon(
       [
         [width / 2, 0],
@@ -72,30 +72,28 @@ function generateDrawable(element: ExcalidrawElement, theme: Theme): Drawable {
         [0, height / 2],
       ],
       options,
-    )
+    );
   }
 
-  throw new Error(`Unhandled element type: ${(element as { type: string }).type}`)
+  throw new Error(`Unhandled element type: ${(element as { type: string }).type}`);
 }
 
 export function pruneShapeCache(elements: readonly ExcalidrawElement[]): void {
-  const activeIds = new Set(
-    elements.filter(el => !el.isDeleted).map(el => el.id),
-  )
+  const activeIds = new Set(elements.filter((el) => !el.isDeleted).map((el) => el.id));
   for (const key of shapeCache.keys()) {
     if (!activeIds.has(key)) {
-      shapeCache.delete(key)
+      shapeCache.delete(key);
     }
   }
 }
 
 export function generateShape(element: ExcalidrawElement, theme: Theme): Drawable {
-  const cached = shapeCache.get(element.id)
+  const cached = shapeCache.get(element.id);
   if (cached && cached.nonce === element.versionNonce && cached.theme === theme) {
-    return cached.drawable
+    return cached.drawable;
   }
 
-  const drawable = generateDrawable(element, theme)
-  shapeCache.set(element.id, { nonce: element.versionNonce, theme, drawable })
-  return drawable
+  const drawable = generateDrawable(element, theme);
+  shapeCache.set(element.id, { nonce: element.versionNonce, theme, drawable });
+  return drawable;
 }

@@ -9,9 +9,9 @@ Reactive [Navigator Languages](https://developer.mozilla.org/en-US/docs/Web/API/
 ## Usage
 
 ```ts
-import { usePreferredLanguages } from '@vueuse/core'
+import { usePreferredLanguages } from "@vueuse/core";
 
-const languages = usePreferredLanguages()
+const languages = usePreferredLanguages();
 ```
 
 ## Component Usage
@@ -37,5 +37,5 @@ const languages = usePreferredLanguages()
  */
 export declare function usePreferredLanguages(
   options?: ConfigurableWindow,
-): ShallowRef<readonly string[]>
+): ShallowRef<readonly string[]>;
 ```

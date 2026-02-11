@@ -1,13 +1,13 @@
-import type { ExcalidrawElement, ExcalidrawArrowElement } from '~/features/elements/types'
-import { isArrowElement, isFixedPointBinding } from '~/features/elements/types'
-import { mutateElement } from '~/features/elements/mutateElement'
-import { pointFrom } from '~/shared/math'
-import type { LocalPoint } from '~/shared/math'
-import { normalizePoints, getSizeFromPoints } from '~/features/linear-editor/pointHandles'
-import { isBindableElement } from './types'
-import type { BindableElement } from './types'
-import { getPointFromFixedPoint } from './proximity'
-import { findBindableElement } from './bindUnbind'
+import type { ExcalidrawElement, ExcalidrawArrowElement } from "~/features/elements/types";
+import { isArrowElement, isFixedPointBinding } from "~/features/elements/types";
+import { mutateElement } from "~/features/elements/mutateElement";
+import { pointFrom } from "~/shared/math";
+import type { LocalPoint } from "~/shared/math";
+import { normalizePoints, getSizeFromPoints } from "~/features/linear-editor/pointHandles";
+import { isBindableElement } from "./types";
+import type { BindableElement } from "./types";
+import { getPointFromFixedPoint } from "./proximity";
+import { findBindableElement } from "./bindUnbind";
 
 /**
  * Update all arrow endpoints bound to a shape.
@@ -17,19 +17,19 @@ export function updateBoundArrowEndpoints(
   shape: ExcalidrawElement,
   elements: readonly ExcalidrawElement[],
 ): void {
-  if (!isBindableElement(shape)) return
-  const bound = shape.boundElements ?? []
-  if (bound.length === 0) return
+  if (!isBindableElement(shape)) return;
+  const bound = shape.boundElements ?? [];
+  if (bound.length === 0) return;
 
   for (const entry of bound) {
-    const arrow = elements.find(el => el.id === entry.id)
-    if (!arrow || !isArrowElement(arrow)) continue
+    const arrow = elements.find((el) => el.id === entry.id);
+    if (!arrow || !isArrowElement(arrow)) continue;
 
     if (arrow.startBinding?.elementId === shape.id) {
-      updateArrowEndpoint(arrow, 'start', shape)
+      updateArrowEndpoint(arrow, "start", shape);
     }
     if (arrow.endBinding?.elementId === shape.id) {
-      updateArrowEndpoint(arrow, 'end', shape)
+      updateArrowEndpoint(arrow, "end", shape);
     }
   }
 }
@@ -39,28 +39,23 @@ export function updateBoundArrowEndpoints(
  */
 export function updateArrowEndpoint(
   arrow: ExcalidrawArrowElement,
-  endpoint: 'start' | 'end',
+  endpoint: "start" | "end",
   target: BindableElement,
 ): void {
-  const binding = endpoint === 'start' ? arrow.startBinding : arrow.endBinding
-  if (!binding) return
+  const binding = endpoint === "start" ? arrow.startBinding : arrow.endBinding;
+  if (!binding) return;
 
-  if (!isFixedPointBinding(binding)) return
-  const { fixedPoint } = binding
+  if (!isFixedPointBinding(binding)) return;
+  const { fixedPoint } = binding;
 
-  const scenePoint = getPointFromFixedPoint(fixedPoint, target)
-  const pointIndex = endpoint === 'start' ? 0 : arrow.points.length - 1
-  const relativePoint = pointFrom<LocalPoint>(
-    scenePoint[0] - arrow.x,
-    scenePoint[1] - arrow.y,
-  )
+  const scenePoint = getPointFromFixedPoint(fixedPoint, target);
+  const pointIndex = endpoint === "start" ? 0 : arrow.points.length - 1;
+  const relativePoint = pointFrom<LocalPoint>(scenePoint[0] - arrow.x, scenePoint[1] - arrow.y);
 
-  const newPoints = arrow.points.map((p, i) =>
-    i === pointIndex ? relativePoint : p,
-  )
+  const newPoints = arrow.points.map((p, i) => (i === pointIndex ? relativePoint : p));
 
-  const normalized = normalizePoints(arrow.x, arrow.y, newPoints)
-  const dims = getSizeFromPoints(normalized.points)
+  const normalized = normalizePoints(arrow.x, arrow.y, newPoints);
+  const dims = getSizeFromPoints(normalized.points);
 
   mutateElement(arrow, {
     x: normalized.x,
@@ -68,7 +63,7 @@ export function updateArrowEndpoint(
     points: normalized.points,
     width: dims.width,
     height: dims.height,
-  })
+  });
 }
 
 /**
@@ -79,11 +74,11 @@ export function updateArrowBindings(
   elements: readonly ExcalidrawElement[],
 ): void {
   if (arrow.startBinding) {
-    const target = findBindableElement(arrow.startBinding.elementId, elements)
-    if (target) updateArrowEndpoint(arrow, 'start', target)
+    const target = findBindableElement(arrow.startBinding.elementId, elements);
+    if (target) updateArrowEndpoint(arrow, "start", target);
   }
   if (arrow.endBinding) {
-    const target = findBindableElement(arrow.endBinding.elementId, elements)
-    if (target) updateArrowEndpoint(arrow, 'end', target)
+    const target = findBindableElement(arrow.endBinding.elementId, elements);
+    if (target) updateArrowEndpoint(arrow, "end", target);
   }
 }

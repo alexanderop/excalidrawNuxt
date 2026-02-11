@@ -27,19 +27,19 @@ Everything lives under `app/`. Don't put pages, components, or composables at th
 
 ```ts
 // ✅ Every file must import what it uses
-import { shallowRef, triggerRef } from 'vue'
-import type { Ref, ShallowRef } from 'vue'
+import { shallowRef, triggerRef } from "vue";
+import type { Ref, ShallowRef } from "vue";
 
 export function useFoo(bar: Ref<number>) {
-  const x = shallowRef(null)
-  return x
+  const x = shallowRef(null);
+  return x;
 }
 ```
 
 ```ts
 // ❌ This fails — nothing is auto-imported
 export function useFoo() {
-  const x = ref(0)  // Error: ref is not defined
+  const x = ref(0); // Error: ref is not defined
 }
 ```
 
@@ -73,14 +73,14 @@ bun add tailwindcss @tailwindcss/vite
 
 ```ts
 // nuxt.config.ts
-import tailwindcss from '@tailwindcss/vite'
+import tailwindcss from "@tailwindcss/vite";
 
 export default defineNuxtConfig({
-  css: ['~/assets/css/main.css'],
+  css: ["~/assets/css/main.css"],
   vite: {
     plugins: [tailwindcss()],
   },
-})
+});
 ```
 
 Tailwind v4 uses CSS-first configuration — no `tailwind.config.js`:

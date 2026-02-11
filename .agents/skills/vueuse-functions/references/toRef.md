@@ -10,13 +10,13 @@ Normalize value/ref/getter to `ref` or `computed`.
 ## Usage
 
 ```ts
-import { toRef } from '@vueuse/core'
+import { toRef } from "@vueuse/core";
 
-const foo = ref('hi')
+const foo = ref("hi");
 
-const a = toRef(0) // Ref<number>
-const b = toRef(foo) // Ref<string>
-const c = toRef(() => 'hi') // ComputedRef<string>
+const a = toRef(0); // Ref<number>
+const b = toRef(foo); // Ref<string>
+const c = toRef(() => "hi"); // ComputedRef<string>
 ```
 
 ## Differences from Vue's `toRef`
@@ -59,17 +59,14 @@ VueUse's `toRef` is not the same as Vue’s `toRef` from the `vue` package.
 /**
  * Normalize value/ref/getter to `ref` or `computed`.
  */
-export declare function toRef<T>(r: () => T): Readonly<Ref<T>>
-export declare function toRef<T>(r: ComputedRef<T>): ComputedRef<T>
-export declare function toRef<T>(r: MaybeRefOrGetter<T>): Ref<T>
-export declare function toRef<T>(r: T): Ref<T>
-export declare function toRef<T extends object, K extends keyof T>(
-  object: T,
-  key: K,
-): ToRef<T[K]>
+export declare function toRef<T>(r: () => T): Readonly<Ref<T>>;
+export declare function toRef<T>(r: ComputedRef<T>): ComputedRef<T>;
+export declare function toRef<T>(r: MaybeRefOrGetter<T>): Ref<T>;
+export declare function toRef<T>(r: T): Ref<T>;
+export declare function toRef<T extends object, K extends keyof T>(object: T, key: K): ToRef<T[K]>;
 export declare function toRef<T extends object, K extends keyof T>(
   object: T,
   key: K,
   defaultValue: T[K],
-): ToRef<Exclude<T[K], undefined>>
+): ToRef<Exclude<T[K], undefined>>;
 ```

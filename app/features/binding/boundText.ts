@@ -2,10 +2,10 @@ import type {
   ExcalidrawElement,
   ExcalidrawTextElement,
   ElementsMap,
-} from '~/features/elements/types'
-import { mutateElement } from '~/features/elements/mutateElement'
-import { getBoundTextElement, BOUND_TEXT_PADDING } from '~/features/elements'
-import { getFontString, measureText } from '~/features/rendering/textMeasurement'
+} from "~/features/elements/types";
+import { mutateElement } from "~/features/elements/mutateElement";
+import { getBoundTextElement, BOUND_TEXT_PADDING } from "~/features/elements";
+import { getFontString, measureText } from "~/features/rendering/textMeasurement";
 
 /**
  * Bind a text element to a container shape.
@@ -15,14 +15,14 @@ export function bindTextToContainer(
   textElement: ExcalidrawTextElement,
   container: ExcalidrawElement,
 ): void {
-  mutateElement(textElement, { containerId: container.id })
+  mutateElement(textElement, { containerId: container.id });
 
-  const existing = container.boundElements ?? []
-  const alreadyBound = existing.some(be => be.id === textElement.id)
+  const existing = container.boundElements ?? [];
+  const alreadyBound = existing.some((be) => be.id === textElement.id);
   if (!alreadyBound) {
     mutateElement(container, {
-      boundElements: [...existing, { id: textElement.id, type: 'text' as const }],
-    })
+      boundElements: [...existing, { id: textElement.id, type: "text" as const }],
+    });
   }
 }
 
@@ -34,10 +34,10 @@ export function unbindTextFromContainer(
   textElement: ExcalidrawTextElement,
   container: ExcalidrawElement,
 ): void {
-  mutateElement(textElement, { containerId: null })
+  mutateElement(textElement, { containerId: null });
   mutateElement(container, {
-    boundElements: (container.boundElements ?? []).filter(be => be.id !== textElement.id),
-  })
+    boundElements: (container.boundElements ?? []).filter((be) => be.id !== textElement.id),
+  });
 }
 
 /**
@@ -47,9 +47,9 @@ export function deleteBoundTextForContainer(
   container: ExcalidrawElement,
   elementMap: ElementsMap,
 ): void {
-  const boundText = getBoundTextElement(container, elementMap)
+  const boundText = getBoundTextElement(container, elementMap);
   if (boundText) {
-    mutateElement(boundText, { isDeleted: true })
+    mutateElement(boundText, { isDeleted: true });
   }
 }
 
@@ -61,22 +61,22 @@ export function updateBoundTextAfterContainerChange(
   container: ExcalidrawElement,
   elementMap: ElementsMap,
 ): void {
-  const boundText = getBoundTextElement(container, elementMap)
-  if (!boundText) return
+  const boundText = getBoundTextElement(container, elementMap);
+  if (!boundText) return;
 
-  const font = getFontString(boundText.fontSize, boundText.fontFamily)
-  const maxWidth = container.width - BOUND_TEXT_PADDING * 2
-  const { height } = measureText(boundText.originalText, font, boundText.lineHeight)
+  const font = getFontString(boundText.fontSize, boundText.fontFamily);
+  const maxWidth = container.width - BOUND_TEXT_PADDING * 2;
+  const { height } = measureText(boundText.originalText, font, boundText.lineHeight);
 
   // Grow container height if text overflows
-  const minContainerHeight = height + BOUND_TEXT_PADDING * 2
+  const minContainerHeight = height + BOUND_TEXT_PADDING * 2;
   if (container.height < minContainerHeight) {
-    mutateElement(container, { height: minContainerHeight })
+    mutateElement(container, { height: minContainerHeight });
   }
 
   // Center text within container
-  const x = container.x + (container.width - maxWidth) / 2
-  const y = container.y + (container.height - height) / 2
+  const x = container.x + (container.width - maxWidth) / 2;
+  const y = container.y + (container.height - height) / 2;
 
   mutateElement(boundText, {
     text: boundText.originalText,
@@ -84,5 +84,5 @@ export function updateBoundTextAfterContainerChange(
     height,
     x,
     y,
-  })
+  });
 }

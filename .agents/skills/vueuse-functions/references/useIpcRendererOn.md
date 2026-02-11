@@ -1,5 +1,5 @@
 ---
-category: '@Electron'
+category: "@Electron"
 ---
 
 # useIpcRendererOn
@@ -9,14 +9,14 @@ Use [ipcRenderer.on](https://www.electronjs.org/docs/api/ipc-renderer#ipcrendere
 ## Usage
 
 ```ts
-import { useIpcRendererOn } from '@vueuse/electron'
+import { useIpcRendererOn } from "@vueuse/electron";
 
 // enable nodeIntegration if you don't provide ipcRenderer explicitly
 // see: https://www.electronjs.org/docs/api/webview-tag#nodeintegration
 // remove listener automatically on unmounted
-useIpcRendererOn('custom-event', (event, ...args) => {
-  console.log(args)
-})
+useIpcRendererOn("custom-event", (event, ...args) => {
+  console.log(args);
+});
 ```
 
 ## Type Declarations
@@ -35,7 +35,7 @@ export declare function useIpcRendererOn(
   ipcRenderer: IpcRenderer,
   channel: string,
   listener: IpcRendererListener,
-): IpcRenderer
+): IpcRenderer;
 /**
  * Listens to channel, when a new message arrives listener would be called with listener(event, args...).
  * [ipcRenderer.removeListener](https://www.electronjs.org/docs/api/ipc-renderer#ipcrendererremovelistenerchannel-listener) automatically on unmounted.
@@ -48,5 +48,5 @@ export declare function useIpcRendererOn(
 export declare function useIpcRendererOn(
   channel: string,
   listener: IpcRendererListener,
-): IpcRenderer
+): IpcRenderer;
 ```

@@ -1,5 +1,5 @@
 ---
-category: '@Math'
+category: "@Math"
 ---
 
 # useFloor
@@ -9,10 +9,10 @@ Reactive `Math.floor`.
 ## Usage
 
 ```ts
-import { useFloor } from '@vueuse/math'
+import { useFloor } from "@vueuse/math";
 
-const value = ref(45.95)
-const result = useFloor(value) // 45
+const value = ref(45.95);
+const result = useFloor(value); // 45
 ```
 
 ## Type Declarations
@@ -25,7 +25,5 @@ const result = useFloor(value) // 45
  *
  * @__NO_SIDE_EFFECTS__
  */
-export declare function useFloor(
-  value: MaybeRefOrGetter<number>,
-): ComputedRef<number>
+export declare function useFloor(value: MaybeRefOrGetter<number>): ComputedRef<number>;
 ```

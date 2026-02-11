@@ -9,9 +9,9 @@ Reactive [prefers-contrast](https://developer.mozilla.org/en-US/docs/Web/CSS/@me
 ## Usage
 
 ```ts
-import { usePreferredContrast } from '@vueuse/core'
+import { usePreferredContrast } from "@vueuse/core";
 
-const preferredContrast = usePreferredContrast()
+const preferredContrast = usePreferredContrast();
 ```
 
 ## Component Usage
@@ -27,7 +27,7 @@ const preferredContrast = usePreferredContrast()
 ## Type Declarations
 
 ```ts
-export type ContrastType = "more" | "less" | "custom" | "no-preference"
+export type ContrastType = "more" | "less" | "custom" | "no-preference";
 /**
  * Reactive prefers-contrast media query.
  *
@@ -38,5 +38,5 @@ export type ContrastType = "more" | "less" | "custom" | "no-preference"
  */
 export declare function usePreferredContrast(
   options?: ConfigurableWindow,
-): ComputedRef<ContrastType>
+): ComputedRef<ContrastType>;
 ```

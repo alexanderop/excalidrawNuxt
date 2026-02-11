@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const model = defineModel<number>({ required: true })
+const model = defineModel<number>({ required: true });
 </script>
 
 <template>

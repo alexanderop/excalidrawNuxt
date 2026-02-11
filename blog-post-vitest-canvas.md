@@ -24,15 +24,15 @@ The config:
 // vitest.config.browser.ts
 export default defineConfig({
   test: {
-    include: ['app/**/*.browser.test.ts'],
+    include: ["app/**/*.browser.test.ts"],
     browser: {
       enabled: true,
       provider: playwright(),
-      instances: [{ browser: 'chromium' }],
+      instances: [{ browser: "chromium" }],
       commands: { canvasDrag, canvasClick, canvasDblClick },
     },
   },
-})
+});
 ```
 
 Custom commands are the key ingredient.
@@ -88,15 +88,15 @@ Raw pixel coordinates in every test would be unreadable. We built layers on top 
 
 ```typescript
 await keyboard.withModifierKeys({ shiftKey: true }, async () => {
-  await pointer.clickOn(element)
-})
+  await pointer.clickOn(element);
+});
 ```
 
 **CanvasGrid** -- The biggest readability win. Instead of magic pixel numbers, you work with a 16x9 logical grid that auto-detects canvas dimensions and maps cell coordinates to pixels.
 
 ```typescript
 // Instead of: canvasDrag('canvas', 320, 180, 640, 360)
-await grid.drag([4, 2], [8, 4])
+await grid.drag([4, 2], [8, 4]);
 ```
 
 Tests read like intent, not pixel math. Grid cells are stable across viewport sizes because they're proportional.
@@ -104,33 +104,33 @@ Tests read like intent, not pixel math. Grid cells are stable across viewport si
 **API** -- Direct state access via `globalThis.__h`, a test hook our canvas component exposes (same pattern as Excalidraw's `window.h`). Read elements, check selection, get the active tool -- bypassing the rendering layer.
 
 ```typescript
-expect(API.elements).toHaveLength(1)
-expect(API.elements[0].type).toBe('rectangle')
-expect(API.activeTool).toBe('selection')
+expect(API.elements).toHaveLength(1);
+expect(API.elements[0].type).toBe("rectangle");
+expect(API.activeTool).toBe("selection");
 ```
 
 **UI** -- The composition layer. Combines tool selection, pointer interaction, grid coordinates, and state verification into high-level operations:
 
 ```typescript
-const rect = await ui.createElement('rectangle', [2, 2], [5, 5])
+const rect = await ui.createElement("rectangle", [2, 2], [5, 5]);
 // Returns a live accessor -- rect.get() always reflects current state
 ```
 
 A real test using all of this:
 
 ```typescript
-it('selects element by clicking on it', async () => {
-  const screen = render(CanvasContainer)
-  await waitForCanvasReady()
-  const ui = new UI(screen)
+it("selects element by clicking on it", async () => {
+  const screen = render(CanvasContainer);
+  await waitForCanvasReady();
+  const ui = new UI(screen);
 
-  const rect = await ui.createElement('rectangle', [2, 2], [5, 5])
-  API.clearSelection()
-  await waitForPaint()
+  const rect = await ui.createElement("rectangle", [2, 2], [5, 5]);
+  API.clearSelection();
+  await waitForPaint();
 
-  await ui.grid.clickCenter([2, 2], [5, 5])
-  assertSelectedElements(rect.id)
-})
+  await ui.grid.clickCenter([2, 2], [5, 5]);
+  assertSelectedElements(rect.id);
+});
 ```
 
 The abstractions carry the weight.
@@ -140,16 +140,15 @@ The abstractions carry the weight.
 Running in a real browser unlocks visual regression testing.
 
 ```typescript
-it('renders a rectangle', async () => {
-  render(CanvasContainer)
-  await waitForCanvasReady()
+it("renders a rectangle", async () => {
+  render(CanvasContainer);
+  await waitForCanvasReady();
 
-  await userEvent.keyboard('2')
-  await commands.canvasDrag(CANVAS_SELECTOR, 100, 100, 300, 250)
+  await userEvent.keyboard("2");
+  await commands.canvasDrag(CANVAS_SELECTOR, 100, 100, 300, 250);
 
-  await expect(page.getByTestId('canvas-container'))
-    .toMatchScreenshot('single-rectangle')
-})
+  await expect(page.getByTestId("canvas-container")).toMatchScreenshot("single-rectangle");
+});
 ```
 
 Excalidraw can't do this -- their canvas is mocked, no pixels to screenshot. We catch rendering regressions in shapes, selection handles, theme changes, and element compositing.
@@ -157,22 +156,22 @@ Excalidraw can't do this -- their canvas is mocked, no pixels to screenshot. We 
 RoughJS uses `Math.random()` for its hand-drawn stroke variations, which would make screenshots non-deterministic. We seed it:
 
 ```typescript
-beforeEach(() => reseed())
-afterEach(() => restoreSeed())
+beforeEach(() => reseed());
+afterEach(() => restoreSeed());
 ```
 
 Screenshots are now pixel-identical across runs.
 
 ## The Comparison
 
-| | Excalidraw (jsdom + mocks) | Our Approach (Vitest Browser Mode) |
-|---|---|---|
-| **Environment** | jsdom, no real browser | Real Chromium via Playwright |
-| **Canvas** | Completely mocked (no-ops) | Real canvas, real pixels |
-| **Speed** | Hundreds of tests in seconds | Slower (browser startup + rendering) |
-| **Visual testing** | Impossible | Screenshot regression testing |
-| **Browser APIs mocked** | ~10 (FontFace, ResizeObserver, etc.) | Zero |
-| **Confidence** | High for logic, zero for rendering | High for both |
+|                         | Excalidraw (jsdom + mocks)           | Our Approach (Vitest Browser Mode)   |
+| ----------------------- | ------------------------------------ | ------------------------------------ |
+| **Environment**         | jsdom, no real browser               | Real Chromium via Playwright         |
+| **Canvas**              | Completely mocked (no-ops)           | Real canvas, real pixels             |
+| **Speed**               | Hundreds of tests in seconds         | Slower (browser startup + rendering) |
+| **Visual testing**      | Impossible                           | Screenshot regression testing        |
+| **Browser APIs mocked** | ~10 (FontFace, ResizeObserver, etc.) | Zero                                 |
+| **Confidence**          | High for logic, zero for rendering   | High for both                        |
 
 Fast but blind vs. slower but sees.
 

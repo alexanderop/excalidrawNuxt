@@ -1,5 +1,5 @@
 ---
-category: '@RxJS'
+category: "@RxJS"
 ---
 
 # useObservable
@@ -11,9 +11,9 @@ Use an RxJS [`Observable`](https://rxjs.dev/guide/observable), return a `ref`, a
 <!-- TODO: import rxjs error if enable twoslash -->
 
 ```ts no-twoslash
-import { useObservable } from '@vueuse/rxjs'
-import { interval } from 'rxjs'
-import { mapTo, scan, startWith } from 'rxjs/operators'
+import { useObservable } from "@vueuse/rxjs";
+import { interval } from "rxjs";
+import { mapTo, scan, startWith } from "rxjs/operators";
 
 // setup()
 const count = useObservable(
@@ -22,7 +22,7 @@ const count = useObservable(
     startWith(0),
     scan((total, next) => next + total),
   ),
-)
+);
 ```
 
 ### Initial Value
@@ -30,13 +30,10 @@ const count = useObservable(
 You can provide an initial value that will be used before the Observable emits its first value:
 
 ```ts no-twoslash
-import { useObservable } from '@vueuse/rxjs'
-import { interval } from 'rxjs'
+import { useObservable } from "@vueuse/rxjs";
+import { interval } from "rxjs";
 
-const count = useObservable(
-  interval(1000),
-  { initialValue: 0 },
-)
+const count = useObservable(interval(1000), { initialValue: 0 });
 // count.value is 0 until the first emission
 ```
 
@@ -45,26 +42,25 @@ const count = useObservable(
 If you want to add custom error handling to an `Observable` that might error, you can supply an optional `onError` configuration. Without this, RxJS will treat any error in the supplied `Observable` as an "unhandled error" and it will be thrown in a new call stack and reported to `window.onerror` (or `process.on('error')` if you happen to be in Node).
 
 ```ts no-twoslash
-import { useObservable } from '@vueuse/rxjs'
-import { interval } from 'rxjs'
-import { map } from 'rxjs/operators'
+import { useObservable } from "@vueuse/rxjs";
+import { interval } from "rxjs";
+import { map } from "rxjs/operators";
 
 // setup()
 const count = useObservable(
   interval(1000).pipe(
     map((n) => {
-      if (n === 10)
-        throw new Error('oops')
+      if (n === 10) throw new Error("oops");
 
-      return n + n
+      return n + n;
     }),
   ),
   {
     onError: (err) => {
-      console.log(err.message) // "oops"
+      console.log(err.message); // "oops"
     },
   },
-)
+);
 ```
 
 ### Options
@@ -78,14 +74,14 @@ const count = useObservable(
 
 ```ts
 export interface UseObservableOptions<I> {
-  onError?: (err: any) => void
+  onError?: (err: any) => void;
   /**
    * The value that should be set if the observable has not emitted.
    */
-  initialValue?: I | undefined
+  initialValue?: I | undefined;
 }
 export declare function useObservable<H, I = undefined>(
   observable: Observable<H>,
   options?: UseObservableOptions<I | undefined>,
-): Readonly<Ref<H | I>>
+): Readonly<Ref<H | I>>;
 ```

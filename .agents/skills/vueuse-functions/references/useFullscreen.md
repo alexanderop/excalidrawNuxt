@@ -9,20 +9,20 @@ Reactive [Fullscreen API](https://developer.mozilla.org/en-US/docs/Web/API/Fulls
 ## Usage
 
 ```ts
-import { useFullscreen } from '@vueuse/core'
+import { useFullscreen } from "@vueuse/core";
 
-const { isFullscreen, enter, exit, toggle } = useFullscreen()
+const { isFullscreen, enter, exit, toggle } = useFullscreen();
 ```
 
 Fullscreen specified element. Some platforms (like iOS's Safari) only allow fullscreen on video elements.
 
 ```vue
 <script setup lang="ts">
-import { useFullscreen } from '@vueuse/core'
-import { useTemplateRef } from 'vue'
+import { useFullscreen } from "@vueuse/core";
+import { useTemplateRef } from "vue";
 
-const el = useTemplateRef('el')
-const { isFullscreen, enter, exit, toggle } = useFullscreen(el)
+const el = useTemplateRef("el");
+const { isFullscreen, enter, exit, toggle } = useFullscreen(el);
 </script>
 
 <template>
@@ -36,9 +36,7 @@ const { isFullscreen, enter, exit, toggle } = useFullscreen(el)
 <template>
   <UseFullscreen v-slot="{ toggle }">
     <video />
-    <button @click="toggle">
-      Go Fullscreen
-    </button>
+    <button @click="toggle">Go Fullscreen</button>
   </UseFullscreen>
 </template>
 ```
@@ -52,7 +50,7 @@ export interface UseFullscreenOptions extends ConfigurableDocument {
    *
    * @default false
    */
-  autoExit?: boolean
+  autoExit?: boolean;
 }
 /**
  * Reactive Fullscreen API.
@@ -65,11 +63,11 @@ export declare function useFullscreen(
   target?: MaybeElementRef,
   options?: UseFullscreenOptions,
 ): {
-  isSupported: ComputedRef<boolean>
-  isFullscreen: ShallowRef<boolean, boolean>
-  enter: () => Promise<void>
-  exit: () => Promise<void>
-  toggle: () => Promise<void>
-}
-export type UseFullscreenReturn = ReturnType<typeof useFullscreen>
+  isSupported: ComputedRef<boolean>;
+  isFullscreen: ShallowRef<boolean, boolean>;
+  enter: () => Promise<void>;
+  exit: () => Promise<void>;
+  toggle: () => Promise<void>;
+};
+export type UseFullscreenReturn = ReturnType<typeof useFullscreen>;
 ```

@@ -1,32 +1,34 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { defineShortcuts } from '#imports'
-import { useCommandPalette } from './useCommandPalette'
-import { COMMAND_GROUPS } from './commandGroups'
+import { computed } from "vue";
+import { defineShortcuts } from "#imports";
+import { useCommandPalette } from "./useCommandPalette";
+import { COMMAND_GROUPS } from "./commandGroups";
 
-defineExpose({})
+defineExpose({});
 
-const { isOpen, execute } = useCommandPalette()
+const { isOpen, execute } = useCommandPalette();
 
 defineShortcuts({
   meta_k: {
-    handler: () => { isOpen.value = !isOpen.value },
+    handler: () => {
+      isOpen.value = !isOpen.value;
+    },
     usingInput: true,
   },
-})
+});
 
 const groups = computed(() =>
-  COMMAND_GROUPS.map(group => ({
+  COMMAND_GROUPS.map((group) => ({
     id: group.id,
     label: group.label,
-    items: group.items.map(item => ({
+    items: group.items.map((item) => ({
       ...item,
       onSelect() {
-        execute(item.id)
+        execute(item.id);
       },
     })),
   })),
-)
+);
 </script>
 
 <template>

@@ -5,6 +5,7 @@ Complete reference for generating interactive walkthrough HTML files using React
 ## Architecture: `<script type="module">` (No Babel)
 
 The generated HTML uses **native ES modules** (`<script type="module">`), not Babel transpilation. This means:
+
 - **Template literals work** — use backticks freely for multi-line strings, string interpolation, etc.
 - **Shiki imported via ESM** — `import { createHighlighter } from 'shiki'`
 - **React/ReactDOM loaded as UMD globals** — accessed via `window.React`, `window.ReactDOM`
@@ -24,28 +25,28 @@ The generated HTML uses **native ES modules** (`<script type="module">`), not Ba
 
 ## Color Palette (Black / White / Purple)
 
-| Token | Hex | Use |
-|-------|-----|-----|
-| `wt-bg` | `#000000` | Page background |
-| `wt-surface` | `#0a0a0a` | Panels, overlays |
-| `wt-raised` | `#141414` | Hover states |
-| `wt-border` | `#2a2a2a` | Borders, dividers |
-| `wt-fg` | `#ffffff` | Primary text |
-| `wt-muted` | `#a0a0a0` | Secondary text |
-| `wt-accent` | `#a855f7` | Purple accent (purple-500) |
-| `wt-file` | `#c084fc` | File paths (purple-400) |
-| `wt-red` | `#ef4444` | Close button hover |
+| Token        | Hex       | Use                        |
+| ------------ | --------- | -------------------------- |
+| `wt-bg`      | `#000000` | Page background            |
+| `wt-surface` | `#0a0a0a` | Panels, overlays           |
+| `wt-raised`  | `#141414` | Hover states               |
+| `wt-border`  | `#2a2a2a` | Borders, dividers          |
+| `wt-fg`      | `#ffffff` | Primary text               |
+| `wt-muted`   | `#a0a0a0` | Secondary text             |
+| `wt-accent`  | `#a855f7` | Purple accent (purple-500) |
+| `wt-file`    | `#c084fc` | File paths (purple-400)    |
+| `wt-red`     | `#ef4444` | Close button hover         |
 
 ### Node Type Colors (Purple Shades)
 
-| Type | Fill | Stroke | Text |
-|------|------|--------|------|
-| component | `#a855f7` (purple-500) | `#c084fc` | white |
+| Type       | Fill                   | Stroke    | Text  |
+| ---------- | ---------------------- | --------- | ----- |
+| component  | `#a855f7` (purple-500) | `#c084fc` | white |
 | composable | `#7c3aed` (purple-600) | `#a78bfa` | white |
-| utility | `#6d28d9` (purple-700) | `#8b5cf6` | white |
-| external | `#525252` (gray-600) | `#737373` | white |
-| event | `#d8b4fe` (purple-200) | `#e9d5ff` | black |
-| data | `#9333ea` (purple-600) | `#a855f7` | white |
+| utility    | `#6d28d9` (purple-700) | `#8b5cf6` | white |
+| external   | `#525252` (gray-600)   | `#737373` | white |
+| event      | `#d8b4fe` (purple-200) | `#e9d5ff` | black |
+| data       | `#9333ea` (purple-600) | `#a855f7` | white |
 
 ## CDN Dependencies
 
@@ -67,13 +68,23 @@ The generated HTML uses **native ES modules** (`<script type="module">`), not Ba
       extend: {
         colors: {
           wt: {
-            bg: '#000000', surface: '#0a0a0a', raised: '#141414',
-            border: '#2a2a2a', fg: '#ffffff', muted: '#a0a0a0',
-            accent: '#a855f7', file: '#c084fc', red: '#ef4444',
+            bg: "#000000",
+            surface: "#0a0a0a",
+            raised: "#141414",
+            border: "#2a2a2a",
+            fg: "#ffffff",
+            muted: "#a0a0a0",
+            accent: "#a855f7",
+            file: "#c084fc",
+            red: "#ef4444",
           },
           node: {
-            component: '#a855f7', composable: '#7c3aed', utility: '#6d28d9',
-            external: '#525252', event: '#d8b4fe', data: '#9333ea',
+            component: "#a855f7",
+            composable: "#7c3aed",
+            utility: "#6d28d9",
+            external: "#525252",
+            event: "#d8b4fe",
+            data: "#9333ea",
           },
         },
       },
@@ -86,28 +97,46 @@ The generated HTML uses **native ES modules** (`<script type="module">`), not Ba
 
 ```css
 /* Mermaid SVG must render at natural size */
-.mermaid-wrap svg { max-width: none !important; height: auto !important; }
+.mermaid-wrap svg {
+  max-width: none !important;
+  height: auto !important;
+}
 
 /* Flowchart node hover */
-.mermaid-wrap .node { cursor: pointer; }
+.mermaid-wrap .node {
+  cursor: pointer;
+}
 .mermaid-wrap .node:hover rect,
 .mermaid-wrap .node:hover polygon,
 .mermaid-wrap .node:hover circle,
 .mermaid-wrap .node:hover .label-container {
-  filter: brightness(1.3); transition: filter .15s;
+  filter: brightness(1.3);
+  transition: filter 0.15s;
 }
 
 /* ER diagram entity hover */
-.mermaid-wrap .er.entityBox { cursor: pointer; }
+.mermaid-wrap .er.entityBox {
+  cursor: pointer;
+}
 .mermaid-wrap g:has(.er.entityBox):hover .er.entityBox {
-  filter: brightness(1.3); transition: filter .15s;
+  filter: brightness(1.3);
+  transition: filter 0.15s;
 }
 
 /* Detail panel body text */
-.dt-body p { color:#a0a0a0; font-size:.88rem; line-height:1.65; margin-bottom:10px; }
+.dt-body p {
+  color: #a0a0a0;
+  font-size: 0.88rem;
+  line-height: 1.65;
+  margin-bottom: 10px;
+}
 .dt-body p code {
-  background:rgba(168,85,247,.12); padding:1px 6px; border-radius:4px;
-  font-family:'SF Mono','Fira Code',monospace; font-size:.82rem; color:#c084fc;
+  background: rgba(168, 85, 247, 0.12);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.82rem;
+  color: #c084fc;
 }
 
 /* Shiki code blocks — override theme background to match walkthrough */
@@ -120,13 +149,13 @@ The generated HTML uses **native ES modules** (`<script type="module">`), not Ba
   margin: 8px 0 14px;
 }
 .dt-body .shiki code {
-  font-family: 'SF Mono','Fira Code',monospace;
-  font-size: .78rem;
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.78rem;
   line-height: 1.55;
   background: none;
   padding: 0;
   border-radius: 0;
-  color: inherit;  /* Let Shiki's inline styles handle colors */
+  color: inherit; /* Let Shiki's inline styles handle colors */
 }
 
 /* Fallback for when Shiki hasn't loaded yet */
@@ -139,8 +168,8 @@ The generated HTML uses **native ES modules** (`<script type="module">`), not Ba
   margin: 8px 0 14px;
 }
 .dt-body pre.code-fallback code {
-  font-family: 'SF Mono','Fira Code',monospace;
-  font-size: .78rem;
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.78rem;
   line-height: 1.55;
   color: #e0e0e0;
   background: none;
@@ -154,25 +183,27 @@ The generated HTML uses **native ES modules** (`<script type="module">`), not Ba
 Shiki is loaded via ESM and initialized before the React app mounts. Code snippets (when present) are pre-highlighted at startup.
 
 ```js
-import { createHighlighter } from 'https://cdn.jsdelivr.net/npm/shiki@3.22.0/+esm'
+import { createHighlighter } from "https://cdn.jsdelivr.net/npm/shiki@3.22.0/+esm";
 
 // Collect unique languages from NODES (only nodes with code)
-const langs = [...new Set(
-  Object.values(NODES)
-    .map(n => n.lang)
-    .filter(Boolean)
-)];
-if (langs.length === 0) langs.push('typescript');
+const langs = [
+  ...new Set(
+    Object.values(NODES)
+      .map((n) => n.lang)
+      .filter(Boolean),
+  ),
+];
+if (langs.length === 0) langs.push("typescript");
 
 // Create highlighter with required languages
 let highlighter = null;
 try {
   highlighter = await createHighlighter({
-    themes: ['vitesse-dark'],
+    themes: ["vitesse-dark"],
     langs: langs,
   });
 } catch (e) {
-  console.warn('Shiki failed to load, falling back to plain code blocks:', e);
+  console.warn("Shiki failed to load, falling back to plain code blocks:", e);
 }
 
 // Pre-highlight code snippets (only nodes that have them)
@@ -181,8 +212,8 @@ for (const [id, node] of Object.entries(NODES)) {
   if (node.code && highlighter) {
     try {
       HIGHLIGHTED[id] = highlighter.codeToHtml(node.code, {
-        lang: node.lang || 'typescript',
-        theme: 'vitesse-dark',
+        lang: node.lang || "typescript",
+        theme: "vitesse-dark",
       });
     } catch (e) {
       console.warn(`Failed to highlight ${id}:`, e);
@@ -192,6 +223,7 @@ for (const [id, node] of Object.entries(NODES)) {
 ```
 
 **Key points:**
+
 - `await createHighlighter()` at module top-level — supported in `<script type="module">`
 - Languages are auto-collected from NODES data — no need to hardcode the list
 - Graceful fallback: if Shiki fails, `HIGHLIGHTED[id]` will be undefined and the DetailPanel renders plain `<pre><code>` instead
@@ -199,15 +231,15 @@ for (const [id, node] of Object.entries(NODES)) {
 
 ### Common Shiki Languages
 
-| Language ID | Use for |
-|-------------|---------|
-| `typescript` | `.ts` files (default) |
-| `vue` | `.vue` files (full SFC) |
-| `vue-html` | Vue template blocks |
-| `json` | Config files, package.json |
-| `css` | Stylesheets |
-| `javascript` | `.js` files |
-| `bash` | Shell scripts, commands |
+| Language ID  | Use for                    |
+| ------------ | -------------------------- |
+| `typescript` | `.ts` files (default)      |
+| `vue`        | `.vue` files (full SFC)    |
+| `vue-html`   | Vue template blocks        |
+| `json`       | Config files, package.json |
+| `css`        | Stylesheets                |
+| `javascript` | `.js` files                |
+| `bash`       | Shell scripts, commands    |
 
 ## Mermaid Initialization
 
@@ -216,24 +248,24 @@ for (const [id, node] of Object.entries(NODES)) {
 ```js
 mermaid.initialize({
   startOnLoad: false,
-  theme: 'dark',
+  theme: "dark",
   themeVariables: {
-    primaryColor: '#0a0a0a',
-    primaryTextColor: '#ffffff',
-    primaryBorderColor: '#2a2a2a',
-    lineColor: '#a0a0a0',
-    secondaryColor: '#000000',
-    tertiaryColor: '#000000',
-    background: '#000000',
-    mainBkg: '#0a0a0a',
-    nodeBorder: '#2a2a2a',
-    clusterBkg: 'rgba(10,10,10,0.8)',
-    clusterBorder: '#7c3aed',
-    titleColor: '#ffffff',
-    edgeLabelBackground: 'transparent',
+    primaryColor: "#0a0a0a",
+    primaryTextColor: "#ffffff",
+    primaryBorderColor: "#2a2a2a",
+    lineColor: "#a0a0a0",
+    secondaryColor: "#000000",
+    tertiaryColor: "#000000",
+    background: "#000000",
+    mainBkg: "#0a0a0a",
+    nodeBorder: "#2a2a2a",
+    clusterBkg: "rgba(10,10,10,0.8)",
+    clusterBorder: "#7c3aed",
+    titleColor: "#ffffff",
+    edgeLabelBackground: "transparent",
   },
-  flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis' },
-  securityLevel: 'loose',
+  flowchart: { useMaxWidth: false, htmlLabels: true, curve: "basis" },
+  securityLevel: "loose",
 });
 ```
 
@@ -244,29 +276,30 @@ When the walkthrough is database-focused, use `erDiagram` syntax. Add ER-specifi
 ```js
 mermaid.initialize({
   startOnLoad: false,
-  theme: 'dark',
+  theme: "dark",
   themeVariables: {
     // Base (same as flowchart)
-    primaryColor: '#0a0a0a',
-    primaryTextColor: '#ffffff',
-    primaryBorderColor: '#2a2a2a',
-    lineColor: '#a0a0a0',
-    background: '#000000',
+    primaryColor: "#0a0a0a",
+    primaryTextColor: "#ffffff",
+    primaryBorderColor: "#2a2a2a",
+    lineColor: "#a0a0a0",
+    background: "#000000",
     // ER-specific
-    entityBkg: '#0a0a0a',
-    entityBorder: '#7c3aed',
-    entityTextColor: '#ffffff',
-    attributeBackgroundColorEven: '#0a0a0a',
-    attributeBackgroundColorOdd: '#141414',
-    labelColor: '#a0a0a0',
-    relationColor: '#a855f7',
+    entityBkg: "#0a0a0a",
+    entityBorder: "#7c3aed",
+    entityTextColor: "#ffffff",
+    attributeBackgroundColorEven: "#0a0a0a",
+    attributeBackgroundColorOdd: "#141414",
+    labelColor: "#a0a0a0",
+    relationColor: "#a855f7",
   },
-  er: { useMaxWidth: false, layoutDirection: 'TB' },
-  securityLevel: 'loose',
+  er: { useMaxWidth: false, layoutDirection: "TB" },
+  securityLevel: "loose",
 });
 ```
 
 **Critical settings**:
+
 - `useMaxWidth: false` — lets the SVG render at its natural large size
 - `securityLevel: 'loose'` — required for `click` callbacks
 - `er.layoutDirection` — `'TB'` (top-bottom) or `'LR'` (left-right)
@@ -308,16 +341,16 @@ function usePanZoom() {
     const { zoom, panX, panY } = st.current;
     if (canvasRef.current)
       canvasRef.current.style.transform = `translate(${panX}px,${panY}px) scale(${zoom})`;
-    if (zoomDisplayRef.current)
-      zoomDisplayRef.current.textContent = Math.round(zoom * 100) + '%';
+    if (zoomDisplayRef.current) zoomDisplayRef.current.textContent = Math.round(zoom * 100) + "%";
   }, []);
 
   const fitToScreen = useCallback(() => {
-    const svg = canvasRef.current?.querySelector('svg');
+    const svg = canvasRef.current?.querySelector("svg");
     const vp = viewportRef.current;
     if (!svg || !vp) return;
     const s = st.current;
-    const vw = vp.clientWidth, vh = vp.clientHeight;
+    const vw = vp.clientWidth,
+      vh = vp.clientHeight;
     const sw = svg.getBoundingClientRect().width / s.zoom;
     const sh = svg.getBoundingClientRect().height / s.zoom;
     const fit = Math.max(0.15, Math.min(2, Math.min((vw - 80) / sw, (vh - 80) / sh)));
@@ -335,7 +368,8 @@ function usePanZoom() {
     const onWheel = (e) => {
       e.preventDefault();
       const r = vp.getBoundingClientRect();
-      const mx = e.clientX - r.left, my = e.clientY - r.top;
+      const mx = e.clientX - r.left,
+        my = e.clientY - r.top;
       const s = st.current;
       const f = e.deltaY < 0 ? 1.12 : 1 / 1.12;
       const nz = Math.min(4, Math.max(0.15, s.zoom * f));
@@ -348,7 +382,7 @@ function usePanZoom() {
 
     // Drag to pan (skip if clicking a node)
     const onDown = (e) => {
-      if (e.target.closest('.node')) return;
+      if (e.target.closest(".node")) return;
       drag.current = { on: true, lx: e.clientX, ly: e.clientY };
       vp.setPointerCapture(e.pointerId);
     };
@@ -357,23 +391,34 @@ function usePanZoom() {
       if (!d.on) return;
       st.current.panX += e.clientX - d.lx;
       st.current.panY += e.clientY - d.ly;
-      d.lx = e.clientX; d.ly = e.clientY;
+      d.lx = e.clientX;
+      d.ly = e.clientY;
       apply();
     };
-    const onUp = () => { drag.current.on = false; };
+    const onUp = () => {
+      drag.current.on = false;
+    };
 
-    vp.addEventListener('wheel', onWheel, { passive: false });
-    vp.addEventListener('pointerdown', onDown);
-    vp.addEventListener('pointermove', onMove);
-    vp.addEventListener('pointerup', onUp);
-    vp.addEventListener('pointercancel', onUp);
-    window.addEventListener('resize', fitToScreen);
+    vp.addEventListener("wheel", onWheel, { passive: false });
+    vp.addEventListener("pointerdown", onDown);
+    vp.addEventListener("pointermove", onMove);
+    vp.addEventListener("pointerup", onUp);
+    vp.addEventListener("pointercancel", onUp);
+    window.addEventListener("resize", fitToScreen);
 
-    return () => { /* removeEventListeners */ };
+    return () => {
+      /* removeEventListeners */
+    };
   }, [apply, fitToScreen]);
 
-  const zoomIn = useCallback(() => { st.current.zoom = Math.min(4, st.current.zoom * 1.25); apply(); }, [apply]);
-  const zoomOut = useCallback(() => { st.current.zoom = Math.max(0.15, st.current.zoom / 1.25); apply(); }, [apply]);
+  const zoomIn = useCallback(() => {
+    st.current.zoom = Math.min(4, st.current.zoom * 1.25);
+    apply();
+  }, [apply]);
+  const zoomOut = useCallback(() => {
+    st.current.zoom = Math.max(0.15, st.current.zoom / 1.25);
+    apply();
+  }, [apply]);
 
   return { viewportRef, canvasRef, zoomDisplayRef, zoomIn, zoomOut, fitToScreen };
 }
@@ -389,14 +434,18 @@ function MermaidDiagram({ onNodeClick }) {
 
   useEffect(() => {
     window.nodeClickHandler = onNodeClick;
-    mermaid.initialize({ /* see config above */ });
-    mermaid.render('walkthrough-diagram', DIAGRAM).then(({ svg, bindFunctions }) => {
+    mermaid.initialize({
+      /* see config above */
+    });
+    mermaid.render("walkthrough-diagram", DIAGRAM).then(({ svg, bindFunctions }) => {
       if (ref.current) {
         ref.current.innerHTML = svg;
-        bindFunctions?.(ref.current);  // Attaches click handlers to nodes
+        bindFunctions?.(ref.current); // Attaches click handlers to nodes
       }
     });
-    return () => { delete window.nodeClickHandler; };
+    return () => {
+      delete window.nodeClickHandler;
+    };
   }, [onNodeClick]);
 
   return <div ref={ref} className="mermaid-wrap" />;
@@ -412,19 +461,21 @@ function MermaidERDiagram({ onEntityClick }) {
   const ref = useRef(null);
 
   useEffect(() => {
-    mermaid.initialize({ /* see ER config above */ });
-    mermaid.render('walkthrough-diagram', DIAGRAM).then(({ svg, bindFunctions }) => {
+    mermaid.initialize({
+      /* see ER config above */
+    });
+    mermaid.render("walkthrough-diagram", DIAGRAM).then(({ svg, bindFunctions }) => {
       if (!ref.current) return;
       ref.current.innerHTML = svg;
       bindFunctions?.(ref.current);
 
       // Attach click handlers to each entity group
-      ref.current.querySelectorAll('.entityLabel').forEach(label => {
+      ref.current.querySelectorAll(".entityLabel").forEach((label) => {
         const entityName = label.textContent?.trim();
-        const entityGroup = label.closest('g');
+        const entityGroup = label.closest("g");
         if (!entityName || !entityGroup) return;
-        entityGroup.style.cursor = 'pointer';
-        entityGroup.addEventListener('click', () => onEntityClick(entityName));
+        entityGroup.style.cursor = "pointer";
+        entityGroup.addEventListener("click", () => onEntityClick(entityName));
       });
     });
   }, [onEntityClick]);
@@ -434,6 +485,7 @@ function MermaidERDiagram({ onEntityClick }) {
 ```
 
 **Key differences from flowchart**:
+
 - No `click nodeId callback` in the diagram definition
 - Entity names in the diagram become the keys in the `NODES` object
 - Click targets are `g` elements containing `.entityLabel`
@@ -460,9 +512,11 @@ The detail panel renders a plain-text description, an optional syntax-highlighte
 // JSX shown for readability — generated code uses React.createElement()
 function DetailPanel({ nodeId, node, onClose }) {
   useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
+    const onKey = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
   }, [onClose]);
 
   // Shiki-highlighted code (pre-computed) or fallback — only if node has code
@@ -470,8 +524,10 @@ function DetailPanel({ nodeId, node, onClose }) {
 
   return (
     <div className="fixed top-4 right-4 bottom-4 w-[560px] z-30 bg-wt-surface border border-wt-border rounded-xl shadow-2xl flex flex-col overflow-hidden">
-      <button onClick={onClose}
-        className="absolute top-3 right-3 z-10 w-7 h-7 rounded-md border border-wt-border bg-wt-raised text-wt-muted flex items-center justify-center text-lg hover:bg-wt-red hover:border-wt-red hover:text-white transition-colors">
+      <button
+        onClick={onClose}
+        className="absolute top-3 right-3 z-10 w-7 h-7 rounded-md border border-wt-border bg-wt-raised text-wt-muted flex items-center justify-center text-lg hover:bg-wt-red hover:border-wt-red hover:text-white transition-colors"
+      >
         &times;
       </button>
       <div className="flex-1 overflow-y-auto p-5">
@@ -483,10 +539,13 @@ function DetailPanel({ nodeId, node, onClose }) {
         {/* Optional syntax-highlighted code block */}
         {node.code && (
           <div className="dt-body">
-            {codeHtml
-              ? <div dangerouslySetInnerHTML={{ __html: codeHtml }} />
-              : <pre className="code-fallback"><code>{node.code}</code></pre>
-            }
+            {codeHtml ? (
+              <div dangerouslySetInnerHTML={{ __html: codeHtml }} />
+            ) : (
+              <pre className="code-fallback">
+                <code>{node.code}</code>
+              </pre>
+            )}
           </div>
         )}
 
@@ -496,7 +555,12 @@ function DetailPanel({ nodeId, node, onClose }) {
               Files
             </div>
             <code className="text-sm text-wt-file font-mono leading-relaxed">
-              {node.files.map((f, i) => <span key={i}>{f}<br/></span>)}
+              {node.files.map((f, i) => (
+                <span key={i}>
+                  {f}
+                  <br />
+                </span>
+              ))}
             </code>
           </div>
         )}
@@ -507,6 +571,7 @@ function DetailPanel({ nodeId, node, onClose }) {
 ```
 
 **Key differences from previous version**:
+
 - `node.description` is rendered as a plain `<p>` text — no `dangerouslySetInnerHTML`
 - No `<h3>Overview</h3><h3>Details</h3>` structure — just the description
 - Code block is optional and most nodes won't have one
@@ -523,19 +588,25 @@ function App() {
   // Bridge mermaid clicks → React state + dim other nodes
   const setActiveNode = useCallback((nodeId) => {
     _setActiveId(nodeId);
-    document.querySelectorAll('.mermaid-wrap .node').forEach(n => { n.style.opacity = nodeId ? '0.4' : '1'; });
+    document.querySelectorAll(".mermaid-wrap .node").forEach((n) => {
+      n.style.opacity = nodeId ? "0.4" : "1";
+    });
     if (nodeId) {
       const el = document.querySelector(`.mermaid-wrap .node[id*="${nodeId}"]`);
-      if (el) el.style.opacity = '1';
+      if (el) el.style.opacity = "1";
     }
   }, []);
 
   const closeDetail = useCallback(() => {
     _setActiveId(null);
-    document.querySelectorAll('.mermaid-wrap .node').forEach(n => { n.style.opacity = '1'; });
+    document.querySelectorAll(".mermaid-wrap .node").forEach((n) => {
+      n.style.opacity = "1";
+    });
   }, []);
 
-  useEffect(() => { setTimeout(pz.fitToScreen, 600); }, [pz.fitToScreen]);
+  useEffect(() => {
+    setTimeout(pz.fitToScreen, 600);
+  }, [pz.fitToScreen]);
 
   return (
     <>
@@ -546,24 +617,38 @@ function App() {
 
       <Summary />
 
-      <div ref={pz.viewportRef} className="w-full h-screen overflow-hidden cursor-grab active:cursor-grabbing">
-        <div ref={pz.canvasRef} className="origin-top-left will-change-transform inline-block p-[80px_60px_60px]">
+      <div
+        ref={pz.viewportRef}
+        className="w-full h-screen overflow-hidden cursor-grab active:cursor-grabbing"
+      >
+        <div
+          ref={pz.canvasRef}
+          className="origin-top-left will-change-transform inline-block p-[80px_60px_60px]"
+        >
           <MermaidDiagram onNodeClick={setActiveNode} />
         </div>
       </div>
 
-      <ZoomControls zoomDisplayRef={pz.zoomDisplayRef} onZoomIn={pz.zoomIn} onZoomOut={pz.zoomOut} onFit={pz.fitToScreen} />
+      <ZoomControls
+        zoomDisplayRef={pz.zoomDisplayRef}
+        onZoomIn={pz.zoomIn}
+        onZoomOut={pz.zoomOut}
+        onFit={pz.fitToScreen}
+      />
 
       <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-20 flex gap-4 px-4 py-2 bg-wt-surface border border-wt-border rounded-lg shadow-xl">
-        {LEGEND.map(l => (
+        {LEGEND.map((l) => (
           <span key={l.label} className="flex items-center gap-1.5 text-xs text-wt-muted">
-            <span className={`w-2 h-2 rounded-full ${l.color}`} />{l.label}
+            <span className={`w-2 h-2 rounded-full ${l.color}`} />
+            {l.label}
           </span>
         ))}
       </div>
 
       {/* Pass both nodeId and node to DetailPanel */}
-      {activeId && NODES[activeId] && <DetailPanel nodeId={activeId} node={NODES[activeId]} onClose={closeDetail} />}
+      {activeId && NODES[activeId] && (
+        <DetailPanel nodeId={activeId} node={NODES[activeId]} onClose={closeDetail} />
+      )}
 
       <div className="fixed bottom-5 right-5 z-20 text-xs text-wt-muted opacity-50">
         <kbd>Scroll</kbd> zoom · <kbd>Drag</kbd> pan · Click nodes
@@ -572,7 +657,7 @@ function App() {
   );
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 ```
 
 ## Node Detail Data Format
@@ -583,7 +668,8 @@ Plain-text description, optional raw source code, file paths. Most nodes have no
 const NODES = {
   nodeId: {
     title: "Drawing Interaction",
-    description: "Converts pointer events into shape data. This is the bridge between raw mouse input and the element model.",
+    description:
+      "Converts pointer events into shape data. This is the bridge between raw mouse input and the element model.",
     files: ["app/features/tools/useDrawingInteraction.ts"],
     // Optional — only if it's the single most illuminating snippet (max 5 lines)
     // code: `const element = createElement(tool, startPoint, currentPoint)`,
@@ -593,6 +679,7 @@ const NODES = {
 ```
 
 **Guidelines:**
+
 - `description` is 1-2 plain-text sentences. Answers "what is this?" and "why does it exist?"
 - `code` is **optional** — most nodes should NOT have code. Only include when it's the key insight.
 - `code` uses template literals for multi-line. Max 5 lines. No HTML escaping needed (Shiki handles it).
@@ -605,10 +692,12 @@ const NODES = {
 A 2-3 sentence overview rendered as a card above the diagram. Define it as a constant:
 
 ```js
-const SUMMARY = "The drawing tool converts pointer events into visual elements on the canvas. When you select a tool and drag, a composable tracks the gesture and creates element data, which the rendering pipeline turns into canvas pixels. The tool state machine coordinates which interactions are active.";
+const SUMMARY =
+  "The drawing tool converts pointer events into visual elements on the canvas. When you select a tool and drag, a composable tracks the gesture and creates element data, which the rendering pipeline turns into canvas pixels. The tool state machine coordinates which interactions are active.";
 ```
 
 **Guidelines:**
+
 - 2-3 sentences max
 - Answer: "What does this system do, at the highest level?"
 - Plain text, no formatting

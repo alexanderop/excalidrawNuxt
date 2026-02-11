@@ -151,10 +151,10 @@ Excalidraw-specific setup:
 
 ```typescript
 const renderApp: TestRenderFn = async (ui, options) => {
-  Pointer.resetAll();  // no state leaks between tests
+  Pointer.resetAll(); // no state leaks between tests
 
   const renderResult = render(ui, {
-    queries: customQueries,  // includes getByToolName
+    queries: customQueries, // includes getByToolName
     ...options,
   });
 
@@ -315,6 +315,7 @@ export class Pointer {
 ```
 
 Two modes of positioning solve different needs:
+
 - **Incremental** (`down/move/up` with deltas) is natural for drawing gestures
 - **Absolute** (`downAt/moveTo/upAt`) is better for precise coordinate tests
 
@@ -327,13 +328,23 @@ export const Keyboard = {
     altKey = !!modifiers.alt;
     shiftKey = !!modifiers.shift;
     ctrlKey = !!modifiers.ctrl;
-    try { cb(); }
-    finally { /* restore previous values */ }
+    try {
+      cb();
+    } finally {
+      /* restore previous values */
+    }
   },
 
-  keyPress(key) { Keyboard.keyDown(key); Keyboard.keyUp(key); },
-  undo()  { Keyboard.withModifierKeys({ ctrl: true }, () => Keyboard.keyPress("z")); },
-  redo()  { Keyboard.withModifierKeys({ ctrl: true, shift: true }, () => Keyboard.keyPress("z")); },
+  keyPress(key) {
+    Keyboard.keyDown(key);
+    Keyboard.keyUp(key);
+  },
+  undo() {
+    Keyboard.withModifierKeys({ ctrl: true }, () => Keyboard.keyPress("z"));
+  },
+  redo() {
+    Keyboard.withModifierKeys({ ctrl: true, shift: true }, () => Keyboard.keyPress("z"));
+  },
 };
 ```
 
@@ -364,7 +375,7 @@ export const UI = {
     }
 
     const origElement = h.elements.at(-1);
-    return proxy(origElement);  // <-- returns a live Proxy
+    return proxy(origElement); // <-- returns a live Proxy
   },
 };
 ```
@@ -375,14 +386,17 @@ A raw reference would go stale. The proxy solves this:
 
 ```typescript
 const proxy = (element) => {
-  return new Proxy({}, {
-    get(target, prop) {
-      // Always read from the CURRENT elements array
-      const current = h.elements.find(({ id }) => id === element.id);
-      if (prop === "get") return () => current;
-      return current[prop];
+  return new Proxy(
+    {},
+    {
+      get(target, prop) {
+        // Always read from the CURRENT elements array
+        const current = h.elements.find(({ id }) => id === element.id);
+        if (prop === "get") return () => current;
+        return current[prop];
+      },
     },
-  });
+  );
 };
 ```
 
@@ -391,7 +405,7 @@ Now test code can do:
 ```typescript
 const rect = UI.createElement("rectangle", { x: 10, y: 10, width: 100, height: 50 });
 // ... many interactions later ...
-expect(rect.width).toBe(200);  // always reads the latest value
+expect(rect.width).toBe(200); // always reads the latest value
 ```
 
 ---
@@ -546,7 +560,7 @@ it("should support tool locking", async () => {
 The regression test file creates multiple pointer instances for touch testing:
 
 ```typescript
-const mouse   = new Pointer("mouse");
+const mouse = new Pointer("mouse");
 const finger1 = new Pointer("touch", 1);
 const finger2 = new Pointer("touch", 2);
 ```
@@ -565,17 +579,10 @@ precision:
 ```typescript
 describe("Math curve", () => {
   it("intersection point is found", () => {
-    const c = curve(
-      pointFrom(100, 0),
-      pointFrom(100, 100),
-      pointFrom(100, 100),
-      pointFrom(0, 100),
-    );
+    const c = curve(pointFrom(100, 0), pointFrom(100, 100), pointFrom(100, 100), pointFrom(0, 100));
     const l = lineSegment(pointFrom(0, 0), pointFrom(200, 200));
 
-    expect(curveIntersectLineSegment(c, l)).toCloselyEqualPoints([
-      [87.5, 87.5],
-    ]);
+    expect(curveIntersectLineSegment(c, l)).toCloselyEqualPoints([[87.5, 87.5]]);
   });
 });
 ```
@@ -632,8 +639,7 @@ app state, all elements, and the full undo/redo history:
 
 ```typescript
 const checkpoint = (name) => {
-  expect(renderStaticScene.mock.calls.length)
-    .toMatchSnapshot(`[${name}] number of renders`);
+  expect(renderStaticScene.mock.calls.length).toMatchSnapshot(`[${name}] number of renders`);
   expect(h.state).toMatchSnapshot(`[${name}] appState`);
   expect(h.elements.length).toMatchSnapshot(`[${name}] number of elements`);
   for (const [i, el] of h.elements.entries()) {
@@ -643,7 +649,7 @@ const checkpoint = (name) => {
 };
 
 afterEach(() => {
-  checkpoint("end of test");  // auto-checkpoint at end of every test
+  checkpoint("end of test"); // auto-checkpoint at end of every test
 });
 ```
 

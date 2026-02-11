@@ -1,13 +1,15 @@
 {
   "name": "excalidrawNuxt",
-  "type": "module",
   "private": true,
+  "type": "module",
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare && simple-git-hooks",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check",
     "lint:oxlint": "oxlint . --fix --ignore-path .gitignore",
     "lint:eslint": "eslint . --fix --cache",
     "lint": "run-s lint:*",
@@ -17,15 +19,6 @@
     "test:browser": "vitest --project browser",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage"
-  },
-  "simple-git-hooks": {
-    "pre-commit": "bun run lint-staged && bun run typecheck"
-  },
-  "lint-staged": {
-    "*.{ts,vue}": [
-      "oxlint --fix",
-      "eslint --fix --cache"
-    ]
   },
   "dependencies": {
     "@excalidraw/common": "0.18.0-f0063e113",
@@ -58,12 +51,24 @@
     "eslint-plugin-vue": "^10.7.0",
     "lint-staged": "^16.2.7",
     "npm-run-all2": "^8.0.4",
+    "oxfmt": "^0.31.0",
     "oxlint": "^1.43.0",
     "playwright": "^1.52.0",
-    "prettier": "^3.8.1",
     "simple-git-hooks": "^2.13.1",
     "typescript": "^5.9.3",
     "vitest": "^4.0.0",
     "vitest-browser-vue": "^2.0.0"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "bun run lint-staged && bun run typecheck"
+  },
+  "lint-staged": {
+    "*.{ts,vue,json,css,md}": [
+      "oxfmt"
+    ],
+    "*.{ts,vue}": [
+      "oxlint --fix",
+      "eslint --fix --cache"
+    ]
   }
 }

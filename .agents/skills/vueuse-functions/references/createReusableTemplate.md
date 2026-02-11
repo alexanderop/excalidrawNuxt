@@ -32,9 +32,9 @@ In the previous example, we could refactor it to:
 
 ```vue
 <script setup lang="ts">
-import { createReusableTemplate } from '@vueuse/core'
+import { createReusableTemplate } from "@vueuse/core";
 
-const [DefineTemplate, ReuseTemplate] = createReusableTemplate()
+const [DefineTemplate, ReuseTemplate] = createReusableTemplate();
 </script>
 
 <template>
@@ -63,10 +63,10 @@ When using with [Options API](https://vuejs.org/guide/introduction.html#api-styl
 
 ```vue
 <script>
-import { createReusableTemplate } from '@vueuse/core'
-import { defineComponent } from 'vue'
+import { createReusableTemplate } from "@vueuse/core";
+import { defineComponent } from "vue";
 
-const [DefineTemplate, ReuseTemplate] = createReusableTemplate()
+const [DefineTemplate, ReuseTemplate] = createReusableTemplate();
 
 export default defineComponent({
   components: {
@@ -76,7 +76,7 @@ export default defineComponent({
   setup() {
     // ...
   },
-})
+});
 </script>
 
 <template>
@@ -97,9 +97,9 @@ You can also pass data to the template using slots:
 
 ```vue
 <script setup lang="ts">
-import { createReusableTemplate } from '@vueuse/core'
+import { createReusableTemplate } from "@vueuse/core";
 
-const [DefineTemplate, ReuseTemplate] = createReusableTemplate()
+const [DefineTemplate, ReuseTemplate] = createReusableTemplate();
 </script>
 
 <template>
@@ -119,13 +119,13 @@ const [DefineTemplate, ReuseTemplate] = createReusableTemplate()
 
 ```vue
 <script setup lang="ts">
-import { createReusableTemplate } from '@vueuse/core'
+import { createReusableTemplate } from "@vueuse/core";
 
 // Comes with pair of `DefineTemplate` and `ReuseTemplate`
-const [DefineFoo, ReuseFoo] = createReusableTemplate<{ msg: string }>()
+const [DefineFoo, ReuseFoo] = createReusableTemplate<{ msg: string }>();
 
 // You can create multiple reusable templates
-const [DefineBar, ReuseBar] = createReusableTemplate<{ items: string[] }>()
+const [DefineBar, ReuseBar] = createReusableTemplate<{ items: string[] }>();
 </script>
 
 <template>
@@ -145,11 +145,11 @@ Optionally, if you are not a fan of array destructuring, the following usages ar
 
 ```vue
 <script setup lang="ts">
-import { createReusableTemplate } from '@vueuse/core'
+import { createReusableTemplate } from "@vueuse/core";
 
 const { define: DefineFoo, reuse: ReuseFoo } = createReusableTemplate<{
-  msg: string
-}>()
+  msg: string;
+}>();
 </script>
 
 <template>
@@ -163,9 +163,9 @@ const { define: DefineFoo, reuse: ReuseFoo } = createReusableTemplate<{
 
 ```vue
 <script setup lang="ts">
-import { createReusableTemplate } from '@vueuse/core'
+import { createReusableTemplate } from "@vueuse/core";
 
-const TemplateFoo = createReusableTemplate<{ msg: string }>()
+const TemplateFoo = createReusableTemplate<{ msg: string }>();
 </script>
 
 <template>
@@ -186,24 +186,24 @@ Passing boolean props without `v-bind` is not supported. See the [Caveats](#bool
 By default, all props and attributes passed to `<ReuseTemplate>` will be passed to the template. If you don't want certain props to be passed to the DOM, you need to define the runtime props:
 
 ```ts
-import { createReusableTemplate } from '@vueuse/core'
+import { createReusableTemplate } from "@vueuse/core";
 
 const [DefineTemplate, ReuseTemplate] = createReusableTemplate({
   props: {
     msg: String,
     enable: Boolean,
-  }
-})
+  },
+});
 ```
 
 If you don't want to pass any props to the template, you can pass the `inheritAttrs` option:
 
 ```ts
-import { createReusableTemplate } from '@vueuse/core'
+import { createReusableTemplate } from "@vueuse/core";
 
 const [DefineTemplate, ReuseTemplate] = createReusableTemplate({
   inheritAttrs: false,
-})
+});
 ```
 
 ### Passing Slots
@@ -212,9 +212,9 @@ It's also possible to pass slots back from `<ReuseTemplate>`. You can access the
 
 ```vue
 <script setup lang="ts">
-import { createReusableTemplate } from '@vueuse/core'
+import { createReusableTemplate } from "@vueuse/core";
 
-const [DefineTemplate, ReuseTemplate] = createReusableTemplate()
+const [DefineTemplate, ReuseTemplate] = createReusableTemplate();
 </script>
 
 <template>
@@ -242,17 +242,15 @@ As opposed to Vue's behavior, props defined as `boolean` that were passed withou
 
 ```vue
 <script setup lang="ts">
-import { createReusableTemplate } from '@vueuse/core'
+import { createReusableTemplate } from "@vueuse/core";
 
 const [DefineTemplate, ReuseTemplate] = createReusableTemplate<{
-  value?: boolean
-}>()
+  value?: boolean;
+}>();
 </script>
 
 <template>
-  <DefineTemplate v-slot="{ value }">
-    {{ typeof value }}: {{ value }}
-  </DefineTemplate>
+  <DefineTemplate v-slot="{ value }"> {{ typeof value }}: {{ value }} </DefineTemplate>
 
   <ReuseTemplate :value="true" />
   <!-- boolean: true -->
@@ -284,15 +282,10 @@ Alternative Approaches:
 ## Type Declarations
 
 ```ts
-type ObjectLiteralWithPotentialObjectLiterals = Record<
-  string,
-  Record<string, any> | undefined
->
-type GenerateSlotsFromSlotMap<
-  T extends ObjectLiteralWithPotentialObjectLiterals,
-> = {
-  [K in keyof T]: Slot<T[K]>
-}
+type ObjectLiteralWithPotentialObjectLiterals = Record<string, Record<string, any> | undefined>;
+type GenerateSlotsFromSlotMap<T extends ObjectLiteralWithPotentialObjectLiterals> = {
+  [K in keyof T]: Slot<T[K]>;
+};
 export type DefineTemplateComponent<
   Bindings extends Record<string, any>,
   MapSlotNameToSlotProps extends ObjectLiteralWithPotentialObjectLiterals,
@@ -301,20 +294,20 @@ export type DefineTemplateComponent<
     $slots: {
       default: (
         _: Bindings & {
-          $slots: GenerateSlotsFromSlotMap<MapSlotNameToSlotProps>
+          $slots: GenerateSlotsFromSlotMap<MapSlotNameToSlotProps>;
         },
-      ) => any
-    }
-  }
-}
+      ) => any;
+    };
+  };
+};
 export type ReuseTemplateComponent<
   Bindings extends Record<string, any>,
   MapSlotNameToSlotProps extends ObjectLiteralWithPotentialObjectLiterals,
 > = DefineComponent<Bindings> & {
   new (): {
-    $slots: GenerateSlotsFromSlotMap<MapSlotNameToSlotProps>
-  }
-}
+    $slots: GenerateSlotsFromSlotMap<MapSlotNameToSlotProps>;
+  };
+};
 export type ReusableTemplatePair<
   Bindings extends Record<string, any>,
   MapSlotNameToSlotProps extends ObjectLiteralWithPotentialObjectLiterals,
@@ -322,22 +315,20 @@ export type ReusableTemplatePair<
   DefineTemplateComponent<Bindings, MapSlotNameToSlotProps>,
   ReuseTemplateComponent<Bindings, MapSlotNameToSlotProps>,
 ] & {
-  define: DefineTemplateComponent<Bindings, MapSlotNameToSlotProps>
-  reuse: ReuseTemplateComponent<Bindings, MapSlotNameToSlotProps>
-}
-export interface CreateReusableTemplateOptions<
-  Props extends Record<string, any>,
-> {
+  define: DefineTemplateComponent<Bindings, MapSlotNameToSlotProps>;
+  reuse: ReuseTemplateComponent<Bindings, MapSlotNameToSlotProps>;
+};
+export interface CreateReusableTemplateOptions<Props extends Record<string, any>> {
   /**
    * Inherit attrs from reuse component.
    *
    * @default true
    */
-  inheritAttrs?: boolean
+  inheritAttrs?: boolean;
   /**
    * Props definition for reuse component.
    */
-  props?: ComponentObjectPropsOptions<Props>
+  props?: ComponentObjectPropsOptions<Props>;
 }
 /**
  * This function creates `define` and `reuse` components in pair,
@@ -349,9 +340,11 @@ export interface CreateReusableTemplateOptions<
  */
 export declare function createReusableTemplate<
   Bindings extends Record<string, any>,
-  MapSlotNameToSlotProps extends ObjectLiteralWithPotentialObjectLiterals =
-    Record<"default", undefined>,
+  MapSlotNameToSlotProps extends ObjectLiteralWithPotentialObjectLiterals = Record<
+    "default",
+    undefined
+  >,
 >(
   options?: CreateReusableTemplateOptions<Bindings>,
-): ReusableTemplatePair<Bindings, MapSlotNameToSlotProps>
+): ReusableTemplatePair<Bindings, MapSlotNameToSlotProps>;
 ```

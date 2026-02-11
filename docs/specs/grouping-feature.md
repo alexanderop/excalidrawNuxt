@@ -11,11 +11,13 @@ Add element grouping (Cmd+G / Cmd+Shift+G) so users can treat multiple elements 
 ## Excalidraw Reference
 
 Source files studied:
+
 - `excalidraw/packages/element/src/groups.ts` — all group utilities
 - `excalidraw/packages/excalidraw/actions/actionGroup.tsx` — group/ungroup actions
 - `excalidraw/packages/element/src/types.ts` — `GroupId` type, `groupIds` field
 
 Key design decisions from Excalidraw:
+
 - `GroupId = string` (random ID, same generator as element IDs)
 - `groupIds: readonly GroupId[]` — ordered **deepest → shallowest** (supports nesting)
 - Groups are NOT a separate entity — they exist only as shared IDs on elements
@@ -29,7 +31,7 @@ Key design decisions from Excalidraw:
 
 ```typescript
 // app/features/elements/types.ts
-export type { GroupId } from '@excalidraw/element/types'
+export type { GroupId } from "@excalidraw/element/types";
 // groupIds: readonly GroupId[] — already on _ExcalidrawElementBase
 ```
 
@@ -39,9 +41,9 @@ export type { GroupId } from '@excalidraw/element/types'
 // app/features/elements/createElement.ts
 const base = {
   // ... existing fields ...
-  groupIds: [] as readonly string[],  // DONE — default to no groups
+  groupIds: [] as readonly string[], // DONE — default to no groups
   ...overrides,
-}
+};
 ```
 
 ### 3. Group-related app state — `DONE`
@@ -50,7 +52,7 @@ Implemented in `useGroups` composable (`app/features/groups/composables/useGroup
 
 ```typescript
 // Actual implementation uses ReadonlySet<GroupId> not Record<GroupId, boolean>
-selectedGroupIds: ShallowRef<ReadonlySet<GroupId>>
+selectedGroupIds: ShallowRef<ReadonlySet<GroupId>>;
 // Note: editingGroupId is NOT yet implemented (deferred — no nested group editing)
 ```
 
@@ -74,26 +76,39 @@ Actual implementation. Note: some functions re-exported from `@excalidraw/elemen
 
 ```typescript
 // Re-exported from @excalidraw/element (upstream utilities):
-export { isElementInGroup, getElementsInGroup, elementsAreInSameGroup } from '@excalidraw/element'
+export { isElementInGroup, getElementsInGroup, elementsAreInSameGroup } from "@excalidraw/element";
 
 // Custom implementations:
-function getOutermostGroupId(element: ExcalidrawElement): GroupId | null
+function getOutermostGroupId(element: ExcalidrawElement): GroupId | null;
 // Note: simplified from spec — no editingGroupId parameter (nested groups deferred)
-function addToGroup(prevGroupIds: readonly GroupId[], newGroupId: GroupId): readonly GroupId[]
+function addToGroup(prevGroupIds: readonly GroupId[], newGroupId: GroupId): readonly GroupId[];
 // Note: uses ReadonlySet instead of Record<GroupId, boolean>
-function removeFromGroups(groupIds: readonly GroupId[], groupIdsToRemove: ReadonlySet<GroupId>): readonly GroupId[]
+function removeFromGroups(
+  groupIds: readonly GroupId[],
+  groupIdsToRemove: ReadonlySet<GroupId>,
+): readonly GroupId[];
 // Note: renamed from selectGroupsForSelectedElements; returns ReadonlySet not Record
 function expandSelectionToGroups(
   elements: readonly ExcalidrawElement[],
   selectedElementIds: ReadonlySet<string>,
-): GroupExpansionResult  // { elementIds: ReadonlySet<string>; groupIds: ReadonlySet<GroupId> }
+): GroupExpansionResult; // { elementIds: ReadonlySet<string>; groupIds: ReadonlySet<GroupId> }
 // Note: uses ReadonlySet instead of Record<GroupId, boolean>
-function isSelectedViaGroup(element: ExcalidrawElement, selectedGroupIds: ReadonlySet<GroupId>): boolean
-function reorderElementsForGroup(elements: readonly ExcalidrawElement[], groupElementIds: ReadonlySet<string>): readonly ExcalidrawElement[]
-function cleanupAfterDelete(elements: readonly ExcalidrawElement[], deletedIds: ReadonlySet<string>): void
+function isSelectedViaGroup(
+  element: ExcalidrawElement,
+  selectedGroupIds: ReadonlySet<GroupId>,
+): boolean;
+function reorderElementsForGroup(
+  elements: readonly ExcalidrawElement[],
+  groupElementIds: ReadonlySet<string>,
+): readonly ExcalidrawElement[];
+function cleanupAfterDelete(
+  elements: readonly ExcalidrawElement[],
+  deletedIds: ReadonlySet<string>,
+): void;
 ```
 
 **Differences from original spec:**
+
 - Uses `ReadonlySet<GroupId>` instead of `Record<GroupId, boolean>` for type safety
 - `addToGroup` does not take `editingGroupId` (nested groups deferred)
 - Added `cleanupAfterDelete` — auto-ungroups when a group has <2 members
@@ -105,28 +120,29 @@ function cleanupAfterDelete(elements: readonly ExcalidrawElement[], deletedIds: 
 Actual interface (differs from original spec):
 
 ```typescript
-function useGroups(options: UseGroupsOptions): UseGroupsReturn
+function useGroups(options: UseGroupsOptions): UseGroupsReturn;
 
 interface UseGroupsOptions {
-  elements: ShallowRef<readonly ExcalidrawElement[]>
-  selectedIds: ShallowRef<ReadonlySet<string>>
-  selectedElements: () => readonly ExcalidrawElement[]
-  replaceSelection: (ids: Set<string>) => void
-  replaceElements: (elements: readonly ExcalidrawElement[]) => void
-  markStaticDirty: () => void
-  markInteractiveDirty: () => void
+  elements: ShallowRef<readonly ExcalidrawElement[]>;
+  selectedIds: ShallowRef<ReadonlySet<string>>;
+  selectedElements: () => readonly ExcalidrawElement[];
+  replaceSelection: (ids: Set<string>) => void;
+  replaceElements: (elements: readonly ExcalidrawElement[]) => void;
+  markStaticDirty: () => void;
+  markInteractiveDirty: () => void;
 }
 
 interface UseGroupsReturn {
-  selectedGroupIds: ShallowRef<ReadonlySet<GroupId>>  // ReadonlySet, not Record
-  groupSelection: () => void       // Cmd+G
-  ungroupSelection: () => void     // Cmd+Shift+G
-  isSelectedViaGroup: (element: ExcalidrawElement) => boolean
-  expandSelectionForGroups: () => void  // expands selection to include all group members
+  selectedGroupIds: ShallowRef<ReadonlySet<GroupId>>; // ReadonlySet, not Record
+  groupSelection: () => void; // Cmd+G
+  ungroupSelection: () => void; // Cmd+Shift+G
+  isSelectedViaGroup: (element: ExcalidrawElement) => boolean;
+  expandSelectionForGroups: () => void; // expands selection to include all group members
 }
 ```
 
 **Differences from original spec:**
+
 - Takes an options object instead of positional args
 - Uses `ReadonlySet<GroupId>` instead of `Record<GroupId, boolean>`
 - No `editingGroupId` (nested group editing deferred)
@@ -137,6 +153,7 @@ interface UseGroupsReturn {
 ## Selection Changes
 
 ### Current Flow (no groups)
+
 ```
 click element → select(element.id) → selectedIds = {elementId}
 ```
@@ -163,11 +180,13 @@ flowchart TD
 The `select()` method needs a group-aware wrapper. Two approaches:
 
 **Option A (preferred): Wrap in `useGroups`**
+
 - `useSelection` stays unchanged (it manages raw IDs)
 - `useGroups` intercepts clicks and calls `replaceSelection()` with expanded group member IDs
 - Keeps separation of concerns clean
 
 **Option B: Modify `useSelection`**
+
 - Add `groupIds` awareness directly into `select()`
 - Tighter coupling but fewer indirections
 
@@ -192,6 +211,7 @@ Currently drags all `selectedElements`. With groups, this already works because 
 ### `resizeElement.ts`
 
 Single-element resize. When a group is selected:
+
 - Show a single bounding box around the entire group
 - Resize scales all group members proportionally from the group center
 - This is a **follow-up task** — initially, disable resize handles when multiple elements are selected via group (Excalidraw does the same)
@@ -212,11 +232,11 @@ Dashed border style for group bounding box (distinct from element selection bord
 
 ## Keyboard Shortcuts
 
-| Shortcut | Action | Condition |
-|----------|--------|-----------|
-| Cmd+G | Group selected elements | 2+ elements selected |
-| Cmd+Shift+G | Ungroup | Group(s) selected |
-| Escape | Exit group editing | `editingGroupId` is set |
+| Shortcut    | Action                  | Condition               |
+| ----------- | ----------------------- | ----------------------- |
+| Cmd+G       | Group selected elements | 2+ elements selected    |
+| Cmd+Shift+G | Ungroup                 | Group(s) selected       |
+| Escape      | Exit group editing      | `editingGroupId` is set |
 
 ### Integration Point
 
@@ -224,12 +244,12 @@ Add to the existing keyboard handler (wherever shortcuts are registered):
 
 ```typescript
 // Cmd+G
-if (event.metaKey && event.key === 'g' && !event.shiftKey) {
-  groupSelection()
+if (event.metaKey && event.key === "g" && !event.shiftKey) {
+  groupSelection();
 }
 // Cmd+Shift+G
-if (event.metaKey && event.key === 'G' && event.shiftKey) {
-  ungroupSelection()
+if (event.metaKey && event.key === "G" && event.shiftKey) {
+  ungroupSelection();
 }
 ```
 
@@ -245,7 +265,7 @@ When grouping, reorder elements so group members are contiguous in the elements 
 function reorderElementsForGroup(
   elements: readonly ExcalidrawElement[],
   groupElementIds: Set<string>,
-): ExcalidrawElement[]
+): ExcalidrawElement[];
 ```
 
 ## Nested Groups
@@ -262,9 +282,11 @@ element.groupIds = ["inner-group", "outer-group"]
 ## Copy/Paste & Delete
 
 ### Delete
+
 - Deleting an element removes it from its group. If only 1 element remains in the group, auto-ungroup it (remove the `groupId` from the remaining element).
 
 ### Copy/Paste
+
 - Copying grouped elements should preserve their group relationship but assign a **new** `groupId` to the pasted group (so it's independent of the original).
 
 ## Implementation Order
@@ -280,18 +302,19 @@ flowchart LR
     G --> H["8. Delete cleanup ✓"]
 ```
 
-| Phase | Status | Files |
-|-------|--------|-------|
-| 1. Data model | DONE | `elements/types.ts` (re-export), `elements/createElement.ts` |
-| 2. Group utils | DONE | `groups/groupUtils.ts` + `groupUtils.unit.test.ts` |
-| 3. useGroups | DONE | `groups/composables/useGroups.ts` |
-| 4. Selection integration | DONE | `useSelectionInteraction.ts` calls `expandSelectionForGroups()` |
-| 5. Keyboard shortcuts | DONE | Cmd+G / Cmd+Shift+G wired in |
-| 6. Rendering | PARTIAL | Group bounding box rendering not yet implemented (individual elements render, no group-level dashed border) |
-| 7. Z-order reordering | DONE | `reorderElementsForGroup()` in groupUtils |
-| 8. Delete cleanup | DONE | `cleanupAfterDelete()` auto-ungroups orphaned groups |
+| Phase                    | Status  | Files                                                                                                       |
+| ------------------------ | ------- | ----------------------------------------------------------------------------------------------------------- |
+| 1. Data model            | DONE    | `elements/types.ts` (re-export), `elements/createElement.ts`                                                |
+| 2. Group utils           | DONE    | `groups/groupUtils.ts` + `groupUtils.unit.test.ts`                                                          |
+| 3. useGroups             | DONE    | `groups/composables/useGroups.ts`                                                                           |
+| 4. Selection integration | DONE    | `useSelectionInteraction.ts` calls `expandSelectionForGroups()`                                             |
+| 5. Keyboard shortcuts    | DONE    | Cmd+G / Cmd+Shift+G wired in                                                                                |
+| 6. Rendering             | PARTIAL | Group bounding box rendering not yet implemented (individual elements render, no group-level dashed border) |
+| 7. Z-order reordering    | DONE    | `reorderElementsForGroup()` in groupUtils                                                                   |
+| 8. Delete cleanup        | DONE    | `cleanupAfterDelete()` auto-ungroups orphaned groups                                                        |
 
 ### Still TODO
+
 - Group bounding box rendering (dashed border around grouped elements when selected as group)
 - `editingGroupId` / nested group editing (double-click to drill into group)
 - Escape to exit group editing mode

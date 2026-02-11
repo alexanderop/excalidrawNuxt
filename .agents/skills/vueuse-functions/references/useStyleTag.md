@@ -13,18 +13,12 @@ Inject reactive `style` element in head.
 Provide a CSS string, then `useStyleTag` will automatically generate an id and inject it in `<head>`.
 
 ```ts
-import { useStyleTag } from '@vueuse/core'
+import { useStyleTag } from "@vueuse/core";
 
-const {
-  id,
-  css,
-  load,
-  unload,
-  isLoaded,
-} = useStyleTag('.foo { margin-top: 32px; }')
+const { id, css, load, unload, isLoaded } = useStyleTag(".foo { margin-top: 32px; }");
 
 // Later you can modify styles
-css.value = '.foo { margin-top: 64px; }'
+css.value = ".foo { margin-top: 64px; }";
 ```
 
 This code will be injected to `<head>`:
@@ -42,9 +36,9 @@ This code will be injected to `<head>`:
 If you need to define your own id, you can pass `id` as first argument.
 
 ```ts
-import { useStyleTag } from '@vueuse/core'
+import { useStyleTag } from "@vueuse/core";
 // ---cut---
-useStyleTag('.foo { margin-top: 32px; }', { id: 'custom-id' })
+useStyleTag(".foo { margin-top: 32px; }", { id: "custom-id" });
 ```
 
 ```html
@@ -61,9 +55,9 @@ useStyleTag('.foo { margin-top: 32px; }', { id: 'custom-id' })
 You can pass media attributes as last argument within object.
 
 ```ts
-import { useStyleTag } from '@vueuse/core'
+import { useStyleTag } from "@vueuse/core";
 // ---cut---
-useStyleTag('.foo { margin-top: 32px; }', { media: 'print' })
+useStyleTag(".foo { margin-top: 32px; }", { media: "print" });
 ```
 
 ```html
@@ -82,38 +76,38 @@ export interface UseStyleTagOptions extends ConfigurableDocument {
   /**
    * Media query for styles to apply
    */
-  media?: string
+  media?: string;
   /**
    * Load the style immediately
    *
    * @default true
    */
-  immediate?: boolean
+  immediate?: boolean;
   /**
    * Manual controls the timing of loading and unloading
    *
    * @default false
    */
-  manual?: boolean
+  manual?: boolean;
   /**
    * DOM id of the style tag
    *
    * @default auto-incremented
    */
-  id?: string
+  id?: string;
   /**
    * Nonce value for CSP (Content Security Policy)
    *
    * @default undefined
    */
-  nonce?: string
+  nonce?: string;
 }
 export interface UseStyleTagReturn {
-  id: string
-  css: ShallowRef<string>
-  load: () => void
-  unload: () => void
-  isLoaded: Readonly<ShallowRef<boolean>>
+  id: string;
+  css: ShallowRef<string>;
+  load: () => void;
+  unload: () => void;
+  isLoaded: Readonly<ShallowRef<boolean>>;
 }
 /**
  * Inject <style> element in head.
@@ -127,5 +121,5 @@ export interface UseStyleTagReturn {
 export declare function useStyleTag(
   css: MaybeRef<string>,
   options?: UseStyleTagOptions,
-): UseStyleTagReturn
+): UseStyleTagReturn;
 ```

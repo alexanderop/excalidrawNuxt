@@ -9,11 +9,11 @@ Wrapper for `setTimeout` with controls.
 ## Usage
 
 ```ts
-import { useTimeoutFn } from '@vueuse/core'
+import { useTimeoutFn } from "@vueuse/core";
 
 const { isPending, start, stop } = useTimeoutFn(() => {
   /* ... */
-}, 3000)
+}, 3000);
 ```
 
 ## Type Declarations
@@ -25,17 +25,15 @@ export interface UseTimeoutFnOptions {
    *
    * @default true
    */
-  immediate?: boolean
+  immediate?: boolean;
   /**
    * Execute the callback immediately after calling `start`
    *
    * @default false
    */
-  immediateCallback?: boolean
+  immediateCallback?: boolean;
 }
-export type UseTimeoutFnReturn<CallbackFn extends AnyFn> = Stoppable<
-  Parameters<CallbackFn> | []
->
+export type UseTimeoutFnReturn<CallbackFn extends AnyFn> = Stoppable<Parameters<CallbackFn> | []>;
 /**
  * Wrapper for `setTimeout` with controls.
  *
@@ -47,5 +45,5 @@ export declare function useTimeoutFn<CallbackFn extends AnyFn>(
   cb: CallbackFn,
   interval: MaybeRefOrGetter<number>,
   options?: UseTimeoutFnOptions,
-): UseTimeoutFnReturn<CallbackFn>
+): UseTimeoutFnReturn<CallbackFn>;
 ```

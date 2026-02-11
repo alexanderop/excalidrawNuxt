@@ -12,11 +12,11 @@ Provides reactive bindings for the [Gamepad API](https://developer.mozilla.org/e
 
 ```vue
 <script setup lang="ts">
-import { useGamepad } from '@vueuse/core'
-import { computed } from 'vue'
+import { useGamepad } from "@vueuse/core";
+import { computed } from "vue";
 
-const { isSupported, gamepads } = useGamepad()
-const gamepad = computed(() => gamepads.value.find(g => g.mapping === 'standard'))
+const { isSupported, gamepads } = useGamepad();
+const gamepad = computed(() => gamepads.value.find((g) => g.mapping === "standard"));
 </script>
 
 <template>
@@ -31,15 +31,15 @@ const gamepad = computed(() => gamepads.value.find(g => g.mapping === 'standard'
 Currently the Gamepad API does not have event support to update the state of the gamepad. To update the gamepad state, `requestAnimationFrame` is used to poll for gamepad changes. You can control this polling by using the `pause` and `resume` functions provided by `useGamepad`
 
 ```ts
-import { useGamepad } from '@vueuse/core'
+import { useGamepad } from "@vueuse/core";
 
-const { pause, resume, gamepads } = useGamepad()
+const { pause, resume, gamepads } = useGamepad();
 
-pause()
+pause();
 
 // gamepads object will not update
 
-resume()
+resume();
 
 // gamepads object will update on user input
 ```
@@ -49,17 +49,17 @@ resume()
 The `onConnected` and `onDisconnected` events will trigger when a gamepad is connected or disconnected.
 
 ```ts
-import { useGamepad } from '@vueuse/core'
+import { useGamepad } from "@vueuse/core";
 // ---cut---
-const { gamepads, onConnected, onDisconnected } = useGamepad()
+const { gamepads, onConnected, onDisconnected } = useGamepad();
 
 onConnected((index) => {
-  console.log(`${gamepads.value[index].id} connected`)
-})
+  console.log(`${gamepads.value[index].id} connected`);
+});
 
 onDisconnected((index) => {
-  console.log(`${index} disconnected`)
-})
+  console.log(`${index} disconnected`);
+});
 ```
 
 ### Vibration
@@ -69,23 +69,23 @@ onDisconnected((index) => {
 <!-- eslint-disable import/first -->
 
 ```ts
-import { useGamepad } from '@vueuse/core'
+import { useGamepad } from "@vueuse/core";
 
-const { gamepads, onConnected, onDisconnected } = useGamepad()
-const gamepad = gamepads.value[0]!
+const { gamepads, onConnected, onDisconnected } = useGamepad();
+const gamepad = gamepads.value[0]!;
 // ---cut---
-import { computed } from 'vue'
+import { computed } from "vue";
 
-const supportsVibration = computed(() => gamepad.hapticActuators.length > 0)
+const supportsVibration = computed(() => gamepad.hapticActuators.length > 0);
 function vibrate() {
   if (supportsVibration.value) {
-    const actuator = gamepad.hapticActuators[0]
-    actuator.playEffect('dual-rumble', {
+    const actuator = gamepad.hapticActuators[0];
+    actuator.playEffect("dual-rumble", {
       startDelay: 0,
       duration: 1000,
       weakMagnitude: 1,
       strongMagnitude: 1,
-    })
+    });
   }
 }
 ```
@@ -98,9 +98,9 @@ To make the Gamepad API easier to use, we provide mappings to map a controller t
 
 ```vue
 <script setup>
-import { mapGamepadToXbox360Controller } from '@vueuse/core'
+import { mapGamepadToXbox360Controller } from "@vueuse/core";
 
-const controller = mapGamepadToXbox360Controller(gamepad)
+const controller = mapGamepadToXbox360Controller(gamepad);
 </script>
 
 <template>
@@ -124,8 +124,7 @@ In other frameworks or plain Vue, you can wrap your usage component with a `<Cli
 ## Type Declarations
 
 ```ts
-export interface UseGamepadOptions
-  extends ConfigurableWindow, ConfigurableNavigator {}
+export interface UseGamepadOptions extends ConfigurableWindow, ConfigurableNavigator {}
 /**
  * Maps a standard standard gamepad to an Xbox 360 Controller.
  */
@@ -133,90 +132,90 @@ export declare function mapGamepadToXbox360Controller(
   gamepad: Ref<Gamepad | undefined>,
 ): ComputedRef<{
   buttons: {
-    a: GamepadButton
-    b: GamepadButton
-    x: GamepadButton
-    y: GamepadButton
-  }
+    a: GamepadButton;
+    b: GamepadButton;
+    x: GamepadButton;
+    y: GamepadButton;
+  };
   bumper: {
-    left: GamepadButton
-    right: GamepadButton
-  }
+    left: GamepadButton;
+    right: GamepadButton;
+  };
   triggers: {
-    left: GamepadButton
-    right: GamepadButton
-  }
+    left: GamepadButton;
+    right: GamepadButton;
+  };
   stick: {
     left: {
-      horizontal: number
-      vertical: number
-      button: GamepadButton
-    }
+      horizontal: number;
+      vertical: number;
+      button: GamepadButton;
+    };
     right: {
-      horizontal: number
-      vertical: number
-      button: GamepadButton
-    }
-  }
+      horizontal: number;
+      vertical: number;
+      button: GamepadButton;
+    };
+  };
   dpad: {
-    up: GamepadButton
-    down: GamepadButton
-    left: GamepadButton
-    right: GamepadButton
-  }
-  back: GamepadButton
-  start: GamepadButton
-} | null>
+    up: GamepadButton;
+    down: GamepadButton;
+    left: GamepadButton;
+    right: GamepadButton;
+  };
+  back: GamepadButton;
+  start: GamepadButton;
+} | null>;
 export declare function useGamepad(options?: UseGamepadOptions): {
-  isSupported: ComputedRef<boolean>
-  onConnected: EventHookOn<number>
-  onDisconnected: EventHookOn<number>
+  isSupported: ComputedRef<boolean>;
+  onConnected: EventHookOn<number>;
+  onDisconnected: EventHookOn<number>;
   gamepads: Ref<
     {
-      readonly axes: ReadonlyArray<number>
+      readonly axes: ReadonlyArray<number>;
       readonly buttons: readonly {
-        readonly pressed: boolean
-        readonly touched: boolean
-        readonly value: number
-      }[]
-      readonly connected: boolean
-      readonly id: string
-      readonly index: number
-      readonly mapping: GamepadMappingType
-      readonly timestamp: DOMHighResTimeStamp
+        readonly pressed: boolean;
+        readonly touched: boolean;
+        readonly value: number;
+      }[];
+      readonly connected: boolean;
+      readonly id: string;
+      readonly index: number;
+      readonly mapping: GamepadMappingType;
+      readonly timestamp: DOMHighResTimeStamp;
       readonly vibrationActuator: {
         playEffect: (
           type: GamepadHapticEffectType,
           params?: GamepadEffectParameters,
-        ) => Promise<GamepadHapticsResult>
-        reset: () => Promise<GamepadHapticsResult>
-      }
+        ) => Promise<GamepadHapticsResult>;
+        reset: () => Promise<GamepadHapticsResult>;
+      };
     }[],
     | Gamepad[]
     | {
-        readonly axes: ReadonlyArray<number>
+        readonly axes: ReadonlyArray<number>;
         readonly buttons: readonly {
-          readonly pressed: boolean
-          readonly touched: boolean
-          readonly value: number
-        }[]
-        readonly connected: boolean
-        readonly id: string
-        readonly index: number
-        readonly mapping: GamepadMappingType
-        readonly timestamp: DOMHighResTimeStamp
+          readonly pressed: boolean;
+          readonly touched: boolean;
+          readonly value: number;
+        }[];
+        readonly connected: boolean;
+        readonly id: string;
+        readonly index: number;
+        readonly mapping: GamepadMappingType;
+        readonly timestamp: DOMHighResTimeStamp;
         readonly vibrationActuator: {
           playEffect: (
             type: GamepadHapticEffectType,
             params?: GamepadEffectParameters,
-          ) => Promise<GamepadHapticsResult>
-          reset: () => Promise<GamepadHapticsResult>
-        }
+          ) => Promise<GamepadHapticsResult>;
+          reset: () => Promise<GamepadHapticsResult>;
+        };
       }[]
-  >
-  pause: Fn
-  resume: Fn
-  isActive: Readonly<ShallowRef<boolean>>
-}
-export type UseGamepadReturn = ReturnType<typeof useGamepad>
+  >;
+  pause: Fn;
+  resume: Fn;
+  isActive: Readonly<ShallowRef<boolean>>;
+};
+export type UseGamepadReturn = ReturnType<typeof useGamepad>;
 ```

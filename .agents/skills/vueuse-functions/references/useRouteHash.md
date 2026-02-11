@@ -1,5 +1,5 @@
 ---
-category: '@Router'
+category: "@Router"
 ---
 
 # useRouteHash
@@ -9,12 +9,12 @@ Shorthand for a reactive `route.hash`.
 ## Usage
 
 ```ts
-import { useRouteHash } from '@vueuse/router'
+import { useRouteHash } from "@vueuse/router";
 
-const search = useRouteHash()
+const search = useRouteHash();
 
-console.log(search.value) // route.hash
-search.value = 'foobar' // router.replace({ hash: 'foobar' })
+console.log(search.value); // route.hash
+search.value = "foobar"; // router.replace({ hash: 'foobar' })
 ```
 
 ## Type Declarations
@@ -23,5 +23,5 @@ search.value = 'foobar' // router.replace({ hash: 'foobar' })
 export declare function useRouteHash(
   defaultValue?: MaybeRefOrGetter<RouteHashValueRaw>,
   { mode, route, router }?: ReactiveRouteOptions,
-): Ref<RouteHashValueRaw, RouteHashValueRaw>
+): Ref<RouteHashValueRaw, RouteHashValueRaw>;
 ```

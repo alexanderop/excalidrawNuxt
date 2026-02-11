@@ -1,5 +1,5 @@
 ---
-category: '@RxJS'
+category: "@RxJS"
 ---
 
 # useSubject
@@ -11,19 +11,19 @@ Bind an RxJS [`Subject`](https://rxjs.dev/guide/subject) to a `ref` and propagat
 <!-- TODO: import rxjs error if enable twoslash -->
 
 ```ts no-twoslash
-import { useSubject } from '@vueuse/rxjs'
-import { Subject } from 'rxjs'
+import { useSubject } from "@vueuse/rxjs";
+import { Subject } from "rxjs";
 
-const subject = new Subject()
+const subject = new Subject();
 
 // setup()
-const subjectRef = useSubject(subject)
+const subjectRef = useSubject(subject);
 
 // Changes to subjectRef.value will be pushed to the subject
-subjectRef.value = 'new value'
+subjectRef.value = "new value";
 
 // Values emitted by the subject will update subjectRef
-subject.next('from subject')
+subject.next("from subject");
 ```
 
 ### With BehaviorSubject
@@ -31,14 +31,14 @@ subject.next('from subject')
 When using a `BehaviorSubject`, the returned ref is initialized with the subject's current value and the type does not include `undefined`:
 
 ```ts no-twoslash
-import { useSubject } from '@vueuse/rxjs'
-import { BehaviorSubject } from 'rxjs'
+import { useSubject } from "@vueuse/rxjs";
+import { BehaviorSubject } from "rxjs";
 
-const subject = new BehaviorSubject('initial')
+const subject = new BehaviorSubject("initial");
 
 // setup()
-const subjectRef = useSubject(subject) // Ref<string>, not Ref<string | undefined>
-console.log(subjectRef.value) // 'initial'
+const subjectRef = useSubject(subject); // Ref<string>, not Ref<string | undefined>
+console.log(subjectRef.value); // 'initial'
 ```
 
 ### Error Handling
@@ -46,17 +46,17 @@ console.log(subjectRef.value) // 'initial'
 If you want to add custom error handling to a Subject that might error, you can supply an optional `onError` configuration. Without this, RxJS will treat any error in the supplied observable as an "unhandled error" and it will be thrown in a new call stack and reported to `window.onerror` (or `process.on('error')` if you happen to be in node).
 
 ```ts no-twoslash
-import { useSubject } from '@vueuse/rxjs'
-import { Subject } from 'rxjs'
+import { useSubject } from "@vueuse/rxjs";
+import { Subject } from "rxjs";
 
-const subject = new Subject()
+const subject = new Subject();
 
 // setup()
 const subjectRef = useSubject(subject, {
   onError: (err) => {
-    console.log(err.message) // "oops"
+    console.log(err.message); // "oops"
   },
-},)
+});
 ```
 
 ## Type Declarations
@@ -69,9 +69,9 @@ export interface UseSubjectOptions<I = undefined> extends Omit<
 export declare function useSubject<H>(
   subject: BehaviorSubject<H>,
   options?: UseSubjectOptions,
-): Ref<H>
+): Ref<H>;
 export declare function useSubject<H>(
   subject: Subject<H>,
   options?: UseSubjectOptions,
-): Ref<H | undefined>
+): Ref<H | undefined>;
 ```

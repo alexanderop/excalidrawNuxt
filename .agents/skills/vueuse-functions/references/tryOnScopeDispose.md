@@ -9,11 +9,9 @@ Safe `onScopeDispose`. Call `onScopeDispose()` if it's inside an effect scope li
 ## Usage
 
 ```ts
-import { tryOnScopeDispose } from '@vueuse/core'
+import { tryOnScopeDispose } from "@vueuse/core";
 
-tryOnScopeDispose(() => {
-
-})
+tryOnScopeDispose(() => {});
 ```
 
 ## Type Declarations
@@ -24,8 +22,5 @@ tryOnScopeDispose(() => {
  *
  * @param fn
  */
-export declare function tryOnScopeDispose(
-  fn: Fn,
-  failSilently?: boolean,
-): boolean
+export declare function tryOnScopeDispose(fn: Fn, failSilently?: boolean): boolean;
 ```

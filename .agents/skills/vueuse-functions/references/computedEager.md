@@ -25,21 +25,21 @@ Learn more at [Vue: When a computed property can be the wrong tool](https://dev.
 ## Usage
 
 ```ts
-import { computedEager } from '@vueuse/core'
+import { computedEager } from "@vueuse/core";
 
-const todos = ref([])
-const hasOpenTodos = computedEager(() => !!todos.length)
+const todos = ref([]);
+const hasOpenTodos = computedEager(() => !!todos.length);
 
-console.log(hasOpenTodos.value) // false
-toTodos.value.push({ title: 'Learn Vue' })
-console.log(hasOpenTodos.value) // true
+console.log(hasOpenTodos.value); // false
+toTodos.value.push({ title: "Learn Vue" });
+console.log(hasOpenTodos.value); // true
 ```
 
 ## Type Declarations
 
 ```ts
-export type ComputedEagerOptions = WatchOptionsBase
-export type ComputedEagerReturn<T = any> = Readonly<ShallowRef<T>>
+export type ComputedEagerOptions = WatchOptionsBase;
+export type ComputedEagerReturn<T = any> = Readonly<ShallowRef<T>>;
 /**
  *
  * @deprecated This function will be removed in future version.
@@ -56,7 +56,7 @@ export type ComputedEagerReturn<T = any> = Readonly<ShallowRef<T>>
 export declare function computedEager<T>(
   fn: () => T,
   options?: ComputedEagerOptions,
-): ComputedEagerReturn<T>
+): ComputedEagerReturn<T>;
 /** @deprecated use `computedEager` instead */
-export declare const eagerComputed: typeof computedEager
+export declare const eagerComputed: typeof computedEager;
 ```

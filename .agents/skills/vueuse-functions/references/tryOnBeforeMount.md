@@ -9,11 +9,9 @@ Safe `onBeforeMount`. Call `onBeforeMount()` if it's inside a component lifecycl
 ## Usage
 
 ```ts
-import { tryOnBeforeMount } from '@vueuse/core'
+import { tryOnBeforeMount } from "@vueuse/core";
 
-tryOnBeforeMount(() => {
-
-})
+tryOnBeforeMount(() => {});
 ```
 
 ## Type Declarations
@@ -30,5 +28,5 @@ export declare function tryOnBeforeMount(
   fn: Fn,
   sync?: boolean,
   target?: ComponentInternalInstance | null,
-): void
+): void;
 ```

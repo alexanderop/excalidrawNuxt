@@ -9,11 +9,11 @@ Shorthand for accessing `ref.value`
 ## Usage
 
 ```ts
-import { get } from '@vueuse/core'
+import { get } from "@vueuse/core";
 
-const a = ref(42)
+const a = ref(42);
 
-console.log(get(a)) // 42
+console.log(get(a)); // 42
 ```
 
 ## Type Declarations
@@ -22,9 +22,6 @@ console.log(get(a)) // 42
 /**
  * Shorthand for accessing `ref.value`
  */
-export declare function get<T>(ref: MaybeRef<T>): T
-export declare function get<T, K extends keyof T>(
-  ref: MaybeRef<T>,
-  key: K,
-): T[K]
+export declare function get<T>(ref: MaybeRef<T>): T;
+export declare function get<T, K extends keyof T>(ref: MaybeRef<T>, key: K): T[K];
 ```

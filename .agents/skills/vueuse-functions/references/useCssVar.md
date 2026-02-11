@@ -9,30 +9,30 @@ Manipulate CSS variables
 ## Usage
 
 ```ts
-import { useCssVar } from '@vueuse/core'
-import { useTemplateRef } from 'vue'
+import { useCssVar } from "@vueuse/core";
+import { useTemplateRef } from "vue";
 
-const el = useTemplateRef('el')
-const color1 = useCssVar('--color', el)
+const el = useTemplateRef("el");
+const color1 = useCssVar("--color", el);
 
-const elv = useTemplateRef('elv')
-const key = ref('--color')
-const colorVal = useCssVar(key, elv)
+const elv = useTemplateRef("elv");
+const key = ref("--color");
+const colorVal = useCssVar(key, elv);
 
-const someEl = useTemplateRef('someEl')
-const color2 = useCssVar('--color', someEl, { initialValue: '#eee' })
+const someEl = useTemplateRef("someEl");
+const color2 = useCssVar("--color", someEl, { initialValue: "#eee" });
 ```
 
 ## Type Declarations
 
 ```ts
 export interface UseCssVarOptions extends ConfigurableWindow {
-  initialValue?: string
+  initialValue?: string;
   /**
    * Use MutationObserver to monitor variable changes
    * @default false
    */
-  observe?: boolean
+  observe?: boolean;
 }
 /**
  * Manipulate CSS variables.
@@ -46,5 +46,5 @@ export declare function useCssVar(
   prop: MaybeRefOrGetter<string | null | undefined>,
   target?: MaybeElementRef,
   options?: UseCssVarOptions,
-): ShallowRef<string | undefined, string | undefined>
+): ShallowRef<string | undefined, string | undefined>;
 ```

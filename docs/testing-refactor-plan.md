@@ -88,41 +88,41 @@ DOM. We need an equivalent.
 
 export interface TestHook {
   // Elements
-  elements: ShallowRef<readonly ExcalidrawElement[]>
-  elementMap: ElementsMap
-  addElement: (element: ExcalidrawElement) => void
-  replaceElements: (newElements: readonly ExcalidrawElement[]) => void
-  getElementById: (id: string) => ExcalidrawElement | undefined
+  elements: ShallowRef<readonly ExcalidrawElement[]>;
+  elementMap: ElementsMap;
+  addElement: (element: ExcalidrawElement) => void;
+  replaceElements: (newElements: readonly ExcalidrawElement[]) => void;
+  getElementById: (id: string) => ExcalidrawElement | undefined;
 
   // Selection
-  selectedIds: ShallowRef<ReadonlySet<string>>
-  selectedElements: ComputedRef<ExcalidrawElement[]>
-  select: (id: string) => void
-  addToSelection: (id: string) => void
-  clearSelection: () => void
-  replaceSelection: (ids: Set<string>) => void
-  isSelected: (id: string) => boolean
+  selectedIds: ShallowRef<ReadonlySet<string>>;
+  selectedElements: ComputedRef<ExcalidrawElement[]>;
+  select: (id: string) => void;
+  addToSelection: (id: string) => void;
+  clearSelection: () => void;
+  replaceSelection: (ids: Set<string>) => void;
+  isSelected: (id: string) => boolean;
 
   // Tools
-  activeTool: ShallowRef<ToolType>
-  setTool: (tool: ToolType) => void
+  activeTool: ShallowRef<ToolType>;
+  setTool: (tool: ToolType) => void;
 
   // Viewport
-  scrollX: Ref<number>
-  scrollY: Ref<number>
-  zoom: Ref<number>
-  panBy: (dx: number, dy: number) => void
-  zoomBy: (delta: number, center?: { x: number; y: number }) => void
-  toScene: (screenX: number, screenY: number) => { x: number; y: number }
+  scrollX: Ref<number>;
+  scrollY: Ref<number>;
+  zoom: Ref<number>;
+  panBy: (dx: number, dy: number) => void;
+  zoomBy: (delta: number, center?: { x: number; y: number }) => void;
+  toScene: (screenX: number, screenY: number) => { x: number; y: number };
 
   // In-progress state
-  newElement: ShallowRef<ExcalidrawElement | null>
-  multiElement: ShallowRef<ExcalidrawElement | null>
-  editingTextElement: ShallowRef<ExcalidrawElement | null>
+  newElement: ShallowRef<ExcalidrawElement | null>;
+  multiElement: ShallowRef<ExcalidrawElement | null>;
+  editingTextElement: ShallowRef<ExcalidrawElement | null>;
 
   // Rendering
-  markStaticDirty: () => void
-  markInteractiveDirty: () => void
+  markStaticDirty: () => void;
+  markInteractiveDirty: () => void;
 }
 ```
 
@@ -133,16 +133,34 @@ expose to the window:
 
 ```typescript
 // At the end of CanvasContainer.vue <script setup>
-if (import.meta.env.MODE === 'test' || import.meta.env.DEV) {
-  ;(window as any).__h = {
-    elements, elementMap, addElement, replaceElements, getElementById,
-    selectedIds, selectedElements, select, addToSelection,
-    clearSelection, replaceSelection, isSelected,
-    activeTool, setTool,
-    scrollX, scrollY, zoom, panBy, zoomBy, toScene,
-    newElement, multiElement, editingTextElement: editingTextElement,
-    markStaticDirty, markInteractiveDirty,
-  } satisfies TestHook
+if (import.meta.env.MODE === "test" || import.meta.env.DEV) {
+  (window as any).__h = {
+    elements,
+    elementMap,
+    addElement,
+    replaceElements,
+    getElementById,
+    selectedIds,
+    selectedElements,
+    select,
+    addToSelection,
+    clearSelection,
+    replaceSelection,
+    isSelected,
+    activeTool,
+    setTool,
+    scrollX,
+    scrollY,
+    zoom,
+    panBy,
+    zoomBy,
+    toScene,
+    newElement,
+    multiElement,
+    editingTextElement: editingTextElement,
+    markStaticDirty,
+    markInteractiveDirty,
+  } satisfies TestHook;
 }
 ```
 
@@ -152,9 +170,9 @@ if (import.meta.env.MODE === 'test' || import.meta.env.DEV) {
 // app/__test-utils__/browser/api.ts
 
 function getH(): TestHook {
-  const h = (window as any).__h
-  if (!h) throw new Error('Test hook not available -- is CanvasContainer mounted?')
-  return h
+  const h = (window as any).__h;
+  if (!h) throw new Error("Test hook not available -- is CanvasContainer mounted?");
+  return h;
 }
 ```
 
@@ -189,21 +207,49 @@ static methods (simpler, same ergonomics):
 // app/__test-utils__/browser/api.ts
 
 export const API = {
-  get h(): TestHook { return getH() },
-  get elements(): readonly ExcalidrawElement[] { return API.h.elements.value },
-  setElements(elements) { API.h.replaceElements(elements) },
-  getSelectedElements() { return API.h.selectedElements.value },
-  getSelectedElement() { /* throws if !== 1 selected */ },
-  setSelectedElements(elements) { API.h.replaceSelection(new Set(elements.map(e => e.id))) },
-  clearSelection() { API.h.clearSelection() },
-  addElement(overrides?) { /* creates + adds to scene, returns element */ },
-  getElementByID(id) { return API.h.getElementById(id) },
-  get activeTool() { return API.h.activeTool.value },
-  setTool(tool) { API.h.setTool(tool) },
-  get scrollX() { return API.h.scrollX.value },
-  get scrollY() { return API.h.scrollY.value },
-  get zoom() { return API.h.zoom.value },
-}
+  get h(): TestHook {
+    return getH();
+  },
+  get elements(): readonly ExcalidrawElement[] {
+    return API.h.elements.value;
+  },
+  setElements(elements) {
+    API.h.replaceElements(elements);
+  },
+  getSelectedElements() {
+    return API.h.selectedElements.value;
+  },
+  getSelectedElement() {
+    /* throws if !== 1 selected */
+  },
+  setSelectedElements(elements) {
+    API.h.replaceSelection(new Set(elements.map((e) => e.id)));
+  },
+  clearSelection() {
+    API.h.clearSelection();
+  },
+  addElement(overrides?) {
+    /* creates + adds to scene, returns element */
+  },
+  getElementByID(id) {
+    return API.h.getElementById(id);
+  },
+  get activeTool() {
+    return API.h.activeTool.value;
+  },
+  setTool(tool) {
+    API.h.setTool(tool);
+  },
+  get scrollX() {
+    return API.h.scrollX.value;
+  },
+  get scrollY() {
+    return API.h.scrollY.value;
+  },
+  get zoom() {
+    return API.h.zoom.value;
+  },
+};
 ```
 
 **This unlocks a critical pattern**: scene setup without mouse simulation.
@@ -211,20 +257,20 @@ Need 3 rectangles on the canvas for a selection test? Don't draw them --
 inject them:
 
 ```typescript
-it('box-selects multiple elements', async () => {
-  render(CanvasContainer)
-  await waitForCanvasReady()
+it("box-selects multiple elements", async () => {
+  render(CanvasContainer);
+  await waitForCanvasReady();
 
-  const r1 = API.addElement({ x: 100, y: 100, width: 50, height: 50 })
-  const r2 = API.addElement({ x: 200, y: 100, width: 50, height: 50 })
-  API.h.markStaticDirty()
-  await waitForPaint()
+  const r1 = API.addElement({ x: 100, y: 100, width: 50, height: 50 });
+  const r2 = API.addElement({ x: 200, y: 100, width: 50, height: 50 });
+  API.h.markStaticDirty();
+  await waitForPaint();
 
   // Now test the actual interaction: box-select
-  await grid.drag([1, 1], [5, 3])
+  await grid.drag([1, 1], [5, 3]);
 
-  expect(API.getSelectedElements().map(e => e.id)).toEqual([r1.id, r2.id])
-})
+  expect(API.getSelectedElements().map((e) => e.id)).toEqual([r1.id, r2.id]);
+});
 ```
 
 ### 2b. Pointer with modifier keys
@@ -237,46 +283,52 @@ We should add both modes:
 // app/__test-utils__/browser/Pointer.ts (extended)
 
 export class Pointer {
-  private x = 0
-  private y = 0
-  private modifiers: ModifierKeys = {}
+  private x = 0;
+  private y = 0;
+  private modifiers: ModifierKeys = {};
 
   /** Scoped modifier context (Excalidraw pattern) */
   async withModifiers(mods: ModifierKeys, fn: () => Promise<void>): Promise<void> {
-    const prev = { ...this.modifiers }
-    this.modifiers = { ...this.modifiers, ...mods }
-    await fn()
-    this.modifiers = prev
+    const prev = { ...this.modifiers };
+    this.modifiers = { ...this.modifiers, ...mods };
+    await fn();
+    this.modifiers = prev;
   }
 
   async clickAt(x: number, y: number, opts?: ModifierKeys): Promise<void> {
-    this.x = x
-    this.y = y
-    await commands.canvasClick(CANVAS_SELECTOR, x, y, { ...this.modifiers, ...opts })
+    this.x = x;
+    this.y = y;
+    await commands.canvasClick(CANVAS_SELECTOR, x, y, { ...this.modifiers, ...opts });
   }
 
-  async drag(sx: number, sy: number, ex: number, ey: number, opts?: { steps?: number }): Promise<void> {
-    this.x = ex
-    this.y = ey
-    await commands.canvasDrag(CANVAS_SELECTOR, sx, sy, ex, ey, opts)
+  async drag(
+    sx: number,
+    sy: number,
+    ex: number,
+    ey: number,
+    opts?: { steps?: number },
+  ): Promise<void> {
+    this.x = ex;
+    this.y = ey;
+    await commands.canvasDrag(CANVAS_SELECTOR, sx, sy, ex, ey, opts);
   }
 
   /** Click on an element's center (Excalidraw pattern) */
   async clickOn(element: ExcalidrawElement): Promise<void> {
-    const cx = element.x + element.width / 2
-    const cy = element.y + element.height / 2
-    await this.clickAt(cx, cy)
+    const cx = element.x + element.width / 2;
+    const cy = element.y + element.height / 2;
+    await this.clickAt(cx, cy);
   }
 
   /** Shift-click multiple elements to select them (Excalidraw pattern) */
   async select(elements: ExcalidrawElement | ExcalidrawElement[]): Promise<void> {
-    const els = Array.isArray(elements) ? elements : [elements]
-    if (els.length === 0) return
+    const els = Array.isArray(elements) ? elements : [elements];
+    if (els.length === 0) return;
     // Click first element without shift
-    await this.clickOn(els[0]!)
+    await this.clickOn(els[0]!);
     // Shift-click the rest
     for (const el of els.slice(1)) {
-      await this.clickOn(el, { shiftKey: true })
+      await this.clickOn(el, { shiftKey: true });
     }
   }
 }
@@ -289,32 +341,32 @@ export class Pointer {
 
 export class Keyboard {
   async press(key: string): Promise<void> {
-    await userEvent.keyboard(key)
+    await userEvent.keyboard(key);
   }
 
   /** Modifier key context (Excalidraw pattern) */
   async withModifierKeys(mods: ModifierKeys, fn: () => Promise<void>): Promise<void> {
-    const downs: string[] = []
-    if (mods.shiftKey) downs.push('{Shift>}')
-    if (mods.ctrlKey) downs.push('{Control>}')
-    if (mods.altKey) downs.push('{Alt>}')
-    if (mods.metaKey) downs.push('{Meta>}')
+    const downs: string[] = [];
+    if (mods.shiftKey) downs.push("{Shift>}");
+    if (mods.ctrlKey) downs.push("{Control>}");
+    if (mods.altKey) downs.push("{Alt>}");
+    if (mods.metaKey) downs.push("{Meta>}");
 
     // Press modifier keys down
-    for (const key of downs) await userEvent.keyboard(key)
-    await fn()
+    for (const key of downs) await userEvent.keyboard(key);
+    await fn();
     // Release modifier keys
     for (const key of downs.reverse()) {
-      await userEvent.keyboard(key.replace('>', '/}').replace('}/', '/'))
+      await userEvent.keyboard(key.replace(">", "/}").replace("}/", "/"));
     }
   }
 
   async undo(): Promise<void> {
-    await userEvent.keyboard('{Control>}z{/Control}')
+    await userEvent.keyboard("{Control>}z{/Control}");
   }
 
   async redo(): Promise<void> {
-    await userEvent.keyboard('{Control>}{Shift>}z{/Shift}{/Control}')
+    await userEvent.keyboard("{Control>}{Shift>}z{/Shift}{/Control}");
   }
 }
 ```
@@ -338,39 +390,39 @@ export class UI {
     start: Cell,
     end: Cell,
   ): Promise<{ get: () => ExcalidrawElement; id: string }> {
-    const beforeCount = API.elements.length
-    await this.createElementAtCells(tool, start, end)
-    await waitForPaint()
+    const beforeCount = API.elements.length;
+    await this.createElementAtCells(tool, start, end);
+    await waitForPaint();
 
-    const el = API.elements[API.elements.length - 1]
+    const el = API.elements[API.elements.length - 1];
     if (!el || API.elements.length <= beforeCount) {
-      throw new Error(`createElement(${tool}) did not produce an element`)
+      throw new Error(`createElement(${tool}) did not produce an element`);
     }
 
     return {
       id: el.id,
       get: () => API.getElementById(el.id) ?? el,
-    }
+    };
   }
 
   async selectElement(element: ExcalidrawElement): Promise<void> {
-    await this.pointer.clickOn(element)
+    await this.pointer.clickOn(element);
   }
 
   async group(): Promise<void> {
     await this.keyboard.withModifierKeys({ ctrlKey: true }, async () => {
-      await this.keyboard.press('g')
-    })
+      await this.keyboard.press("g");
+    });
   }
 
   async ungroup(): Promise<void> {
     await this.keyboard.withModifierKeys({ ctrlKey: true, shiftKey: true }, async () => {
-      await this.keyboard.press('g')
-    })
+      await this.keyboard.press("g");
+    });
   }
 
   async deleteSelected(): Promise<void> {
-    await this.keyboard.press('{Delete}')
+    await this.keyboard.press("{Delete}");
   }
 }
 ```
@@ -382,22 +434,23 @@ export class UI {
 
 expect.extend({
   toCloselyEqualPoints(received, expected, precision = 2) {
-    const COMPARE = Math.pow(10, precision)
+    const COMPARE = Math.pow(10, precision);
     const pass = expected.every(
       (point, idx) =>
         Math.abs(received[idx][0] - point[0]) < COMPARE &&
         Math.abs(received[idx][1] - point[1]) < COMPARE,
-    )
+    );
     return {
       pass,
-      message: () => pass
-        ? `expected points to NOT closely equal ${JSON.stringify(expected)}`
-        : `expected points to closely equal\n` +
-          `  Expected: ${JSON.stringify(expected)}\n` +
-          `  Received: ${JSON.stringify(received)}`,
-    }
+      message: () =>
+        pass
+          ? `expected points to NOT closely equal ${JSON.stringify(expected)}`
+          : `expected points to closely equal\n` +
+            `  Expected: ${JSON.stringify(expected)}\n` +
+            `  Received: ${JSON.stringify(received)}`,
+    };
   },
-})
+});
 ```
 
 ```typescript
@@ -408,22 +461,22 @@ export function assertElements(
   expected: { id: string; selected?: true; [key: string]: unknown }[],
 ) {
   // Check order
-  expect(actual.map(e => e.id)).toEqual(expected.map(e => e.id))
+  expect(actual.map((e) => e.id)).toEqual(expected.map((e) => e.id));
 
   // Check properties (only the ones specified in expected)
   for (const exp of expected) {
-    const act = actual.find(e => e.id === exp.id)
-    expect(act).toBeDefined()
+    const act = actual.find((e) => e.id === exp.id);
+    expect(act).toBeDefined();
     for (const [key, value] of Object.entries(exp)) {
-      if (key === 'selected') continue
-      expect((act as any)[key]).toEqual(value)
+      if (key === "selected") continue;
+      expect((act as any)[key]).toEqual(value);
     }
   }
 
   // Check selection
-  const expectedSelected = expected.filter(e => e.selected).map(e => e.id)
-  const actualSelected = API.getSelectedElements().map(e => e.id)
-  expect(actualSelected.sort()).toEqual(expectedSelected.sort())
+  const expectedSelected = expected.filter((e) => e.selected).map((e) => e.id);
+  const actualSelected = API.getSelectedElements().map((e) => e.id);
+  expect(actualSelected.sort()).toEqual(expectedSelected.sort());
 }
 ```
 
@@ -431,9 +484,9 @@ export function assertElements(
 // app/__test-utils__/matchers/assertSelectedElements.ts
 
 export function assertSelectedElements(...ids: string[]) {
-  const selected = API.getSelectedElements().map(e => e.id)
-  expect(selected.length).toBe(ids.length)
-  expect(selected).toEqual(expect.arrayContaining(ids))
+  const selected = API.getSelectedElements().map((e) => e.id);
+  expect(selected.length).toBe(ids.length);
+  expect(selected).toEqual(expect.arrayContaining(ids));
 }
 ```
 
@@ -514,21 +567,22 @@ it('creates a rectangle on drag', () => {
 
 ```typescript
 // drawing.browser.test.ts
-it('creates a rectangle on drag', async () => {
-  render(CanvasContainer)
-  await waitForCanvasReady()
+it("creates a rectangle on drag", async () => {
+  render(CanvasContainer);
+  await waitForCanvasReady();
 
-  await ui.createElementAtCells('rectangle', [2, 2], [5, 5])
+  await ui.createElementAtCells("rectangle", [2, 2], [5, 5]);
 
-  expect(API.elements.length).toBe(1)
-  expect(API.elements[0].type).toBe('rectangle')
-  expect(API.elements[0].width).toBeGreaterThan(0)
-  expect(API.elements[0].height).toBeGreaterThan(0)
-  expect(API.activeTool).toBe('selection')
-})
+  expect(API.elements.length).toBe(1);
+  expect(API.elements[0].type).toBe("rectangle");
+  expect(API.elements[0].width).toBeGreaterThan(0);
+  expect(API.elements[0].height).toBeGreaterThan(0);
+  expect(API.activeTool).toBe("selection");
+});
 ```
 
 The browser test is:
+
 - Shorter (no mock setup)
 - More confident (real events, real canvas, real state)
 - More readable (describes intent, not wiring)
@@ -547,27 +601,27 @@ Adopt Excalidraw's snapshot serializer to prevent float precision flakiness:
 
 expect.addSnapshotSerializer({
   serialize(val, config, indentation, depth, refs, printer) {
-    return printer(val.toFixed(5), config, indentation, depth, refs)
+    return printer(val.toFixed(5), config, indentation, depth, refs);
   },
   test(val) {
-    return typeof val === 'number' && Number.isFinite(val) && !Number.isInteger(val)
+    return typeof val === "number" && Number.isFinite(val) && !Number.isInteger(val);
   },
-})
+});
 ```
 
 Then use element snapshots for regression detection:
 
 ```typescript
-it('creates element with correct properties', async () => {
-  render(CanvasContainer)
-  await waitForCanvasReady()
+it("creates element with correct properties", async () => {
+  render(CanvasContainer);
+  await waitForCanvasReady();
 
-  await ui.createElementAtCells('rectangle', [2, 2], [5, 5])
-  await waitForPaint()
+  await ui.createElementAtCells("rectangle", [2, 2], [5, 5]);
+  await waitForPaint();
 
   // Snapshot the full element (seed deterministic via reseed())
-  expect(API.elements[0]).toMatchSnapshot()
-})
+  expect(API.elements[0]).toMatchSnapshot();
+});
 ```
 
 ### 4b. Checkpoint pattern for regression suites
@@ -578,39 +632,39 @@ Port Excalidraw's checkpoint pattern for comprehensive regression tests:
 // app/__test-utils__/browser/checkpoint.ts
 
 export function checkpoint(name: string) {
-  expect(API.elements.length).toMatchSnapshot(`[${name}] element count`)
+  expect(API.elements.length).toMatchSnapshot(`[${name}] element count`);
   for (const [i, el] of API.elements.entries()) {
-    expect(el).toMatchSnapshot(`[${name}] element ${i}`)
+    expect(el).toMatchSnapshot(`[${name}] element ${i}`);
   }
-  expect(API.activeTool).toMatchSnapshot(`[${name}] active tool`)
-  expect([...API.h.selectedIds.value]).toMatchSnapshot(`[${name}] selected ids`)
+  expect(API.activeTool).toMatchSnapshot(`[${name}] active tool`);
+  expect([...API.h.selectedIds.value]).toMatchSnapshot(`[${name}] selected ids`);
 }
 ```
 
 Usage in regression test suites:
 
 ```typescript
-describe('regression: draw and select workflow', () => {
-  beforeEach(() => reseed())
-  afterEach(() => restoreSeed())
+describe("regression: draw and select workflow", () => {
+  beforeEach(() => reseed());
+  afterEach(() => restoreSeed());
 
-  it('draw rect, draw ellipse, select both, group', async () => {
-    render(CanvasContainer)
-    await waitForCanvasReady()
+  it("draw rect, draw ellipse, select both, group", async () => {
+    render(CanvasContainer);
+    await waitForCanvasReady();
 
-    await ui.createElementAtCells('rectangle', [1, 1], [4, 4])
-    checkpoint('after rectangle')
+    await ui.createElementAtCells("rectangle", [1, 1], [4, 4]);
+    checkpoint("after rectangle");
 
-    await ui.createElementAtCells('ellipse', [5, 1], [8, 4])
-    checkpoint('after ellipse')
+    await ui.createElementAtCells("ellipse", [5, 1], [8, 4]);
+    checkpoint("after ellipse");
 
-    await grid.drag([0, 0], [9, 5])  // box-select both
-    checkpoint('after box-select')
+    await grid.drag([0, 0], [9, 5]); // box-select both
+    checkpoint("after box-select");
 
-    await ui.group()
-    checkpoint('after group')
-  })
-})
+    await ui.group();
+    checkpoint("after group");
+  });
+});
 ```
 
 ### 4c. Render count verification (from Excalidraw)
@@ -619,19 +673,22 @@ Excalidraw spies on render functions to catch unnecessary re-renders. We can
 do the same by watching the dirty flag trigger count:
 
 ```typescript
-it('should not trigger unnecessary static renders', async () => {
-  render(CanvasContainer)
-  await waitForCanvasReady()
+it("should not trigger unnecessary static renders", async () => {
+  render(CanvasContainer);
+  await waitForCanvasReady();
 
-  let staticRenderCount = 0
-  const origMark = API.h.markStaticDirty
-  API.h.markStaticDirty = () => { staticRenderCount++; origMark() }
+  let staticRenderCount = 0;
+  const origMark = API.h.markStaticDirty;
+  API.h.markStaticDirty = () => {
+    staticRenderCount++;
+    origMark();
+  };
 
-  await ui.createElementAtCells('rectangle', [2, 2], [5, 5])
+  await ui.createElementAtCells("rectangle", [2, 2], [5, 5]);
 
   // One static render when element is committed, not on every pointermove
-  expect(staticRenderCount).toBe(1)
-})
+  expect(staticRenderCount).toBe(1);
+});
 ```
 
 ---
@@ -720,84 +777,85 @@ After the refactor, the dominant test pattern should read like this:
 ```typescript
 // app/features/selection/selection.browser.test.ts
 
-import { render } from 'vitest-browser-vue'
-import CanvasContainer from '~/features/canvas/components/CanvasContainer.vue'
-import { API, UI, waitForCanvasReady, waitForPaint } from '~/__test-utils__/browser'
-import { assertSelectedElements } from '~/__test-utils__/matchers/assertSelectedElements'
-import { reseed, restoreSeed } from '~/__test-utils__/deterministicSeed'
+import { render } from "vitest-browser-vue";
+import CanvasContainer from "~/features/canvas/components/CanvasContainer.vue";
+import { API, UI, waitForCanvasReady, waitForPaint } from "~/__test-utils__/browser";
+import { assertSelectedElements } from "~/__test-utils__/matchers/assertSelectedElements";
+import { reseed, restoreSeed } from "~/__test-utils__/deterministicSeed";
 
-describe('selection', () => {
-  beforeEach(() => reseed())
-  afterEach(() => restoreSeed())
+describe("selection", () => {
+  beforeEach(() => reseed());
+  afterEach(() => restoreSeed());
 
-  it('selects element by clicking on it', async () => {
-    const screen = render(CanvasContainer)
-    await waitForCanvasReady()
-    const ui = new UI(screen)
+  it("selects element by clicking on it", async () => {
+    const screen = render(CanvasContainer);
+    await waitForCanvasReady();
+    const ui = new UI(screen);
 
-    const rect = await ui.createElement('rectangle', [2, 2], [5, 5])
-    API.clearSelection()
-    await waitForPaint()
+    const rect = await ui.createElement("rectangle", [2, 2], [5, 5]);
+    API.clearSelection();
+    await waitForPaint();
 
     // Click on the rectangle center
-    await ui.grid.clickCenter([2, 2], [5, 5])
+    await ui.grid.clickCenter([2, 2], [5, 5]);
 
-    assertSelectedElements(rect.id)
-  })
+    assertSelectedElements(rect.id);
+  });
 
-  it('adds to selection with shift-click', async () => {
-    const screen = render(CanvasContainer)
-    await waitForCanvasReady()
-    const ui = new UI(screen)
+  it("adds to selection with shift-click", async () => {
+    const screen = render(CanvasContainer);
+    await waitForCanvasReady();
+    const ui = new UI(screen);
 
-    const r1 = await ui.createElement('rectangle', [1, 1], [3, 3])
-    const r2 = await ui.createElement('ellipse', [5, 1], [7, 3])
-    API.clearSelection()
-    await waitForPaint()
+    const r1 = await ui.createElement("rectangle", [1, 1], [3, 3]);
+    const r2 = await ui.createElement("ellipse", [5, 1], [7, 3]);
+    API.clearSelection();
+    await waitForPaint();
 
     // Click first element
-    await ui.grid.clickCenter([1, 1], [3, 3])
-    assertSelectedElements(r1.id)
+    await ui.grid.clickCenter([1, 1], [3, 3]);
+    assertSelectedElements(r1.id);
 
     // Shift-click second element
-    await ui.grid.clickCenter([5, 1], [7, 3], { shiftKey: true })
-    assertSelectedElements(r1.id, r2.id)
-  })
+    await ui.grid.clickCenter([5, 1], [7, 3], { shiftKey: true });
+    assertSelectedElements(r1.id, r2.id);
+  });
 
-  it('box-selects multiple elements', async () => {
-    const screen = render(CanvasContainer)
-    await waitForCanvasReady()
+  it("box-selects multiple elements", async () => {
+    const screen = render(CanvasContainer);
+    await waitForCanvasReady();
 
     // Inject elements programmatically (fast scene setup)
-    const r1 = API.addElement({ x: 100, y: 100, width: 80, height: 80 })
-    const r2 = API.addElement({ x: 250, y: 100, width: 80, height: 80 })
-    API.h.markStaticDirty()
-    await waitForPaint()
+    const r1 = API.addElement({ x: 100, y: 100, width: 80, height: 80 });
+    const r2 = API.addElement({ x: 250, y: 100, width: 80, height: 80 });
+    API.h.markStaticDirty();
+    await waitForPaint();
 
     // Drag selection box around both
-    const ui = new UI(screen)
-    await ui.grid.drag([0, 0], [6, 4])
+    const ui = new UI(screen);
+    await ui.grid.drag([0, 0], [6, 4]);
 
-    assertSelectedElements(r1.id, r2.id)
-  })
+    assertSelectedElements(r1.id, r2.id);
+  });
 
-  it('deselects on empty canvas click', async () => {
-    const screen = render(CanvasContainer)
-    await waitForCanvasReady()
-    const ui = new UI(screen)
+  it("deselects on empty canvas click", async () => {
+    const screen = render(CanvasContainer);
+    await waitForCanvasReady();
+    const ui = new UI(screen);
 
-    await ui.createElement('rectangle', [2, 2], [4, 4])
-    assertSelectedElements(API.elements[0].id)
+    await ui.createElement("rectangle", [2, 2], [4, 4]);
+    assertSelectedElements(API.elements[0].id);
 
     // Click on empty space
-    await ui.grid.click([10, 8])
+    await ui.grid.click([10, 8]);
 
-    assertSelectedElements()  // nothing selected
-  })
-})
+    assertSelectedElements(); // nothing selected
+  });
+});
 ```
 
 **Key qualities:**
+
 - Reads like a user story, not implementation wiring
 - No `vi.mock`, no `fire()` synthetic events, no `withSetup`
 - Uses `API.addElement()` for fast scene setup (Excalidraw's API pattern)
@@ -834,37 +892,37 @@ it('shift-click adds to selection', () => {
 ### Our current style (Node unit test with mocked events)
 
 ```typescript
-it('shift-click adds to selection', () => {
-  using sel = withSetup(() => useSelection(elements))
+it("shift-click adds to selection", () => {
+  using sel = withSetup(() => useSelection(elements));
   // ... 20 lines of mock setup ...
-  fire('pointerdown', { offsetX: 25, offsetY: 25 })
-  fire('pointerup', { offsetX: 25, offsetY: 25 })
-  expect(sel.selectedIds.value.size).toBe(1)
+  fire("pointerdown", { offsetX: 25, offsetY: 25 });
+  fire("pointerup", { offsetX: 25, offsetY: 25 });
+  expect(sel.selectedIds.value.size).toBe(1);
 
-  fire('pointerdown', { offsetX: 125, offsetY: 25, shiftKey: true })
-  fire('pointerup', { offsetX: 125, offsetY: 25, shiftKey: true })
-  expect(sel.selectedIds.value.size).toBe(2)
-})
+  fire("pointerdown", { offsetX: 125, offsetY: 25, shiftKey: true });
+  fire("pointerup", { offsetX: 125, offsetY: 25, shiftKey: true });
+  expect(sel.selectedIds.value.size).toBe(2);
+});
 ```
 
 ### Our target style (real browser, Excalidraw patterns)
 
 ```typescript
-it('shift-click adds to selection', async () => {
-  render(CanvasContainer)
-  await waitForCanvasReady()
+it("shift-click adds to selection", async () => {
+  render(CanvasContainer);
+  await waitForCanvasReady();
 
-  const r1 = API.addElement({ x: 0, y: 0, width: 50, height: 50 })
-  const r2 = API.addElement({ x: 100, y: 0, width: 50, height: 50 })
-  API.h.markStaticDirty()
-  await waitForPaint()
+  const r1 = API.addElement({ x: 0, y: 0, width: 50, height: 50 });
+  const r2 = API.addElement({ x: 100, y: 0, width: 50, height: 50 });
+  API.h.markStaticDirty();
+  await waitForPaint();
 
-  await pointer.clickAt(25, 25)
-  assertSelectedElements(r1.id)
+  await pointer.clickAt(25, 25);
+  assertSelectedElements(r1.id);
 
-  await pointer.clickAt(125, 25, { shiftKey: true })
-  assertSelectedElements(r1.id, r2.id)
-})
+  await pointer.clickAt(125, 25, { shiftKey: true });
+  assertSelectedElements(r1.id, r2.id);
+});
 ```
 
 Same confidence as Excalidraw, but with **real** pointer events, **real**

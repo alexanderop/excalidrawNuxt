@@ -10,56 +10,54 @@ Reactive swipe detection based on [`TouchEvents`](https://developer.mozilla.org/
 
 ```vue
 <script setup lang="ts">
-import { useSwipe } from '@vueuse/core'
-import { useTemplateRef } from 'vue'
+import { useSwipe } from "@vueuse/core";
+import { useTemplateRef } from "vue";
 
-const el = useTemplateRef('el')
-const { isSwiping, direction } = useSwipe(el)
+const el = useTemplateRef("el");
+const { isSwiping, direction } = useSwipe(el);
 </script>
 
 <template>
-  <div ref="el">
-    Swipe here
-  </div>
+  <div ref="el">Swipe here</div>
 </template>
 ```
 
 ## Type Declarations
 
 ```ts
-export type UseSwipeDirection = "up" | "down" | "left" | "right" | "none"
+export type UseSwipeDirection = "up" | "down" | "left" | "right" | "none";
 export interface UseSwipeOptions extends ConfigurableWindow {
   /**
    * Register events as passive
    *
    * @default true
    */
-  passive?: boolean
+  passive?: boolean;
   /**
    * @default 50
    */
-  threshold?: number
+  threshold?: number;
   /**
    * Callback on swipe start
    */
-  onSwipeStart?: (e: TouchEvent) => void
+  onSwipeStart?: (e: TouchEvent) => void;
   /**
    * Callback on swipe moves
    */
-  onSwipe?: (e: TouchEvent) => void
+  onSwipe?: (e: TouchEvent) => void;
   /**
    * Callback on swipe ends
    */
-  onSwipeEnd?: (e: TouchEvent, direction: UseSwipeDirection) => void
+  onSwipeEnd?: (e: TouchEvent, direction: UseSwipeDirection) => void;
 }
 export interface UseSwipeReturn {
-  isSwiping: ShallowRef<boolean>
-  direction: ComputedRef<UseSwipeDirection>
-  coordsStart: Readonly<Position>
-  coordsEnd: Readonly<Position>
-  lengthX: ComputedRef<number>
-  lengthY: ComputedRef<number>
-  stop: () => void
+  isSwiping: ShallowRef<boolean>;
+  direction: ComputedRef<UseSwipeDirection>;
+  coordsStart: Readonly<Position>;
+  coordsEnd: Readonly<Position>;
+  lengthX: ComputedRef<number>;
+  lengthY: ComputedRef<number>;
+  stop: () => void;
 }
 /**
  * Reactive swipe detection.
@@ -71,5 +69,5 @@ export interface UseSwipeReturn {
 export declare function useSwipe(
   target: MaybeRefOrGetter<EventTarget | null | undefined>,
   options?: UseSwipeOptions,
-): UseSwipeReturn
+): UseSwipeReturn;
 ```
