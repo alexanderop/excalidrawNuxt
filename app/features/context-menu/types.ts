@@ -1,4 +1,3 @@
-import type { Component } from 'vue'
 import type { ExcalidrawElement } from '~/features/elements/types'
 
 export type ContextMenuType = 'element' | 'canvas'
@@ -11,18 +10,17 @@ export type ContextMenuContext = {
   markDirty: () => void
 }
 
-export type ContextMenuItemBase = {
+export type ContextMenuAction = {
   label: string
-  shortcut?: string
-  icon?: Component
+  kbds?: string[]
   predicate?: (context: ContextMenuContext) => boolean
   action: (context: ContextMenuContext) => void
 }
 
 export type ContextMenuSeparator = { type: 'separator' }
 
-export type ContextMenuItem = ContextMenuItemBase | ContextMenuSeparator
+export type ContextMenuEntry = ContextMenuAction | ContextMenuSeparator
 
-export function isSeparator(item: ContextMenuItem): item is ContextMenuSeparator {
+export function isSeparator(item: ContextMenuEntry): item is ContextMenuSeparator {
   return 'type' in item && item.type === 'separator'
 }

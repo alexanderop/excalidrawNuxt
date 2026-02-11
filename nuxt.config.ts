@@ -1,10 +1,10 @@
-import tailwindcss from '@tailwindcss/vite'
-
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   ssr: false,
+
+  modules: ['@nuxt/ui'],
 
   imports: { autoImport: false },
 
@@ -17,7 +17,6 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
 
   vite: {
-    plugins: [tailwindcss()],
     resolve: {
       alias: {
         // @excalidraw/math only exposes "./*" subpaths for types, not runtime JS.

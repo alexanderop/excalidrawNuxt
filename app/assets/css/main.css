@@ -1,11 +1,12 @@
 @import "tailwindcss";
+@import "@nuxt/ui";
 
 @theme {
   --color-base: rgb(33, 39, 55);
   --color-foreground: rgb(234, 237, 243);
   --color-accent: rgb(255, 107, 237);
   --color-surface: rgb(52, 63, 96);
-  --color-muted: rgb(138, 51, 123);
+  --color-subdued: rgb(138, 51, 123);
   --color-edge: rgb(171, 75, 153);
 }
 
@@ -21,9 +22,9 @@ body,
   transition: background-color 200ms;
 }
 
-html.theme--dark,
-html.theme--dark body,
-html.theme--dark #__nuxt {
+.dark,
+.dark body,
+.dark #__nuxt {
   background: #121212;
 }
 

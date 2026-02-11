@@ -44,7 +44,7 @@ function select(value: number): void {
     <button
       aria-haspopup="listbox"
       :aria-expanded="isOpen"
-      class="flex h-7 items-center gap-1 rounded px-1.5 text-xs transition-colors text-foreground/70 hover:bg-muted/20 hover:text-foreground"
+      class="flex h-7 items-center gap-1 rounded px-1.5 text-xs transition-colors text-foreground/70 hover:bg-subdued/20 hover:text-foreground"
       @click="toggleOpen()"
     >
       <span>{{ currentLabel }}</span>
@@ -75,7 +75,7 @@ function select(value: number): void {
         class="flex w-full items-center px-2.5 py-1 text-left text-xs transition-colors"
         :class="modelValue === option.value
           ? 'bg-accent/20 text-accent'
-          : 'text-foreground/70 hover:bg-muted/20 hover:text-foreground'"
+          : 'text-foreground/70 hover:bg-subdued/20 hover:text-foreground'"
         :style="option.style"
         @click="select(option.value)"
       >

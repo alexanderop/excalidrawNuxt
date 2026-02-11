@@ -304,7 +304,7 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
       <div class="flex gap-0.5">
         <button
           aria-label="Send to back"
-          class="flex h-7 w-7 items-center justify-center rounded text-xs transition-colors text-foreground/70 hover:bg-muted/20 hover:text-foreground"
+          class="flex h-7 w-7 items-center justify-center rounded text-xs transition-colors text-foreground/70 hover:bg-subdued/20 hover:text-foreground"
           @click="emit('send-to-back')"
         >
           <svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -315,7 +315,7 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
         </button>
         <button
           aria-label="Send backward"
-          class="flex h-7 w-7 items-center justify-center rounded text-xs transition-colors text-foreground/70 hover:bg-muted/20 hover:text-foreground"
+          class="flex h-7 w-7 items-center justify-center rounded text-xs transition-colors text-foreground/70 hover:bg-subdued/20 hover:text-foreground"
           @click="emit('send-backward')"
         >
           <svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -325,7 +325,7 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
         </button>
         <button
           aria-label="Bring forward"
-          class="flex h-7 w-7 items-center justify-center rounded text-xs transition-colors text-foreground/70 hover:bg-muted/20 hover:text-foreground"
+          class="flex h-7 w-7 items-center justify-center rounded text-xs transition-colors text-foreground/70 hover:bg-subdued/20 hover:text-foreground"
           @click="emit('bring-forward')"
         >
           <svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -335,7 +335,7 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
         </button>
         <button
           aria-label="Bring to front"
-          class="flex h-7 w-7 items-center justify-center rounded text-xs transition-colors text-foreground/70 hover:bg-muted/20 hover:text-foreground"
+          class="flex h-7 w-7 items-center justify-center rounded text-xs transition-colors text-foreground/70 hover:bg-subdued/20 hover:text-foreground"
           @click="emit('bring-to-front')"
         >
           <svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -353,7 +353,7 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
       <div class="flex gap-0.5">
         <button
           aria-label="Duplicate"
-          class="flex h-7 w-7 items-center justify-center rounded text-xs transition-colors text-foreground/70 hover:bg-muted/20 hover:text-foreground"
+          class="flex h-7 w-7 items-center justify-center rounded text-xs transition-colors text-foreground/70 hover:bg-subdued/20 hover:text-foreground"
           @click="emit('duplicate')"
         >
           <svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -363,7 +363,7 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
         </button>
         <button
           aria-label="Delete"
-          class="flex h-7 w-7 items-center justify-center rounded text-xs transition-colors text-foreground/70 hover:bg-muted/20 hover:text-foreground"
+          class="flex h-7 w-7 items-center justify-center rounded text-xs transition-colors text-foreground/70 hover:bg-subdued/20 hover:text-foreground"
           @click="emit('delete')"
         >
           <svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

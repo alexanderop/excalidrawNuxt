@@ -1,4 +1,4 @@
-import { computed, type Ref } from 'vue'
+import { computed, watchEffect, type Ref } from 'vue'
 import { createGlobalState, useLocalStorage, useActiveElement, useEventListener } from '@vueuse/core'
 import { THEME } from './types'
 import type { Theme } from './types'
@@ -22,6 +22,10 @@ export const useTheme = createGlobalState(() => {
         e.preventDefault()
         toggleTheme()
       }
+    })
+
+    watchEffect(() => {
+      document.documentElement.classList.toggle('dark', theme.value === THEME.DARK)
     })
   }
 

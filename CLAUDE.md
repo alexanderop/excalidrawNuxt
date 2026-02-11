@@ -33,7 +33,7 @@ Defined in `app/assets/css/main.css` via `@theme`. Use these as Tailwind utiliti
 - `foreground` — `rgb(234,237,243)` light gray text
 - `accent` — `rgb(255,107,237)` hot pink highlights
 - `surface` — `rgb(52,63,96)` cards/panels
-- `muted` — `rgb(138,51,123)` subdued purple
+- `subdued` — `rgb(138,51,123)` subdued purple
 - `edge` — `rgb(171,75,153)` borders/dividers
 
 ## Excalidraw Reference Source

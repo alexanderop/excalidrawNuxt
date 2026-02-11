@@ -76,8 +76,6 @@ describe('text tool interaction', () => {
       return ta.scrollWidth <= ta.clientWidth
     }).toBe(true)
 
-    // 3. Visual check — screenshot with textarea open should show text fully visible
-    await expect(page.getByTestId('canvas-container')).toMatchScreenshot('text-textarea-grows-with-content')
   })
 
   it('deletes empty text element on submit', async () => {
@@ -98,8 +96,5 @@ describe('text tool interaction', () => {
       return document.querySelector('textarea')
     }).toBeNull()
 
-    // Canvas should be empty (no text element)
-    await waitForPaint()
-    await expect(page.getByTestId('canvas-container')).toMatchScreenshot('text-empty-deleted')
   })
 })

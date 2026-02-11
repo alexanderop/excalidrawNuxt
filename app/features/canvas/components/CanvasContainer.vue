@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { shallowRef, useTemplateRef, computed, watchEffect } from 'vue'
+import { shallowRef, useTemplateRef, computed } from 'vue'
 import { useElementSize, useEventListener, useActiveElement } from '@vueuse/core'
 import { useViewport } from '../composables/useViewport'
 import { useCanvasLayers } from '../composables/useCanvasLayers'
@@ -22,8 +22,7 @@ import type { ExcalidrawElement } from '~/features/elements/types'
 import { updateBoundTextAfterContainerChange } from '~/features/binding'
 import { useGroups } from '~/features/groups/composables/useGroups'
 import { cleanupAfterDelete } from '~/features/groups/groupUtils'
-import { useTheme, THEME } from '~/features/theme'
-import { useContextMenu, ContextMenu } from '~/features/context-menu'
+import { useContextMenu } from '~/features/context-menu'
 import type { ContextMenuContext } from '~/features/context-menu'
 import { getElementAtPosition } from '~/features/selection'
 import DrawingToolbar from '~/features/tools/components/DrawingToolbar.vue'
@@ -32,12 +31,6 @@ import { useStyleClipboard } from '~/features/properties/composables/useStyleCli
 import { isTypingElement } from '~/shared/isTypingElement'
 
 defineExpose({})
-
-// Theme class on document root
-const { theme } = useTheme()
-watchEffect(() => {
-  document.documentElement.classList.toggle('theme--dark', theme.value === THEME.DARK)
-})
 
 // Template refs
 const containerRef = useTemplateRef<HTMLDivElement>('container')
@@ -127,17 +120,11 @@ function getContextMenuContext(): ContextMenuContext {
 }
 
 const {
-  isOpen: contextMenuOpen,
-  position: contextMenuPosition,
-  filteredItems: contextMenuItems,
-  open: openContextMenu,
-  close: closeContextMenu,
+  menuType: contextMenuType,
+  items: contextMenuItems,
 } = useContextMenu({ context: getContextMenuContext })
 
 function handleContextMenu(e: MouseEvent): void {
-  e.preventDefault()
-  closeContextMenu()
-
   const scenePoint = toScene(e.offsetX, e.offsetY)
   const hitElement = getElementAtPosition(scenePoint, elements.value, zoom.value)
 
@@ -147,13 +134,13 @@ function handleContextMenu(e: MouseEvent): void {
       expandSelectionForGroups()
       dirty.markInteractiveDirty()
     }
-    openContextMenu(e, 'element')
+    contextMenuType.value = 'element'
     return
   }
 
   clearSelection()
   dirty.markInteractiveDirty()
-  openContextMenu(e, 'canvas')
+  contextMenuType.value = 'canvas'
 }
 
 // Style clipboard keyboard shortcuts (Cmd+Alt+C / Cmd+Alt+V)
@@ -388,12 +375,14 @@ const combinedCursorClass = computed(() => {
       ref="newElementCanvas"
       class="pointer-events-none absolute inset-0 z-[1]"
     />
-    <canvas
-      ref="interactiveCanvas"
-      data-testid="interactive-canvas"
-      class="absolute inset-0 z-[2]"
-      @contextmenu="handleContextMenu"
-    />
+    <UContextMenu :items="contextMenuItems">
+      <canvas
+        ref="interactiveCanvas"
+        data-testid="interactive-canvas"
+        class="absolute inset-0 z-[2]"
+        @contextmenu="handleContextMenu"
+      />
+    </UContextMenu>
     <div
       ref="textEditorContainer"
       class="pointer-events-none absolute inset-0 z-[3]"
@@ -408,13 +397,6 @@ const combinedCursorClass = computed(() => {
       @send-backward="applyLayerAction(layerOrder.sendBackward)"
       @send-to-back="applyLayerAction(layerOrder.sendToBack)"
       @delete="handleDeleteFromPanel"
-    />
-    <ContextMenu
-      :is-open="contextMenuOpen"
-      :position="contextMenuPosition"
-      :items="contextMenuItems"
-      :context="getContextMenuContext()"
-      @close="closeContextMenu"
     />
   </div>
 </template>

@@ -60,7 +60,7 @@ function isActive(optionValue: Arrowhead | null): boolean {
       class="flex h-7 w-7 items-center justify-center rounded text-xs transition-colors"
       :class="isActive(option.value)
         ? 'bg-accent/20 text-accent'
-        : 'text-foreground/70 hover:bg-muted/20 hover:text-foreground'"
+        : 'text-foreground/70 hover:bg-subdued/20 hover:text-foreground'"
       @click="emit('update:modelValue', option.value)"
     >
       <svg

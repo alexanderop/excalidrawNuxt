@@ -34,7 +34,7 @@ const tools: Array<{ type: ToolType; label: string; shortcutNumber: number | nul
         class="relative flex h-9 w-9 items-center justify-center rounded-md transition-colors"
         :class="activeTool === tool.type
           ? 'bg-accent/20 text-accent'
-          : 'text-foreground/70 hover:bg-muted/20 hover:text-foreground'"
+          : 'text-foreground/70 hover:bg-subdued/20 hover:text-foreground'"
         @click="setTool(tool.type)"
       >
         <svg
@@ -58,7 +58,7 @@ const tools: Array<{ type: ToolType; label: string; shortcutNumber: number | nul
       <button
         :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
         :aria-pressed="isDark"
-        class="flex h-9 w-9 items-center justify-center rounded-md text-foreground/70 transition-colors hover:bg-muted/20 hover:text-foreground"
+        class="flex h-9 w-9 items-center justify-center rounded-md text-foreground/70 transition-colors hover:bg-subdued/20 hover:text-foreground"
         @click="toggleTheme"
       >
         <!-- Moon icon (shown in light mode) -->
