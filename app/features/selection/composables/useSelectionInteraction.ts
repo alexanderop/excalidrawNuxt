@@ -1,6 +1,7 @@
 import { shallowRef } from 'vue'
 import type { Ref, ShallowRef } from 'vue'
 import { useEventListener } from '@vueuse/core'
+import { defineShortcuts } from '#imports'
 import type { ExcalidrawElement, ExcalidrawLinearElement, ElementsMap } from '~/features/elements/types'
 import { isArrowElement, isLinearElement } from '~/features/elements/types'
 import { mutateElement } from '~/features/elements/mutateElement'
@@ -322,55 +323,11 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
     markSceneDirty()
   }
 
-  function getModifierAction(e: KeyboardEvent): (() => void) | null {
-    if (e.key === 'a') return () => { selectAll(); markInteractiveDirty() }
-    if (e.key === 'g' && !e.shiftKey) return () => options.onGroupAction?.()
-    if (e.key === 'G' || (e.key === 'g' && e.shiftKey)) return () => options.onUngroupAction?.()
-    return null
-  }
-
-  function handleKeyDown(e: KeyboardEvent): void {
-    if (isSelectionBlocked()) return
-    if (isTypingInInput(e)) return
-
+  function nudgeSelected(dx: number, dy: number): void {
     const selected = selectedElements()
-
-    if (e.key === 'Delete' || e.key === 'Backspace') {
-      handleDelete(selected)
-      return
-    }
-
-    if (e.key === 'Escape') {
-      clearSelection()
-      setTool('selection')
-      markInteractiveDirty()
-      return
-    }
-
-    if (e.ctrlKey || e.metaKey) {
-      const action = getModifierAction(e)
-      if (action) {
-        e.preventDefault()
-        action()
-        return
-      }
-    }
-
-    handleArrowKey(e, selected)
-  }
-
-  function handleArrowKey(e: KeyboardEvent, selected: readonly ExcalidrawElement[]): void {
-    const dir = ARROW_DIRECTIONS[e.key]
-    if (!dir) return
     if (selected.length === 0) return
-
-    const step = e.shiftKey ? 10 : 1
-    e.preventDefault()
     for (const el of selected) {
-      mutateElement(el, {
-        x: el.x + dir.x * step,
-        y: el.y + dir.y * step,
-      })
+      mutateElement(el, { x: el.x + dx, y: el.y + dy })
     }
     updateBoundArrowsForSelected()
     updateBoundTextForSelected()
@@ -392,19 +349,32 @@ export function useSelectionInteraction(options: UseSelectionInteractionOptions)
     onDoubleClickLinear(hitElement)
   })
 
-  useEventListener(document, 'keydown', handleKeyDown)
+  defineShortcuts({
+    delete: () => { if (isSelectionBlocked()) return; handleDelete(selectedElements()) },
+    backspace: () => { if (isSelectionBlocked()) return; handleDelete(selectedElements()) },
+    escape: () => {
+      if (isSelectionBlocked()) return
+      clearSelection()
+      setTool('selection')
+      markInteractiveDirty()
+    },
+    meta_a: () => { if (isSelectionBlocked()) return; selectAll(); markInteractiveDirty() },
+    meta_g: () => { if (isSelectionBlocked()) return; options.onGroupAction?.() },
+    meta_shift_g: () => { if (isSelectionBlocked()) return; options.onUngroupAction?.() },
+    arrowup: () => { if (isSelectionBlocked()) return; nudgeSelected(0, -1) },
+    arrowdown: () => { if (isSelectionBlocked()) return; nudgeSelected(0, 1) },
+    arrowleft: () => { if (isSelectionBlocked()) return; nudgeSelected(-1, 0) },
+    arrowright: () => { if (isSelectionBlocked()) return; nudgeSelected(1, 0) },
+    shift_arrowup: () => { if (isSelectionBlocked()) return; nudgeSelected(0, -10) },
+    shift_arrowdown: () => { if (isSelectionBlocked()) return; nudgeSelected(0, 10) },
+    shift_arrowleft: () => { if (isSelectionBlocked()) return; nudgeSelected(-10, 0) },
+    shift_arrowright: () => { if (isSelectionBlocked()) return; nudgeSelected(10, 0) },
+  })
 
   return {
     selectionBox,
     cursorStyle,
   }
-}
-
-const ARROW_DIRECTIONS: Record<string, { x: number; y: number }> = {
-  ArrowUp: { x: 0, y: -1 },
-  ArrowDown: { x: 0, y: 1 },
-  ArrowLeft: { x: -1, y: 0 },
-  ArrowRight: { x: 1, y: 0 },
 }
 
 function normalizeBox(start: GlobalPoint, end: GlobalPoint): Box {
@@ -430,11 +400,6 @@ const RESIZE_CURSORS: Record<TransformHandleDirection, string> = {
 function getResizeCursor(handleType: TransformHandleType): string {
   if (handleType === 'rotation') return 'grab'
   return RESIZE_CURSORS[handleType]
-}
-
-function isTypingInInput(e: KeyboardEvent): boolean {
-  const tag = (e.target as HTMLElement)?.tagName
-  return tag === 'TEXTAREA' || tag === 'INPUT'
 }
 
 function isBoxSelectable(el: ExcalidrawElement): boolean {

@@ -1,6 +1,7 @@
 import { shallowRef, triggerRef } from 'vue'
 import type { Ref, ShallowRef } from 'vue'
-import { useEventListener, onKeyStroke } from '@vueuse/core'
+import { useEventListener } from '@vueuse/core'
+import { defineShortcuts } from '#imports'
 import type { ExcalidrawElement, ExcalidrawLinearElement } from '~/features/elements/types'
 import { isArrowElement } from '~/features/elements/types'
 import { mutateElement } from '~/features/elements/mutateElement'
@@ -143,11 +144,10 @@ export function useMultiPointCreation(options: UseMultiPointCreationOptions): Us
     finalizeMultiPoint()
   })
 
-  onKeyStroke(['Escape', 'Enter'], (e) => {
-    if (!multiElement.value) return
-    e.preventDefault()
-    finalizeMultiPoint()
-  }, { target: document })
+  defineShortcuts({
+    escape: () => { if (!multiElement.value) return; finalizeMultiPoint() },
+    enter: () => { if (!multiElement.value) return; finalizeMultiPoint() },
+  })
 
   return {
     multiElement,

@@ -1,6 +1,7 @@
 import { shallowRef, triggerRef } from 'vue'
 import type { Ref, ShallowRef } from 'vue'
-import { useEventListener, onKeyStroke } from '@vueuse/core'
+import { useEventListener } from '@vueuse/core'
+import { defineShortcuts } from '#imports'
 import type { ExcalidrawElement, ExcalidrawArrowElement, ExcalidrawLinearElement } from '~/features/elements/types'
 import { isArrowElement } from '~/features/elements/types'
 import { mutateElement } from '~/features/elements/mutateElement'
@@ -257,33 +258,25 @@ export function useLinearEditor(options: UseLinearEditorOptions): UseLinearEdito
     markInteractiveDirty()
   })
 
-  onKeyStroke('Escape', (e) => {
-    if (!editingElement.value) return
-    e.preventDefault()
-    exitEditor()
-  }, { target: document })
-
-  onKeyStroke(['Delete', 'Backspace'], (e) => {
+  function deleteSelectedPoints(): void {
     const el = editingElement.value
     if (!el) return
     if (selectedPointIndices.value.size === 0) return
-
     const newPoints = removePoints(el.points, selectedPointIndices.value)
     if (!newPoints) return
-
-    e.preventDefault()
     const dims = getSizeFromPoints(newPoints)
-    mutateElement(el, {
-      points: newPoints,
-      width: dims.width,
-      height: dims.height,
-    })
-
+    mutateElement(el, { points: newPoints, width: dims.width, height: dims.height })
     triggerRef(editingElement)
     selectedPointIndices.value = new Set()
     markStaticDirty()
     markInteractiveDirty()
-  }, { target: document })
+  }
+
+  defineShortcuts({
+    escape: () => { if (!editingElement.value) return; exitEditor() },
+    delete: deleteSelectedPoints,
+    backspace: deleteSelectedPoints,
+  })
 
   return {
     editingElement,
