@@ -398,3 +398,33 @@ if (type === 'image') {
 ```
 
 The `base` object already includes `...overrides`, but type-specific defaults set afterward overwrite them. This gotcha is non-obvious because `base` appears to handle overrides, yet type-specific branches silently clobber them.
+
+## @excalidraw/math Subpath Imports Fail at Build Time
+
+The `@excalidraw/math` package's `exports` map only defines `types` for `./*` subpaths — no runtime JS condition:
+
+```json
+"./*": {
+  "types": "./dist/types/math/src/*.d.ts"
+}
+```
+
+`@excalidraw/element` imports `@excalidraw/math/ellipse` at runtime, which causes Vite/Rollup to fail during production build:
+
+```
+Error: [commonjs--resolver] No known conditions for "./ellipse" specifier in "@excalidraw/math" package
+```
+
+The main entry (`"."`) already re-exports all ellipse functions, so the fix is a Vite resolve alias in `nuxt.config.ts`:
+
+```ts
+vite: {
+  resolve: {
+    alias: {
+      '@excalidraw/math/ellipse': '@excalidraw/math',
+    },
+  },
+},
+```
+
+**Rule**: If a new `@excalidraw/*` package update introduces more subpath imports (e.g., `/polygon`, `/curve`), add additional aliases as needed.
