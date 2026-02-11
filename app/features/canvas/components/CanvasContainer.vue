@@ -6,28 +6,29 @@ import { useCanvasLayers } from '../composables/useCanvasLayers'
 import { useSceneRenderer } from '../composables/useSceneRenderer'
 import { usePanning } from '../composables/usePanning'
 import { createDirtyFlags } from '../composables/createDirtyFlags'
+import type { ExcalidrawElement } from '~/features/elements/types'
 import { useElements } from '~/features/elements/useElements'
 import { useLayerOrder } from '~/features/elements/composables/useLayerOrder'
 import { mutateElement } from '~/features/elements/mutateElement'
-import { useToolStore } from '~/features/tools/useTool'
 import type { ToolType } from '~/features/tools/types'
+import { useToolStore } from '~/features/tools/useTool'
 import { useDrawingInteraction } from '~/features/tools/useDrawingInteraction'
 import { useTextInteraction } from '~/features/tools/useTextInteraction'
 import { useCodeInteraction } from '~/features/code'
 import { useImageInteraction } from '~/features/image'
-import { useSelection, useSelectionInteraction } from '~/features/selection'
+import { useSelection, useSelectionInteraction, getElementAtPosition } from '~/features/selection'
 import { useMultiPointCreation } from '~/features/linear-editor/useMultiPointCreation'
 import { useLinearEditor } from '~/features/linear-editor/useLinearEditor'
-import type { ExcalidrawElement } from '~/features/elements/types'
 import { updateBoundTextAfterContainerChange } from '~/features/binding'
 import { useGroups } from '~/features/groups/composables/useGroups'
 import { cleanupAfterDelete } from '~/features/groups/groupUtils'
+import { useCommandPalette } from '~/features/command-palette'
 import { useContextMenu } from '~/features/context-menu'
 import type { ContextMenuContext } from '~/features/context-menu'
-import { getElementAtPosition } from '~/features/selection'
-import DrawingToolbar from '~/features/tools/components/DrawingToolbar.vue'
+import { useTheme } from '~/features/theme'
 import { PropertiesPanel } from '~/features/properties'
 import { useStyleClipboard } from '~/features/properties/composables/useStyleClipboard'
+import DrawingToolbar from '~/features/tools/components/DrawingToolbar.vue'
 import { isTypingElement } from '~/shared/isTypingElement'
 
 defineExpose({})
@@ -333,6 +334,44 @@ const { markStaticDirty, markNewElementDirty, markInteractiveDirty } = useSceneR
 
 // Bind real renderer callbacks to deferred dirty flags
 dirty.bind({ markStaticDirty, markInteractiveDirty, markNewElementDirty })
+
+// Register command palette actions
+const { toggleTheme } = useTheme()
+const { registerActions } = useCommandPalette()
+const TOOL_TYPES: ToolType[] = ['selection', 'hand', 'rectangle', 'diamond', 'ellipse', 'arrow', 'text', 'code', 'line', 'image']
+
+registerActions([
+  // Tools
+  ...TOOL_TYPES.map(type => ({ id: `tool:${type}`, handler: () => setTool(type) })),
+  // Actions
+  { id: 'action:delete', handler: handleDeleteFromPanel },
+  { id: 'action:select-all', handler: selectAll },
+  { id: 'action:group', handler: groupSelection },
+  { id: 'action:ungroup', handler: ungroupSelection },
+  // Layers
+  { id: 'layer:bring-to-front', handler: () => applyLayerAction(layerOrder.bringToFront) },
+  { id: 'layer:bring-forward', handler: () => applyLayerAction(layerOrder.bringForward) },
+  { id: 'layer:send-backward', handler: () => applyLayerAction(layerOrder.sendBackward) },
+  { id: 'layer:send-to-back', handler: () => applyLayerAction(layerOrder.sendToBack) },
+  // Settings
+  { id: 'settings:toggle-theme', handler: toggleTheme },
+  {
+    id: 'style:copy-styles',
+    handler: () => {
+      if (selectedElements.value.length > 0) {
+        copyStyles(selectedElements.value[0]!)
+      }
+    },
+  },
+  {
+    id: 'style:paste-styles',
+    handler: () => {
+      if (selectedElements.value.length > 0 && hasStoredStyles.value) {
+        pasteStyles([...selectedElements.value], dirty.markStaticDirty)
+      }
+    },
+  },
+])
 
 // Test hook — expose reactive state for browser tests (Excalidraw's window.h pattern).
 // Always available (SSR disabled, zero overhead — just window property assignments).

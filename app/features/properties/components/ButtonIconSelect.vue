@@ -22,14 +22,17 @@ function isActive(optionValue: string | number): boolean {
 
 <template>
   <div class="flex gap-0.5">
-    <button
+    <UButton
       v-for="option in options"
       :key="option.value"
+      variant="ghost"
+      color="neutral"
+      size="xs"
+      square
       :aria-label="option.label"
       :aria-pressed="isActive(option.value)"
-      class="flex h-7 w-7 items-center justify-center rounded text-xs transition-colors"
       :class="isActive(option.value)
-        ? 'bg-accent/20 text-accent'
+        ? 'bg-accent/20 text-accent hover:bg-accent/30'
         : 'text-foreground/70 hover:bg-subdued/20 hover:text-foreground'"
       @click="emit('update:modelValue', option.value)"
     >
@@ -46,6 +49,6 @@ function isActive(optionValue: string | number): boolean {
         v-html="option.icon"
       />
       <span v-else class="leading-none">{{ option.label }}</span>
-    </button>
+    </UButton>
   </div>
 </template>

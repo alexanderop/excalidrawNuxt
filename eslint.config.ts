@@ -153,6 +153,7 @@ export default defineConfigWithVueTs(
           { target: './app/features/rendering', from: './app/features', except: ['./rendering', './theme', './code', './image'] },
           { target: './app/features/selection', from: './app/features', except: ['./selection', './theme'] },
           { target: './app/features/tools', from: './app/features', except: ['./tools', './theme', './code'] },
+          { target: './app/features/command-palette', from: './app/features', except: ['./command-palette'] },
         ],
       }],
     },

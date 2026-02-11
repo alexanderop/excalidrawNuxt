@@ -52,14 +52,17 @@ function isActive(optionValue: Arrowhead | null): boolean {
 <template>
   <div class="flex items-center gap-0.5">
     <span class="mr-0.5 text-[10px] text-foreground/40">{{ label }}</span>
-    <button
+    <UButton
       v-for="option in arrowheadOptions"
       :key="String(option.value)"
+      variant="ghost"
+      color="neutral"
+      size="xs"
+      square
       :aria-label="`${label} arrowhead: ${option.label}`"
       :aria-pressed="isActive(option.value)"
-      class="flex h-7 w-7 items-center justify-center rounded text-xs transition-colors"
       :class="isActive(option.value)
-        ? 'bg-accent/20 text-accent'
+        ? 'bg-accent/20 text-accent hover:bg-accent/30'
         : 'text-foreground/70 hover:bg-subdued/20 hover:text-foreground'"
       @click="emit('update:modelValue', option.value)"
     >
@@ -74,6 +77,6 @@ function isActive(optionValue: Arrowhead | null): boolean {
         stroke-linejoin="round"
         v-html="option.icon"
       />
-    </button>
+    </UButton>
   </div>
 </template>

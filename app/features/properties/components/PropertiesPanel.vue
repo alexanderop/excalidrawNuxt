@@ -10,6 +10,9 @@ import ColorSwatch from './ColorSwatch.vue'
 import FontPicker from './FontPicker.vue'
 import ArrowheadPicker from './ArrowheadPicker.vue'
 
+const SECTION_LABEL = 'mb-1.5 block text-[11px] font-medium tracking-wide text-foreground/50'
+const SECTION_PAD = 'px-3 py-2.5'
+
 const { selectedElements } = defineProps<{
   selectedElements: ExcalidrawElement[]
 }>()
@@ -167,8 +170,8 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
     class="properties-sidebar absolute left-3 top-16 z-10 flex w-52 flex-col rounded-lg border border-edge/40 bg-surface/80 shadow-lg backdrop-blur-md max-h-[calc(100vh-6rem)] overflow-y-auto"
   >
     <!-- Stroke -->
-    <div class="border-b border-edge/20 px-3 py-2.5">
-      <span class="mb-1.5 block text-[11px] font-medium tracking-wide text-foreground/50">Stroke</span>
+    <div :class="SECTION_PAD">
+      <span :class="SECTION_LABEL">Stroke</span>
       <div class="flex items-center gap-1.5">
         <ColorSwatch
           :color="currentStrokeColor === 'mixed' ? 'mixed' : currentStrokeColor"
@@ -178,9 +181,11 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
       </div>
     </div>
 
+    <USeparator :ui="{ border: 'border-edge/20' }" />
+
     <!-- Background -->
-    <div class="border-b border-edge/20 px-3 py-2.5">
-      <span class="mb-1.5 block text-[11px] font-medium tracking-wide text-foreground/50">Background</span>
+    <div :class="SECTION_PAD">
+      <span :class="SECTION_LABEL">Background</span>
       <div class="flex items-center gap-1.5">
         <ColorSwatch
           :color="currentBgColor === 'mixed' ? 'mixed' : currentBgColor"
@@ -190,9 +195,11 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
       </div>
     </div>
 
+    <USeparator :ui="{ border: 'border-edge/20' }" />
+
     <!-- Fill Style -->
-    <div class="border-b border-edge/20 px-3 py-2.5">
-      <span class="mb-1.5 block text-[11px] font-medium tracking-wide text-foreground/50">Fill</span>
+    <div :class="SECTION_PAD">
+      <span :class="SECTION_LABEL">Fill</span>
       <ButtonIconSelect
         :options="fillStyleOptions"
         :model-value="currentFillStyle"
@@ -200,9 +207,11 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
       />
     </div>
 
+    <USeparator :ui="{ border: 'border-edge/20' }" />
+
     <!-- Stroke Width -->
-    <div class="border-b border-edge/20 px-3 py-2.5">
-      <span class="mb-1.5 block text-[11px] font-medium tracking-wide text-foreground/50">Stroke width</span>
+    <div :class="SECTION_PAD">
+      <span :class="SECTION_LABEL">Stroke width</span>
       <ButtonIconSelect
         :options="strokeWidthOptions"
         :model-value="currentStrokeWidth"
@@ -210,9 +219,11 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
       />
     </div>
 
+    <USeparator :ui="{ border: 'border-edge/20' }" />
+
     <!-- Stroke Style -->
-    <div class="border-b border-edge/20 px-3 py-2.5">
-      <span class="mb-1.5 block text-[11px] font-medium tracking-wide text-foreground/50">Stroke style</span>
+    <div :class="SECTION_PAD">
+      <span :class="SECTION_LABEL">Stroke style</span>
       <ButtonIconSelect
         :options="strokeStyleOptions"
         :model-value="currentStrokeStyle"
@@ -220,9 +231,11 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
       />
     </div>
 
+    <USeparator :ui="{ border: 'border-edge/20' }" />
+
     <!-- Sloppiness -->
-    <div class="border-b border-edge/20 px-3 py-2.5">
-      <span class="mb-1.5 block text-[11px] font-medium tracking-wide text-foreground/50">Sloppiness</span>
+    <div :class="SECTION_PAD">
+      <span :class="SECTION_LABEL">Sloppiness</span>
       <ButtonIconSelect
         :options="roughnessOptions"
         :model-value="currentRoughness"
@@ -230,9 +243,11 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
       />
     </div>
 
+    <USeparator :ui="{ border: 'border-edge/20' }" />
+
     <!-- Edges -->
-    <div class="border-b border-edge/20 px-3 py-2.5">
-      <span class="mb-1.5 block text-[11px] font-medium tracking-wide text-foreground/50">Edges</span>
+    <div :class="SECTION_PAD">
+      <span :class="SECTION_LABEL">Edges</span>
       <ButtonIconSelect
         :options="roundnessOptions"
         :model-value="currentRoundness"
@@ -240,9 +255,11 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
       />
     </div>
 
+    <USeparator :ui="{ border: 'border-edge/20' }" />
+
     <!-- Opacity -->
-    <div class="border-b border-edge/20 px-3 py-2.5">
-      <span class="mb-1.5 block text-[11px] font-medium tracking-wide text-foreground/50">Opacity</span>
+    <div :class="SECTION_PAD">
+      <span :class="SECTION_LABEL">Opacity</span>
       <OpacitySlider
         :model-value="currentOpacity"
         @update:model-value="onOpacityChange"
@@ -251,8 +268,9 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
 
     <!-- Text controls (conditional) -->
     <template v-if="hasTextSelected">
-      <div class="border-b border-edge/20 px-3 py-2.5">
-        <span class="mb-1.5 block text-[11px] font-medium tracking-wide text-foreground/50">Text</span>
+      <USeparator :ui="{ border: 'border-edge/20' }" />
+      <div :class="SECTION_PAD">
+        <span :class="SECTION_LABEL">Text</span>
         <div class="flex flex-col gap-2">
           <div class="flex items-center gap-1.5">
             <FontPicker
@@ -281,8 +299,9 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
 
     <!-- Arrow controls (conditional) -->
     <template v-if="hasArrowSelected">
-      <div class="border-b border-edge/20 px-3 py-2.5">
-        <span class="mb-1.5 block text-[11px] font-medium tracking-wide text-foreground/50">Arrowheads</span>
+      <USeparator :ui="{ border: 'border-edge/20' }" />
+      <div :class="SECTION_PAD">
+        <span :class="SECTION_LABEL">Arrowheads</span>
         <div class="flex flex-col gap-1.5">
           <ArrowheadPicker
             label="Start"
@@ -298,79 +317,119 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
       </div>
     </template>
 
+    <USeparator :ui="{ border: 'border-edge/20' }" />
+
     <!-- Layers -->
-    <div class="border-b border-edge/20 px-3 py-2.5">
-      <span class="mb-1.5 block text-[11px] font-medium tracking-wide text-foreground/50">Layers</span>
+    <div :class="SECTION_PAD">
+      <span :class="SECTION_LABEL">Layers</span>
       <div class="flex gap-0.5">
-        <button
-          aria-label="Send to back"
-          class="flex h-7 w-7 items-center justify-center rounded text-xs transition-colors text-foreground/70 hover:bg-subdued/20 hover:text-foreground"
-          @click="emit('send-to-back')"
-        >
-          <svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <polyline points="7 14 12 19 17 14" />
-            <line x1="5" y1="21" x2="19" y2="21" />
-          </svg>
-        </button>
-        <button
-          aria-label="Send backward"
-          class="flex h-7 w-7 items-center justify-center rounded text-xs transition-colors text-foreground/70 hover:bg-subdued/20 hover:text-foreground"
-          @click="emit('send-backward')"
-        >
-          <svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="12" y1="7" x2="12" y2="19" />
-            <polyline points="7 14 12 19 17 14" />
-          </svg>
-        </button>
-        <button
-          aria-label="Bring forward"
-          class="flex h-7 w-7 items-center justify-center rounded text-xs transition-colors text-foreground/70 hover:bg-subdued/20 hover:text-foreground"
-          @click="emit('bring-forward')"
-        >
-          <svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="12" y1="17" x2="12" y2="5" />
-            <polyline points="7 10 12 5 17 10" />
-          </svg>
-        </button>
-        <button
-          aria-label="Bring to front"
-          class="flex h-7 w-7 items-center justify-center rounded text-xs transition-colors text-foreground/70 hover:bg-subdued/20 hover:text-foreground"
-          @click="emit('bring-to-front')"
-        >
-          <svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="12" y1="19" x2="12" y2="5" />
-            <polyline points="7 10 12 5 17 10" />
-            <line x1="5" y1="3" x2="19" y2="3" />
-          </svg>
-        </button>
+        <UTooltip text="Send to back" :content="{ side: 'bottom' }">
+          <UButton
+            variant="ghost"
+            color="neutral"
+            size="xs"
+            square
+            aria-label="Send to back"
+            class="text-foreground/70 hover:bg-subdued/20 hover:text-foreground"
+            @click="emit('send-to-back')"
+          >
+            <svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <polyline points="7 14 12 19 17 14" />
+              <line x1="5" y1="21" x2="19" y2="21" />
+            </svg>
+          </UButton>
+        </UTooltip>
+        <UTooltip text="Send backward" :content="{ side: 'bottom' }">
+          <UButton
+            variant="ghost"
+            color="neutral"
+            size="xs"
+            square
+            aria-label="Send backward"
+            class="text-foreground/70 hover:bg-subdued/20 hover:text-foreground"
+            @click="emit('send-backward')"
+          >
+            <svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="7" x2="12" y2="19" />
+              <polyline points="7 14 12 19 17 14" />
+            </svg>
+          </UButton>
+        </UTooltip>
+        <UTooltip text="Bring forward" :content="{ side: 'bottom' }">
+          <UButton
+            variant="ghost"
+            color="neutral"
+            size="xs"
+            square
+            aria-label="Bring forward"
+            class="text-foreground/70 hover:bg-subdued/20 hover:text-foreground"
+            @click="emit('bring-forward')"
+          >
+            <svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="17" x2="12" y2="5" />
+              <polyline points="7 10 12 5 17 10" />
+            </svg>
+          </UButton>
+        </UTooltip>
+        <UTooltip text="Bring to front" :content="{ side: 'bottom' }">
+          <UButton
+            variant="ghost"
+            color="neutral"
+            size="xs"
+            square
+            aria-label="Bring to front"
+            class="text-foreground/70 hover:bg-subdued/20 hover:text-foreground"
+            @click="emit('bring-to-front')"
+          >
+            <svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="19" x2="12" y2="5" />
+              <polyline points="7 10 12 5 17 10" />
+              <line x1="5" y1="3" x2="19" y2="3" />
+            </svg>
+          </UButton>
+        </UTooltip>
       </div>
     </div>
 
+    <USeparator :ui="{ border: 'border-edge/20' }" />
+
     <!-- Actions -->
-    <div class="px-3 py-2.5">
-      <span class="mb-1.5 block text-[11px] font-medium tracking-wide text-foreground/50">Actions</span>
+    <div :class="SECTION_PAD">
+      <span :class="SECTION_LABEL">Actions</span>
       <div class="flex gap-0.5">
-        <button
-          aria-label="Duplicate"
-          class="flex h-7 w-7 items-center justify-center rounded text-xs transition-colors text-foreground/70 hover:bg-subdued/20 hover:text-foreground"
-          @click="emit('duplicate')"
-        >
-          <svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="9" y="9" width="13" height="13" rx="2" />
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-          </svg>
-        </button>
-        <button
-          aria-label="Delete"
-          class="flex h-7 w-7 items-center justify-center rounded text-xs transition-colors text-foreground/70 hover:bg-subdued/20 hover:text-foreground"
-          @click="emit('delete')"
-        >
-          <svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="3 6 5 6 21 6" />
-            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-          </svg>
-        </button>
+        <UTooltip text="Duplicate" :content="{ side: 'bottom' }">
+          <UButton
+            variant="ghost"
+            color="neutral"
+            size="xs"
+            square
+            aria-label="Duplicate"
+            class="text-foreground/70 hover:bg-subdued/20 hover:text-foreground"
+            @click="emit('duplicate')"
+          >
+            <svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" />
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+            </svg>
+          </UButton>
+        </UTooltip>
+        <UTooltip text="Delete" :content="{ side: 'bottom' }">
+          <UButton
+            variant="ghost"
+            color="neutral"
+            size="xs"
+            square
+            aria-label="Delete"
+            class="text-foreground/70 hover:bg-subdued/20 hover:text-foreground"
+            @click="emit('delete')"
+          >
+            <svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6" />
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+            </svg>
+          </UButton>
+        </UTooltip>
       </div>
     </div>
   </div>
