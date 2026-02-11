@@ -70,7 +70,8 @@ Browser tests (`*.browser.test.ts`) test canvas interactions via Vitest browser 
 
 ## Skills
 
-- **VueUse Skill** (`/vueuse-functions`): Contains all information about VueUse composables. Use this skill to find and apply suitable VueUse functions.
+- **Nuxt UI Skill** (`/nuxt-ui`): Contains all information about @nuxt/ui v4 components and theming. **Always consult this skill** when building or modifying Vue components, layouts, forms, or any UI work.
+- **VueUse Skill** (`/vueuse-functions`): Contains all information about VueUse composables. **Always consult this skill** when working with Vue composables or looking for reactive utilities.
 
 ## Further Reading
 

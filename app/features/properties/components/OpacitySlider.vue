@@ -1,29 +1,22 @@
 <script setup lang="ts">
-const { modelValue } = defineProps<{
-  modelValue: number
-}>()
-
-const emit = defineEmits<{
-  'update:modelValue': [value: number]
-}>()
-
-function onInput(event: Event): void {
-  const target = event.target as HTMLInputElement
-  emit('update:modelValue', Number(target.value))
-}
+const model = defineModel<number>({ required: true })
 </script>
 
 <template>
   <div class="flex items-center gap-2">
-    <input
-      type="range"
-      :value="modelValue"
-      min="0"
-      max="100"
-      step="1"
-      class="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-edge/30 accent-accent"
-      @input="onInput"
-    >
-    <span class="w-8 shrink-0 text-right text-xs text-foreground/70">{{ modelValue }}%</span>
+    <USlider
+      v-model="model"
+      :min="0"
+      :max="100"
+      :step="1"
+      size="sm"
+      class="flex-1"
+      :ui="{
+        track: 'bg-edge/30',
+        range: 'bg-accent',
+        thumb: 'ring-accent bg-foreground',
+      }"
+    />
+    <span class="w-8 shrink-0 text-right text-xs text-foreground/70">{{ model }}%</span>
   </div>
 </template>

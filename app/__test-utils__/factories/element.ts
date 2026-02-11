@@ -5,7 +5,10 @@ import type {
   ExcalidrawDiamondElement,
   ExcalidrawElement,
   ExcalidrawEllipseElement,
+  ExcalidrawImageElement,
   ExcalidrawRectangleElement,
+  ExcalidrawTextElement,
+  FileId,
 } from '~/features/elements/types'
 
 const BASE_PROPS = {
@@ -64,4 +67,34 @@ export function createTestArrowElement(
     elbowed: false,
   }
   return Object.assign(defaults, overrides) as ExcalidrawArrowElement
+}
+
+export function createTestTextElement(
+  overrides: Partial<Omit<ExcalidrawTextElement, 'type'>> = {},
+): ExcalidrawTextElement {
+  return {
+    ...BASE_PROPS,
+    type: 'text' as const,
+    fontSize: 20,
+    fontFamily: 1,
+    lineHeight: 1.25,
+    text: 'Test text',
+    originalText: 'Test text',
+    containerId: null,
+    textAlign: 'left' as const,
+    ...overrides,
+  } as ExcalidrawTextElement
+}
+
+export function createTestImageElement(
+  overrides: Partial<Omit<ExcalidrawImageElement, 'type'>> = {},
+): ExcalidrawImageElement {
+  return {
+    ...BASE_PROPS,
+    type: 'image' as const,
+    fileId: 'test-file-id' as string as FileId,
+    scale: [1, 1] as readonly [number, number],
+    status: 'saved' as const,
+    ...overrides,
+  } as ExcalidrawImageElement
 }
