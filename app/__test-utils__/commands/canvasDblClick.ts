@@ -50,24 +50,32 @@ export const canvasDblClick: BrowserCommand<
         altKey: opts.altKey ?? false,
       };
 
+      function withOffset(evt: PointerEvent | MouseEvent): typeof evt {
+        Object.defineProperty(evt, "offsetX", { value: px });
+        Object.defineProperty(evt, "offsetY", { value: py });
+        return evt;
+      }
+
       // First click
-      el.dispatchEvent(new PointerEvent("pointerdown", { ...shared, buttons: 1 }));
-      el.dispatchEvent(new PointerEvent("pointerup", { ...shared, buttons: 0 }));
+      el.dispatchEvent(withOffset(new PointerEvent("pointerdown", { ...shared, buttons: 1 })));
+      el.dispatchEvent(withOffset(new PointerEvent("pointerup", { ...shared, buttons: 0 })));
       // Second click
-      el.dispatchEvent(new PointerEvent("pointerdown", { ...shared, buttons: 1 }));
-      el.dispatchEvent(new PointerEvent("pointerup", { ...shared, buttons: 0 }));
+      el.dispatchEvent(withOffset(new PointerEvent("pointerdown", { ...shared, buttons: 1 })));
+      el.dispatchEvent(withOffset(new PointerEvent("pointerup", { ...shared, buttons: 0 })));
       // dblclick event (MouseEvent, not PointerEvent)
       el.dispatchEvent(
-        new MouseEvent("dblclick", {
-          clientX: shared.clientX,
-          clientY: shared.clientY,
-          button: 0,
-          bubbles: true,
-          cancelable: true,
-          shiftKey: shared.shiftKey,
-          metaKey: shared.metaKey,
-          altKey: shared.altKey,
-        }),
+        withOffset(
+          new MouseEvent("dblclick", {
+            clientX: shared.clientX,
+            clientY: shared.clientY,
+            button: 0,
+            bubbles: true,
+            cancelable: true,
+            shiftKey: shared.shiftKey,
+            metaKey: shared.metaKey,
+            altKey: shared.altKey,
+          }),
+        ),
       );
     },
     { sel: selector, px: x, py: y, opts: options ?? {} },

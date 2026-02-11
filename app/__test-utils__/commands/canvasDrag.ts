@@ -54,19 +54,22 @@ export const canvasDrag: BrowserCommand<
       const rect = el.getBoundingClientRect();
 
       function fire(type: string, x: number, y: number): void {
-        el!.dispatchEvent(
-          new PointerEvent(type, {
-            clientX: rect.left + x,
-            clientY: rect.top + y,
-            button: 0,
-            buttons: type === "pointerup" ? 0 : 1,
-            bubbles: true,
-            cancelable: true,
-            pointerId: 1,
-            pointerType: "mouse",
-            isPrimary: true,
-          }),
-        );
+        const evt = new PointerEvent(type, {
+          clientX: rect.left + x,
+          clientY: rect.top + y,
+          button: 0,
+          buttons: type === "pointerup" ? 0 : 1,
+          bubbles: true,
+          cancelable: true,
+          pointerId: 1,
+          pointerType: "mouse",
+          isPrimary: true,
+        });
+        // Synthetic events may not compute offsetX/offsetY from clientX/clientY.
+        // Override them so handlers using e.offsetX/e.offsetY get correct values.
+        Object.defineProperty(evt, "offsetX", { value: x });
+        Object.defineProperty(evt, "offsetY", { value: y });
+        el!.dispatchEvent(evt);
       }
 
       fire("pointerdown", sx, sy);

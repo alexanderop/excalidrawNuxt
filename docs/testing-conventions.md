@@ -219,6 +219,23 @@ API.scrollX / API.scrollY / API.zoom; // viewport state
 - **Canvas drags**: `await commands.canvasDrag(CANVAS_SELECTOR, startX, startY, endX, endY)` (dispatches PointerEvents inside iframe — never use `page.mouse`)
 - **Assertions**: `await expect.element(btn).toHaveAttribute('aria-pressed', 'true')`
 
+### Synthetic PointerEvent offsetX/offsetY Gotcha
+
+When dispatching synthetic `PointerEvent`s via `new PointerEvent()`, the browser does **not** automatically compute `offsetX`/`offsetY` from `clientX`/`clientY`. These are read-only computed getter properties, not constructor options.
+
+Handlers using `e.offsetX`/`e.offsetY` (like `toScene(e.offsetX, e.offsetY)`) will receive incorrect values (typically 0,0), breaking coordinate-sensitive interactions.
+
+**Fix**: Override offset properties after construction:
+
+```ts
+const evt = new PointerEvent(type, { clientX: rect.left + x, clientY: rect.top + y, ... });
+Object.defineProperty(evt, "offsetX", { value: x });
+Object.defineProperty(evt, "offsetY", { value: y });
+el.dispatchEvent(evt);
+```
+
+This is already applied to `canvasDrag`, `canvasClick`, and `canvasDblClick` commands. Any new canvas event commands must do the same.
+
 ### Browser Helper Classes
 
 All browser helpers are re-exported from `~/__test-utils__/browser`:

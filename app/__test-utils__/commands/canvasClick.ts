@@ -32,22 +32,25 @@ export const canvasClick: BrowserCommand<
       const rect = el.getBoundingClientRect();
 
       function fire(type: string, buttons: number): void {
-        el!.dispatchEvent(
-          new PointerEvent(type, {
-            clientX: rect.left + px,
-            clientY: rect.top + py,
-            button: 0,
-            buttons,
-            bubbles: true,
-            cancelable: true,
-            pointerId: 1,
-            pointerType: "mouse",
-            isPrimary: true,
-            shiftKey: opts.shiftKey ?? false,
-            metaKey: opts.metaKey ?? false,
-            altKey: opts.altKey ?? false,
-          }),
-        );
+        const evt = new PointerEvent(type, {
+          clientX: rect.left + px,
+          clientY: rect.top + py,
+          button: 0,
+          buttons,
+          bubbles: true,
+          cancelable: true,
+          pointerId: 1,
+          pointerType: "mouse",
+          isPrimary: true,
+          shiftKey: opts.shiftKey ?? false,
+          metaKey: opts.metaKey ?? false,
+          altKey: opts.altKey ?? false,
+        });
+        // Synthetic events may not compute offsetX/offsetY from clientX/clientY.
+        // Override them so handlers using e.offsetX/e.offsetY get correct values.
+        Object.defineProperty(evt, "offsetX", { value: px });
+        Object.defineProperty(evt, "offsetY", { value: py });
+        el!.dispatchEvent(evt);
       }
 
       fire("pointerdown", 1);
