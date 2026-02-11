@@ -1,75 +1,67 @@
-# Nuxt Minimal Starter
+# Excalidraw Nuxt
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+A collaborative drawing application built with [Nuxt 4](https://nuxt.com/) and [Vue 3](https://vuejs.org/), inspired by and based on [Excalidraw](https://excalidraw.com/).
+
+## Credits
+
+This project is a Vue/Nuxt reimplementation inspired by [Excalidraw](https://github.com/excalidraw/excalidraw), the excellent open-source virtual whiteboard created by the Excalidraw team and contributors. The original Excalidraw source is used as a reference for feature parity and correctness, then adapted into idiomatic Vue composables and Nuxt conventions.
+
+Thank you to the Excalidraw team for building such a well-designed, open-source drawing tool.
+
+## Stack
+
+- **Nuxt 4** (Vue 3.5+) with SSR disabled
+- **Tailwind CSS v4**
+- **TypeScript**
+- **RoughJS** + **perfect-freehand** for canvas shape rendering
+- **VueUse** for composables
+- **Bun** package manager
 
 ## Setup
 
-Make sure to install dependencies:
+Install dependencies:
 
 ```bash
-# npm
-npm install
-
-# pnpm
-pnpm install
-
-# yarn
-yarn install
-
-# bun
 bun install
 ```
 
-## Development Server
+## Development
 
 Start the development server on `http://localhost:3000`:
 
 ```bash
-# npm
-npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
+bun dev
 ```
 
 ## Production
 
-Build the application for production:
+Build for production:
 
 ```bash
-# npm
-npm run build
-
-# pnpm
-pnpm build
-
-# yarn
-yarn build
-
-# bun
-bun run build
+bun build
 ```
 
-Locally preview production build:
+Preview the production build:
 
 ```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
+bun preview
 ```
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+## Testing
+
+```bash
+bun test            # Run all tests
+bun test:unit       # Unit tests only
+bun test:browser    # Browser tests only
+```
+
+## Linting & Type Checking
+
+```bash
+bun lint            # Run oxlint then eslint
+bun typecheck       # Type-check with nuxi
+```
+
+## License
+
+This project references the [Excalidraw](https://github.com/excalidraw/excalidraw) source code, which is licensed under the [MIT License](https://github.com/excalidraw/excalidraw/blob/master/LICENSE).
