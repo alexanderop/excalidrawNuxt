@@ -22,7 +22,8 @@ const tools: Array<{
   { type: "ellipse", label: "Ellipse", shortcutNumber: 4, shortcutKey: "O" },
   { type: "arrow", label: "Arrow", shortcutNumber: 5, shortcutKey: "A" },
   { type: "text", label: "Text", shortcutNumber: 6, shortcutKey: "T" },
-  { type: "code", label: "Code", shortcutNumber: 7, shortcutKey: "C" },
+  { type: "freedraw", label: "Pencil", shortcutNumber: 7, shortcutKey: "P" },
+  { type: "code", label: "Code", shortcutNumber: 0, shortcutKey: "C" },
   { type: "line", label: "Line", shortcutNumber: 8, shortcutKey: "L" },
   { type: "image", label: "Image", shortcutNumber: 9, shortcutKey: "I" },
 ];

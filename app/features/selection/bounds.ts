@@ -1,25 +1,35 @@
 import type { ExcalidrawElement } from "~/features/elements/types";
-import { isLinearElement } from "~/features/elements/types";
+import { isLinearElement, isFreeDrawElement } from "~/features/elements/types";
 import { pointFrom, pointRotateRads } from "~/shared/math";
 import type { GlobalPoint } from "~/shared/math";
 
 export type Bounds = [x1: number, y1: number, x2: number, y2: number];
 
+interface PointBasedElement {
+  x: number;
+  y: number;
+  points: readonly { 0: number; 1: number }[];
+}
+
+function getPointBasedBounds(element: PointBasedElement): Bounds {
+  let minX = Infinity,
+    minY = Infinity,
+    maxX = -Infinity,
+    maxY = -Infinity;
+  for (const p of element.points) {
+    const px = p[0] + element.x;
+    const py = p[1] + element.y;
+    if (px < minX) minX = px;
+    if (py < minY) minY = py;
+    if (px > maxX) maxX = px;
+    if (py > maxY) maxY = py;
+  }
+  return [minX, minY, maxX, maxY];
+}
+
 export function getElementBounds(element: ExcalidrawElement): Bounds {
-  if (isLinearElement(element)) {
-    let minX = Infinity,
-      minY = Infinity,
-      maxX = -Infinity,
-      maxY = -Infinity;
-    for (const p of element.points) {
-      const px = p[0] + element.x;
-      const py = p[1] + element.y;
-      if (px < minX) minX = px;
-      if (py < minY) minY = py;
-      if (px > maxX) maxX = px;
-      if (py > maxY) maxY = py;
-    }
-    return [minX, minY, maxX, maxY];
+  if (isFreeDrawElement(element) || isLinearElement(element)) {
+    return getPointBasedBounds(element);
   }
 
   const { x, y, width, height, angle } = element;

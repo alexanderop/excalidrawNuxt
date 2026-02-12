@@ -9,6 +9,7 @@ import type {
 import { isArrowElement, isLinearElement } from "~/features/elements/types";
 import { createElement } from "~/features/elements/createElement";
 import { mutateElement } from "~/features/elements/mutateElement";
+import { useStyleDefaults } from "~/features/properties/composables/useStyleDefaults";
 import { pointFrom, snapAngle } from "~/shared/math";
 import type { GlobalPoint, LocalPoint } from "~/shared/math";
 import {
@@ -65,6 +66,8 @@ export function useDrawingInteraction(
     suggestedBindings,
   } = options;
 
+  const { getStyleOverrides } = useStyleDefaults();
+
   const newElement = options.newElement ?? shallowRef<ExcalidrawElement | null>(null);
   let originX = 0;
   let originY = 0;
@@ -80,7 +83,7 @@ export function useDrawingInteraction(
     originX = scene[0];
     originY = scene[1];
 
-    newElement.value = createElement(tool, originX, originY);
+    newElement.value = createElement(tool, originX, originY, getStyleOverrides());
 
     canvasRef.value?.setPointerCapture(e.pointerId);
   });

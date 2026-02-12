@@ -19,8 +19,11 @@ const KEY_TO_TOOL: Record<string, ToolType> = {
   "8": "line",
   t: "text",
   "6": "text",
+  p: "freedraw",
+  x: "freedraw",
+  "7": "freedraw",
   c: "code",
-  "7": "code",
+  "0": "code",
   i: "image",
   "9": "image",
 };

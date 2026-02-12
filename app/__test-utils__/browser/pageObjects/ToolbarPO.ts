@@ -8,9 +8,15 @@ const TOOL_SHORTCUTS: Record<string, string> = {
   ellipse: "4",
   arrow: "a",
   line: "l",
+  freedraw: "p",
   text: "t",
   hand: "h",
   code: "c",
+};
+
+/** Maps tool keys to their toolbar aria-label when it differs from the capitalized key. */
+const TOOL_LABELS: Record<string, string> = {
+  freedraw: "Pencil",
 };
 
 export class ToolbarPO {
@@ -25,9 +31,8 @@ export class ToolbarPO {
   }
 
   async expectActive(tool: string): Promise<void> {
-    const btn = this.screen.getByRole("button", {
-      name: tool.charAt(0).toUpperCase() + tool.slice(1),
-    });
+    const label = TOOL_LABELS[tool] ?? tool.charAt(0).toUpperCase() + tool.slice(1);
+    const btn = this.screen.getByRole("button", { name: label });
     await expect.element(btn).toHaveAttribute("aria-pressed", "true");
   }
 }

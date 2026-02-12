@@ -12,6 +12,7 @@ export type {
   ExcalidrawTextElement,
   ExcalidrawLinearElement,
   ExcalidrawImageElement,
+  ExcalidrawFreeDrawElement,
   InitializedExcalidrawImageElement,
   FileId,
   Arrowhead,

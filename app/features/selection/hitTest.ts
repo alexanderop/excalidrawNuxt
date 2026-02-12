@@ -1,5 +1,5 @@
-import type { ExcalidrawElement, ExcalidrawLinearElement } from "~/features/elements/types";
-import { isLinearElement } from "~/features/elements/types";
+import type { ExcalidrawElement } from "~/features/elements/types";
+import { isLinearElement, isFreeDrawElement } from "~/features/elements/types";
 import {
   pointFrom,
   pointRotateRads,
@@ -37,8 +37,8 @@ export function hitTest(point: GlobalPoint, element: ExcalidrawElement, zoom: nu
 }
 
 function hitTestShape(point: GlobalPoint, element: ExcalidrawElement, threshold: number): boolean {
-  if (isLinearElement(element)) {
-    return hitTestArrow(point, element, threshold);
+  if (isFreeDrawElement(element) || isLinearElement(element)) {
+    return hitTestPolyline(point, element, threshold);
   }
   switch (element.type) {
     case "rectangle":
@@ -124,7 +124,11 @@ function isPointInPolygon(point: GlobalPoint, vertices: GlobalPoint[], threshold
   return pointOnPolygon(point, poly, threshold);
 }
 
-function hitTestArrow(point: GlobalPoint, el: ExcalidrawLinearElement, threshold: number): boolean {
+function hitTestPolyline(
+  point: GlobalPoint,
+  el: ExcalidrawElement & { points: readonly { 0: number; 1: number }[] },
+  threshold: number,
+): boolean {
   const pts = el.points.map((p) => pointFrom<GlobalPoint>(p[0] + el.x, p[1] + el.y));
   for (let i = 0; i < pts.length - 1; i++) {
     const a = pts[i];

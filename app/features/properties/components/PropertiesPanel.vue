@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, toRef } from "vue";
 import type { ExcalidrawElement, Arrowhead } from "~/features/elements/types";
+import type { ToolType } from "~/features/tools/types";
 import { useStyleDefaults } from "../composables/useStyleDefaults";
 import { usePropertyActions } from "../composables/usePropertyActions";
 import { usePropertyVisibility } from "../composables/usePropertyVisibility";
@@ -27,8 +28,9 @@ const PROP_ROW =
 const PROP_LABEL = "min-w-14 shrink-0 text-[11px] font-medium text-foreground/50";
 const GROUP_DIVIDER = "h-px mx-3 my-1 bg-gradient-to-r from-transparent via-edge/25 to-transparent";
 
-const { selectedElements } = defineProps<{
+const { selectedElements, activeTool } = defineProps<{
   selectedElements: ExcalidrawElement[];
+  activeTool: ToolType;
 }>();
 
 const emit = defineEmits<{
@@ -60,7 +62,10 @@ const {
   showShapeGroup,
   hasText: hasTextSelected,
   hasArrow: hasArrowSelected,
-} = usePropertyVisibility(elements);
+} = usePropertyVisibility(
+  elements,
+  toRef(() => activeTool),
+);
 
 // Current form values from selection — filter to only relevant elements
 const currentStrokeColor = computed(() =>

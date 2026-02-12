@@ -18,6 +18,7 @@ export const COMMAND_GROUP_DEFS: CommandGroupDef[] = [
       "tool:ellipse",
       "tool:arrow",
       "tool:text",
+      "tool:freedraw",
       "tool:code",
       "tool:line",
       "tool:image",

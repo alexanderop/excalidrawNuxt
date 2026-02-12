@@ -20,6 +20,7 @@ export type {
   ExcalidrawTextElement,
   ExcalidrawLinearElement,
   ExcalidrawImageElement,
+  ExcalidrawFreeDrawElement,
   InitializedExcalidrawImageElement,
   FileId,
   FixedPointBinding,
@@ -68,6 +69,7 @@ import type {
   ExcalidrawLineElement,
   ExcalidrawTextElement,
   ExcalidrawImageElement,
+  ExcalidrawFreeDrawElement,
 } from "@excalidraw/element/types";
 
 /** The element types our app creates and renders. */
@@ -78,7 +80,8 @@ export type SupportedElement =
   | ExcalidrawArrowElement
   | ExcalidrawLineElement
   | ExcalidrawTextElement
-  | ExcalidrawImageElement;
+  | ExcalidrawImageElement
+  | ExcalidrawFreeDrawElement;
 
 /** The 3 shape types that arrows can bind to. */
 export type SupportedBindableElement =

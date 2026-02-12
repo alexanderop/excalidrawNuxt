@@ -205,7 +205,7 @@ export default defineConfigWithVueTs(
             {
               target: "./app/features/tools",
               from: "./app/features",
-              except: ["./tools", "./theme", "./code"],
+              except: ["./tools", "./theme", "./code", "./properties"],
             },
             {
               target: "./app/features/command-palette",

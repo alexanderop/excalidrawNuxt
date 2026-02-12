@@ -30,6 +30,20 @@ export const useStyleDefaults = createGlobalState(() => {
   const endArrowhead = ref<Arrowhead | null>("arrow");
   const recentColors = ref<string[]>([]);
 
+  /** Return current style values as a plain object for createElement overrides. */
+  function getStyleOverrides(): Record<string, unknown> {
+    return {
+      strokeColor: strokeColor.value,
+      backgroundColor: backgroundColor.value,
+      fillStyle: fillStyle.value,
+      strokeWidth: strokeWidth.value,
+      strokeStyle: strokeStyle.value,
+      opacity: opacity.value,
+      roughness: roughness.value,
+      roundness: roundness.value === "sharp" ? null : { type: 3 },
+    };
+  }
+
   return {
     strokeColor,
     backgroundColor,
@@ -45,5 +59,6 @@ export const useStyleDefaults = createGlobalState(() => {
     startArrowhead,
     endArrowhead,
     recentColors,
+    getStyleOverrides,
   };
 });

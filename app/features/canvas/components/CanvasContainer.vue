@@ -11,8 +11,10 @@ import { useElements } from "~/features/elements/useElements";
 import { useLayerOrder } from "~/features/elements/composables/useLayerOrder";
 import { mutateElement } from "~/features/elements/mutateElement";
 import type { ToolType } from "~/features/tools/types";
+import { isDrawingTool, isFreeDrawTool, isTextTool } from "~/features/tools/types";
 import { useToolStore } from "~/features/tools/useTool";
 import { useDrawingInteraction } from "~/features/tools/useDrawingInteraction";
+import { useFreeDrawInteraction } from "~/features/tools/useFreeDrawInteraction";
 import { useTextInteraction } from "~/features/tools/useTextInteraction";
 import { useCodeInteraction } from "~/features/code";
 import { useImageInteraction } from "~/features/image";
@@ -60,6 +62,13 @@ const {
   selectAll,
   isSelected,
 } = useSelection(elements);
+
+const showToolProperties = computed(
+  () =>
+    isDrawingTool(activeTool.value) ||
+    isFreeDrawTool(activeTool.value) ||
+    isTextTool(activeTool.value),
+);
 
 const suggestedBindings = shallowRef<readonly ExcalidrawElement[]>([]);
 
@@ -273,6 +282,7 @@ onBeforeToolChange(() => {
   if (editingLinearElement.value) exitLinearEditor();
   if (editingTextElement.value) submitTextEditor();
   if (editingCodeElement.value) submitCodeEditor();
+  finalizeFreeDrawIfActive();
 });
 
 // Drawing & selection own their refs internally
@@ -286,6 +296,20 @@ const { newElement } = useDrawingInteraction({
   onElementCreated(el) {
     addElement(el);
     select(el.id);
+    dirty.markInteractiveDirty();
+  },
+  markNewElementDirty: dirty.markNewElementDirty,
+});
+
+// Freedraw interaction (pencil tool) — separate from drawing interaction
+const { newFreeDrawElement, finalizeFreeDrawIfActive } = useFreeDrawInteraction({
+  ...shared,
+  activeTool,
+  spaceHeld,
+  isPanning,
+  onElementCreated(el) {
+    addElement(el);
+    // Freedraw elements are NOT auto-selected after drawing
     dirty.markInteractiveDirty();
   },
   markNewElementDirty: dirty.markNewElementDirty,
@@ -314,6 +338,9 @@ const { selectionBox, cursorStyle } = useSelectionInteraction({
   onContainerChanged: (container) => updateBoundTextAfterContainerChange(container, elementMap),
 });
 
+// Combine newElement from shape drawing and freedraw into one ref for the renderer
+const activeNewElement = computed(() => newElement.value ?? newFreeDrawElement.value);
+
 // Scene renderer (render callbacks + dirty watcher + animation controller)
 const { markStaticDirty, markNewElementDirty, markInteractiveDirty } = useSceneRenderer({
   layers: { staticCtx, newElementCtx, interactiveCtx, staticRc, newElementRc },
@@ -322,7 +349,7 @@ const { markStaticDirty, markNewElementDirty, markInteractiveDirty } = useSceneR
   elements,
   selectedElements,
   selectedIds,
-  newElement,
+  newElement: activeNewElement,
   selectionBox,
   editingLinearElement,
   editingPointIndices,
@@ -390,6 +417,7 @@ const TOOL_DEFS: { type: ToolType; icon: string; kbd: string }[] = [
   { type: "ellipse", icon: "i-lucide-circle", kbd: "O" },
   { type: "arrow", icon: "i-lucide-arrow-right", kbd: "A" },
   { type: "text", icon: "i-lucide-type", kbd: "T" },
+  { type: "freedraw", icon: "i-lucide-pencil", kbd: "P" },
   { type: "code", icon: "i-lucide-code", kbd: "C" },
   { type: "line", icon: "i-lucide-minus", kbd: "L" },
   { type: "image", icon: "i-lucide-image", kbd: "I" },
@@ -560,7 +588,7 @@ register([
   markInteractiveDirty,
 };
 
-const CROSSHAIR_TOOLS = new Set<ToolType>(["text", "code", "image"]);
+const CROSSHAIR_TOOLS = new Set<ToolType>(["text", "code", "image", "freedraw"]);
 
 const combinedCursorClass = computed(() => {
   if (cursorClass.value !== "cursor-default") return cursorClass.value;
@@ -594,8 +622,9 @@ const combinedCursorClass = computed(() => {
     <div ref="textEditorContainer" class="pointer-events-none absolute inset-0 z-[3]" />
     <DrawingToolbar />
     <PropertiesPanel
-      v-if="selectedElements.length > 0"
+      v-if="selectedElements.length > 0 || showToolProperties"
       :selected-elements="selectedElements"
+      :active-tool="activeTool"
       @mark-dirty="dirty.markStaticDirty"
     />
   </div>

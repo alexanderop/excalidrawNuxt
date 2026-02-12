@@ -44,7 +44,7 @@ interface UseSceneRendererOptions {
   elements: ShallowRef<readonly ExcalidrawElement[]>;
   selectedElements: ComputedRef<ExcalidrawElement[]>;
   selectedIds: ShallowRef<ReadonlySet<string>>;
-  newElement: ShallowRef<ExcalidrawElement | null>;
+  newElement: Ref<ExcalidrawElement | null>;
   selectionBox: ShallowRef<Box | null>;
   // Linear editor state
   editingLinearElement?: ShallowRef<ExcalidrawLinearElement | null>;

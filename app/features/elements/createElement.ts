@@ -114,5 +114,17 @@ export function createElement(
     } as SupportedElement;
   }
 
+  if (type === "freedraw") {
+    return {
+      ...base,
+      type: "freedraw",
+      points: [pointFrom<LocalPoint>(0, 0)],
+      pressures: [],
+      simulatePressure: true,
+      lastCommittedPoint: null,
+      roundness: null,
+    } as SupportedElement;
+  }
+
   throw new Error(`Unhandled element type: ${String(type)}`);
 }

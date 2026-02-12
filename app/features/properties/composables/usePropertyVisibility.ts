@@ -1,6 +1,6 @@
-import { computed, type ComputedRef } from "vue";
+import { computed, type ComputedRef, type Ref } from "vue";
 import type { ExcalidrawElement } from "~/features/elements/types";
-import { isTextElement, isArrowElement } from "~/features/elements/types";
+import type { ToolType } from "~/features/tools/types";
 import {
   hasStrokeColor,
   hasBackground,
@@ -26,36 +26,49 @@ export interface PropertyVisibility {
   hasArrow: ComputedRef<boolean>;
 }
 
+/** Tool types that map 1:1 to an element type for property visibility. */
+const TOOL_ELEMENT_TYPES: ReadonlySet<string> = new Set([
+  "rectangle",
+  "ellipse",
+  "diamond",
+  "arrow",
+  "line",
+  "freedraw",
+  "text",
+]);
+
 export function usePropertyVisibility(
   selectedElements: ComputedRef<ExcalidrawElement[]>,
+  activeTool?: Ref<ToolType>,
 ): PropertyVisibility {
-  const showStrokeColor = computed(() =>
-    selectedElements.value.some((el) => hasStrokeColor(el.type)),
-  );
-  const showBackground = computed(() =>
-    selectedElements.value.some((el) => hasBackground(el.type)),
-  );
+  /** Check a predicate against selected elements, falling back to active tool type. */
+  function check(predicate: (type: string) => boolean): ComputedRef<boolean> {
+    return computed(() => {
+      if (selectedElements.value.some((el) => predicate(el.type))) return true;
+      if (activeTool && selectedElements.value.length === 0) {
+        return TOOL_ELEMENT_TYPES.has(activeTool.value) && predicate(activeTool.value);
+      }
+      return false;
+    });
+  }
+
+  const showStrokeColor = check(hasStrokeColor);
+  const showBackground = check(hasBackground);
   const showColors = computed(() => showStrokeColor.value || showBackground.value);
 
-  const showFillStyle = computed(() => selectedElements.value.some((el) => hasFillStyle(el.type)));
-  const showStrokeWidth = computed(() =>
-    selectedElements.value.some((el) => hasStrokeWidth(el.type)),
-  );
-  const showStrokeStyle = computed(() =>
-    selectedElements.value.some((el) => hasStrokeStyle(el.type)),
-  );
+  const showFillStyle = check(hasFillStyle);
+  const showStrokeWidth = check(hasStrokeWidth);
+  const showStrokeStyle = check(hasStrokeStyle);
   const showStyleGroup = computed(
     () => showFillStyle.value || showStrokeWidth.value || showStrokeStyle.value,
   );
 
-  const showRoughness = computed(() => selectedElements.value.some((el) => hasRoughness(el.type)));
-  const showRoundness = computed(() =>
-    selectedElements.value.some((el) => canChangeRoundness(el.type)),
-  );
+  const showRoughness = check(hasRoughness);
+  const showRoundness = check(canChangeRoundness);
   const showShapeGroup = computed(() => showRoughness.value || showRoundness.value);
 
-  const hasText = computed(() => selectedElements.value.some((el) => isTextElement(el)));
-  const hasArrow = computed(() => selectedElements.value.some((el) => isArrowElement(el)));
+  const hasText = check((type) => type === "text");
+  const hasArrow = check((type) => type === "arrow");
 
   return {
     showStrokeColor,

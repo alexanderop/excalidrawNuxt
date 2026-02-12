@@ -2,7 +2,14 @@ export type LinearToolType = "arrow" | "line";
 export type ShapeToolType = "rectangle" | "ellipse" | "diamond";
 export type DrawingToolType = ShapeToolType | LinearToolType;
 
-export type ToolType = "selection" | "hand" | "text" | "code" | "image" | DrawingToolType;
+export type ToolType =
+  | "selection"
+  | "hand"
+  | "text"
+  | "code"
+  | "image"
+  | "freedraw"
+  | DrawingToolType;
 
 export function isDrawingTool(tool: ToolType): tool is DrawingToolType {
   return (
@@ -32,4 +39,8 @@ export function isCodeTool(tool: ToolType): tool is "code" {
 
 export function isImageTool(tool: ToolType): tool is "image" {
   return tool === "image";
+}
+
+export function isFreeDrawTool(tool: ToolType): tool is "freedraw" {
+  return tool === "freedraw";
 }
