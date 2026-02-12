@@ -22,12 +22,13 @@ import { useLinearEditor } from "~/features/linear-editor/useLinearEditor";
 import { updateBoundTextAfterContainerChange } from "~/features/binding";
 import { useGroups } from "~/features/groups/composables/useGroups";
 import { cleanupAfterDelete } from "~/features/groups/groupUtils";
+import { useClipboard } from "~/features/clipboard";
 import { useCommandPalette } from "~/features/command-palette";
 import { useContextMenu } from "~/features/context-menu";
-import type { ContextMenuContext } from "~/features/context-menu";
 import { useTheme } from "~/features/theme";
 import { PropertiesPanel } from "~/features/properties";
 import { useStyleClipboard } from "~/features/properties/composables/useStyleClipboard";
+import { useActionRegistry, type ActionDefinition } from "~/shared/useActionRegistry";
 import DrawingToolbar from "~/features/tools/components/DrawingToolbar.vue";
 import { isTypingElement } from "~/shared/isTypingElement";
 
@@ -91,7 +92,7 @@ function applyLayerAction(action: (ids: ReadonlySet<string>) => void): void {
   dirty.markInteractiveDirty();
 }
 
-function handleDeleteFromPanel(): void {
+function handleDelete(): void {
   const selected = selectedElements.value;
   if (selected.length === 0) return;
   for (const el of selected) {
@@ -105,19 +106,7 @@ function handleDeleteFromPanel(): void {
 }
 
 // Context menu
-function getContextMenuContext(): ContextMenuContext {
-  return {
-    selectedIds: selectedIds.value,
-    selectedElements: selectedElements.value,
-    hasGroups: selectedGroupIds.value.size > 0,
-    isMultiSelect: selectedIds.value.size > 1,
-    markDirty: dirty.markStaticDirty,
-  };
-}
-
-const { menuType: contextMenuType, items: contextMenuItems } = useContextMenu({
-  context: getContextMenuContext,
-});
+const { menuType: contextMenuType, items: contextMenuItems } = useContextMenu();
 
 function handleContextMenu(e: MouseEvent): void {
   const scenePoint = toScene(e.offsetX, e.offsetY);
@@ -157,6 +146,30 @@ useEventListener(document, "keydown", (e: KeyboardEvent) => {
     if (!hasStoredStyles.value) return;
     e.preventDefault();
     pasteStyles([...selectedElements.value], dirty.markStaticDirty);
+  }
+});
+
+// Element clipboard keyboard shortcuts (Cmd+C / Cmd+X / Cmd+V)
+useEventListener(document, "keydown", (e: KeyboardEvent) => {
+  if (isTypingElement(activeEl.value)) return;
+  if (!e.metaKey && !e.ctrlKey) return;
+  if (e.altKey) return; // Alt+C/V is style clipboard, not element clipboard
+
+  if (e.code === "KeyC") {
+    e.preventDefault();
+    handleCopy();
+    return;
+  }
+
+  if (e.code === "KeyX") {
+    e.preventDefault();
+    handleCut();
+    return;
+  }
+
+  if (e.code === "KeyV") {
+    e.preventDefault();
+    handlePaste();
   }
 });
 
@@ -325,52 +338,195 @@ const { markStaticDirty, markNewElementDirty, markInteractiveDirty } = useSceneR
 // Bind real renderer callbacks to deferred dirty flags
 dirty.bind({ markStaticDirty, markInteractiveDirty, markNewElementDirty });
 
-// Register command palette actions
+// Clipboard (element copy/cut/paste)
+const { copy: clipboardCopy, cut: clipboardCut, paste: clipboardPaste } = useClipboard();
+
+function handleCopy(): void {
+  if (selectedElements.value.length === 0) return;
+  clipboardCopy(selectedElements.value);
+}
+
+function handleCut(): void {
+  if (selectedElements.value.length === 0) return;
+  clipboardCut(selectedElements.value, {
+    markDeleted(els) {
+      for (const el of els) {
+        mutateElement(el, { isDeleted: true });
+      }
+      clearSelection();
+      dirty.markStaticDirty();
+      dirty.markInteractiveDirty();
+    },
+  });
+}
+
+function handlePaste(): void {
+  clipboardPaste({
+    addElement,
+    select,
+    replaceSelection,
+    markStaticDirty: dirty.markStaticDirty,
+    markInteractiveDirty: dirty.markInteractiveDirty,
+  });
+}
+
+function handleDuplicate(): void {
+  if (selectedElements.value.length === 0) return;
+  handleCopy();
+  handlePaste();
+}
+
+// Register all actions in the unified registry
 const { toggleTheme } = useTheme();
-const { registerActions } = useCommandPalette();
-const TOOL_TYPES: ToolType[] = [
-  "selection",
-  "hand",
-  "rectangle",
-  "diamond",
-  "ellipse",
-  "arrow",
-  "text",
-  "code",
-  "line",
-  "image",
+const { register } = useActionRegistry();
+// Keep useCommandPalette alive so its global state is initialized
+useCommandPalette();
+
+const TOOL_DEFS: { type: ToolType; icon: string; kbd: string }[] = [
+  { type: "selection", icon: "i-lucide-mouse-pointer", kbd: "V" },
+  { type: "hand", icon: "i-lucide-hand", kbd: "H" },
+  { type: "rectangle", icon: "i-lucide-square", kbd: "R" },
+  { type: "diamond", icon: "i-lucide-diamond", kbd: "D" },
+  { type: "ellipse", icon: "i-lucide-circle", kbd: "O" },
+  { type: "arrow", icon: "i-lucide-arrow-right", kbd: "A" },
+  { type: "text", icon: "i-lucide-type", kbd: "T" },
+  { type: "code", icon: "i-lucide-code", kbd: "C" },
+  { type: "line", icon: "i-lucide-minus", kbd: "L" },
+  { type: "image", icon: "i-lucide-image", kbd: "I" },
 ];
 
-registerActions([
+register([
   // Tools
-  ...TOOL_TYPES.map((type) => ({ id: `tool:${type}`, handler: () => setTool(type) })),
+  ...TOOL_DEFS.map(
+    ({ type, icon, kbd }): ActionDefinition => ({
+      id: `tool:${type}`,
+      label: type.charAt(0).toUpperCase() + type.slice(1),
+      icon,
+      kbds: [kbd] as readonly string[],
+      handler: () => setTool(type),
+    }),
+  ),
   // Actions
-  { id: "action:delete", handler: handleDeleteFromPanel },
-  { id: "action:select-all", handler: selectAll },
-  { id: "action:group", handler: groupSelection },
-  { id: "action:ungroup", handler: ungroupSelection },
+  {
+    id: "action:delete",
+    label: "Delete",
+    icon: "i-lucide-trash-2",
+    kbds: ["delete"],
+    handler: handleDelete,
+    enabled: () => selectedElements.value.length > 0,
+  },
+  {
+    id: "action:duplicate",
+    label: "Duplicate",
+    icon: "i-lucide-copy",
+    kbds: ["meta", "D"],
+    handler: handleDuplicate,
+    enabled: () => selectedElements.value.length > 0,
+  },
+  {
+    id: "action:select-all",
+    label: "Select All",
+    icon: "i-lucide-box-select",
+    kbds: ["meta", "A"],
+    handler: selectAll,
+  },
+  {
+    id: "action:group",
+    label: "Group",
+    icon: "i-lucide-group",
+    kbds: ["meta", "G"],
+    handler: groupSelection,
+    enabled: () => selectedIds.value.size > 1,
+  },
+  {
+    id: "action:ungroup",
+    label: "Ungroup",
+    icon: "i-lucide-ungroup",
+    kbds: ["meta", "shift", "G"],
+    handler: ungroupSelection,
+    enabled: () => selectedGroupIds.value.size > 0,
+  },
   // Layers
-  { id: "layer:bring-to-front", handler: () => applyLayerAction(layerOrder.bringToFront) },
-  { id: "layer:bring-forward", handler: () => applyLayerAction(layerOrder.bringForward) },
-  { id: "layer:send-backward", handler: () => applyLayerAction(layerOrder.sendBackward) },
-  { id: "layer:send-to-back", handler: () => applyLayerAction(layerOrder.sendToBack) },
+  {
+    id: "layer:bring-to-front",
+    label: "Bring to Front",
+    icon: "i-lucide-bring-to-front",
+    kbds: ["meta", "shift", "]"],
+    handler: () => applyLayerAction(layerOrder.bringToFront),
+    enabled: () => selectedElements.value.length > 0,
+  },
+  {
+    id: "layer:bring-forward",
+    label: "Bring Forward",
+    icon: "i-lucide-move-up",
+    kbds: ["meta", "]"],
+    handler: () => applyLayerAction(layerOrder.bringForward),
+    enabled: () => selectedElements.value.length > 0,
+  },
+  {
+    id: "layer:send-backward",
+    label: "Send Backward",
+    icon: "i-lucide-move-down",
+    kbds: ["meta", "["],
+    handler: () => applyLayerAction(layerOrder.sendBackward),
+    enabled: () => selectedElements.value.length > 0,
+  },
+  {
+    id: "layer:send-to-back",
+    label: "Send to Back",
+    icon: "i-lucide-send-to-back",
+    kbds: ["meta", "shift", "["],
+    handler: () => applyLayerAction(layerOrder.sendToBack),
+    enabled: () => selectedElements.value.length > 0,
+  },
   // Settings
-  { id: "settings:toggle-theme", handler: toggleTheme },
+  {
+    id: "settings:toggle-theme",
+    label: "Toggle Theme",
+    icon: "i-lucide-sun-moon",
+    kbds: ["alt", "shift", "D"],
+    handler: toggleTheme,
+  },
+  // Styles
   {
     id: "style:copy-styles",
-    handler: () => {
-      if (selectedElements.value.length > 0) {
-        copyStyles(selectedElements.value[0]!);
-      }
-    },
+    label: "Copy Styles",
+    icon: "i-lucide-paintbrush",
+    kbds: ["meta", "alt", "C"],
+    handler: () => copyStyles(selectedElements.value[0]!),
+    enabled: () => selectedElements.value.length > 0,
   },
   {
     id: "style:paste-styles",
-    handler: () => {
-      if (selectedElements.value.length > 0 && hasStoredStyles.value) {
-        pasteStyles([...selectedElements.value], dirty.markStaticDirty);
-      }
-    },
+    label: "Paste Styles",
+    icon: "i-lucide-clipboard-paste",
+    kbds: ["meta", "alt", "V"],
+    handler: () => pasteStyles([...selectedElements.value], dirty.markStaticDirty),
+    enabled: () => selectedElements.value.length > 0 && hasStoredStyles.value,
+  },
+  // Clipboard
+  {
+    id: "clipboard:copy",
+    label: "Copy",
+    icon: "i-lucide-copy",
+    kbds: ["meta", "C"],
+    handler: handleCopy,
+    enabled: () => selectedElements.value.length > 0,
+  },
+  {
+    id: "clipboard:cut",
+    label: "Cut",
+    icon: "i-lucide-scissors",
+    kbds: ["meta", "X"],
+    handler: handleCut,
+    enabled: () => selectedElements.value.length > 0,
+  },
+  {
+    id: "clipboard:paste",
+    label: "Paste",
+    icon: "i-lucide-clipboard",
+    kbds: ["meta", "V"],
+    handler: handlePaste,
   },
 ]);
 
@@ -441,11 +597,6 @@ const combinedCursorClass = computed(() => {
       v-if="selectedElements.length > 0"
       :selected-elements="selectedElements"
       @mark-dirty="dirty.markStaticDirty"
-      @bring-to-front="applyLayerAction(layerOrder.bringToFront)"
-      @bring-forward="applyLayerAction(layerOrder.bringForward)"
-      @send-backward="applyLayerAction(layerOrder.sendBackward)"
-      @send-to-back="applyLayerAction(layerOrder.sendToBack)"
-      @delete="handleDeleteFromPanel"
     />
   </div>
 </template>

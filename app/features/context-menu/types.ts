@@ -1,26 +1,9 @@
-import type { ExcalidrawElement } from "~/features/elements/types";
+import type { ActionId } from "~/shared/useActionRegistry";
 
 export type ContextMenuType = "element" | "canvas";
 
-export type ContextMenuContext = {
-  selectedIds: ReadonlySet<string>;
-  selectedElements: readonly ExcalidrawElement[];
-  hasGroups: boolean;
-  isMultiSelect: boolean;
-  markDirty: () => void;
-};
+export type ContextMenuItemDef = { type: "separator" } | { actionId: ActionId };
 
-export type ContextMenuAction = {
-  label: string;
-  kbds?: string[];
-  predicate?: (context: ContextMenuContext) => boolean;
-  action: (context: ContextMenuContext) => void;
-};
-
-export type ContextMenuSeparator = { type: "separator" };
-
-export type ContextMenuEntry = ContextMenuAction | ContextMenuSeparator;
-
-export function isSeparator(item: ContextMenuEntry): item is ContextMenuSeparator {
+export function isSeparator(item: ContextMenuItemDef): item is { type: "separator" } {
   return "type" in item && item.type === "separator";
 }

@@ -2,11 +2,13 @@
 import { computed } from "vue";
 import { defineShortcuts } from "#imports";
 import { useCommandPalette } from "./useCommandPalette";
-import { COMMAND_GROUPS } from "./commandGroups";
+import { COMMAND_GROUP_DEFS } from "./commandGroups";
+import { useActionRegistry } from "~/shared/useActionRegistry";
 
 defineExpose({});
 
 const { isOpen, execute } = useCommandPalette();
+const { get, isEnabled } = useActionRegistry();
 
 defineShortcuts({
   meta_k: {
@@ -18,15 +20,23 @@ defineShortcuts({
 });
 
 const groups = computed(() =>
-  COMMAND_GROUPS.map((group) => ({
+  COMMAND_GROUP_DEFS.map((group) => ({
     id: group.id,
     label: group.label,
-    items: group.items.map((item) => ({
-      ...item,
-      onSelect() {
-        execute(item.id);
-      },
-    })),
+    items: group.actionIds
+      .map((actionId) => {
+        const action = get(actionId);
+        if (!action) return null;
+        return {
+          id: action.id,
+          label: action.label,
+          icon: action.icon,
+          kbds: action.kbds ? [...action.kbds] : undefined,
+          disabled: !isEnabled(actionId),
+          onSelect: () => execute(action.id),
+        };
+      })
+      .filter((item) => item !== null),
   })),
 );
 </script>

@@ -41,3 +41,17 @@ body,
   background: rgb(171 75 153 / 0.3);
   border-radius: 2px;
 }
+
+/* Inner scroll area (when bottom bar is pinned) */
+.properties-sidebar-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.properties-sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.properties-sidebar-scroll::-webkit-scrollbar-thumb {
+  background: rgb(171 75 153 / 0.3);
+  border-radius: 2px;
+}

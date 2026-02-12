@@ -21,7 +21,7 @@ function isActive(optionValue: string | number): boolean {
 </script>
 
 <template>
-  <div class="flex gap-0.5">
+  <div class="flex gap-0.5 rounded-md bg-base/40 p-0.5 border border-edge/10">
     <UButton
       v-for="option in options"
       :key="option.value"

@@ -7,9 +7,14 @@ import { useStyleDefaults } from "../composables/useStyleDefaults";
 
 type ShadeIndex = 0 | 1 | 2 | 3 | 4;
 
-const { color, label } = defineProps<{
+const {
+  color,
+  label,
+  size = "md",
+} = defineProps<{
   color: string;
   label: string;
+  size?: "sm" | "md";
 }>();
 
 const emit = defineEmits<{
@@ -112,8 +117,11 @@ if (typeof document !== "undefined") {
     <button
       :aria-label="label"
       :title="label"
-      class="relative flex h-7 w-7 items-center justify-center rounded border transition-colors"
-      :class="isPickerOpen ? 'border-accent' : 'border-edge/40 hover:border-edge'"
+      class="relative flex items-center justify-center rounded border transition-colors"
+      :class="[
+        isPickerOpen ? 'border-accent' : 'border-edge/40 hover:border-edge',
+        size === 'sm' ? 'h-6 w-6' : 'h-7 w-7',
+      ]"
     >
       <!-- Checkerboard for transparent -->
       <span

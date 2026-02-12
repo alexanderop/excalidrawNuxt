@@ -1,0 +1,80 @@
+import { createGlobalState } from "@vueuse/core";
+import type { ToolType } from "~/features/tools/types";
+
+// ── Action ID union ─────────────────────────────────────────────────
+// Every registered action must have an ID from this type.
+// Adding an actionId to a context menu / command palette / template
+// without registering it will now be a compile error.
+
+type ToolActionId = `tool:${ToolType}`;
+
+type ActionActionId =
+  | "action:delete"
+  | "action:duplicate"
+  | "action:select-all"
+  | "action:group"
+  | "action:ungroup";
+
+type LayerActionId =
+  | "layer:bring-to-front"
+  | "layer:bring-forward"
+  | "layer:send-backward"
+  | "layer:send-to-back";
+
+type ClipboardActionId = "clipboard:copy" | "clipboard:cut" | "clipboard:paste";
+
+type StyleActionId = "style:copy-styles" | "style:paste-styles";
+
+type SettingsActionId = "settings:toggle-theme" | "settings:toggle-grid";
+
+type FlipActionId = "flip:horizontal" | "flip:vertical";
+
+export type ActionId =
+  | ToolActionId
+  | ActionActionId
+  | LayerActionId
+  | ClipboardActionId
+  | StyleActionId
+  | SettingsActionId
+  | FlipActionId;
+
+// ── Registry ────────────────────────────────────────────────────────
+
+export interface ActionDefinition {
+  id: ActionId;
+  label: string;
+  icon: string;
+  kbds?: readonly string[];
+  handler: () => void;
+  enabled?: () => boolean;
+}
+
+export const useActionRegistry = createGlobalState(() => {
+  const registry = new Map<ActionId, ActionDefinition>();
+
+  function register(actions: ActionDefinition[]): void {
+    for (const action of actions) {
+      registry.set(action.id, action);
+    }
+  }
+
+  function get(id: ActionId): ActionDefinition | undefined {
+    return registry.get(id);
+  }
+
+  function execute(id: ActionId): void {
+    const action = registry.get(id);
+    if (!action) return;
+    if (action.enabled && !action.enabled()) return;
+    action.handler();
+  }
+
+  function isEnabled(id: ActionId): boolean {
+    const action = registry.get(id);
+    if (!action) return false;
+    if (!action.enabled) return true;
+    return action.enabled();
+  }
+
+  return { register, get, execute, isEnabled };
+});

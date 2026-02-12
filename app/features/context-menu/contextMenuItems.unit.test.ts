@@ -1,29 +1,23 @@
-import { isSeparator } from "./types";
-import type { ContextMenuAction, ContextMenuContext } from "./types";
+import { isSeparator, type ContextMenuItemDef } from "./types";
+import { elementMenuItems, canvasMenuItems } from "./contextMenuItems";
+import type { ActionId } from "~/shared/useActionRegistry";
 
-vi.mock("~/features/properties/composables/useStyleClipboard", () => ({
-  useStyleClipboard: () => ({
-    copyStyles: vi.fn(),
-    pasteStyles: vi.fn(),
-    hasStoredStyles: { value: false },
-  }),
-}));
-
-const { elementMenuItems, canvasMenuItems } = await import("./contextMenuItems");
+function getActionIds(items: readonly ContextMenuItemDef[]): ActionId[] {
+  return items
+    .filter((item): item is { actionId: ActionId } => !isSeparator(item))
+    .map((item) => item.actionId);
+}
 
 describe("elementMenuItems", () => {
   it("is a non-empty array", () => {
     expect(elementMenuItems.length).toBeGreaterThan(0);
   });
 
-  it("contains Cut, Copy, and Paste actions", () => {
-    const labels = elementMenuItems
-      .filter((item): item is ContextMenuAction => !isSeparator(item))
-      .map((item) => item.label);
-
-    expect(labels).toContain("Cut");
-    expect(labels).toContain("Copy");
-    expect(labels).toContain("Paste");
+  it("contains clipboard action IDs", () => {
+    const ids = getActionIds(elementMenuItems);
+    expect(ids).toContain("clipboard:cut");
+    expect(ids).toContain("clipboard:copy");
+    expect(ids).toContain("clipboard:paste");
   });
 
   it("contains separator entries", () => {
@@ -31,40 +25,35 @@ describe("elementMenuItems", () => {
     expect(separators.length).toBeGreaterThan(0);
   });
 
-  it("contains Delete action", () => {
-    const labels = elementMenuItems
-      .filter((item): item is ContextMenuAction => !isSeparator(item))
-      .map((item) => item.label);
-
-    expect(labels).toContain("Delete");
+  it("contains delete action ID", () => {
+    const ids = getActionIds(elementMenuItems);
+    expect(ids).toContain("action:delete");
   });
 
-  it("contains Group and Ungroup actions", () => {
-    const labels = elementMenuItems
-      .filter((item): item is ContextMenuAction => !isSeparator(item))
-      .map((item) => item.label);
-
-    expect(labels).toContain("Group");
-    expect(labels).toContain("Ungroup");
+  it("contains group and ungroup action IDs", () => {
+    const ids = getActionIds(elementMenuItems);
+    expect(ids).toContain("action:group");
+    expect(ids).toContain("action:ungroup");
   });
 
-  it("Ungroup predicate returns true when context.hasGroups is true", () => {
-    const ungroupItem = elementMenuItems.find(
-      (item): item is ContextMenuAction => !isSeparator(item) && item.label === "Ungroup",
-    );
+  it("contains layer action IDs", () => {
+    const ids = getActionIds(elementMenuItems);
+    expect(ids).toContain("layer:bring-to-front");
+    expect(ids).toContain("layer:bring-forward");
+    expect(ids).toContain("layer:send-backward");
+    expect(ids).toContain("layer:send-to-back");
+  });
 
-    expect(ungroupItem).toBeDefined();
-    expect(ungroupItem!.predicate).toBeDefined();
+  it("contains style action IDs", () => {
+    const ids = getActionIds(elementMenuItems);
+    expect(ids).toContain("style:copy-styles");
+    expect(ids).toContain("style:paste-styles");
+  });
 
-    const ctx: ContextMenuContext = {
-      selectedIds: new Set(),
-      selectedElements: [],
-      hasGroups: true,
-      isMultiSelect: false,
-      markDirty: vi.fn(),
-    };
-
-    expect(ungroupItem!.predicate!(ctx)).toBe(true);
+  it("contains flip action IDs", () => {
+    const ids = getActionIds(elementMenuItems);
+    expect(ids).toContain("flip:horizontal");
+    expect(ids).toContain("flip:vertical");
   });
 });
 
@@ -73,12 +62,9 @@ describe("canvasMenuItems", () => {
     expect(canvasMenuItems.length).toBeGreaterThan(0);
   });
 
-  it("contains Paste and Select all", () => {
-    const labels = canvasMenuItems
-      .filter((item): item is ContextMenuAction => !isSeparator(item))
-      .map((item) => item.label);
-
-    expect(labels).toContain("Paste");
-    expect(labels).toContain("Select all");
+  it("contains paste and select-all action IDs", () => {
+    const ids = getActionIds(canvasMenuItems);
+    expect(ids).toContain("clipboard:paste");
+    expect(ids).toContain("action:select-all");
   });
 });

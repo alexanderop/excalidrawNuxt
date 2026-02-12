@@ -4,14 +4,19 @@ import type { ExcalidrawElement, Arrowhead } from "~/features/elements/types";
 import { isTextElement, isArrowElement } from "~/features/elements/types";
 import { useStyleDefaults } from "../composables/useStyleDefaults";
 import { usePropertyActions } from "../composables/usePropertyActions";
+import { useActionRegistry } from "~/shared/useActionRegistry";
 import ButtonIconSelect from "./ButtonIconSelect.vue";
 import OpacitySlider from "./OpacitySlider.vue";
 import ColorSwatch from "./ColorSwatch.vue";
 import FontPicker from "./FontPicker.vue";
 import ArrowheadPicker from "./ArrowheadPicker.vue";
 
-const SECTION_LABEL = "mb-1.5 block text-[11px] font-medium tracking-wide text-foreground/50";
-const SECTION_PAD = "px-3 py-2.5";
+const GROUP_HEADER =
+  "px-3 pt-2.5 pb-1 text-[10px] font-semibold uppercase tracking-widest text-foreground/30";
+const PROP_ROW =
+  "flex items-center justify-between px-3 py-1.5 hover:bg-subdued/8 transition-colors";
+const PROP_LABEL = "min-w-14 shrink-0 text-[11px] font-medium text-foreground/50";
+const GROUP_DIVIDER = "h-px mx-3 my-1 bg-gradient-to-r from-transparent via-edge/25 to-transparent";
 
 const { selectedElements } = defineProps<{
   selectedElements: ExcalidrawElement[];
@@ -19,13 +24,9 @@ const { selectedElements } = defineProps<{
 
 const emit = defineEmits<{
   "mark-dirty": [];
-  "bring-to-front": [];
-  "bring-forward": [];
-  "send-backward": [];
-  "send-to-back": [];
-  delete: [];
-  duplicate: [];
 }>();
+
+const { execute } = useActionRegistry();
 
 const styleDefaults = useStyleDefaults();
 
@@ -85,6 +86,18 @@ const currentStartArrowhead = computed(() =>
 const currentEndArrowhead = computed(() =>
   actions.getFormValue<Arrowhead | null>("endArrowhead", styleDefaults.endArrowhead.value),
 );
+
+const strokeHexDisplay = computed(() => {
+  if (currentStrokeColor.value === "mixed") return "mixed";
+  if (currentStrokeColor.value === "transparent") return "none";
+  return currentStrokeColor.value;
+});
+
+const bgHexDisplay = computed(() => {
+  if (currentBgColor.value === "mixed") return "mixed";
+  if (currentBgColor.value === "transparent") return "none";
+  return currentBgColor.value;
+});
 
 // Options for ButtonIconSelect groups
 const fillStyleOptions = [
@@ -199,108 +212,108 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
 
 <template>
   <div
-    class="properties-sidebar absolute left-3 top-16 z-10 flex w-52 flex-col rounded-lg border border-edge/40 bg-surface/80 shadow-lg backdrop-blur-md max-h-[calc(100vh-6rem)] overflow-y-auto"
+    class="properties-sidebar absolute left-3 top-16 z-10 flex w-56 flex-col rounded-lg border border-edge/40 bg-surface/80 shadow-lg backdrop-blur-md max-h-[calc(100vh-6rem)] overflow-hidden"
   >
-    <!-- Stroke -->
-    <div :class="SECTION_PAD">
-      <span :class="SECTION_LABEL">Stroke</span>
-      <div class="flex items-center gap-1.5">
-        <ColorSwatch
-          :color="currentStrokeColor === 'mixed' ? 'mixed' : currentStrokeColor"
-          label="Stroke color"
-          @update:color="actions.changeStrokeColor"
+    <!-- Scrollable content area -->
+    <div class="properties-sidebar-scroll flex-1 overflow-y-auto">
+      <!-- ZONE 1: Two-column color row -->
+      <div class="grid grid-cols-2 gap-px bg-edge/10">
+        <div class="flex flex-col gap-1.5 bg-surface/80 p-2.5">
+          <span class="text-[10px] font-medium uppercase tracking-wide text-foreground/40"
+            >Stroke</span
+          >
+          <div class="flex items-center gap-2">
+            <ColorSwatch
+              size="sm"
+              :color="currentStrokeColor === 'mixed' ? 'mixed' : currentStrokeColor"
+              label="Stroke color"
+              @update:color="actions.changeStrokeColor"
+            />
+            <span class="font-mono text-[10px] text-foreground/50">{{ strokeHexDisplay }}</span>
+          </div>
+        </div>
+        <div class="flex flex-col gap-1.5 bg-surface/80 p-2.5">
+          <span class="text-[10px] font-medium uppercase tracking-wide text-foreground/40"
+            >Fill</span
+          >
+          <div class="flex items-center gap-2">
+            <ColorSwatch
+              size="sm"
+              :color="currentBgColor === 'mixed' ? 'mixed' : currentBgColor"
+              label="Background color"
+              @update:color="actions.changeBackgroundColor"
+            />
+            <span class="font-mono text-[10px] text-foreground/50">{{ bgHexDisplay }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div :class="GROUP_DIVIDER" />
+
+      <!-- ZONE 2: Style group -->
+      <div :class="GROUP_HEADER">Style</div>
+      <div :class="PROP_ROW">
+        <span :class="PROP_LABEL">Fill</span>
+        <ButtonIconSelect
+          :options="fillStyleOptions"
+          :model-value="currentFillStyle"
+          @update:model-value="onFillStyleChange"
         />
       </div>
-    </div>
-
-    <USeparator :ui="{ border: 'border-edge/20' }" />
-
-    <!-- Background -->
-    <div :class="SECTION_PAD">
-      <span :class="SECTION_LABEL">Background</span>
-      <div class="flex items-center gap-1.5">
-        <ColorSwatch
-          :color="currentBgColor === 'mixed' ? 'mixed' : currentBgColor"
-          label="Background color"
-          @update:color="actions.changeBackgroundColor"
+      <div :class="PROP_ROW">
+        <span :class="PROP_LABEL">Width</span>
+        <ButtonIconSelect
+          :options="strokeWidthOptions"
+          :model-value="currentStrokeWidth"
+          @update:model-value="onStrokeWidthChange"
         />
       </div>
-    </div>
+      <div :class="PROP_ROW">
+        <span :class="PROP_LABEL">Dash</span>
+        <ButtonIconSelect
+          :options="strokeStyleOptions"
+          :model-value="currentStrokeStyle"
+          @update:model-value="onStrokeStyleChange"
+        />
+      </div>
 
-    <USeparator :ui="{ border: 'border-edge/20' }" />
+      <div :class="GROUP_DIVIDER" />
 
-    <!-- Fill Style -->
-    <div :class="SECTION_PAD">
-      <span :class="SECTION_LABEL">Fill</span>
-      <ButtonIconSelect
-        :options="fillStyleOptions"
-        :model-value="currentFillStyle"
-        @update:model-value="onFillStyleChange"
-      />
-    </div>
+      <!-- ZONE 3: Shape group -->
+      <div :class="GROUP_HEADER">Shape</div>
+      <div :class="PROP_ROW">
+        <span :class="PROP_LABEL">Rough</span>
+        <ButtonIconSelect
+          :options="roughnessOptions"
+          :model-value="currentRoughness"
+          @update:model-value="onRoughnessChange"
+        />
+      </div>
+      <div :class="PROP_ROW">
+        <span :class="PROP_LABEL">Edges</span>
+        <ButtonIconSelect
+          :options="roundnessOptions"
+          :model-value="currentRoundness"
+          @update:model-value="onRoundnessChange"
+        />
+      </div>
 
-    <USeparator :ui="{ border: 'border-edge/20' }" />
+      <div :class="GROUP_DIVIDER" />
 
-    <!-- Stroke Width -->
-    <div :class="SECTION_PAD">
-      <span :class="SECTION_LABEL">Stroke width</span>
-      <ButtonIconSelect
-        :options="strokeWidthOptions"
-        :model-value="currentStrokeWidth"
-        @update:model-value="onStrokeWidthChange"
-      />
-    </div>
+      <!-- ZONE 4: Opacity -->
+      <div :class="PROP_ROW">
+        <span :class="PROP_LABEL">Opacity</span>
+        <div class="flex-1">
+          <OpacitySlider :model-value="currentOpacity" @update:model-value="onOpacityChange" />
+        </div>
+      </div>
 
-    <USeparator :ui="{ border: 'border-edge/20' }" />
-
-    <!-- Stroke Style -->
-    <div :class="SECTION_PAD">
-      <span :class="SECTION_LABEL">Stroke style</span>
-      <ButtonIconSelect
-        :options="strokeStyleOptions"
-        :model-value="currentStrokeStyle"
-        @update:model-value="onStrokeStyleChange"
-      />
-    </div>
-
-    <USeparator :ui="{ border: 'border-edge/20' }" />
-
-    <!-- Sloppiness -->
-    <div :class="SECTION_PAD">
-      <span :class="SECTION_LABEL">Sloppiness</span>
-      <ButtonIconSelect
-        :options="roughnessOptions"
-        :model-value="currentRoughness"
-        @update:model-value="onRoughnessChange"
-      />
-    </div>
-
-    <USeparator :ui="{ border: 'border-edge/20' }" />
-
-    <!-- Edges -->
-    <div :class="SECTION_PAD">
-      <span :class="SECTION_LABEL">Edges</span>
-      <ButtonIconSelect
-        :options="roundnessOptions"
-        :model-value="currentRoundness"
-        @update:model-value="onRoundnessChange"
-      />
-    </div>
-
-    <USeparator :ui="{ border: 'border-edge/20' }" />
-
-    <!-- Opacity -->
-    <div :class="SECTION_PAD">
-      <span :class="SECTION_LABEL">Opacity</span>
-      <OpacitySlider :model-value="currentOpacity" @update:model-value="onOpacityChange" />
-    </div>
-
-    <!-- Text controls (conditional) -->
-    <template v-if="hasTextSelected">
-      <USeparator :ui="{ border: 'border-edge/20' }" />
-      <div :class="SECTION_PAD">
-        <span :class="SECTION_LABEL">Text</span>
-        <div class="flex flex-col gap-2">
+      <!-- ZONE 5: Text controls (conditional) -->
+      <template v-if="hasTextSelected">
+        <div :class="GROUP_DIVIDER" />
+        <div :class="GROUP_HEADER">Text</div>
+        <div :class="PROP_ROW">
+          <span :class="PROP_LABEL">Font</span>
           <div class="flex items-center gap-1.5">
             <FontPicker :model-value="currentFontFamily" @update:model-value="onFontFamilyChange" />
             <input
@@ -314,40 +327,45 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
               @change="onFontSizeChange"
             />
           </div>
+        </div>
+        <div :class="PROP_ROW">
+          <span :class="PROP_LABEL">Align</span>
           <ButtonIconSelect
             :options="textAlignOptions"
             :model-value="currentTextAlign"
             @update:model-value="onTextAlignChange"
           />
         </div>
-      </div>
-    </template>
+      </template>
 
-    <!-- Arrow controls (conditional) -->
-    <template v-if="hasArrowSelected">
-      <USeparator :ui="{ border: 'border-edge/20' }" />
-      <div :class="SECTION_PAD">
-        <span :class="SECTION_LABEL">Arrowheads</span>
-        <div class="flex flex-col gap-1.5">
-          <ArrowheadPicker
-            label="Start"
-            :model-value="currentStartArrowhead"
-            @update:model-value="onStartArrowheadChange"
-          />
-          <ArrowheadPicker
-            label="End"
-            :model-value="currentEndArrowhead"
-            @update:model-value="onEndArrowheadChange"
-          />
+      <!-- ZONE 6: Arrow controls (conditional) -->
+      <template v-if="hasArrowSelected">
+        <div :class="GROUP_DIVIDER" />
+        <div :class="GROUP_HEADER">Arrowheads</div>
+        <div class="px-3 py-1.5">
+          <div class="flex flex-col gap-1.5">
+            <ArrowheadPicker
+              label="Start"
+              :model-value="currentStartArrowhead"
+              @update:model-value="onStartArrowheadChange"
+            />
+            <ArrowheadPicker
+              label="End"
+              :model-value="currentEndArrowhead"
+              @update:model-value="onEndArrowheadChange"
+            />
+          </div>
         </div>
-      </div>
-    </template>
+      </template>
 
-    <USeparator :ui="{ border: 'border-edge/20' }" />
+      <!-- Spacer so content doesn't hide behind bottom bar -->
+      <div class="h-1" />
+    </div>
 
-    <!-- Layers -->
-    <div :class="SECTION_PAD">
-      <span :class="SECTION_LABEL">Layers</span>
+    <!-- Bottom bar: Layers + Actions (pinned) -->
+    <div
+      class="flex items-center justify-between border-t border-edge/20 bg-surface/90 px-2.5 py-1.5"
+    >
       <div class="flex gap-0.5">
         <UTooltip text="Send to back" :content="{ side: 'bottom' }">
           <UButton
@@ -357,7 +375,7 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
             square
             aria-label="Send to back"
             class="text-foreground/70 hover:bg-subdued/20 hover:text-foreground"
-            @click="emit('send-to-back')"
+            @click="execute('layer:send-to-back')"
           >
             <svg
               aria-hidden="true"
@@ -383,7 +401,7 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
             square
             aria-label="Send backward"
             class="text-foreground/70 hover:bg-subdued/20 hover:text-foreground"
-            @click="emit('send-backward')"
+            @click="execute('layer:send-backward')"
           >
             <svg
               aria-hidden="true"
@@ -408,7 +426,7 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
             square
             aria-label="Bring forward"
             class="text-foreground/70 hover:bg-subdued/20 hover:text-foreground"
-            @click="emit('bring-forward')"
+            @click="execute('layer:bring-forward')"
           >
             <svg
               aria-hidden="true"
@@ -433,7 +451,7 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
             square
             aria-label="Bring to front"
             class="text-foreground/70 hover:bg-subdued/20 hover:text-foreground"
-            @click="emit('bring-to-front')"
+            @click="execute('layer:bring-to-front')"
           >
             <svg
               aria-hidden="true"
@@ -452,13 +470,10 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
           </UButton>
         </UTooltip>
       </div>
-    </div>
 
-    <USeparator :ui="{ border: 'border-edge/20' }" />
+      <!-- Vertical separator -->
+      <div class="mx-1 h-5 w-px bg-edge/20" />
 
-    <!-- Actions -->
-    <div :class="SECTION_PAD">
-      <span :class="SECTION_LABEL">Actions</span>
       <div class="flex gap-0.5">
         <UTooltip text="Duplicate" :content="{ side: 'bottom' }">
           <UButton
@@ -468,7 +483,7 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
             square
             aria-label="Duplicate"
             class="text-foreground/70 hover:bg-subdued/20 hover:text-foreground"
-            @click="emit('duplicate')"
+            @click="execute('action:duplicate')"
           >
             <svg
               aria-hidden="true"
@@ -492,8 +507,8 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
             size="xs"
             square
             aria-label="Delete"
-            class="text-foreground/70 hover:bg-subdued/20 hover:text-foreground"
-            @click="emit('delete')"
+            class="text-foreground/70 hover:bg-red-500/20 hover:text-red-400"
+            @click="execute('action:delete')"
           >
             <svg
               aria-hidden="true"

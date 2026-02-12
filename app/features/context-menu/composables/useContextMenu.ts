@@ -1,12 +1,11 @@
-import { ref, computed } from "vue";
-import type { Ref, ComputedRef } from "vue";
-import type { ContextMenuType, ContextMenuContext } from "../types";
-import { isSeparator } from "../types";
+import { ref, computed, type Ref, type ComputedRef } from "vue";
+import { isSeparator, type ContextMenuType, type ContextMenuItemDef } from "../types";
 import { elementMenuItems, canvasMenuItems } from "../contextMenuItems";
-
-interface UseContextMenuOptions {
-  context: () => ContextMenuContext;
-}
+import {
+  useActionRegistry,
+  type ActionDefinition,
+  type ActionId,
+} from "~/shared/useActionRegistry";
 
 interface NuxtUiMenuItem {
   label?: string;
@@ -20,33 +19,55 @@ interface UseContextMenuReturn {
   items: ComputedRef<NuxtUiMenuItem[]>;
 }
 
-export function useContextMenu(options: UseContextMenuOptions): UseContextMenuReturn {
-  const { context } = options;
+function resolveItem(
+  item: ContextMenuItemDef,
+  get: (id: ActionId) => ActionDefinition | undefined,
+  execute: (id: ActionId) => void,
+): NuxtUiMenuItem | null {
+  if (isSeparator(item)) return { type: "separator" };
+
+  const action = get(item.actionId);
+  if (!action) return null;
+  if (action.enabled && !action.enabled()) return null;
+
+  return {
+    label: action.label,
+    kbds: action.kbds ? [...action.kbds] : undefined,
+    onSelect: () => execute(item.actionId),
+  };
+}
+
+function cleanSeparators(items: NuxtUiMenuItem[]): NuxtUiMenuItem[] {
+  const collapsed: NuxtUiMenuItem[] = [];
+  for (const item of items) {
+    const lastIsSeparator = collapsed.length > 0 && collapsed.at(-1)!.type === "separator";
+    if (item.type === "separator" && lastIsSeparator) continue;
+    collapsed.push(item);
+  }
+
+  const start = collapsed.findIndex((item) => item.type !== "separator");
+  if (start === -1) return [];
+
+  let end = collapsed.length - 1;
+  while (end > start && collapsed[end]!.type === "separator") end--;
+
+  return collapsed.slice(start, end + 1);
+}
+
+export function useContextMenu(): UseContextMenuReturn {
+  const { get, execute } = useActionRegistry();
 
   const menuType = ref<ContextMenuType>("canvas");
 
   const items = computed<NuxtUiMenuItem[]>(() => {
     const rawItems = menuType.value === "element" ? elementMenuItems : canvasMenuItems;
-    const ctx = context();
 
-    return rawItems
-      .filter((item) => {
-        if (isSeparator(item)) return true;
-        if (!item.predicate) return true;
-        return item.predicate(ctx);
-      })
-      .map((item) => {
-        if (isSeparator(item)) return { type: "separator" as const };
-        return {
-          label: item.label,
-          kbds: item.kbds,
-          onSelect: () => item.action(ctx),
-        };
-      });
+    const resolved = rawItems
+      .map((item) => resolveItem(item, get, execute))
+      .filter((item): item is NuxtUiMenuItem => item !== null);
+
+    return cleanSeparators(resolved);
   });
 
-  return {
-    menuType,
-    items,
-  };
+  return { menuType, items };
 }

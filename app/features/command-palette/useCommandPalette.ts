@@ -1,35 +1,20 @@
-import type { Ref } from "vue";
-import { ref } from "vue";
+import { ref, type Ref } from "vue";
 import { createGlobalState } from "@vueuse/core";
-
-export interface ActionEntry {
-  id: string;
-  handler: () => void;
-}
+import { useActionRegistry, type ActionId } from "~/shared/useActionRegistry";
 
 interface CommandPaletteState {
   isOpen: Ref<boolean>;
-  registerActions: (entries: ActionEntry[]) => void;
-  execute: (id: string) => void;
+  execute: (id: ActionId) => void;
 }
 
 export const useCommandPalette = createGlobalState((): CommandPaletteState => {
   const isOpen = ref(false);
-  const actionRegistry = new Map<string, () => void>();
+  const { execute: registryExecute } = useActionRegistry();
 
-  function registerActions(entries: ActionEntry[]): void {
-    for (const entry of entries) {
-      actionRegistry.set(entry.id, entry.handler);
-    }
-  }
-
-  function execute(id: string): void {
-    const handler = actionRegistry.get(id);
-    if (handler) {
-      handler();
-    }
+  function execute(id: ActionId): void {
+    registryExecute(id);
     isOpen.value = false;
   }
 
-  return { isOpen, registerActions, execute };
+  return { isOpen, execute };
 });

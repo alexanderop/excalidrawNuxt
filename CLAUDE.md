@@ -58,6 +58,18 @@ The original Excalidraw source code lives in `excalidraw/` (git-ignored, not par
 
 Browser tests (`*.browser.test.ts`) test canvas interactions via Vitest browser mode + Playwright. **Never use `page.mouse`** for canvas events — iframe coordinate mismatches cause silent failures. Use the custom commands (`canvasDrag`, `canvasClick`, `canvasDblClick`) which dispatch `PointerEvent`s directly inside the iframe via `frame.evaluate`. See `app/__test-utils__/commands/`. Browser tests also have high-level helpers in `app/__test-utils__/browser/` (`Pointer`, `Keyboard`, `UI`, `CanvasGrid`, etc.).
 
+## Action Registry
+
+All user-triggerable operations (tools, clipboard, layers, flips, etc.) are defined as `ActionDefinition` objects and stored in a global `useActionRegistry` singleton (`app/shared/useActionRegistry.ts`). Each action has an `id` (namespaced like `clipboard:copy`, `layer:bring-to-front`, `tool:rectangle`), a `label`, an `icon`, optional keyboard shortcuts (`kbds`), a `handler`, and an optional `enabled` predicate.
+
+Consumers never call handlers directly — they reference actions by ID:
+
+- **Context menu** (`contextMenuItems.ts`) — declarative lists of `{ actionId }` entries and separators, resolved at render time via the registry.
+- **Command palette** (`commandGroups.ts`) — grouped action ID lists displayed as searchable commands.
+- **Keyboard shortcuts** — bound via `kbds` on the action definition.
+
+To add a new operation: define an `ActionDefinition`, register it, and reference its ID in whichever trigger surfaces need it.
+
 ## Docs = Memory
 
 **Do NOT use Claude Code's built-in memory (`~/.claude/projects/.../memory/`).** The `docs/` folder IS the agent memory. It is version-controlled, shared across sessions, and agents maintain it themselves.
