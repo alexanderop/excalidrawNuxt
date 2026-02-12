@@ -1,10 +1,19 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import type { ExcalidrawElement, Arrowhead } from "~/features/elements/types";
-import { isTextElement, isArrowElement } from "~/features/elements/types";
 import { useStyleDefaults } from "../composables/useStyleDefaults";
 import { usePropertyActions } from "../composables/usePropertyActions";
+import { usePropertyVisibility } from "../composables/usePropertyVisibility";
 import { useActionRegistry } from "~/shared/useActionRegistry";
+import {
+  hasStrokeColor,
+  hasBackground,
+  hasFillStyle,
+  hasStrokeWidth,
+  hasStrokeStyle,
+  hasRoughness,
+  canChangeRoundness,
+} from "../propertyPredicates";
 import ButtonIconSelect from "./ButtonIconSelect.vue";
 import OpacitySlider from "./OpacitySlider.vue";
 import ColorSwatch from "./ColorSwatch.vue";
@@ -30,37 +39,64 @@ const { execute } = useActionRegistry();
 
 const styleDefaults = useStyleDefaults();
 
+const elements = computed(() => selectedElements);
+
 const actions = usePropertyActions({
-  selectedElements: computed(() => selectedElements),
+  selectedElements: elements,
   styleDefaults,
   markDirty: () => emit("mark-dirty"),
 });
 
-const hasTextSelected = computed(() => selectedElements.some((el) => isTextElement(el)));
+const {
+  showStrokeColor,
+  showBackground,
+  showColors,
+  showFillStyle,
+  showStrokeWidth,
+  showStrokeStyle,
+  showStyleGroup,
+  showRoughness,
+  showRoundness,
+  showShapeGroup,
+  hasText: hasTextSelected,
+  hasArrow: hasArrowSelected,
+} = usePropertyVisibility(elements);
 
-const hasArrowSelected = computed(() => selectedElements.some((el) => isArrowElement(el)));
-
-// Current form values from selection
+// Current form values from selection — filter to only relevant elements
 const currentStrokeColor = computed(() =>
-  actions.getFormValue<string>("strokeColor", styleDefaults.strokeColor.value),
+  actions.getFormValue<string>("strokeColor", styleDefaults.strokeColor.value, (el) =>
+    hasStrokeColor(el.type),
+  ),
 );
 const currentBgColor = computed(() =>
-  actions.getFormValue<string>("backgroundColor", styleDefaults.backgroundColor.value),
+  actions.getFormValue<string>("backgroundColor", styleDefaults.backgroundColor.value, (el) =>
+    hasBackground(el.type),
+  ),
 );
 const currentFillStyle = computed(() =>
-  actions.getFormValue<string>("fillStyle", styleDefaults.fillStyle.value),
+  actions.getFormValue<string>("fillStyle", styleDefaults.fillStyle.value, (el) =>
+    hasFillStyle(el.type),
+  ),
 );
 const currentStrokeWidth = computed(() =>
-  actions.getFormValue<number>("strokeWidth", styleDefaults.strokeWidth.value),
+  actions.getFormValue<number>("strokeWidth", styleDefaults.strokeWidth.value, (el) =>
+    hasStrokeWidth(el.type),
+  ),
 );
 const currentStrokeStyle = computed(() =>
-  actions.getFormValue<string>("strokeStyle", styleDefaults.strokeStyle.value),
+  actions.getFormValue<string>("strokeStyle", styleDefaults.strokeStyle.value, (el) =>
+    hasStrokeStyle(el.type),
+  ),
 );
 const currentRoughness = computed(() =>
-  actions.getFormValue<number>("roughness", styleDefaults.roughness.value),
+  actions.getFormValue<number>("roughness", styleDefaults.roughness.value, (el) =>
+    hasRoughness(el.type),
+  ),
 );
 const currentRoundness = computed(() => {
-  const raw = actions.getFormValue<{ type: number } | null>("roundness", null);
+  const raw = actions.getFormValue<{ type: number } | null>("roundness", null, (el) =>
+    canChangeRoundness(el.type),
+  );
   if (raw === "mixed") return "mixed";
   return raw === null ? "sharp" : "round";
 });
@@ -87,17 +123,14 @@ const currentEndArrowhead = computed(() =>
   actions.getFormValue<Arrowhead | null>("endArrowhead", styleDefaults.endArrowhead.value),
 );
 
-const strokeHexDisplay = computed(() => {
-  if (currentStrokeColor.value === "mixed") return "mixed";
-  if (currentStrokeColor.value === "transparent") return "none";
-  return currentStrokeColor.value;
-});
+function formatColorDisplay(color: string): string {
+  if (color === "mixed") return "mixed";
+  if (color === "transparent") return "none";
+  return color;
+}
 
-const bgHexDisplay = computed(() => {
-  if (currentBgColor.value === "mixed") return "mixed";
-  if (currentBgColor.value === "transparent") return "none";
-  return currentBgColor.value;
-});
+const strokeHexDisplay = computed(() => formatColorDisplay(currentStrokeColor.value));
+const bgHexDisplay = computed(() => formatColorDisplay(currentBgColor.value));
 
 // Options for ButtonIconSelect groups
 const fillStyleOptions = [
@@ -217,90 +250,99 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
     <!-- Scrollable content area -->
     <div class="properties-sidebar-scroll flex-1 overflow-y-auto">
       <!-- ZONE 1: Two-column color row -->
-      <div class="grid grid-cols-2 gap-px bg-edge/10">
-        <div class="flex flex-col gap-1.5 bg-surface/80 p-2.5">
-          <span class="text-[10px] font-medium uppercase tracking-wide text-foreground/40"
-            >Stroke</span
-          >
-          <div class="flex items-center gap-2">
-            <ColorSwatch
-              size="sm"
-              :color="currentStrokeColor === 'mixed' ? 'mixed' : currentStrokeColor"
-              label="Stroke color"
-              @update:color="actions.changeStrokeColor"
-            />
-            <span class="font-mono text-[10px] text-foreground/50">{{ strokeHexDisplay }}</span>
+      <template v-if="showColors">
+        <div
+          class="gap-px bg-edge/10"
+          :class="showStrokeColor && showBackground ? 'grid grid-cols-2' : 'flex'"
+        >
+          <div v-if="showStrokeColor" class="flex flex-col gap-1.5 bg-surface/80 p-2.5">
+            <span class="text-[10px] font-medium uppercase tracking-wide text-foreground/40"
+              >Stroke</span
+            >
+            <div class="flex items-center gap-2">
+              <ColorSwatch
+                size="sm"
+                :color="currentStrokeColor === 'mixed' ? 'mixed' : currentStrokeColor"
+                label="Stroke color"
+                @update:color="actions.changeStrokeColor"
+              />
+              <span class="font-mono text-[10px] text-foreground/50">{{ strokeHexDisplay }}</span>
+            </div>
+          </div>
+          <div v-if="showBackground" class="flex flex-col gap-1.5 bg-surface/80 p-2.5">
+            <span class="text-[10px] font-medium uppercase tracking-wide text-foreground/40"
+              >Fill</span
+            >
+            <div class="flex items-center gap-2">
+              <ColorSwatch
+                size="sm"
+                :color="currentBgColor === 'mixed' ? 'mixed' : currentBgColor"
+                label="Background color"
+                @update:color="actions.changeBackgroundColor"
+              />
+              <span class="font-mono text-[10px] text-foreground/50">{{ bgHexDisplay }}</span>
+            </div>
           </div>
         </div>
-        <div class="flex flex-col gap-1.5 bg-surface/80 p-2.5">
-          <span class="text-[10px] font-medium uppercase tracking-wide text-foreground/40"
-            >Fill</span
-          >
-          <div class="flex items-center gap-2">
-            <ColorSwatch
-              size="sm"
-              :color="currentBgColor === 'mixed' ? 'mixed' : currentBgColor"
-              label="Background color"
-              @update:color="actions.changeBackgroundColor"
-            />
-            <span class="font-mono text-[10px] text-foreground/50">{{ bgHexDisplay }}</span>
-          </div>
-        </div>
-      </div>
 
-      <div :class="GROUP_DIVIDER" />
+        <div :class="GROUP_DIVIDER" />
+      </template>
 
       <!-- ZONE 2: Style group -->
-      <div :class="GROUP_HEADER">Style</div>
-      <div :class="PROP_ROW">
-        <span :class="PROP_LABEL">Fill</span>
-        <ButtonIconSelect
-          :options="fillStyleOptions"
-          :model-value="currentFillStyle"
-          @update:model-value="onFillStyleChange"
-        />
-      </div>
-      <div :class="PROP_ROW">
-        <span :class="PROP_LABEL">Width</span>
-        <ButtonIconSelect
-          :options="strokeWidthOptions"
-          :model-value="currentStrokeWidth"
-          @update:model-value="onStrokeWidthChange"
-        />
-      </div>
-      <div :class="PROP_ROW">
-        <span :class="PROP_LABEL">Dash</span>
-        <ButtonIconSelect
-          :options="strokeStyleOptions"
-          :model-value="currentStrokeStyle"
-          @update:model-value="onStrokeStyleChange"
-        />
-      </div>
+      <template v-if="showStyleGroup">
+        <div :class="GROUP_HEADER">Style</div>
+        <div v-if="showFillStyle" :class="PROP_ROW">
+          <span :class="PROP_LABEL">Fill</span>
+          <ButtonIconSelect
+            :options="fillStyleOptions"
+            :model-value="currentFillStyle"
+            @update:model-value="onFillStyleChange"
+          />
+        </div>
+        <div v-if="showStrokeWidth" :class="PROP_ROW">
+          <span :class="PROP_LABEL">Width</span>
+          <ButtonIconSelect
+            :options="strokeWidthOptions"
+            :model-value="currentStrokeWidth"
+            @update:model-value="onStrokeWidthChange"
+          />
+        </div>
+        <div v-if="showStrokeStyle" :class="PROP_ROW">
+          <span :class="PROP_LABEL">Dash</span>
+          <ButtonIconSelect
+            :options="strokeStyleOptions"
+            :model-value="currentStrokeStyle"
+            @update:model-value="onStrokeStyleChange"
+          />
+        </div>
 
-      <div :class="GROUP_DIVIDER" />
+        <div :class="GROUP_DIVIDER" />
+      </template>
 
       <!-- ZONE 3: Shape group -->
-      <div :class="GROUP_HEADER">Shape</div>
-      <div :class="PROP_ROW">
-        <span :class="PROP_LABEL">Rough</span>
-        <ButtonIconSelect
-          :options="roughnessOptions"
-          :model-value="currentRoughness"
-          @update:model-value="onRoughnessChange"
-        />
-      </div>
-      <div :class="PROP_ROW">
-        <span :class="PROP_LABEL">Edges</span>
-        <ButtonIconSelect
-          :options="roundnessOptions"
-          :model-value="currentRoundness"
-          @update:model-value="onRoundnessChange"
-        />
-      </div>
+      <template v-if="showShapeGroup">
+        <div :class="GROUP_HEADER">Shape</div>
+        <div v-if="showRoughness" :class="PROP_ROW">
+          <span :class="PROP_LABEL">Rough</span>
+          <ButtonIconSelect
+            :options="roughnessOptions"
+            :model-value="currentRoughness"
+            @update:model-value="onRoughnessChange"
+          />
+        </div>
+        <div v-if="showRoundness" :class="PROP_ROW">
+          <span :class="PROP_LABEL">Edges</span>
+          <ButtonIconSelect
+            :options="roundnessOptions"
+            :model-value="currentRoundness"
+            @update:model-value="onRoundnessChange"
+          />
+        </div>
 
-      <div :class="GROUP_DIVIDER" />
+        <div :class="GROUP_DIVIDER" />
+      </template>
 
-      <!-- ZONE 4: Opacity -->
+      <!-- ZONE 4: Opacity (always shown) -->
       <div :class="PROP_ROW">
         <span :class="PROP_LABEL">Opacity</span>
         <div class="flex-1">

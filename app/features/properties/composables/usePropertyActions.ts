@@ -39,7 +39,11 @@ interface UsePropertyActionsReturn {
   changeFontSize: (size: number) => void;
   changeTextAlign: (align: TextAlign) => void;
   changeArrowhead: (position: "start" | "end", type: Arrowhead | null) => void;
-  getFormValue: <T>(property: string, fallback: T) => T | "mixed";
+  getFormValue: <T>(
+    property: string,
+    fallback: T,
+    isRelevant?: (el: ExcalidrawElement) => boolean,
+  ) => T | "mixed";
 }
 
 export function usePropertyActions(options: UsePropertyActionsOptions): UsePropertyActionsReturn {
@@ -107,8 +111,14 @@ export function usePropertyActions(options: UsePropertyActionsOptions): UsePrope
     styleDefaults[property].value = type;
   }
 
-  function getFormValue<T>(property: string, fallback: T): T | "mixed" {
-    const elements = selectedElements.value;
+  function getFormValue<T>(
+    property: string,
+    fallback: T,
+    isRelevant?: (el: ExcalidrawElement) => boolean,
+  ): T | "mixed" {
+    const elements = isRelevant
+      ? selectedElements.value.filter(isRelevant)
+      : selectedElements.value;
     if (elements.length === 0) return fallback;
 
     const values = new Set(elements.map((el) => (el as Record<string, unknown>)[property] as T));
