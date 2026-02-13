@@ -1,6 +1,6 @@
 import type { ShallowRef, ComputedRef, Ref } from "vue";
 import type { ExcalidrawElement, ElementsMap } from "~/features/elements/types";
-import type { ToolType } from "~/features/tools/types";
+import type { ToolType } from "~/shared/toolTypes";
 
 export interface TestHook {
   // Elements

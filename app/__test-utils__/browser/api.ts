@@ -1,5 +1,5 @@
 import type { ExcalidrawElement, ExcalidrawRectangleElement } from "~/features/elements/types";
-import type { ToolType } from "~/features/tools/types";
+import type { ToolType } from "~/shared/toolTypes";
 import { getH } from "../testHook";
 import type { TestHook } from "../testHook";
 import { createTestElement } from "../factories/element";

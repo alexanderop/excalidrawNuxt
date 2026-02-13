@@ -11,7 +11,13 @@ import {
   DEFAULT_FONT_FAMILY,
   DEFAULT_TEXT_ALIGN,
 } from "~/features/elements/constants";
-import type { Arrowhead, FillStyle, StrokeStyle, TextAlign } from "~/features/elements/types";
+import type {
+  Arrowhead,
+  FillStyle,
+  MutableElement,
+  StrokeStyle,
+  TextAlign,
+} from "~/features/elements/types";
 import type { Roundness } from "../types";
 
 export const useStyleDefaults = createGlobalState(() => {
@@ -31,7 +37,7 @@ export const useStyleDefaults = createGlobalState(() => {
   const recentColors = ref<string[]>([]);
 
   /** Return current style values as a plain object for createElement overrides. */
-  function getStyleOverrides(): Record<string, unknown> {
+  function getStyleOverrides(): Partial<MutableElement> {
     return {
       strokeColor: strokeColor.value,
       backgroundColor: backgroundColor.value,
@@ -40,7 +46,7 @@ export const useStyleDefaults = createGlobalState(() => {
       strokeStyle: strokeStyle.value,
       opacity: opacity.value,
       roughness: roughness.value,
-      roundness: roundness.value === "sharp" ? null : { type: 3 },
+      roundness: roundness.value === "sharp" ? null : { type: 3 as const },
     };
   }
 

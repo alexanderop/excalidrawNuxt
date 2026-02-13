@@ -1,4 +1,4 @@
-import type { ExcalidrawElement } from "~/features/elements/types";
+import type { ExcalidrawElement, ExcalidrawRectangleElement } from "~/features/elements/types";
 
 export type CodeLanguage = "typescript" | "vue";
 
@@ -7,10 +7,16 @@ export interface CodeElementData {
   language: CodeLanguage;
 }
 
-export function isCodeElement(el: ExcalidrawElement): boolean {
+/** A rectangle element with code customData. */
+export type CodeElement = ExcalidrawRectangleElement & { customData: CodeElementData };
+
+export function isCodeElement(el: ExcalidrawElement): el is CodeElement {
   return el.type === "rectangle" && el.customData?.code !== undefined;
 }
 
-export function getCodeData(el: ExcalidrawElement): CodeElementData {
-  return el.customData as CodeElementData;
+export function getCodeData(el: CodeElement): CodeElementData;
+export function getCodeData(el: ExcalidrawElement): CodeElementData | undefined;
+export function getCodeData(el: ExcalidrawElement): CodeElementData | undefined {
+  if (!isCodeElement(el)) return undefined;
+  return el.customData;
 }

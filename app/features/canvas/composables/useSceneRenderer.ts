@@ -19,6 +19,7 @@ import type {
 } from "~/features/elements/types";
 import type { Box, GlobalPoint } from "~/shared/math";
 import { useTheme, resolveColor } from "~/features/theme";
+import type { CodeElement } from "~/features/code";
 import { useImageCache } from "~/features/image/useImageCache";
 
 interface UseSceneRendererOptions {
@@ -60,7 +61,7 @@ interface UseSceneRendererOptions {
   // Text editing — hide element being edited (textarea overlay replaces canvas-drawn text)
   editingTextElement?: ShallowRef<ExcalidrawTextElement | null>;
   // Code editing — hide element being edited (editor overlay replaces canvas-drawn code)
-  editingCodeElement?: ShallowRef<ExcalidrawElement | null>;
+  editingCodeElement?: ShallowRef<CodeElement | null>;
 }
 
 interface UseSceneRendererReturn {

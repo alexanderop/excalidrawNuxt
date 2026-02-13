@@ -1,5 +1,6 @@
 import { generateId } from "~/shared/random";
 import type { FileId } from "./types";
+import { toFileId } from "./types";
 import { useImageCache } from "./useImageCache";
 import { SUPPORTED_IMAGE_TYPES, MAX_IMAGE_FILE_SIZE } from "./constants";
 
@@ -17,7 +18,13 @@ function isSupportedMimeType(type: string): boolean {
 function fileToDataURL(file: File | Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.addEventListener("load", () => resolve(reader.result as string));
+    reader.addEventListener("load", () => {
+      if (typeof reader.result !== "string") {
+        reject(new Error("FileReader result is not a string"));
+        return;
+      }
+      resolve(reader.result);
+    });
     reader.addEventListener("error", () => reject(new Error("Failed to read file")));
     reader.readAsDataURL(file);
   });
@@ -40,7 +47,7 @@ export function useImageUpload() {
     if (!isSupportedMimeType(mimeType)) return null;
     if (file.size > MAX_IMAGE_FILE_SIZE) return null;
 
-    const fileId = generateId() as string as FileId;
+    const fileId = toFileId(generateId());
     const dataURL = await fileToDataURL(file);
     const image = await loadImage(dataURL);
 

@@ -1,6 +1,6 @@
-import type { ExcalidrawElement } from "~/features/elements/types";
 import type { Theme } from "~/features/theme/types";
 import { getCodeData } from "./types";
+import type { CodeElement } from "./types";
 import { useShikiHighlighter } from "./useShikiHighlighter";
 import {
   CODE_FONT_SIZE,
@@ -20,7 +20,7 @@ import {
 
 export function renderCodeElement(
   ctx: CanvasRenderingContext2D,
-  element: ExcalidrawElement,
+  element: CodeElement,
   theme: Theme,
 ): void {
   const { code, language } = getCodeData(element);

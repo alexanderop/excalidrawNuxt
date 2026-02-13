@@ -1,6 +1,26 @@
 import { expect, beforeAll } from "vitest";
 import { page } from "vitest/browser";
+import { config } from "vitest-browser-vue";
+import { defineComponent, h } from "vue";
 import "~/assets/css/main.css";
+
+// Stub Nuxt UI components (UButton, UTooltip, etc.) that aren't available
+// in the browser test environment. Each stub renders a plain <div> with its
+// default slot so the rest of the component tree works normally.
+const NuxtUiStub = defineComponent({
+  inheritAttrs: false,
+  setup(_, { attrs, slots }) {
+    return () => h("div", attrs, slots.default?.());
+  },
+});
+
+config.global.stubs = {
+  UButton: NuxtUiStub,
+  UTooltip: NuxtUiStub,
+  UPopover: NuxtUiStub,
+  UContextMenu: NuxtUiStub,
+  USlider: NuxtUiStub,
+};
 
 // Desktop-sized viewport for all browser tests (screenshots are resolution-dependent)
 beforeAll(async () => {

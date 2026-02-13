@@ -9,7 +9,7 @@ import { mutateElement } from "~/features/elements/mutateElement";
 import { getElementAtPosition } from "~/features/selection/hitTest";
 import { useTheme } from "~/features/theme";
 import { isCodeElement, getCodeData } from "./types";
-import type { CodeLanguage } from "./types";
+import type { CodeLanguage, CodeElement } from "./types";
 import { measureCode } from "./measureCode";
 import { useShikiHighlighter } from "./useShikiHighlighter";
 import { buildEditorDom } from "./buildEditorDom";
@@ -36,7 +36,7 @@ interface UseCodeInteractionOptions {
 }
 
 interface UseCodeInteractionReturn {
-  editingCodeElement: ShallowRef<ExcalidrawElement | null>;
+  editingCodeElement: ShallowRef<CodeElement | null>;
   submitCodeEditor: () => void;
 }
 
@@ -61,10 +61,10 @@ export function useCodeInteraction(options: UseCodeInteractionOptions): UseCodeI
 
   const { theme } = useTheme();
   const { highlight, tokensToHtml } = useShikiHighlighter();
-  const editingCodeElement = shallowRef<ExcalidrawElement | null>(null);
+  const editingCodeElement = shallowRef<CodeElement | null>(null);
   let activeEditorContainer: HTMLDivElement | null = null;
 
-  function openEditor(element: ExcalidrawElement): void {
+  function openEditor(element: CodeElement): void {
     options.onInteractionStart?.();
     editingCodeElement.value = element;
     const editorContainer = textEditorContainerRef.value;
@@ -222,6 +222,7 @@ export function useCodeInteraction(options: UseCodeInteractionOptions): UseCodeI
     // Switch tool BEFORE opening editor — otherwise onBeforeToolChange
     // sees editingCodeElement and immediately closes the editor
     setTool("selection");
+    if (!isCodeElement(created)) return;
     openEditor(created);
   });
 

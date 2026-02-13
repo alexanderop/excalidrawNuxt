@@ -1,5 +1,5 @@
 import { createGlobalState } from "@vueuse/core";
-import type { ToolType } from "~/features/tools/types";
+import type { ToolType } from "~/shared/toolTypes";
 
 // ── Action ID union ─────────────────────────────────────────────────
 // Every registered action must have an ID from this type.

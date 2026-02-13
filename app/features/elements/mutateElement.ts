@@ -1,13 +1,13 @@
 import { randomVersionNonce } from "~/shared/random";
-import type { ExcalidrawElement } from "./types";
+import type { ExcalidrawElement, MutableElement } from "./types";
 
 export function mutateElement<T extends ExcalidrawElement>(
   element: T,
-  updates: Record<string, unknown>,
+  updates: Partial<MutableElement>,
 ): T {
   Object.assign(element, updates, {
     versionNonce: randomVersionNonce(),
-    version: (((element as Record<string, unknown>).version as number) ?? 0) + 1,
+    version: (element.version ?? 0) + 1,
     updated: Date.now(),
   });
   return element;

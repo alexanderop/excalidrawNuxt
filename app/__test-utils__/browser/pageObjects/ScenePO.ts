@@ -1,5 +1,5 @@
 import type { ExcalidrawElement, ExcalidrawRectangleElement } from "~/features/elements/types";
-import type { ToolType } from "~/features/tools/types";
+import type { ToolType } from "~/shared/toolTypes";
 import { API } from "../api";
 import { waitForPaint } from "../waiters";
 

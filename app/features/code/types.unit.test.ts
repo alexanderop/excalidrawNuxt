@@ -24,9 +24,15 @@ describe("isCodeElement", () => {
 });
 
 describe("getCodeData", () => {
-  it("returns the customData object", () => {
+  it("returns the customData for a code element", () => {
     const codeData = { code: "const x = 1", language: "typescript" as const };
     const el = createTestElement({ customData: codeData });
+    if (!isCodeElement(el)) throw new Error("expected code element");
     expect(getCodeData(el)).toBe(codeData);
+  });
+
+  it("returns undefined for a non-code element", () => {
+    const el = createTestElement();
+    expect(getCodeData(el)).toBeUndefined();
   });
 });

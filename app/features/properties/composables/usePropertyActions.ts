@@ -3,6 +3,7 @@ import type {
   ExcalidrawElement,
   Arrowhead,
   FillStyle,
+  MutableElement,
   StrokeStyle,
   TextAlign,
 } from "~/features/elements/types";
@@ -42,7 +43,7 @@ export function usePropertyActions(options: UsePropertyActionsOptions): UsePrope
   function applyAndRemember<K extends keyof StyleDefaults>(
     key: K,
     value: StyleDefaults[K]["value"],
-    updates?: Record<string, unknown>,
+    updates?: Partial<MutableElement>,
   ): void {
     onBeforeChange?.();
     for (const el of selectedElements.value) {
@@ -81,7 +82,7 @@ export function usePropertyActions(options: UsePropertyActionsOptions): UsePrope
   }
 
   function changeRoundness(type: Roundness): void {
-    const roundness = type === "sharp" ? null : { type: 3 };
+    const roundness = type === "sharp" ? null : { type: 3 as const };
     applyAndRemember("roundness", type, { roundness });
   }
 

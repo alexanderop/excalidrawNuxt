@@ -163,6 +163,7 @@ export default defineConfigWithVueTs(
                 "./app/utils",
                 "./app/types",
                 "./app/stores",
+                "./app/shared",
               ],
               from: ["./app/features", "./app/pages"],
             },

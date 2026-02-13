@@ -2,6 +2,7 @@ import type { ExcalidrawElement } from "~/features/elements/types";
 import type {
   ExcalidrawImageElement,
   InitializedExcalidrawImageElement,
+  FileId,
 } from "@excalidraw/element/types";
 
 export type {
@@ -23,4 +24,8 @@ export function isInitializedImageElement(
   el: ExcalidrawElement | null,
 ): el is InitializedExcalidrawImageElement {
   return isImageElement(el) && el.fileId !== null;
+}
+
+export function toFileId(id: string): FileId {
+  return id as unknown as FileId;
 }

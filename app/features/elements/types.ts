@@ -88,3 +88,40 @@ export type SupportedBindableElement =
   | ExcalidrawRectangleElement
   | ExcalidrawEllipseElement
   | ExcalidrawDiamondElement;
+
+// ---------------------------------------------------------------------------
+// Helper types for type-safe mutations
+// ---------------------------------------------------------------------------
+
+/**
+ * Flattens a union into a single object type containing all possible keys.
+ * For overlapping keys the value type is a union of all member types.
+ */
+type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never) extends (
+  k: infer I,
+) => void
+  ? I
+  : never;
+type FlattenUnion<T> = {
+  [K in keyof UnionToIntersection<T>]: T extends Record<K, infer V> ? V : never;
+};
+
+/** Writable version of all SupportedElement properties (removes readonly modifiers). */
+export type MutableElement = {
+  -readonly [K in keyof FlattenUnion<SupportedElement>]: FlattenUnion<SupportedElement>[K];
+};
+
+/** Maps element type string to its concrete type. */
+export interface ElementTypeMap {
+  rectangle: ExcalidrawRectangleElement;
+  ellipse: ExcalidrawEllipseElement;
+  diamond: ExcalidrawDiamondElement;
+  arrow: ExcalidrawArrowElement;
+  line: ExcalidrawLineElement;
+  text: ExcalidrawTextElement;
+  image: ExcalidrawImageElement;
+  freedraw: ExcalidrawFreeDrawElement;
+}
+
+/** Union of supported element type strings. */
+export type SupportedElementType = SupportedElement["type"];

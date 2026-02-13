@@ -69,7 +69,7 @@ export function useFreeDrawInteraction(
     const simulatePressure = e.pressure === 0 || e.pressure === 0.5;
     mutateElement(el, { simulatePressure });
 
-    newFreeDrawElement.value = el as ExcalidrawFreeDrawElement;
+    newFreeDrawElement.value = el;
     canvasRef.value?.setPointerCapture(e.pointerId);
   });
 

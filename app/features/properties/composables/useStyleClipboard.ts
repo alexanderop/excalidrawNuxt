@@ -1,6 +1,6 @@
 import { ref, computed } from "vue";
 import { createGlobalState } from "@vueuse/core";
-import type { ExcalidrawElement } from "~/features/elements/types";
+import type { ExcalidrawElement, MutableElement } from "~/features/elements/types";
 import { isTextElement } from "~/features/elements/types";
 import { mutateElement } from "~/features/elements/mutateElement";
 import { useStyleDefaults } from "./useStyleDefaults";
@@ -28,12 +28,12 @@ const TEXT_ONLY_KEYS: ReadonlySet<StyleKey> = new Set(["fontFamily", "fontSize",
 function buildUpdatesForElement(
   snapshot: StyleSnapshot,
   el: ExcalidrawElement,
-): Record<string, unknown> {
-  const updates: Record<string, unknown> = {};
+): Partial<MutableElement> {
+  const updates: Partial<MutableElement> = {};
   for (const key of STYLE_KEYS) {
     if (!(key in snapshot)) continue;
     if (TEXT_ONLY_KEYS.has(key) && !isTextElement(el)) continue;
-    updates[key] = snapshot[key];
+    (updates as Record<string, unknown>)[key] = snapshot[key];
   }
   return updates;
 }

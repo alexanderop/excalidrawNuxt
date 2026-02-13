@@ -1,7 +1,7 @@
 import { generateId, randomInteger, randomVersionNonce } from "~/shared/random";
 import { pointFrom } from "~/shared/math";
 import type { LocalPoint, Radians } from "~/shared/math";
-import type { SupportedElement } from "./types";
+import type { SupportedElementType, ElementTypeMap, MutableElement } from "./types";
 import {
   DEFAULT_BG_COLOR,
   DEFAULT_FILL_STYLE,
@@ -15,14 +15,12 @@ import {
   DEFAULT_TEXT_ALIGN,
 } from "./constants";
 
-type SupportedElementType = SupportedElement["type"];
-
-export function createElement(
-  type: SupportedElementType,
+export function createElement<T extends SupportedElementType>(
+  type: T,
   x: number,
   y: number,
-  overrides: Record<string, unknown> = {},
-): SupportedElement {
+  overrides: Partial<MutableElement> = {},
+): ElementTypeMap[T] {
   const base = {
     id: generateId(),
     x,
@@ -67,7 +65,7 @@ export function createElement(
       lineHeight: DEFAULT_LINE_HEIGHT as number & { _brand: "unitlessLineHeight" },
       autoResize: true,
       ...overrides,
-    } as SupportedElement;
+    } as unknown as ElementTypeMap[T];
   }
 
   if (type === "arrow") {
@@ -81,7 +79,7 @@ export function createElement(
       startBinding: null,
       endBinding: null,
       elbowed: false,
-    } as SupportedElement;
+    } as unknown as ElementTypeMap[T];
   }
 
   if (type === "line") {
@@ -95,11 +93,11 @@ export function createElement(
       startBinding: null,
       endBinding: null,
       polygon: false,
-    } as SupportedElement;
+    } as unknown as ElementTypeMap[T];
   }
 
   if (type === "rectangle" || type === "ellipse" || type === "diamond") {
-    return { ...base, type } as SupportedElement;
+    return { ...base, type } as unknown as ElementTypeMap[T];
   }
 
   if (type === "image") {
@@ -111,7 +109,7 @@ export function createElement(
       scale: [1, 1],
       crop: null,
       ...overrides,
-    } as SupportedElement;
+    } as unknown as ElementTypeMap[T];
   }
 
   if (type === "freedraw") {
@@ -123,7 +121,7 @@ export function createElement(
       simulatePressure: true,
       lastCommittedPoint: null,
       roundness: null,
-    } as SupportedElement;
+    } as unknown as ElementTypeMap[T];
   }
 
   throw new Error(`Unhandled element type: ${String(type)}`);
