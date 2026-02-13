@@ -74,3 +74,37 @@ sequenceDiagram
     CI->>TEC: remove code editor DOM
     CI->>CI: markStaticDirty()
 ```
+
+## Free-draw (Pencil) Creation Flow
+
+```mermaid
+sequenceDiagram
+        participant User as User Input
+        participant FD as useFreeDrawInteraction
+        participant EL as createElement/mutateElement
+        participant CC as CanvasContainer
+
+        User->>FD: pointerdown (freedraw tool active)
+        FD->>EL: createElement('freedraw', sceneX, sceneY, styleOverrides)
+        FD->>EL: mutateElement(simulatePressure = pressure===0 or 0.5)
+        FD->>FD: set newFreeDrawElement + pointer capture
+
+        loop pointermove
+            FD->>EL: append points (relative to origin)
+            FD->>EL: append pressures when simulatePressure=false
+            FD->>FD: markNewElementDirty()
+        end
+
+        alt pointerup
+            FD->>FD: finalize element
+        else tool switch
+            CC->>FD: finalizeFreeDrawIfActive()
+        end
+
+        FD->>EL: normalize dot click (single-point nudge)
+        FD->>EL: update width/height + lastCommittedPoint
+        FD->>CC: onElementCreated(el)
+        FD->>FD: clear in-progress state
+        FD->>FD: markNewElementDirty() + markStaticDirty()
+        Note over FD: Tool stays on freedraw and element is not auto-selected
+```

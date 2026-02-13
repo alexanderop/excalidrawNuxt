@@ -219,6 +219,15 @@ API.scrollX / API.scrollY / API.zoom; // viewport state
 - **Canvas drags**: `await commands.canvasDrag(CANVAS_SELECTOR, startX, startY, endX, endY)` (dispatches PointerEvents inside iframe — never use `page.mouse`)
 - **Assertions**: `await expect.element(btn).toHaveAttribute('aria-pressed', 'true')`
 
+### Canvas command modifier support
+
+Current command support is intentionally narrow:
+
+- `canvasClick` / `canvasDblClick`: `shiftKey`, `metaKey`, `altKey`
+- `canvasDrag`: no modifier options (only `{ steps?: number }`)
+
+`ctrlKey` is not currently forwarded by canvas commands. For Ctrl/Cmd+click workflows, extend command options first before relying on pointer-modifier assertions.
+
 ### Synthetic PointerEvent offsetX/offsetY Gotcha
 
 When dispatching synthetic `PointerEvent`s via `new PointerEvent()`, the browser does **not** automatically compute `offsetX`/`offsetY` from `clientX`/`clientY`. These are read-only computed getter properties, not constructor options.
@@ -400,11 +409,22 @@ describe("visual rendering", () => {
 
 Reference screenshots are stored in `__screenshots__/` next to the test file.
 
+### CanvasPage seeding pitfall
+
+`CanvasPage.create()` already calls `reseed()` and registers `restoreSeed()` with `onTestFinished()`.
+Do not also add `beforeEach(reseed)` / `afterEach(restoreSeed)` in the same file when using `CanvasPage`.
+
+Double-seeding can restore `Math.random` to an already-seeded generator and leak deterministic RNG state across tests.
+
+- Using `CanvasPage.create()`: no manual seed hooks
+- Not using `CanvasPage.create()`: keep manual `reseed()` / `restoreSeed()` hooks
+
 ## Canvas Grid Testing
 
 Use `CanvasGrid` to express canvas interactions in human-readable cell coordinates instead of raw pixels.
 
-Default grid: **16 cols x 9 rows** = 80px cells on 1280x720 canvas (16:9 aspect ratio).
+Default logical grid: **16 cols x 9 rows**.
+Cell pixel size is resolved from the runtime canvas CSS dimensions (after `waitForCanvasReady()`), not hardcoded.
 
 ```
  0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15

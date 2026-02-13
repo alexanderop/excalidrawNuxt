@@ -76,6 +76,8 @@ flowchart LR
 | `watch(selectedIds)`                                      | Interactive                | `useSceneRenderer`        |
 | Element created/mutated                                   | Static                     | interaction composables   |
 | New element drag                                          | NewElement                 | `useDrawingInteraction`   |
+| Free-draw pointermove (in-progress stroke)                | NewElement                 | `useFreeDrawInteraction`  |
+| Free-draw finalize (`pointerup` or tool-switch finalize)  | NewElement + Static        | `useFreeDrawInteraction`  |
 | Selection change/drag/resize                              | Interactive                | `useSelectionInteraction` |
 | Group/ungroup                                             | Static + Interactive       | `useGroups`               |
 | Linear editor point move                                  | Static + Interactive       | `useLinearEditor`         |

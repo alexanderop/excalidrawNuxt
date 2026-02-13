@@ -245,7 +245,7 @@ export const canvasDrag: BrowserCommand<[...]> = async (
     const rect = el.getBoundingClientRect()
 
     function fire(type, x, y) {
-      el.dispatchEvent(new PointerEvent(type, {
+      const evt = new PointerEvent(type, {
         clientX: rect.left + x,
         clientY: rect.top + y,
         button: 0,
@@ -254,7 +254,11 @@ export const canvasDrag: BrowserCommand<[...]> = async (
         pointerId: 1,
         pointerType: 'mouse',
         isPrimary: true,
-      }))
+      })
+      // Synthetic PointerEvents don't reliably compute offsetX/offsetY.
+      Object.defineProperty(evt, 'offsetX', { value: x })
+      Object.defineProperty(evt, 'offsetY', { value: y })
+      el.dispatchEvent(evt)
     }
 
     fire('pointerdown', sx, sy)

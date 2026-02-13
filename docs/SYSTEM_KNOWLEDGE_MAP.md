@@ -4,22 +4,25 @@
 
 ## Feature Inventory
 
-Twelve feature modules under `app/features/`:
+Fifteen feature modules under `app/features/`:
 
-| Feature           | Directory        | Key Exports                                                                                                                                                                                                                             | Purpose                                                                                                                        |
-| ----------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| **Canvas**        | `canvas/`        | `useViewport`, `useRenderer`, `useSceneRenderer`, `useCanvasLayers`, `usePanning`, `useAnimationController`, `createDirtyFlags`, `screenToScene`/`sceneToScreen`                                                                        | Triple canvas stack, RAF render loop, viewport, panning, coordinate transforms                                                 |
-| **Context Menu**  | `context-menu/`  | `useContextMenu`, `ContextMenu.vue`, `contextMenuItems`                                                                                                                                                                                 | Right-click overlay with element/canvas actions (copy, paste, duplicate, delete, z-order, group, flip)                         |
-| **Elements**      | `elements/`      | `useElements`, `createElement`, `mutateElement`, `useLayerOrder`, element types                                                                                                                                                         | Reactive element array, factory, in-place mutation + version bump, group-aware z-order reordering                              |
-| **Rendering**     | `rendering/`     | `renderGrid`, `renderScene`, `renderElement`, `renderInteractiveScene`, `generateShape`, `renderArrowheads`                                                                                                                             | Grid, roughjs shapes, arrowheads, interactive overlays (selection borders, handles, linear editor, binding highlights, groups) |
-| **Selection**     | `selection/`     | `useSelection`, `useSelectionInteraction`, `hitTest`, `getTransformHandles`, `dragElements`, `resizeElement`, `bounds`                                                                                                                  | Click/drag selection, state machine, hit testing, transform handles, drag + resize                                             |
-| **Tools**         | `tools/`         | `useToolStore`, `useDrawingInteraction`, `useTextInteraction`, `DrawingToolbar.vue`                                                                                                                                                     | Active tool state, keyboard shortcuts (incl. line tool `l`/`8`), pointer-to-shape/arrow/line creation, bound text on shapes    |
-| **Linear Editor** | `linear-editor/` | `useLinearEditor`, `useMultiPointCreation`, `pointHandles` (`movePoint`, `movePoints`, `getSizeFromPoints`, etc.), `renderLinearEditor`                                                                                                 | Arrow/line point editing (double-click), multi-point click-to-place creation, rubber band preview                              |
-| **Code**          | `code/`          | `useCodeInteraction`, `useShikiHighlighter`, `renderCodeElement`, `measureCode`, `isCodeElement`, `getCodeData`                                                                                                                         | Code element with syntax highlighting via Shiki, inline code editor, TypeScript/Vue language support                           |
-| **Binding**       | `binding/`       | `getHoveredElementForBinding`, `bindArrowToElement`, `unbindArrowEndpoint`, `updateBoundArrowEndpoints`, `renderSuggestedBinding`, `proximity`, `bindTextToContainer`, `unbindTextFromContainer`, `updateBoundTextAfterContainerChange` | Arrow-to-shape binding, fixedPoint system, edge distance, blue highlight, bound text lifecycle                                 |
-| **Groups**        | `groups/`        | `useGroups`, `expandSelectionToGroups`, `addToGroup`, `removeFromGroups`, `reorderElementsForGroup`, `cleanupAfterDelete`                                                                                                               | Flat groupIds model, Cmd+G/Cmd+Shift+G, group selection expansion, z-order reordering                                          |
-| **Properties**    | `properties/`    | `useStyleDefaults`, `usePropertyActions`, `useStyleClipboard`, `PropertiesPanel.vue`, `ColorPicker.vue`, `palette`                                                                                                                      | Element style editing (colors, stroke, fill, opacity, fonts, arrowheads), sticky defaults, copy/paste styles                   |
-| **Theme**         | `theme/`         | `useTheme`, `resolveColor`, `applyDarkModeFilter`, `THEME`                                                                                                                                                                              | Light/dark mode via localStorage, CSS invert+hue-rotate color transform, Alt+Shift+D toggle                                    |
+| Feature             | Directory          | Key Exports                                                                                                                                                                                                                             | Purpose                                                                                                                                                                                                   |
+| ------------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Canvas**          | `canvas/`          | `useViewport`, `useRenderer`, `useSceneRenderer`, `useCanvasLayers`, `usePanning`, `useAnimationController`, `createDirtyFlags`, `screenToScene`/`sceneToScreen`                                                                        | Triple canvas stack, RAF render loop, viewport, panning, coordinate transforms                                                                                                                            |
+| **Context Menu**    | `context-menu/`    | `useContextMenu`, `ContextMenu.vue`, `contextMenuItems`                                                                                                                                                                                 | Right-click overlay with element/canvas actions (copy, paste, duplicate, delete, z-order, group, flip)                                                                                                    |
+| **Elements**        | `elements/`        | `useElements`, `createElement`, `mutateElement`, `useLayerOrder`, element types                                                                                                                                                         | Reactive element array, factory, in-place mutation + version bump, group-aware z-order reordering                                                                                                         |
+| **Rendering**       | `rendering/`       | `renderGrid`, `renderScene`, `renderElement`, `renderInteractiveScene`, `generateShape`, `renderArrowheads`                                                                                                                             | Grid, roughjs shapes, arrowheads, interactive overlays (selection borders, handles, linear editor, binding highlights, groups)                                                                            |
+| **Selection**       | `selection/`       | `useSelection`, `useSelectionInteraction`, `hitTest`, `getTransformHandles`, `dragElements`, `resizeElement`, `bounds`                                                                                                                  | Click/drag selection, state machine, hit testing, transform handles, drag + resize                                                                                                                        |
+| **Tools**           | `tools/`           | `useToolStore`, `useDrawingInteraction`, `ToolType`/`DrawingToolType`, `isDrawingTool`/`isTextTool`/`isImageTool`, `DrawingToolbar.vue`                                                                                                 | Active tool state, keyboard shortcuts (incl. line tool `l`/`8`), pointer-to-shape/arrow/line creation. Free-draw uses `useFreeDrawInteraction` (imported directly, not re-exported from `tools/index.ts`) |
+| **Linear Editor**   | `linear-editor/`   | `useLinearEditor`, `useMultiPointCreation`, `pointHandles` (`movePoint`, `movePoints`, `getSizeFromPoints`, etc.), `renderLinearEditor`                                                                                                 | Arrow/line point editing (double-click), multi-point click-to-place creation, rubber band preview                                                                                                         |
+| **Code**            | `code/`            | `useCodeInteraction`, `useShikiHighlighter`, `renderCodeElement`, `measureCode`, `isCodeElement`, `getCodeData`                                                                                                                         | Code element with syntax highlighting via Shiki, inline code editor, TypeScript/Vue language support                                                                                                      |
+| **Clipboard**       | `clipboard/`       | `useClipboard`                                                                                                                                                                                                                          | Element copy/cut/paste lifecycle with offset-on-paste behavior                                                                                                                                            |
+| **Image**           | `image/`           | `useImageInteraction`, `useImageUpload`, `useImageCache`, `loadImageDimensions`                                                                                                                                                         | Image insertion (tool, paste, drag/drop), upload/cache, dimensions/loading lifecycle                                                                                                                      |
+| **Command Palette** | `command-palette/` | `CommandPalette.vue`, `useCommandPalette`                                                                                                                                                                                               | Global action search/execute UI backed by action registry                                                                                                                                                 |
+| **Binding**         | `binding/`         | `getHoveredElementForBinding`, `bindArrowToElement`, `unbindArrowEndpoint`, `updateBoundArrowEndpoints`, `renderSuggestedBinding`, `proximity`, `bindTextToContainer`, `unbindTextFromContainer`, `updateBoundTextAfterContainerChange` | Arrow-to-shape binding, fixedPoint system, edge distance, blue highlight, bound text lifecycle                                                                                                            |
+| **Groups**          | `groups/`          | `useGroups`, `expandSelectionToGroups`, `addToGroup`, `removeFromGroups`, `reorderElementsForGroup`, `cleanupAfterDelete`                                                                                                               | Flat groupIds model, Cmd+G/Cmd+Shift+G, group selection expansion, z-order reordering                                                                                                                     |
+| **Properties**      | `properties/`      | `useStyleDefaults`, `usePropertyActions`, `useStyleClipboard`, `PropertiesPanel.vue`, `ColorPicker.vue`, `palette`                                                                                                                      | Element style editing (colors, stroke, fill, opacity, fonts, arrowheads), sticky defaults, copy/paste styles                                                                                              |
+| **Theme**           | `theme/`           | `useTheme`, `resolveColor`, `applyDarkModeFilter`, `THEME`                                                                                                                                                                              | Light/dark mode via localStorage, CSS invert+hue-rotate color transform, Alt+Shift+D toggle                                                                                                               |
 
 ## Cross-Feature Dependencies
 
@@ -37,6 +40,9 @@ graph TD
     Canvas --> Groups
     Canvas --> ContextMenu[Context Menu]
     Canvas --> Properties
+    Canvas --> Clipboard
+    Canvas --> Image
+    Canvas --> CommandPalette[Command Palette]
 
     ContextMenu --> Elements
     ContextMenu --> Selection
@@ -49,6 +55,7 @@ graph TD
 
     Tools --> Elements
     Tools --> Binding
+    Tools --> Properties
 
     Code --> Elements
     Code --> Selection
@@ -70,6 +77,8 @@ graph TD
     Binding --> Elements
 
     Groups --> Elements
+
+    Pages --> CommandPalette
 
     Elements --> shared
     Canvas --> shared
@@ -169,3 +178,9 @@ graph TD
 | **isTypingElement** | `shared/isTypingElement.ts` | Detects input/textarea focus for keyboard shortcut suppression                                                                                                                                                                                                   |
 
 > **Note:** Update this map when new features, diagrams, or reference docs are added.
+
+## Free-draw Notes
+
+- `CanvasContainer.vue` wires `useFreeDrawInteraction()` separately from `useDrawingInteraction()`.
+- Free-draw finalization happens on both `pointerup` and tool-switch lifecycle (`onBeforeToolChange` via `finalizeFreeDrawIfActive()`).
+- Free-draw commit does not auto-switch back to selection and does not auto-select the committed stroke.

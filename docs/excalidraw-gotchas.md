@@ -459,3 +459,14 @@ vite: {
 ```
 
 **Rule**: If a new `@excalidraw/*` package update introduces more subpath imports (e.g., `/polygon`, `/curve`), add additional aliases as needed.
+
+## Free-draw Finalization and Selection Semantics
+
+Free-draw (`useFreeDrawInteraction`) is intentionally separate from shape creation (`useDrawingInteraction`). Two behaviors are easy to miss when debugging UX:
+
+1. Finalization can happen from both `pointerup` and tool-switch lifecycle (`onBeforeToolChange` → `finalizeFreeDrawIfActive()`).
+2. Committed free-draw elements are **not** auto-selected, and the active tool stays on free-draw.
+
+**Bug pattern**: Assuming free-draw follows rectangle/ellipse flow (auto-select + tool reset to selection) causes wrong test assertions and accidental behavior regressions.
+
+**Rule**: Treat free-draw as continuous creation mode. If changing this behavior, update both event finalization paths and tests relying on post-commit selection/tool state.

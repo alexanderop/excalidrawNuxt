@@ -29,6 +29,12 @@ flowchart TB
         D_PU[pointerup: finalize element]
     end
 
+    subgraph "useFreeDrawInteraction"
+        F_PD[pointerdown: start stroke]
+        F_PM[pointermove: append points]
+        F_PU[pointerup: finalize stroke]
+    end
+
     subgraph "useSelectionInteraction"
         S_PD[pointerdown: hit-test / box-select]
         S_PM[pointermove: drag / resize / box]
@@ -72,6 +78,9 @@ flowchart TB
     CVS --> D_PD
     CVS --> D_PM
     CVS --> D_PU
+    CVS --> F_PD
+    CVS --> F_PM
+    CVS --> F_PU
     CVS --> S_PD
     CVS --> S_PM
     CVS --> S_PU
@@ -200,6 +209,7 @@ flowchart TD
 | ------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | `usePanning`              | `wheel`, `pointerdown`, `pointermove`, `pointerup`    | `keydown` (Space), `keyup` (Space)                               | `spaceHeld`, `isPanning`, viewport scroll/zoom                                        |
 | `useDrawingInteraction`   | `pointerdown`, `pointermove`, `pointerup`             | --                                                               | `newElement`, element mutations, `suggestedBindings`                                  |
+| `useFreeDrawInteraction`  | `pointerdown`, `pointermove`, `pointerup`             | --                                                               | `newFreeDrawElement`, freedraw points/pressures, static/newElement dirty flags        |
 | `useSelectionInteraction` | `pointerdown`, `pointermove`, `pointerup`, `dblclick` | `keydown` (Delete, Escape, Ctrl+A, Ctrl+G, Ctrl+Shift+G, arrows) | selection state, `selectionBox`, `cursorStyle`, element mutations, group actions      |
 | `useMultiPointCreation`   | `pointerdown`, `pointermove`, `dblclick`              | `keydown` (Escape, Enter)                                        | `multiElement`, `lastCursorPoint`, `suggestedBindings`                                |
 | `useLinearEditor`         | `pointerdown`, `pointermove`, `pointerup`             | `keydown` (Escape, Delete/Backspace)                             | `editingElement`, `selectedPointIndices`, `hoveredMidpointIndex`, `suggestedBindings` |
