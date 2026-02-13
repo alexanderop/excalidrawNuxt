@@ -1,20 +1,14 @@
-<script setup lang="ts">
-interface Option {
-  label: string;
-  value: string | number;
-  icon?: string;
-}
-
+<script setup lang="ts" generic="T extends string | number">
 const { options, modelValue } = defineProps<{
-  options: Option[];
-  modelValue: string | number | "mixed" | null;
+  options: { label: string; value: T; icon?: string }[];
+  modelValue: T | "mixed" | null;
 }>();
 
 const emit = defineEmits<{
-  "update:modelValue": [value: string | number];
+  "update:modelValue": [value: T];
 }>();
 
-function isActive(optionValue: string | number): boolean {
+function isActive(optionValue: T): boolean {
   if (modelValue === "mixed" || modelValue === null) return false;
   return modelValue === optionValue;
 }

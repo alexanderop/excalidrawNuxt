@@ -40,6 +40,8 @@ interface UseTextInteractionOptions {
   markInteractiveDirty: () => void;
   spaceHeld: Ref<boolean>;
   isPanning: Ref<boolean>;
+  onInteractionStart?: () => void;
+  onInteractionEnd?: () => void;
 }
 
 interface UseTextInteractionReturn {
@@ -139,22 +141,22 @@ export function useTextInteraction(options: UseTextInteractionOptions): UseTextI
   }
 
   function openEditor(element: ExcalidrawTextElement, container?: ExcalidrawElement): void {
+    options.onInteractionStart?.();
     editingTextElement.value = element;
     editingContainer = container ?? getElementById(element.containerId ?? "") ?? null;
 
-    const isBound = !!editingContainer;
     const textarea = createBaseTextarea(element);
 
-    if (isBound && editingContainer) {
+    if (editingContainer) {
       styleBoundTextarea(textarea, editingContainer);
     }
-    if (!isBound) {
+    if (!editingContainer) {
       styleStandaloneTextarea(textarea, element);
     }
 
     textarea.addEventListener("input", () => {
-      if (isBound && editingContainer) handleBoundTextInput(textarea, element, editingContainer);
-      if (!isBound) handleStandaloneTextInput(textarea, element);
+      if (editingContainer) handleBoundTextInput(textarea, element, editingContainer);
+      if (!editingContainer) handleStandaloneTextInput(textarea, element);
     });
 
     textarea.addEventListener("keydown", (e: KeyboardEvent) => {
@@ -243,6 +245,7 @@ export function useTextInteraction(options: UseTextInteractionOptions): UseTextI
       submitStandaloneText(element, text);
     }
 
+    options.onInteractionEnd?.();
     textarea.remove();
     canvasRef.value?.focus();
     markStaticDirty();

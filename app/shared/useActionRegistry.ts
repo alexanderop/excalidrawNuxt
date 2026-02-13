@@ -29,6 +29,8 @@ type SettingsActionId = "settings:toggle-theme" | "settings:toggle-grid";
 
 type FlipActionId = "flip:horizontal" | "flip:vertical";
 
+type HistoryActionId = "history:undo" | "history:redo";
+
 export type ActionId =
   | ToolActionId
   | ActionActionId
@@ -36,7 +38,8 @@ export type ActionId =
   | ClipboardActionId
   | StyleActionId
   | SettingsActionId
-  | FlipActionId;
+  | FlipActionId
+  | HistoryActionId;
 
 // ── Registry ────────────────────────────────────────────────────────
 
@@ -49,7 +52,14 @@ export interface ActionDefinition {
   enabled?: () => boolean;
 }
 
-export const useActionRegistry = createGlobalState(() => {
+export interface ActionRegistry {
+  register: (actions: ActionDefinition[]) => void;
+  get: (id: ActionId) => ActionDefinition | undefined;
+  execute: (id: ActionId) => void;
+  isEnabled: (id: ActionId) => boolean;
+}
+
+export const useActionRegistry = createGlobalState((): ActionRegistry => {
   const registry = new Map<ActionId, ActionDefinition>();
 
   function register(actions: ActionDefinition[]): void {

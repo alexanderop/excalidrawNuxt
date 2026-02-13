@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { computed, toRef } from "vue";
-import type { ExcalidrawElement, Arrowhead } from "~/features/elements/types";
+import type {
+  ExcalidrawElement,
+  Arrowhead,
+  FillStyle,
+  StrokeStyle,
+  TextAlign,
+} from "~/features/elements/types";
+import type { Roundness } from "../types";
 import type { ToolType } from "~/features/tools/types";
 import { useStyleDefaults } from "../composables/useStyleDefaults";
 import { usePropertyActions } from "../composables/usePropertyActions";
@@ -37,6 +44,7 @@ const { selectedElements, activeTool } = defineProps<{
 
 const emit = defineEmits<{
   "mark-dirty": [];
+  "will-change": [];
 }>();
 
 const { execute } = useActionRegistry();
@@ -50,6 +58,7 @@ const actions = usePropertyActions({
   selectedElements: elements,
   styleDefaults,
   markDirty: () => emit("mark-dirty"),
+  onBeforeChange: () => emit("will-change"),
 });
 
 const {
@@ -82,7 +91,7 @@ const currentBgColor = computed(() =>
   ),
 );
 const currentFillStyle = computed(() =>
-  actions.getFormValue<string>("fillStyle", styleDefaults.fillStyle.value, (el) =>
+  actions.getFormValue<FillStyle>("fillStyle", styleDefaults.fillStyle.value, (el) =>
     hasFillStyle(el.type),
   ),
 );
@@ -92,7 +101,7 @@ const currentStrokeWidth = computed(() =>
   ),
 );
 const currentStrokeStyle = computed(() =>
-  actions.getFormValue<string>("strokeStyle", styleDefaults.strokeStyle.value, (el) =>
+  actions.getFormValue<StrokeStyle>("strokeStyle", styleDefaults.strokeStyle.value, (el) =>
     hasStrokeStyle(el.type),
   ),
 );
@@ -114,7 +123,7 @@ const currentOpacity = computed(() => {
   return val;
 });
 const currentTextAlign = computed(() =>
-  actions.getFormValue<string>("textAlign", styleDefaults.textAlign.value),
+  actions.getFormValue<TextAlign>("textAlign", styleDefaults.textAlign.value),
 );
 const currentFontFamily = computed(() =>
   actions.getFormValue<number>("fontFamily", styleDefaults.fontFamily.value),
@@ -141,7 +150,7 @@ const strokeHexDisplay = computed(() => formatColorDisplay(currentStrokeColor.va
 const bgHexDisplay = computed(() => formatColorDisplay(currentBgColor.value));
 
 // Options for ButtonIconSelect groups
-const fillStyleOptions = [
+const fillStyleOptions: { label: string; value: FillStyle; icon: string }[] = [
   {
     label: "Hachure",
     value: "hachure",
@@ -159,7 +168,7 @@ const fillStyleOptions = [
   },
 ];
 
-const strokeWidthOptions = [
+const strokeWidthOptions: { label: string; value: number; icon: string }[] = [
   { label: "Thin", value: 1, icon: '<line x1="4" y1="12" x2="20" y2="12" stroke-width="1"/>' },
   { label: "Bold", value: 2, icon: '<line x1="4" y1="12" x2="20" y2="12" stroke-width="2.5"/>' },
   {
@@ -169,7 +178,7 @@ const strokeWidthOptions = [
   },
 ];
 
-const strokeStyleOptions = [
+const strokeStyleOptions: { label: string; value: StrokeStyle; icon: string }[] = [
   { label: "Solid", value: "solid", icon: '<line x1="4" y1="12" x2="20" y2="12"/>' },
   {
     label: "Dashed",
@@ -183,18 +192,18 @@ const strokeStyleOptions = [
   },
 ];
 
-const roughnessOptions = [
+const roughnessOptions: { label: string; value: number; icon: string }[] = [
   { label: "Architect", value: 0, icon: '<line x1="4" y1="12" x2="20" y2="12"/>' },
   { label: "Artist", value: 1, icon: '<path d="M4 12c2-2 4 2 6 0s4-2 6 0"/>' },
   { label: "Cartoonist", value: 2, icon: '<path d="M4 12c1-4 3 4 5-2s3 4 5-1 3 3 6 1"/>' },
 ];
 
-const roundnessOptions = [
+const roundnessOptions: { label: string; value: Roundness; icon: string }[] = [
   { label: "Sharp", value: "sharp", icon: '<rect x="4" y="4" width="16" height="16"/>' },
   { label: "Round", value: "round", icon: '<rect x="4" y="4" width="16" height="16" rx="4"/>' },
 ];
 
-const textAlignOptions = [
+const textAlignOptions: { label: string; value: TextAlign; icon: string }[] = [
   {
     label: "Left",
     value: "left",
@@ -212,42 +221,12 @@ const textAlignOptions = [
   },
 ];
 
-function onFillStyleChange(val: string | number): void {
-  actions.changeFillStyle(val as "hachure" | "cross-hatch" | "solid");
-}
-function onStrokeWidthChange(val: string | number): void {
-  actions.changeStrokeWidth(val as number);
-}
-function onStrokeStyleChange(val: string | number): void {
-  actions.changeStrokeStyle(val as "solid" | "dashed" | "dotted");
-}
-function onRoughnessChange(val: string | number): void {
-  actions.changeRoughness(val as number);
-}
-function onRoundnessChange(val: string | number): void {
-  actions.changeRoundness(val as "sharp" | "round");
-}
-function onOpacityChange(val: number): void {
-  actions.changeOpacity(val);
-}
-function onTextAlignChange(val: string | number): void {
-  actions.changeTextAlign(val as "left" | "center" | "right");
-}
-function onFontFamilyChange(val: number): void {
-  actions.changeFontFamily(val);
-}
 function onFontSizeChange(event: Event): void {
-  const input = event.target as HTMLInputElement;
-  const val = Number(input.value);
+  if (!(event.target instanceof HTMLInputElement)) return;
+  const val = Number(event.target.value);
   if (val >= 8 && val <= 120) {
     actions.changeFontSize(val);
   }
-}
-function onStartArrowheadChange(val: Arrowhead | null): void {
-  actions.changeArrowhead("start", val);
-}
-function onEndArrowheadChange(val: Arrowhead | null): void {
-  actions.changeArrowhead("end", val);
 }
 </script>
 
@@ -304,7 +283,7 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
           <ButtonIconSelect
             :options="fillStyleOptions"
             :model-value="currentFillStyle"
-            @update:model-value="onFillStyleChange"
+            @update:model-value="actions.changeFillStyle"
           />
         </div>
         <div v-if="showStrokeWidth" :class="PROP_ROW">
@@ -312,7 +291,7 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
           <ButtonIconSelect
             :options="strokeWidthOptions"
             :model-value="currentStrokeWidth"
-            @update:model-value="onStrokeWidthChange"
+            @update:model-value="actions.changeStrokeWidth"
           />
         </div>
         <div v-if="showStrokeStyle" :class="PROP_ROW">
@@ -320,7 +299,7 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
           <ButtonIconSelect
             :options="strokeStyleOptions"
             :model-value="currentStrokeStyle"
-            @update:model-value="onStrokeStyleChange"
+            @update:model-value="actions.changeStrokeStyle"
           />
         </div>
 
@@ -335,7 +314,7 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
           <ButtonIconSelect
             :options="roughnessOptions"
             :model-value="currentRoughness"
-            @update:model-value="onRoughnessChange"
+            @update:model-value="actions.changeRoughness"
           />
         </div>
         <div v-if="showRoundness" :class="PROP_ROW">
@@ -343,7 +322,7 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
           <ButtonIconSelect
             :options="roundnessOptions"
             :model-value="currentRoundness"
-            @update:model-value="onRoundnessChange"
+            @update:model-value="actions.changeRoundness"
           />
         </div>
 
@@ -354,7 +333,10 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
       <div :class="PROP_ROW">
         <span :class="PROP_LABEL">Opacity</span>
         <div class="flex-1">
-          <OpacitySlider :model-value="currentOpacity" @update:model-value="onOpacityChange" />
+          <OpacitySlider
+            :model-value="currentOpacity"
+            @update:model-value="actions.changeOpacity"
+          />
         </div>
       </div>
 
@@ -365,7 +347,10 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
         <div :class="PROP_ROW">
           <span :class="PROP_LABEL">Font</span>
           <div class="flex items-center gap-1.5">
-            <FontPicker :model-value="currentFontFamily" @update:model-value="onFontFamilyChange" />
+            <FontPicker
+              :model-value="currentFontFamily"
+              @update:model-value="actions.changeFontFamily"
+            />
             <input
               type="number"
               :value="currentFontSize"
@@ -383,7 +368,7 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
           <ButtonIconSelect
             :options="textAlignOptions"
             :model-value="currentTextAlign"
-            @update:model-value="onTextAlignChange"
+            @update:model-value="actions.changeTextAlign"
           />
         </div>
       </template>
@@ -397,12 +382,12 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
             <ArrowheadPicker
               label="Start"
               :model-value="currentStartArrowhead"
-              @update:model-value="onStartArrowheadChange"
+              @update:model-value="(val: Arrowhead | null) => actions.changeArrowhead('start', val)"
             />
             <ArrowheadPicker
               label="End"
               :model-value="currentEndArrowhead"
-              @update:model-value="onEndArrowheadChange"
+              @update:model-value="(val: Arrowhead | null) => actions.changeArrowhead('end', val)"
             />
           </div>
         </div>

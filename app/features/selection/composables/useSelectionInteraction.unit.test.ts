@@ -17,9 +17,9 @@ type EventHandler = (...args: unknown[]) => void;
 
 const { handlers, mockUseEventListener } = vi.hoisted(() => {
   // Stub `document` so useEventListener(document, ...) doesn't throw in node
+  const noop = () => ({});
 
   if (globalThis.document === undefined) {
-    const noop = () => ({});
     const stubElement = {
       style: {},
       setAttribute: noop,

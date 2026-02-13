@@ -30,9 +30,11 @@ import { useContextMenu } from "~/features/context-menu";
 import { useTheme } from "~/features/theme";
 import { PropertiesPanel } from "~/features/properties";
 import { useStyleClipboard } from "~/features/properties/composables/useStyleClipboard";
+import { useHistory } from "~/features/history/useHistory";
 import { useActionRegistry, type ActionDefinition } from "~/shared/useActionRegistry";
-import DrawingToolbar from "~/features/tools/components/DrawingToolbar.vue";
 import { isTypingElement } from "~/shared/isTypingElement";
+import DrawingToolbar from "~/features/tools/components/DrawingToolbar.vue";
+import BottomBar from "./BottomBar.vue";
 
 defineExpose({});
 
@@ -45,7 +47,7 @@ const textEditorContainerRef = useTemplateRef<HTMLDivElement>("textEditorContain
 
 // Viewport & size
 const { width, height } = useElementSize(containerRef);
-const { scrollX, scrollY, zoom, zoomBy, panBy, toScene } = useViewport();
+const { scrollX, scrollY, zoom, zoomTo, zoomBy, panBy, toScene } = useViewport();
 
 // Domain state
 const { elements, elementMap, addElement, replaceElements, getElementById } = useElements();
@@ -94,6 +96,15 @@ const { selectedGroupIds, groupSelection, ungroupSelection, expandSelectionForGr
 
 // Layer order
 const layerOrder = useLayerOrder({ elements, replaceElements });
+
+// History (undo/redo)
+const history = useHistory({
+  elements,
+  replaceElements,
+  selectedIds,
+  replaceSelection,
+  dirty,
+});
 
 function applyLayerAction(action: (ids: ReadonlySet<string>) => void): void {
   action(selectedIds.value);
@@ -154,7 +165,7 @@ useEventListener(document, "keydown", (e: KeyboardEvent) => {
     if (selectedElements.value.length === 0) return;
     if (!hasStoredStyles.value) return;
     e.preventDefault();
-    pasteStyles([...selectedElements.value], dirty.markStaticDirty);
+    history.recordAction(() => pasteStyles([...selectedElements.value], dirty.markStaticDirty));
   }
 });
 
@@ -172,13 +183,13 @@ useEventListener(document, "keydown", (e: KeyboardEvent) => {
 
   if (e.code === "KeyX") {
     e.preventDefault();
-    handleCut();
+    history.recordAction(handleCut);
     return;
   }
 
   if (e.code === "KeyV") {
     e.preventDefault();
-    handlePaste();
+    history.recordAction(handlePaste);
   }
 });
 
@@ -199,6 +210,8 @@ const shared = {
   suggestedBindings,
   markStaticDirty: dirty.markStaticDirty,
   markInteractiveDirty: dirty.markInteractiveDirty,
+  onInteractionStart: history.saveCheckpoint,
+  onInteractionEnd: history.commitCheckpoint,
 };
 
 const { multiElement, lastCursorPoint, finalizeMultiPoint } = useMultiPointCreation({
@@ -238,6 +251,8 @@ const { editingTextElement, submitTextEditor } = useTextInteraction({
   markInteractiveDirty: dirty.markInteractiveDirty,
   spaceHeld,
   isPanning,
+  onInteractionStart: history.saveCheckpoint,
+  onInteractionEnd: history.commitCheckpoint,
 });
 
 // Code editing
@@ -251,14 +266,14 @@ const { editingCodeElement, submitCodeEditor } = useCodeInteraction({
   scrollX,
   scrollY,
   elements,
-  elementMap,
   addElement,
-  getElementById,
   select,
   markStaticDirty: dirty.markStaticDirty,
   markInteractiveDirty: dirty.markInteractiveDirty,
   spaceHeld,
   isPanning,
+  onInteractionStart: history.saveCheckpoint,
+  onInteractionEnd: history.commitCheckpoint,
 });
 
 // Image insertion (file dialog, drop zone, paste)
@@ -274,6 +289,8 @@ useImageInteraction({
   select,
   markStaticDirty: dirty.markStaticDirty,
   markInteractiveDirty: dirty.markInteractiveDirty,
+  onInteractionStart: history.saveCheckpoint,
+  onInteractionEnd: history.commitCheckpoint,
 });
 
 // Finalize in-progress operations when user switches tools
@@ -336,6 +353,9 @@ const { selectionBox, cursorStyle } = useSelectionInteraction({
   onDeleteCleanup: (deletedIds) => cleanupAfterDelete(elements.value, deletedIds),
   elementMap,
   onContainerChanged: (container) => updateBoundTextAfterContainerChange(container, elementMap),
+  onInteractionStart: history.saveCheckpoint,
+  onInteractionEnd: history.commitCheckpoint,
+  recordAction: history.recordAction,
 });
 
 // Combine newElement from shape drawing and freedraw into one ref for the renderer
@@ -409,6 +429,10 @@ const { register } = useActionRegistry();
 // Keep useCommandPalette alive so its global state is initialized
 useCommandPalette();
 
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 const TOOL_DEFS: { type: ToolType; icon: string; kbd: string }[] = [
   { type: "selection", icon: "i-lucide-mouse-pointer", kbd: "V" },
   { type: "hand", icon: "i-lucide-hand", kbd: "H" },
@@ -428,7 +452,7 @@ register([
   ...TOOL_DEFS.map(
     ({ type, icon, kbd }): ActionDefinition => ({
       id: `tool:${type}`,
-      label: type.charAt(0).toUpperCase() + type.slice(1),
+      label: capitalize(type),
       icon,
       kbds: [kbd] as readonly string[],
       handler: () => setTool(type),
@@ -440,7 +464,7 @@ register([
     label: "Delete",
     icon: "i-lucide-trash-2",
     kbds: ["delete"],
-    handler: handleDelete,
+    handler: () => history.recordAction(handleDelete),
     enabled: () => selectedElements.value.length > 0,
   },
   {
@@ -448,7 +472,7 @@ register([
     label: "Duplicate",
     icon: "i-lucide-copy",
     kbds: ["meta", "D"],
-    handler: handleDuplicate,
+    handler: () => history.recordAction(handleDuplicate),
     enabled: () => selectedElements.value.length > 0,
   },
   {
@@ -463,7 +487,7 @@ register([
     label: "Group",
     icon: "i-lucide-group",
     kbds: ["meta", "G"],
-    handler: groupSelection,
+    handler: () => history.recordAction(groupSelection),
     enabled: () => selectedIds.value.size > 1,
   },
   {
@@ -471,7 +495,7 @@ register([
     label: "Ungroup",
     icon: "i-lucide-ungroup",
     kbds: ["meta", "shift", "G"],
-    handler: ungroupSelection,
+    handler: () => history.recordAction(ungroupSelection),
     enabled: () => selectedGroupIds.value.size > 0,
   },
   // Layers
@@ -480,7 +504,7 @@ register([
     label: "Bring to Front",
     icon: "i-lucide-bring-to-front",
     kbds: ["meta", "shift", "]"],
-    handler: () => applyLayerAction(layerOrder.bringToFront),
+    handler: () => history.recordAction(() => applyLayerAction(layerOrder.bringToFront)),
     enabled: () => selectedElements.value.length > 0,
   },
   {
@@ -488,7 +512,7 @@ register([
     label: "Bring Forward",
     icon: "i-lucide-move-up",
     kbds: ["meta", "]"],
-    handler: () => applyLayerAction(layerOrder.bringForward),
+    handler: () => history.recordAction(() => applyLayerAction(layerOrder.bringForward)),
     enabled: () => selectedElements.value.length > 0,
   },
   {
@@ -496,7 +520,7 @@ register([
     label: "Send Backward",
     icon: "i-lucide-move-down",
     kbds: ["meta", "["],
-    handler: () => applyLayerAction(layerOrder.sendBackward),
+    handler: () => history.recordAction(() => applyLayerAction(layerOrder.sendBackward)),
     enabled: () => selectedElements.value.length > 0,
   },
   {
@@ -504,7 +528,7 @@ register([
     label: "Send to Back",
     icon: "i-lucide-send-to-back",
     kbds: ["meta", "shift", "["],
-    handler: () => applyLayerAction(layerOrder.sendToBack),
+    handler: () => history.recordAction(() => applyLayerAction(layerOrder.sendToBack)),
     enabled: () => selectedElements.value.length > 0,
   },
   // Settings
@@ -529,7 +553,8 @@ register([
     label: "Paste Styles",
     icon: "i-lucide-clipboard-paste",
     kbds: ["meta", "alt", "V"],
-    handler: () => pasteStyles([...selectedElements.value], dirty.markStaticDirty),
+    handler: () =>
+      history.recordAction(() => pasteStyles([...selectedElements.value], dirty.markStaticDirty)),
     enabled: () => selectedElements.value.length > 0 && hasStoredStyles.value,
   },
   // Clipboard
@@ -546,7 +571,7 @@ register([
     label: "Cut",
     icon: "i-lucide-scissors",
     kbds: ["meta", "X"],
-    handler: handleCut,
+    handler: () => history.recordAction(handleCut),
     enabled: () => selectedElements.value.length > 0,
   },
   {
@@ -554,7 +579,24 @@ register([
     label: "Paste",
     icon: "i-lucide-clipboard",
     kbds: ["meta", "V"],
-    handler: handlePaste,
+    handler: () => history.recordAction(handlePaste),
+  },
+  // History
+  {
+    id: "history:undo",
+    label: "Undo",
+    icon: "i-lucide-undo-2",
+    kbds: ["meta", "Z"],
+    handler: history.undo,
+    enabled: () => history.canUndo.value,
+  },
+  {
+    id: "history:redo",
+    label: "Redo",
+    icon: "i-lucide-redo-2",
+    kbds: ["meta", "shift", "Z"],
+    handler: history.redo,
+    enabled: () => history.canRedo.value,
   },
 ]);
 
@@ -586,7 +628,13 @@ register([
   editingTextElement,
   markStaticDirty,
   markInteractiveDirty,
+  history,
 };
+
+function handlePropertyChange(): void {
+  history.commitCheckpoint();
+  dirty.markStaticDirty();
+}
 
 const CROSSHAIR_TOOLS = new Set<ToolType>(["text", "code", "image", "freedraw"]);
 
@@ -621,11 +669,22 @@ const combinedCursorClass = computed(() => {
     </UContextMenu>
     <div ref="textEditorContainer" class="pointer-events-none absolute inset-0 z-[3]" />
     <DrawingToolbar />
+    <BottomBar
+      :zoom="zoom"
+      :can-undo="history.canUndo.value"
+      :can-redo="history.canRedo.value"
+      @zoom-in="zoomBy(0.1)"
+      @zoom-out="zoomBy(-0.1)"
+      @zoom-reset="zoomTo(1)"
+      @undo="history.undo()"
+      @redo="history.redo()"
+    />
     <PropertiesPanel
       v-if="selectedElements.length > 0 || showToolProperties"
       :selected-elements="selectedElements"
       :active-tool="activeTool"
-      @mark-dirty="dirty.markStaticDirty"
+      @will-change="history.saveCheckpoint()"
+      @mark-dirty="handlePropertyChange"
     />
   </div>
 </template>

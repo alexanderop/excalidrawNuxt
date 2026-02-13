@@ -56,6 +56,7 @@ describe("usePanning", () => {
       (globalThis as Record<string, unknown>).document = {};
     }
     if (globalThis.HTMLElement === undefined) {
+      // oxlint-ignore no-extraneous-class -- minimal stub for node environment
       (globalThis as Record<string, unknown>).HTMLElement = class {};
     }
   });

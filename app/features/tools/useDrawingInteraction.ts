@@ -40,6 +40,8 @@ interface UseDrawingInteractionOptions {
   elements: ShallowRef<readonly ExcalidrawElement[]>;
   zoom: Ref<number>;
   suggestedBindings: ShallowRef<readonly ExcalidrawElement[]>;
+  onInteractionStart?: () => void;
+  onInteractionEnd?: () => void;
 }
 
 interface UseDrawingInteractionReturn {
@@ -79,6 +81,7 @@ export function useDrawingInteraction(
     if (!isDrawingTool(tool)) return;
     if (e.button !== 0) return;
 
+    options.onInteractionStart?.();
     const scene = toScene(e.offsetX, e.offsetY);
     originX = scene[0];
     originY = scene[1];
@@ -218,6 +221,7 @@ export function useDrawingInteraction(
       }
     }
 
+    options.onInteractionEnd?.();
     setTool("selection");
     newElement.value = null;
     markNewElementDirty();

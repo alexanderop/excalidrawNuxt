@@ -54,6 +54,8 @@ interface UseLinearEditorOptions {
   select: (id: string) => void;
   elements: ShallowRef<readonly ExcalidrawElement[]>;
   suggestedBindings: ShallowRef<readonly ExcalidrawElement[]>;
+  onInteractionStart?: () => void;
+  onInteractionEnd?: () => void;
 }
 
 interface UseLinearEditorReturn {
@@ -92,20 +94,22 @@ export function useLinearEditor(options: UseLinearEditorOptions): UseLinearEdito
 
   let interaction: EditorInteraction = { type: "idle" };
 
-  function enterEditor(element: ExcalidrawLinearElement): void {
-    editingElement.value = element;
+  function resetEditorState(): void {
     selectedPointIndices.value = new Set();
     hoveredMidpointIndex.value = null;
     interaction = { type: "idle" };
+  }
+
+  function enterEditor(element: ExcalidrawLinearElement): void {
+    editingElement.value = element;
+    resetEditorState();
     select(element.id);
     markInteractiveDirty();
   }
 
   function exitEditor(): void {
     editingElement.value = null;
-    selectedPointIndices.value = new Set();
-    hoveredMidpointIndex.value = null;
-    interaction = { type: "idle" };
+    resetEditorState();
     markInteractiveDirty();
   }
 
@@ -141,6 +145,7 @@ export function useLinearEditor(options: UseLinearEditorOptions): UseLinearEdito
     // Check point handle hit
     const pointIdx = hitTestPointHandles(scene, el, zoom.value);
     if (pointIdx >= 0) {
+      options.onInteractionStart?.();
       handlePointClick(pointIdx, e);
       interaction = { type: "dragging", lastScene: scene };
       canvasRef.value?.setPointerCapture(e.pointerId);
@@ -150,6 +155,7 @@ export function useLinearEditor(options: UseLinearEditorOptions): UseLinearEdito
     // Check midpoint hit — insert and start dragging
     const midIdx = hitTestMidpoints(scene, el, zoom.value);
     if (midIdx >= 0) {
+      options.onInteractionStart?.();
       handleMidpointClick(el, midIdx, e);
       return;
     }
@@ -260,6 +266,7 @@ export function useLinearEditor(options: UseLinearEditorOptions): UseLinearEdito
 
       suggestedBindings.value = [];
     }
+    options.onInteractionEnd?.();
     interaction = { type: "idle" };
     markStaticDirty();
     markInteractiveDirty();
@@ -279,11 +286,13 @@ export function useLinearEditor(options: UseLinearEditorOptions): UseLinearEdito
     markInteractiveDirty();
   }
 
+  function exitIfActive(): void {
+    if (!editingElement.value) return;
+    exitEditor();
+  }
+
   defineShortcuts({
-    escape: () => {
-      if (!editingElement.value) return;
-      exitEditor();
-    },
+    escape: exitIfActive,
     delete: deleteSelectedPoints,
     backspace: deleteSelectedPoints,
   });

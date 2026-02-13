@@ -1,7 +1,7 @@
 import { shallowRef } from "vue";
 import type { Ref, ShallowRef } from "vue";
 import { useEventListener } from "@vueuse/core";
-import type { ExcalidrawElement, ElementsMap } from "~/features/elements/types";
+import type { ExcalidrawElement } from "~/features/elements/types";
 import type { ToolType } from "~/features/tools/types";
 import type { GlobalPoint } from "~/shared/math";
 import { createElement } from "~/features/elements/createElement";
@@ -25,14 +25,14 @@ interface UseCodeInteractionOptions {
   scrollX: Ref<number>;
   scrollY: Ref<number>;
   elements: ShallowRef<readonly ExcalidrawElement[]>;
-  elementMap: ElementsMap;
   addElement: (el: ExcalidrawElement) => void;
-  getElementById: (id: string) => ExcalidrawElement | undefined;
   select: (id: string) => void;
   markStaticDirty: () => void;
   markInteractiveDirty: () => void;
   spaceHeld: Ref<boolean>;
   isPanning: Ref<boolean>;
+  onInteractionStart?: () => void;
+  onInteractionEnd?: () => void;
 }
 
 interface UseCodeInteractionReturn {
@@ -65,6 +65,7 @@ export function useCodeInteraction(options: UseCodeInteractionOptions): UseCodeI
   let activeEditorContainer: HTMLDivElement | null = null;
 
   function openEditor(element: ExcalidrawElement): void {
+    options.onInteractionStart?.();
     editingCodeElement.value = element;
     const editorContainer = textEditorContainerRef.value;
     if (!editorContainer) return;
@@ -185,6 +186,7 @@ export function useCodeInteraction(options: UseCodeInteractionOptions): UseCodeI
       }
     }
 
+    options.onInteractionEnd?.();
     editorDiv.remove();
     canvasRef.value?.focus();
     setTool("selection");

@@ -178,6 +178,43 @@ defineProps<{
 </script>
 ```
 
+### Generic Component Gotcha: Local Interfaces
+
+When a generic component uses a local `interface` that references the generic type `T`, Volar/vue-tsc may emit:
+
+```
+TS4025: Exported variable '__VLS_export' has or is using private name 'Option'.
+```
+
+**Problem:**
+
+```vue
+<script setup lang="ts" generic="T extends string | number">
+interface Option {
+  // ❌ Local interface uses T
+  label: string;
+  value: T;
+}
+
+defineProps<{
+  options: Option[];
+}>();
+</script>
+```
+
+**Solution:** Inline the type directly into `defineProps`:
+
+```vue
+<script setup lang="ts" generic="T extends string | number">
+defineProps<{
+  options: { label: string; value: T }[]; // ✅ Inlined
+  modelValue: T | null;
+}>();
+</script>
+```
+
+**Why this matters:** This pattern is useful when a parent passes typed options (like `FillStyle[]` or `Roundness[]`) and expects the component to emit the exact narrow type rather than a broad `string | number` union — eliminating `as` casts in event handlers.
+
 ## useTemplateRef (Vue 3.5+)
 
 Type-safe template refs. Replaces the old `const el = ref<HTMLElement>(null)` pattern where the variable name had to match the template `ref` attribute.

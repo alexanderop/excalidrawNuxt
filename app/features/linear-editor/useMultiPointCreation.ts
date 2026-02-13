@@ -25,6 +25,8 @@ interface UseMultiPointCreationOptions {
   elements: ShallowRef<readonly ExcalidrawElement[]>;
   zoom: Ref<number>;
   suggestedBindings: ShallowRef<readonly ExcalidrawElement[]>;
+  onInteractionStart?: () => void;
+  onInteractionEnd?: () => void;
 }
 
 interface UseMultiPointCreationReturn {
@@ -52,6 +54,7 @@ export function useMultiPointCreation(
   const lastCursorPoint = shallowRef<GlobalPoint | null>(null);
 
   function startMultiPoint(element: ExcalidrawLinearElement): void {
+    options.onInteractionStart?.();
     multiElement.value = element;
     const lastPt = element.points.at(-1);
     if (!lastPt) return;
@@ -84,6 +87,7 @@ export function useMultiPointCreation(
       suggestedBindings.value = [];
     }
 
+    options.onInteractionEnd?.();
     multiElement.value = null;
     lastCursorPoint.value = null;
     onFinalize();
@@ -148,15 +152,14 @@ export function useMultiPointCreation(
     finalizeMultiPoint();
   });
 
+  function finalizeIfActive(): void {
+    if (!multiElement.value) return;
+    finalizeMultiPoint();
+  }
+
   defineShortcuts({
-    escape: () => {
-      if (!multiElement.value) return;
-      finalizeMultiPoint();
-    },
-    enter: () => {
-      if (!multiElement.value) return;
-      finalizeMultiPoint();
-    },
+    escape: finalizeIfActive,
+    enter: finalizeIfActive,
   });
 
   return {

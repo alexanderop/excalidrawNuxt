@@ -20,6 +20,8 @@ interface UseImageInteractionOptions {
   select: (id: string) => void;
   markStaticDirty: () => void;
   markInteractiveDirty: () => void;
+  onInteractionStart?: () => void;
+  onInteractionEnd?: () => void;
 }
 
 interface UseImageInteractionReturn {
@@ -66,6 +68,7 @@ export function useImageInteraction(
   }
 
   async function createImageElements(files: File[], sceneX: number, sceneY: number): Promise<void> {
+    options.onInteractionStart?.();
     const results = await processFiles(files);
 
     for (const [i, result] of results.entries()) {
@@ -90,6 +93,7 @@ export function useImageInteraction(
       select(el.id);
     }
 
+    options.onInteractionEnd?.();
     markStaticDirty();
     markInteractiveDirty();
   }

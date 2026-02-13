@@ -72,6 +72,12 @@ interface UseSelectionInteractionOptions {
   elementMap?: ElementsMap;
   /** Called after drag/resize on containers that have bound text */
   onContainerChanged?: (container: ExcalidrawElement) => void;
+  /** Called when a drag/resize/rotate interaction starts (for undo checkpoints) */
+  onInteractionStart?: () => void;
+  /** Called when a drag/resize/rotate interaction ends (for undo checkpoints) */
+  onInteractionEnd?: () => void;
+  /** Wraps a mutation for history recording (undo/redo). Falls back to direct call if not provided. */
+  recordAction?: (fn: () => void) => void;
 }
 
 export function useSelectionInteraction(
@@ -99,6 +105,13 @@ export function useSelectionInteraction(
     onDoubleClickLinear,
     elementMap,
     onContainerChanged,
+    onInteractionStart,
+    onInteractionEnd,
+    recordAction,
+    expandSelectionForGroups,
+    onGroupAction,
+    onUngroupAction,
+    onDeleteCleanup,
   } = options;
 
   let interaction: InteractionState = { type: "idle" };
@@ -115,6 +128,7 @@ export function useSelectionInteraction(
     const handleType = getTransformHandleAtPosition(scenePoint, el, zoom.value);
     if (!handleType || handleType === "rotation") return false;
 
+    onInteractionStart?.();
     interaction = {
       type: "resizing",
       resizeState: {
@@ -136,6 +150,7 @@ export function useSelectionInteraction(
     const handleType = getTransformHandleAtPosition(scenePoint, el, zoom.value);
     if (handleType !== "rotation") return false;
 
+    onInteractionStart?.();
     interaction = { type: "rotating" };
     cursorStyle.value = "grabbing";
     tryCatchSync(() => canvasRef.value?.setPointerCapture(e.pointerId));
@@ -152,8 +167,9 @@ export function useSelectionInteraction(
     if (!e.shiftKey && !isSelected(hitElement.id)) {
       select(hitElement.id);
     }
-    options.expandSelectionForGroups?.();
+    expandSelectionForGroups?.();
 
+    onInteractionStart?.();
     interaction = {
       type: "dragging",
       dragState: startDrag(scenePoint, selectedElements()),
@@ -190,20 +206,13 @@ export function useSelectionInteraction(
     markInteractiveDirty();
   }
 
-  function updateBoundArrowsForSelected(): void {
-    for (const el of selectedElements()) {
-      if (!isArrowElement(el) && (el.boundElements ?? []).length > 0) {
-        updateBoundArrowEndpoints(el, elements.value);
-      }
-    }
-  }
-
-  function updateBoundTextForSelected(): void {
-    if (!onContainerChanged) return;
+  function updateBoundElementsForSelected(): void {
     for (const el of selectedElements()) {
       if (isArrowElement(el)) continue;
-      const hasBoundText = (el.boundElements ?? []).some((be) => be.type === "text");
-      if (hasBoundText) {
+      const bound = el.boundElements ?? [];
+      if (bound.length === 0) continue;
+      updateBoundArrowEndpoints(el, elements.value);
+      if (onContainerChanged && bound.some((be) => be.type === "text")) {
         onContainerChanged(el);
       }
     }
@@ -224,8 +233,7 @@ export function useSelectionInteraction(
 
     if (interaction.type === "dragging") {
       continueDrag(scenePoint, interaction.dragState, selectedElements());
-      updateBoundArrowsForSelected();
-      updateBoundTextForSelected();
+      updateBoundElementsForSelected();
       markSceneDirty();
       return;
     }
@@ -236,8 +244,7 @@ export function useSelectionInteraction(
       const el = selected[0];
       if (!el) return;
       resizeElement(scenePoint, interaction.resizeState, el, e.shiftKey);
-      updateBoundArrowsForSelected();
-      updateBoundTextForSelected();
+      updateBoundElementsForSelected();
       markSceneDirty();
       return;
     }
@@ -248,8 +255,7 @@ export function useSelectionInteraction(
       const el = selected[0];
       if (!el) return;
       rotateElement(scenePoint, el, e.shiftKey);
-      updateBoundArrowsForSelected();
-      updateBoundTextForSelected();
+      updateBoundElementsForSelected();
       markSceneDirty();
       return;
     }
@@ -260,6 +266,14 @@ export function useSelectionInteraction(
     selectionBox.value = box;
     selectElementsInBox(box);
     markInteractiveDirty();
+  }
+
+  function unbindDraggedArrows(): void {
+    for (const el of selectedElements()) {
+      if (isArrowElement(el) && (el.startBinding || el.endBinding)) {
+        unbindArrow(el, elements.value);
+      }
+    }
   }
 
   function handlePointerUp(e: PointerEvent): void {
@@ -274,17 +288,14 @@ export function useSelectionInteraction(
     }
 
     if (prevInteraction.type === "dragging") {
-      // Unbind arrows that were dragged as a whole (detaches from shapes)
-      for (const el of selectedElements()) {
-        if (isArrowElement(el) && (el.startBinding || el.endBinding)) {
-          unbindArrow(el, elements.value);
-        }
-      }
+      unbindDraggedArrows();
+      onInteractionEnd?.();
       markSceneDirty();
       return;
     }
 
     if (prevInteraction.type === "resizing" || prevInteraction.type === "rotating") {
+      onInteractionEnd?.();
       markSceneDirty();
     }
   }
@@ -325,7 +336,7 @@ export function useSelectionInteraction(
     }
 
     replaceSelection(ids);
-    options.expandSelectionForGroups?.();
+    expandSelectionForGroups?.();
   }
 
   function unbindBeforeDelete(selected: readonly ExcalidrawElement[]): void {
@@ -356,7 +367,7 @@ export function useSelectionInteraction(
       mutateElement(el, { isDeleted: true });
     }
     const deletedIds = new Set(selected.map((el) => el.id));
-    options.onDeleteCleanup?.(deletedIds);
+    onDeleteCleanup?.(deletedIds);
     clearSelection();
     markSceneDirty();
   }
@@ -367,8 +378,7 @@ export function useSelectionInteraction(
     for (const el of selected) {
       mutateElement(el, { x: el.x + dx, y: el.y + dy });
     }
-    updateBoundArrowsForSelected();
-    updateBoundTextForSelected();
+    updateBoundElementsForSelected();
     markSceneDirty();
   }
 
@@ -387,66 +397,44 @@ export function useSelectionInteraction(
     onDoubleClickLinear(hitElement);
   });
 
+  function whenSelectionActive(fn: () => void): () => void {
+    return () => {
+      if (isSelectionBlocked()) return;
+      fn();
+    };
+  }
+
+  const deleteSelected = whenSelectionActive(() => {
+    const fn = () => handleDelete(selectedElements());
+    if (recordAction) {
+      recordAction(fn);
+      return;
+    }
+    fn();
+  });
+
   defineShortcuts({
-    delete: () => {
-      if (isSelectionBlocked()) return;
-      handleDelete(selectedElements());
-    },
-    backspace: () => {
-      if (isSelectionBlocked()) return;
-      handleDelete(selectedElements());
-    },
-    escape: () => {
-      if (isSelectionBlocked()) return;
+    delete: deleteSelected,
+    backspace: deleteSelected,
+    escape: whenSelectionActive(() => {
       clearSelection();
       setTool("selection");
       markInteractiveDirty();
-    },
-    meta_a: () => {
-      if (isSelectionBlocked()) return;
+    }),
+    meta_a: whenSelectionActive(() => {
       selectAll();
       markInteractiveDirty();
-    },
-    meta_g: () => {
-      if (isSelectionBlocked()) return;
-      options.onGroupAction?.();
-    },
-    meta_shift_g: () => {
-      if (isSelectionBlocked()) return;
-      options.onUngroupAction?.();
-    },
-    arrowup: () => {
-      if (isSelectionBlocked()) return;
-      nudgeSelected(0, -1);
-    },
-    arrowdown: () => {
-      if (isSelectionBlocked()) return;
-      nudgeSelected(0, 1);
-    },
-    arrowleft: () => {
-      if (isSelectionBlocked()) return;
-      nudgeSelected(-1, 0);
-    },
-    arrowright: () => {
-      if (isSelectionBlocked()) return;
-      nudgeSelected(1, 0);
-    },
-    shift_arrowup: () => {
-      if (isSelectionBlocked()) return;
-      nudgeSelected(0, -10);
-    },
-    shift_arrowdown: () => {
-      if (isSelectionBlocked()) return;
-      nudgeSelected(0, 10);
-    },
-    shift_arrowleft: () => {
-      if (isSelectionBlocked()) return;
-      nudgeSelected(-10, 0);
-    },
-    shift_arrowright: () => {
-      if (isSelectionBlocked()) return;
-      nudgeSelected(10, 0);
-    },
+    }),
+    meta_g: whenSelectionActive(() => onGroupAction?.()),
+    meta_shift_g: whenSelectionActive(() => onUngroupAction?.()),
+    arrowup: whenSelectionActive(() => nudgeSelected(0, -1)),
+    arrowdown: whenSelectionActive(() => nudgeSelected(0, 1)),
+    arrowleft: whenSelectionActive(() => nudgeSelected(-1, 0)),
+    arrowright: whenSelectionActive(() => nudgeSelected(1, 0)),
+    shift_arrowup: whenSelectionActive(() => nudgeSelected(0, -10)),
+    shift_arrowdown: whenSelectionActive(() => nudgeSelected(0, 10)),
+    shift_arrowleft: whenSelectionActive(() => nudgeSelected(-10, 0)),
+    shift_arrowright: whenSelectionActive(() => nudgeSelected(10, 0)),
   });
 
   return {

@@ -13,17 +13,7 @@ interface UsePropertyActionsOptions {
   selectedElements: ComputedRef<ExcalidrawElement[]>;
   styleDefaults: StyleDefaults;
   markDirty: () => void;
-}
-
-function applyToSelected(
-  selectedElements: ComputedRef<ExcalidrawElement[]>,
-  updates: Record<string, unknown>,
-  markDirty: () => void,
-): void {
-  for (const el of selectedElements.value) {
-    mutateElement(el, updates);
-  }
-  markDirty();
+  onBeforeChange?: () => void;
 }
 
 interface UsePropertyActionsReturn {
@@ -47,68 +37,69 @@ interface UsePropertyActionsReturn {
 }
 
 export function usePropertyActions(options: UsePropertyActionsOptions): UsePropertyActionsReturn {
-  const { selectedElements, styleDefaults, markDirty } = options;
+  const { selectedElements, styleDefaults, markDirty, onBeforeChange } = options;
+
+  function applyAndRemember<K extends keyof StyleDefaults>(
+    key: K,
+    value: StyleDefaults[K]["value"],
+    updates?: Record<string, unknown>,
+  ): void {
+    onBeforeChange?.();
+    for (const el of selectedElements.value) {
+      mutateElement(el, updates ?? { [key]: value });
+    }
+    markDirty();
+    styleDefaults[key].value = value;
+  }
 
   function changeStrokeColor(color: string): void {
-    applyToSelected(selectedElements, { strokeColor: color }, markDirty);
-    styleDefaults.strokeColor.value = color;
+    applyAndRemember("strokeColor", color);
   }
 
   function changeBackgroundColor(color: string): void {
-    applyToSelected(selectedElements, { backgroundColor: color }, markDirty);
-    styleDefaults.backgroundColor.value = color;
+    applyAndRemember("backgroundColor", color);
   }
 
   function changeFillStyle(style: FillStyle): void {
-    applyToSelected(selectedElements, { fillStyle: style }, markDirty);
-    styleDefaults.fillStyle.value = style;
+    applyAndRemember("fillStyle", style);
   }
 
   function changeStrokeWidth(width: number): void {
-    applyToSelected(selectedElements, { strokeWidth: width }, markDirty);
-    styleDefaults.strokeWidth.value = width;
+    applyAndRemember("strokeWidth", width);
   }
 
   function changeStrokeStyle(style: StrokeStyle): void {
-    applyToSelected(selectedElements, { strokeStyle: style }, markDirty);
-    styleDefaults.strokeStyle.value = style;
+    applyAndRemember("strokeStyle", style);
   }
 
   function changeOpacity(opacity: number): void {
-    applyToSelected(selectedElements, { opacity }, markDirty);
-    styleDefaults.opacity.value = opacity;
+    applyAndRemember("opacity", opacity);
   }
 
   function changeRoughness(roughness: number): void {
-    applyToSelected(selectedElements, { roughness }, markDirty);
-    styleDefaults.roughness.value = roughness;
+    applyAndRemember("roughness", roughness);
   }
 
   function changeRoundness(type: Roundness): void {
     const roundness = type === "sharp" ? null : { type: 3 };
-    applyToSelected(selectedElements, { roundness }, markDirty);
-    styleDefaults.roundness.value = type;
+    applyAndRemember("roundness", type, { roundness });
   }
 
   function changeFontFamily(family: number): void {
-    applyToSelected(selectedElements, { fontFamily: family }, markDirty);
-    styleDefaults.fontFamily.value = family;
+    applyAndRemember("fontFamily", family);
   }
 
   function changeFontSize(size: number): void {
-    applyToSelected(selectedElements, { fontSize: size }, markDirty);
-    styleDefaults.fontSize.value = size;
+    applyAndRemember("fontSize", size);
   }
 
   function changeTextAlign(align: TextAlign): void {
-    applyToSelected(selectedElements, { textAlign: align }, markDirty);
-    styleDefaults.textAlign.value = align;
+    applyAndRemember("textAlign", align);
   }
 
   function changeArrowhead(position: "start" | "end", type: Arrowhead | null): void {
     const property = position === "start" ? "startArrowhead" : "endArrowhead";
-    applyToSelected(selectedElements, { [property]: type }, markDirty);
-    styleDefaults[property].value = type;
+    applyAndRemember(property, type);
   }
 
   function getFormValue<T>(

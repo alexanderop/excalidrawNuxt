@@ -20,6 +20,8 @@ interface UseFreeDrawInteractionOptions {
   onElementCreated: (element: ExcalidrawElement) => void;
   markNewElementDirty: () => void;
   markStaticDirty: () => void;
+  onInteractionStart?: () => void;
+  onInteractionEnd?: () => void;
 }
 
 interface UseFreeDrawInteractionReturn {
@@ -54,6 +56,7 @@ export function useFreeDrawInteraction(
     if (!isFreeDrawTool(activeTool.value)) return;
     if (e.button !== 0) return;
 
+    options.onInteractionStart?.();
     const scene = toScene(e.offsetX, e.offsetY);
     originX = scene[0];
     originY = scene[1];
@@ -114,6 +117,7 @@ export function useFreeDrawInteraction(
     });
 
     onElementCreated(el);
+    options.onInteractionEnd?.();
     newFreeDrawElement.value = null;
     markNewElementDirty();
     markStaticDirty();

@@ -309,6 +309,46 @@ After deleting elements, groups may become orphans (fewer than 2 members). `clea
 
 **Bug pattern**: Deleting elements without calling `cleanupAfterDelete()`. Remaining elements appear selected as a group but the group has only one member.
 
+## Keyboard Shortcuts Must Use recordAction for Undo
+
+Composables that handle keyboard shortcuts via `defineShortcuts` bypass the action registry. If those shortcuts perform undoable mutations (delete, nudge, etc.), they must explicitly wrap the handler in `recordAction()`.
+
+```mermaid
+flowchart TD
+    A["Action Registry (context menu, command palette)"] -->|"handler wrapped in recordAction"| B["History tracked ✅"]
+    C["defineShortcuts in composable"] -->|"direct call"| D["History bypassed ❌"]
+    C -->|"options.recordAction(fn)"| B
+```
+
+**Bug pattern**: The `Delete` shortcut in `useSelectionInteraction` called `handleDelete()` directly. The action registry's `action:delete` used `history.recordAction(handleDelete)` for menu/palette invocation, but the keyboard path skipped history entirely. Undo never restored deleted elements.
+
+**Fix pattern**: Pass `recordAction` as an option to composables that handle undoable keyboard shortcuts:
+
+```ts
+// In composable options
+interface UseSelectionInteractionOptions {
+  recordAction?: (fn: () => void) => void;
+}
+
+// In keyboard handler
+const deleteSelected = whenSelectionActive(() => {
+  const fn = () => handleDelete(selectedElements());
+  if (options.recordAction) {
+    options.recordAction(fn);
+    return;
+  }
+  fn();
+});
+
+// In CanvasContainer.vue
+useSelectionInteraction({
+  // ...other options
+  recordAction: history.recordAction,
+});
+```
+
+**Rule**: Any `defineShortcuts` handler that mutates element state (delete, nudge, duplicate, layer order changes) must be wrapped in `recordAction`. Check both the action registry AND the keyboard shortcut path when adding new undoable operations.
+
 ## Resize Operates in Unrotated Coordinate Space
 
 `resizeElement()` unrotates the pointer around the element center before computing deltas. It also handles:

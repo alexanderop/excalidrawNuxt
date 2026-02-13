@@ -4,7 +4,7 @@
 
 ## Feature Inventory
 
-Fifteen feature modules under `app/features/`:
+Sixteen feature modules under `app/features/`:
 
 | Feature             | Directory          | Key Exports                                                                                                                                                                                                                             | Purpose                                                                                                                                                                                                   |
 | ------------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -22,6 +22,7 @@ Fifteen feature modules under `app/features/`:
 | **Binding**         | `binding/`         | `getHoveredElementForBinding`, `bindArrowToElement`, `unbindArrowEndpoint`, `updateBoundArrowEndpoints`, `renderSuggestedBinding`, `proximity`, `bindTextToContainer`, `unbindTextFromContainer`, `updateBoundTextAfterContainerChange` | Arrow-to-shape binding, fixedPoint system, edge distance, blue highlight, bound text lifecycle                                                                                                            |
 | **Groups**          | `groups/`          | `useGroups`, `expandSelectionToGroups`, `addToGroup`, `removeFromGroups`, `reorderElementsForGroup`, `cleanupAfterDelete`                                                                                                               | Flat groupIds model, Cmd+G/Cmd+Shift+G, group selection expansion, z-order reordering                                                                                                                     |
 | **Properties**      | `properties/`      | `useStyleDefaults`, `usePropertyActions`, `useStyleClipboard`, `PropertiesPanel.vue`, `ColorPicker.vue`, `palette`                                                                                                                      | Element style editing (colors, stroke, fill, opacity, fonts, arrowheads), sticky defaults, copy/paste styles                                                                                              |
+| **History**         | `history/`         | `useHistory`                                                                                                                                                                                                                            | Snapshot-based undo/redo (Cmd+Z / Cmd+Shift+Z), checkpoint pairs for deferred interactions, max 100 entries                                                                                               |
 | **Theme**           | `theme/`           | `useTheme`, `resolveColor`, `applyDarkModeFilter`, `THEME`                                                                                                                                                                              | Light/dark mode via localStorage, CSS invert+hue-rotate color transform, Alt+Shift+D toggle                                                                                                               |
 
 ## Cross-Feature Dependencies
@@ -42,7 +43,10 @@ graph TD
     Canvas --> Properties
     Canvas --> Clipboard
     Canvas --> Image
+    Canvas --> History
     Canvas --> CommandPalette[Command Palette]
+
+    History --> Elements
 
     ContextMenu --> Elements
     ContextMenu --> Selection
@@ -166,6 +170,7 @@ graph TD
 | `usePropertyActions`      | properties    | Options object      | 11 change methods + getFormValue for mixed-value detection. Mutates selected elements, updates sticky defaults, triggers dirty flags                                                                                                                     |
 | `useStyleClipboard`       | properties    | `createGlobalState` | Copy/paste styles between elements. Snapshots 11 style properties, skips text-only props on non-text elements. Cmd+Alt+C / Cmd+Alt+V                                                                                                                     |
 | `useLayerOrder`           | elements      | Options object      | Z-order reordering: bringToFront, bringForward, sendBackward, sendToBack. Group-aware: auto-expands selection to include group members, preserves adjacency                                                                                              |
+| `useHistory`              | history       | Options object      | Snapshot-based undo/redo. `recordAction(fn)` for instant operations, `saveCheckpoint`/`commitCheckpoint` pair for deferred interactions (drag, resize, text edit). Max 100 entries, ~5MB. Cmd+Z / Cmd+Shift+Z via action registry                        |
 
 ## Shared Modules
 
