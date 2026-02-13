@@ -6,6 +6,8 @@ import { useStyleDefaults } from "../composables/useStyleDefaults";
 import { usePropertyActions } from "../composables/usePropertyActions";
 import { usePropertyVisibility } from "../composables/usePropertyVisibility";
 import { useActionRegistry } from "~/shared/useActionRegistry";
+import { useTheme } from "~/features/theme/useTheme";
+import { resolveColor } from "~/features/theme/colors";
 import {
   hasStrokeColor,
   hasBackground,
@@ -38,6 +40,7 @@ const emit = defineEmits<{
 }>();
 
 const { execute } = useActionRegistry();
+const { theme } = useTheme();
 
 const styleDefaults = useStyleDefaults();
 
@@ -131,7 +134,7 @@ const currentEndArrowhead = computed(() =>
 function formatColorDisplay(color: string): string {
   if (color === "mixed") return "mixed";
   if (color === "transparent") return "none";
-  return color;
+  return resolveColor(color, theme.value);
 }
 
 const strokeHexDisplay = computed(() => formatColorDisplay(currentStrokeColor.value));
@@ -267,7 +270,7 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
             <div class="flex items-center gap-2">
               <ColorSwatch
                 size="sm"
-                :color="currentStrokeColor === 'mixed' ? 'mixed' : currentStrokeColor"
+                :color="currentStrokeColor"
                 label="Stroke color"
                 @update:color="actions.changeStrokeColor"
               />
@@ -281,7 +284,7 @@ function onEndArrowheadChange(val: Arrowhead | null): void {
             <div class="flex items-center gap-2">
               <ColorSwatch
                 size="sm"
-                :color="currentBgColor === 'mixed' ? 'mixed' : currentBgColor"
+                :color="currentBgColor"
                 label="Background color"
                 @update:color="actions.changeBackgroundColor"
               />

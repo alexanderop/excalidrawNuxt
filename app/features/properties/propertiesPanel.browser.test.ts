@@ -1,5 +1,8 @@
 import { API, CanvasPage, waitForPaint } from "~/__test-utils__/browser";
 import { createElement } from "~/features/elements/createElement";
+import { resolveColor } from "~/features/theme/colors";
+import { useTheme } from "~/features/theme/useTheme";
+import { DEFAULT_STROKE_COLOR } from "~/features/elements/constants";
 
 /**
  * Helper: add an element programmatically, select it, and flush.
@@ -204,5 +207,74 @@ describe("PropertiesPanel visibility", () => {
     // Fill style row specifically is hidden for arrows
     const fillLabels = page.screen.getByText("Fill");
     await expect.element(fillLabels).not.toBeInTheDocument();
+  });
+});
+
+/** Normalize any CSS color string to #rrggbb via the browser's canvas context. */
+function toHex(cssColor: string): string {
+  const ctx = document.createElement("canvas").getContext("2d")!;
+  ctx.fillStyle = cssColor;
+  return ctx.fillStyle;
+}
+
+describe("PropertiesPanel dark mode colors", () => {
+  it("stroke color swatch reflects the dark-mode resolved color, not the raw stored color", async () => {
+    const page = await CanvasPage.create();
+    const { theme, $reset } = useTheme();
+
+    $reset();
+    await waitForPaint();
+
+    await addAndSelect(page, "rectangle");
+
+    const swatchButton = page.screen.getByLabelText("Stroke color");
+    await expect.element(swatchButton).toBeVisible();
+
+    const swatchSpan = swatchButton.element()!.querySelector("span:last-child") as HTMLElement;
+    expect(swatchSpan.style.backgroundColor).toBeTruthy();
+
+    const lightBg = swatchSpan.style.backgroundColor;
+
+    // Switch to dark mode
+    theme.value = "dark";
+    await waitForPaint();
+
+    const darkBg = swatchSpan.style.backgroundColor;
+
+    // Dark mode swatch must differ from light mode swatch
+    expect(darkBg).not.toBe(lightBg);
+
+    // The dark swatch should match the resolved color for dark mode
+    const expectedResolved = resolveColor(DEFAULT_STROKE_COLOR, "dark");
+    expect(toHex(darkBg)).toBe(toHex(expectedResolved));
+
+    $reset();
+  });
+
+  it("hex label next to swatch updates for dark mode", async () => {
+    const page = await CanvasPage.create();
+    const { theme, $reset } = useTheme();
+
+    $reset();
+    await waitForPaint();
+
+    await addAndSelect(page, "rectangle");
+
+    // In light mode the hex label should show the raw color
+    const hexLabel = page.screen.getByText(DEFAULT_STROKE_COLOR);
+    await expect.element(hexLabel).toBeVisible();
+
+    // Switch to dark mode
+    theme.value = "dark";
+    await waitForPaint();
+
+    // The raw color should no longer be displayed — it should show the resolved dark color
+    await expect.element(page.screen.getByText(DEFAULT_STROKE_COLOR)).not.toBeInTheDocument();
+
+    // The resolved dark color should be visible instead
+    const resolvedDark = resolveColor(DEFAULT_STROKE_COLOR, "dark");
+    await expect.element(page.screen.getByText(resolvedDark)).toBeVisible();
+
+    $reset();
   });
 });

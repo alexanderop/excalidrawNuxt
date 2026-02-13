@@ -4,6 +4,8 @@ import { useEventListener, whenever } from "@vueuse/core";
 import { COLOR_PALETTE, COLOR_NAMES, getTopPickColors, isStandardColor } from "../palette";
 import type { ColorName } from "../palette";
 import { useStyleDefaults } from "../composables/useStyleDefaults";
+import { useTheme } from "~/features/theme/useTheme";
+import { resolveColor } from "~/features/theme/colors";
 
 type ShadeIndex = 0 | 1 | 2 | 3 | 4;
 
@@ -29,14 +31,20 @@ const hexInput = ref("");
 const hexInputRef = useTemplateRef<HTMLInputElement>("hexInputRef");
 
 const { recentColors } = useStyleDefaults();
+const { theme } = useTheme();
 const topPicks = getTopPickColors();
+
+function displayColor(c: string): string {
+  if (c === "transparent" || c === "mixed") return c;
+  return resolveColor(c, theme.value);
+}
 
 const isTransparent = computed(() => color === "transparent");
 const isMixed = computed(() => color === "mixed");
 
 const swatchStyle = computed(() => {
   if (isTransparent.value || isMixed.value) return {};
-  return { backgroundColor: color };
+  return { backgroundColor: displayColor(color) };
 });
 
 const pickerModelValue = computed(() => (color === "mixed" ? "#000000" : color));
@@ -170,7 +178,11 @@ if (typeof document !== "undefined") {
               </svg>
             </template>
             <!-- Color swatch -->
-            <span v-else class="absolute inset-0.5 rounded-sm" :style="{ backgroundColor: c }" />
+            <span
+              v-else
+              class="absolute inset-0.5 rounded-sm"
+              :style="{ backgroundColor: displayColor(c) }"
+            />
           </button>
         </div>
 
@@ -187,7 +199,7 @@ if (typeof document !== "undefined") {
                   ? 'border-accent ring-1 ring-accent'
                   : 'border-transparent hover:border-edge/60'
               "
-              :style="{ backgroundColor: getShadeColor(name, shade) }"
+              :style="{ backgroundColor: displayColor(getShadeColor(name, shade)) }"
               @click="selectColor(getShadeColor(name, shade))"
             />
           </template>
@@ -221,7 +233,7 @@ if (typeof document !== "undefined") {
                   ? 'border-accent ring-1 ring-accent'
                   : 'border-edge/40 hover:border-edge'
               "
-              :style="{ backgroundColor: c }"
+              :style="{ backgroundColor: displayColor(c) }"
               @click="selectColor(c)"
             />
           </div>
