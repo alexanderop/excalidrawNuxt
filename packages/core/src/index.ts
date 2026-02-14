@@ -14,6 +14,7 @@ export * from "./features/clipboard";
 export * from "./features/code";
 export * from "./features/command-palette";
 export * from "./features/context-menu";
+export * from "./features/elbow";
 export * from "./features/elements";
 export * from "./features/groups";
 export * from "./features/history/useHistory";

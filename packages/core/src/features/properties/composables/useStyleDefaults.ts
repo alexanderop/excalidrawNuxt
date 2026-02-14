@@ -10,14 +10,8 @@ import {
   DEFAULT_FONT_FAMILY,
   DEFAULT_TEXT_ALIGN,
 } from "../../elements/constants";
-import type {
-  Arrowhead,
-  FillStyle,
-  MutableElement,
-  StrokeStyle,
-  TextAlign,
-} from "../../elements/types";
-import type { Roundness } from "../types";
+import type { Arrowhead, FillStyle, StrokeStyle, TextAlign } from "../../elements/types";
+import type { ArrowSubtype, Roundness } from "../types";
 import { useDrawVue } from "../../../context";
 
 export interface UseStyleDefaultsReturn {
@@ -29,13 +23,31 @@ export interface UseStyleDefaultsReturn {
   opacity: Ref<number>;
   roughness: Ref<number>;
   roundness: Ref<Roundness>;
+  arrowSubtype: Ref<ArrowSubtype>;
   fontFamily: Ref<number>;
   fontSize: Ref<number>;
   textAlign: Ref<TextAlign>;
   startArrowhead: Ref<Arrowhead | null>;
   endArrowhead: Ref<Arrowhead | null>;
   recentColors: Ref<string[]>;
-  getStyleOverrides: () => Partial<MutableElement>;
+  getStyleOverrides: () => Record<string, unknown>;
+}
+
+function getArrowSubtypeOverrides(
+  subtype: ArrowSubtype,
+  roundnessDefault: Roundness,
+): Record<string, unknown> {
+  switch (subtype) {
+    case "curved": {
+      return { roundness: { type: 2 }, elbowed: false };
+    }
+    case "elbow": {
+      return { roundness: null, elbowed: true };
+    }
+    default: {
+      return { roundness: roundnessDefault === "sharp" ? null : { type: 3 } };
+    }
+  }
 }
 
 export function createStyleDefaults(): UseStyleDefaultsReturn {
@@ -47,6 +59,7 @@ export function createStyleDefaults(): UseStyleDefaultsReturn {
   const opacity = ref<number>(DEFAULT_OPACITY);
   const roughness = ref<number>(DEFAULT_ROUGHNESS);
   const roundness = ref<Roundness>("round");
+  const arrowSubtype = ref<ArrowSubtype>("sharp");
   const fontFamily = ref<number>(DEFAULT_FONT_FAMILY);
   const fontSize = ref<number>(DEFAULT_FONT_SIZE);
   const textAlign = ref<TextAlign>(DEFAULT_TEXT_ALIGN);
@@ -55,7 +68,7 @@ export function createStyleDefaults(): UseStyleDefaultsReturn {
   const recentColors = ref<string[]>([]);
 
   /** Return current style values as a plain object for createElement overrides. */
-  function getStyleOverrides(): Partial<MutableElement> {
+  function getStyleOverrides(): Record<string, unknown> {
     return {
       strokeColor: strokeColor.value,
       backgroundColor: backgroundColor.value,
@@ -64,7 +77,7 @@ export function createStyleDefaults(): UseStyleDefaultsReturn {
       strokeStyle: strokeStyle.value,
       opacity: opacity.value,
       roughness: roughness.value,
-      roundness: roundness.value === "sharp" ? null : { type: 3 as const },
+      ...getArrowSubtypeOverrides(arrowSubtype.value, roundness.value),
     };
   }
 
@@ -77,6 +90,7 @@ export function createStyleDefaults(): UseStyleDefaultsReturn {
     opacity,
     roughness,
     roundness,
+    arrowSubtype,
     fontFamily,
     fontSize,
     textAlign,

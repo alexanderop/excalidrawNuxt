@@ -5,6 +5,9 @@ export const MIDPOINT_HANDLE_RADIUS = 3;
 export const POINT_HIT_THRESHOLD = 10;
 export const MIDPOINT_HIT_THRESHOLD = 8;
 
+/** Max distance (px) to last point during multi-point creation to finalize instead of adding a new point. */
+export const LINE_CONFIRM_THRESHOLD = 8;
+
 export const RUBBER_BAND_DASH = [4, 4] as const;
 export const RUBBER_BAND_WIDTH = 1;
 

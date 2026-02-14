@@ -3,6 +3,7 @@ import { computed, toRef } from "vue";
 import type {
   ExcalidrawElement,
   Arrowhead,
+  ArrowSubtype,
   FillStyle,
   StrokeStyle,
   TextAlign,
@@ -221,6 +222,24 @@ const textAlignOptions: { label: string; value: TextAlign; icon: string }[] = [
   },
 ];
 
+const arrowSubtypeOptions: { label: string; value: ArrowSubtype; icon: string }[] = [
+  {
+    label: "Sharp",
+    value: "sharp",
+    icon: '<polyline points="4 16 12 8 20 16"/>',
+  },
+  {
+    label: "Curved",
+    value: "curved",
+    icon: '<path d="M4 16 Q12 2 20 16"/>',
+  },
+  {
+    label: "Elbow",
+    value: "elbow",
+    icon: '<path d="M4 16 V8 H20"/>',
+  },
+];
+
 function onFontSizeChange(event: Event): void {
   if (!(event.target instanceof HTMLInputElement)) return;
   const val = Number(event.target.value);
@@ -377,6 +396,14 @@ function onFontSizeChange(event: Event): void {
       <template v-if="hasArrowSelected">
         <div :class="GROUP_DIVIDER" />
         <div :class="GROUP_HEADER">Arrowheads</div>
+        <div :class="PROP_ROW">
+          <span :class="PROP_LABEL">Type</span>
+          <ButtonIconSelect
+            :options="arrowSubtypeOptions"
+            :model-value="styleDefaults.arrowSubtype.value"
+            @update:model-value="actions.changeArrowSubtype"
+          />
+        </div>
         <div class="px-3 py-1.5">
           <div class="flex flex-col gap-1.5">
             <ArrowheadPicker

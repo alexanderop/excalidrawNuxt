@@ -202,7 +202,7 @@ const { cursorClass, spaceHeld, isPanning } = usePanning({
 // Theme (stays global)
 const { theme, toggleTheme } = useTheme();
 
-// Tool keyboard shortcuts (extracted from createToolStore — now bound here)
+// Tool keyboard shortcuts
 useKeyboardShortcuts(
   Object.fromEntries(Object.entries(KEY_TO_TOOL).map(([key, tool]) => [key, () => setTool(tool)])),
 );
@@ -220,12 +220,13 @@ const shared = {
   onInteractionEnd: history.commitCheckpoint,
 };
 
-const { multiElement, lastCursorPoint, finalizeMultiPoint } = useMultiPointCreation({
-  ...shared,
-  onFinalize() {
-    setTool("selection");
-  },
-});
+const { multiElement, lastCursorPoint, startMultiPoint, finalizeMultiPoint } =
+  useMultiPointCreation({
+    ...shared,
+    onFinalize() {
+      setTool("selection");
+    },
+  });
 
 const {
   editingElement: editingLinearElement,
@@ -311,7 +312,6 @@ onBeforeToolChange(() => {
   finalizeFreeDrawIfActive();
 });
 
-// Drawing & selection own their refs internally
 const { newElement } = useDrawingInteraction({
   ...shared,
   activeTool,
@@ -319,6 +319,7 @@ const { newElement } = useDrawingInteraction({
   spaceHeld,
   isPanning,
   multiElement,
+  startMultiPoint,
   getStyleOverrides: ctx.styleDefaults.getStyleOverrides,
   onElementCreated(el) {
     addElement(el);
@@ -328,7 +329,7 @@ const { newElement } = useDrawingInteraction({
   markNewElementDirty: dirty.markNewElementDirty,
 });
 
-// Freedraw interaction (pencil tool) — separate from drawing interaction
+// Freedraw interaction
 const { newFreeDrawElement, finalizeFreeDrawIfActive } = useFreeDrawInteraction({
   ...shared,
   activeTool,
@@ -636,6 +637,9 @@ register([
   markInteractiveDirty,
   history,
   imageCache: ctx.imageCache,
+  staticCanvasRef,
+  newElementCanvasRef,
+  interactiveCanvasRef,
 };
 
 function handlePropertyChange(): void {
@@ -712,7 +716,7 @@ defineExpose({
       :selected-elements="selectedElements"
       :active-tool="activeTool"
       :show-tool-properties="showToolProperties"
-      :on-will-change="() => history.saveCheckpoint()"
+      :on-will-change="history.saveCheckpoint"
       :on-mark-dirty="handlePropertyChange"
     />
 

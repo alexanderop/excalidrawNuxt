@@ -9,8 +9,8 @@ import {
 import type { GlobalPoint, Radians } from "../../shared/math";
 import type { ExcalidrawElement } from "../elements/types";
 import { isBindableElement } from "./types";
-import type { BindableElement } from "./types";
-import { BASE_BINDING_DISTANCE, BASE_BINDING_GAP } from "./constants";
+import type { BindableElement, BindingMode } from "./types";
+import { BASE_BINDING_GAP, maxBindingDistance } from "./constants";
 
 interface BindingCandidate {
   element: BindableElement;
@@ -27,7 +27,7 @@ export function getHoveredElementForBinding(
   zoom: number,
   excludeIds: ReadonlySet<string>,
 ): BindingCandidate | null {
-  const threshold = BASE_BINDING_DISTANCE / zoom;
+  const threshold = maxBindingDistance(zoom);
   let closest: BindingCandidate | null = null;
   let closestDist = Infinity;
 
@@ -146,12 +146,16 @@ export function computeFixedPoint(
 
 /**
  * Convert a fixedPoint back to scene coordinates.
- * Projects from center through fixedPoint onto shape edge,
- * then offsets outward by BASE_BINDING_GAP.
+ *
+ * - mode 'orbit' (default): projects from center through fixedPoint onto
+ *   the shape edge, then offsets outward by BASE_BINDING_GAP.
+ * - mode 'inside': returns the fixedPoint's scene coordinate directly
+ *   (no edge projection, no gap offset).
  */
 export function getPointFromFixedPoint(
   fixedPoint: readonly [number, number],
   element: BindableElement,
+  mode: BindingMode = "orbit",
 ): GlobalPoint {
   const cx = element.x + element.width / 2;
   const cy = element.y + element.height / 2;
@@ -159,6 +163,20 @@ export function getPointFromFixedPoint(
   // Fixed point in local (unrotated) space
   const targetX = element.x + fixedPoint[0] * element.width;
   const targetY = element.y + fixedPoint[1] * element.height;
+
+  if (mode === "inside") {
+    // Return the scene coordinate directly — no edge projection, no gap
+    if (element.angle !== 0) {
+      return pointRotateRads(
+        pointFrom<GlobalPoint>(targetX, targetY),
+        pointFrom<GlobalPoint>(cx, cy),
+        element.angle as Radians,
+      );
+    }
+    return pointFrom<GlobalPoint>(targetX, targetY);
+  }
+
+  // --- orbit mode (default) ---
 
   // Direction from center to target
   const dx = targetX - cx;

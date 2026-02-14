@@ -30,7 +30,7 @@ export function renderScene(
   for (const element of elements) {
     const [x1, y1, x2, y2] = getElementBounds(element);
     if (x2 < viewMinX || x1 > viewMaxX || y2 < viewMinY || y1 > viewMaxY) continue;
-    renderElement(ctx, rc, element, theme, imageCache);
+    renderElement(ctx, rc, element, theme, imageCache, zoom);
   }
 
   ctx.restore();

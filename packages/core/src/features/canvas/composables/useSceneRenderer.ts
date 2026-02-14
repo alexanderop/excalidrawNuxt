@@ -193,7 +193,7 @@ export function useSceneRenderer(options: UseSceneRendererOptions): UseSceneRend
       ctx.save();
       ctx.scale(zoom.value, zoom.value);
       ctx.translate(scrollX.value, scrollY.value);
-      renderElement(ctx, rc, el, theme.value, imageCache.value);
+      renderElement(ctx, rc, el, theme.value, imageCache.value, zoom.value);
       ctx.restore();
     },
     onRenderInteractive(ctx) {

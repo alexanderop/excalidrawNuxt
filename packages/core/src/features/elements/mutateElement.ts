@@ -3,7 +3,7 @@ import type { ExcalidrawElement, MutableElement } from "./types";
 
 export function mutateElement<T extends ExcalidrawElement>(
   element: T,
-  updates: Partial<MutableElement>,
+  updates: Partial<MutableElement> | Record<string, unknown>,
 ): T {
   Object.assign(element, updates, {
     versionNonce: randomVersionNonce(),

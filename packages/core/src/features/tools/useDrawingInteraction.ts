@@ -6,7 +6,7 @@ import type {
   ExcalidrawArrowElement,
   ExcalidrawLinearElement,
 } from "../elements/types";
-import { isArrowElement, isLinearElement } from "../elements/types";
+import { isArrowElement, isElbowArrow, isLinearElement } from "../elements/types";
 import { createElement } from "../elements/createElement";
 import { mutateElement } from "../elements/mutateElement";
 import { pointFrom, snapAngle } from "../../shared/math";
@@ -17,8 +17,10 @@ import {
   updateArrowEndpoint,
   MINIMUM_ARROW_SIZE,
 } from "../binding";
+import type { BindingMode } from "../binding";
 import type { ToolType } from "./types";
 import { isDrawingTool, isLinearTool } from "./types";
+import { routeElbowArrow } from "../elbow/routeElbow";
 
 const _excludeIds = new Set<string>();
 
@@ -36,6 +38,8 @@ interface UseDrawingInteractionOptions {
   newElement?: ShallowRef<ExcalidrawElement | null>;
   /** If set, skip pointerdown when multi-point mode is active */
   multiElement?: ShallowRef<ExcalidrawLinearElement | null>;
+  /** Callback to enter multi-point creation mode after initial drag */
+  startMultiPoint?: (element: ExcalidrawLinearElement) => void;
   elements: ShallowRef<readonly ExcalidrawElement[]>;
   zoom: Ref<number>;
   suggestedBindings: ShallowRef<readonly ExcalidrawElement[]>;
@@ -72,6 +76,8 @@ export function useDrawingInteraction(
   const newElement = options.newElement ?? shallowRef<ExcalidrawElement | null>(null);
   let originX = 0;
   let originY = 0;
+  /** Track Alt key state at drag start for binding mode */
+  let altKeyAtStart = false;
 
   useEventListener(canvasRef, "pointerdown", (e: PointerEvent) => {
     if (spaceHeld.value || isPanning.value) return;
@@ -84,6 +90,7 @@ export function useDrawingInteraction(
     const scene = toScene(e.offsetX, e.offsetY);
     originX = scene[0];
     originY = scene[1];
+    altKeyAtStart = e.altKey;
 
     newElement.value = createElement(tool, originX, originY, getStyleOverrides());
 
@@ -166,7 +173,8 @@ export function useDrawingInteraction(
     markNewElementDirty();
   });
 
-  function tryBindArrowEndpoints(arrowEl: ExcalidrawArrowElement): void {
+  /** Bind both endpoints of an arrow to nearby shapes. */
+  function tryBindArrowEndpoints(arrowEl: ExcalidrawArrowElement, startMode?: BindingMode): void {
     _excludeIds.clear();
     _excludeIds.add(arrowEl.id);
 
@@ -178,7 +186,13 @@ export function useDrawingInteraction(
       _excludeIds,
     );
     if (startCandidate) {
-      bindArrowToElement(arrowEl, "start", startCandidate.element, startCandidate.fixedPoint);
+      bindArrowToElement(
+        arrowEl,
+        "start",
+        startCandidate.element,
+        startCandidate.fixedPoint,
+        startMode,
+      );
       updateArrowEndpoint(arrowEl, "start", startCandidate.element);
     }
 
@@ -199,6 +213,24 @@ export function useDrawingInteraction(
     suggestedBindings.value = [];
   }
 
+  /** Bind only the start endpoint (for entering multi-point mode — end is bound on finalize). */
+  function tryBindArrowStart(arrowEl: ExcalidrawArrowElement, mode?: BindingMode): void {
+    _excludeIds.clear();
+    _excludeIds.add(arrowEl.id);
+
+    const startScenePoint = pointFrom<GlobalPoint>(arrowEl.x, arrowEl.y);
+    const startCandidate = getHoveredElementForBinding(
+      startScenePoint,
+      elements.value,
+      zoom.value,
+      _excludeIds,
+    );
+    if (startCandidate) {
+      bindArrowToElement(arrowEl, "start", startCandidate.element, startCandidate.fixedPoint, mode);
+      updateArrowEndpoint(arrowEl, "start", startCandidate.element);
+    }
+  }
+
   function isElementValid(el: ExcalidrawElement): boolean {
     if (isLinearElement(el)) {
       return Math.hypot(el.width, el.height) >= MINIMUM_ARROW_SIZE;
@@ -212,12 +244,58 @@ export function useDrawingInteraction(
 
     canvasRef.value?.releasePointerCapture(e.pointerId);
 
-    if (isElementValid(el)) {
-      onElementCreated(el);
-      // Bind arrow endpoints to nearby shapes
-      if (isArrowElement(el)) {
-        tryBindArrowEndpoints(el);
+    if (!isElementValid(el)) {
+      // Invalid element — discard
+      options.onInteractionEnd?.();
+      setTool("selection");
+      newElement.value = null;
+      markNewElementDirty();
+      markStaticDirty();
+      return;
+    }
+
+    onElementCreated(el);
+
+    // Determine binding mode from Alt key
+    const bindingMode: BindingMode | undefined = altKeyAtStart ? "inside" : undefined;
+
+    // Linear tools: enter multi-point mode or handle elbow auto-finalize
+    if (isLinearElement(el)) {
+      // Elbow arrows finalize immediately — no multi-point
+      if (isArrowElement(el) && isElbowArrow(el)) {
+        tryBindArrowEndpoints(el, bindingMode);
+        routeElbowArrow(el, elements.value);
+        options.onInteractionEnd?.();
+        setTool("selection");
+        newElement.value = null;
+        markNewElementDirty();
+        markStaticDirty();
+        return;
       }
+
+      // Non-elbow linear: bind start only, then enter multi-point mode
+      if (isArrowElement(el)) {
+        tryBindArrowStart(el, bindingMode);
+      }
+
+      if (options.startMultiPoint) {
+        options.startMultiPoint(el);
+        suggestedBindings.value = [];
+        newElement.value = null;
+        markNewElementDirty();
+        markStaticDirty();
+        return;
+      }
+
+      // Fallback: no startMultiPoint provided — bind both endpoints and finalize
+      if (isArrowElement(el)) {
+        tryBindArrowEndpoints(el, bindingMode);
+      }
+    }
+
+    // Non-linear elements or fallback: finalize immediately
+    if (isArrowElement(el)) {
+      tryBindArrowEndpoints(el, bindingMode);
     }
 
     options.onInteractionEnd?.();

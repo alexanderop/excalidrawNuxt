@@ -9,6 +9,7 @@ import { pointFrom, snapAngle } from "../../shared/math";
 import type { GlobalPoint, LocalPoint } from "../../shared/math";
 import { getHoveredElementForBinding, bindArrowToElement, updateArrowEndpoint } from "../binding";
 import { getSizeFromPoints } from "./pointHandles";
+import { LINE_CONFIRM_THRESHOLD } from "./constants";
 
 const _excludeIds = new Set<string>();
 
@@ -100,6 +101,32 @@ export function useMultiPointCreation(
     if (!lastPt) return;
     const lastSceneX = lastPt[0] + el.x;
     const lastSceneY = lastPt[1] + el.y;
+
+    // Distance check: finalize if clicking near the last point
+    const dist = Math.hypot(scene[0] - lastSceneX, scene[1] - lastSceneY);
+    if (dist < LINE_CONFIRM_THRESHOLD) {
+      finalizeMultiPoint();
+      return;
+    }
+
+    // For arrows: finalize if clicking on a binding target
+    if (isArrowElement(el)) {
+      _excludeIds.clear();
+      _excludeIds.add(el.id);
+      const candidate = getHoveredElementForBinding(scene, elements.value, zoom.value, _excludeIds);
+      if (candidate) {
+        // Add the final point at the click position, then finalize
+        const dx = scene[0] - lastSceneX;
+        const dy = scene[1] - lastSceneY;
+        const newRelativePoint = pointFrom<LocalPoint>(lastPt[0] + dx, lastPt[1] + dy);
+        const newPoints = [...el.points, newRelativePoint];
+        const dims = getSizeFromPoints(newPoints);
+        mutateElement(el, { points: newPoints, width: dims.width, height: dims.height });
+        triggerRef(multiElement);
+        finalizeMultiPoint();
+        return;
+      }
+    }
 
     let dx = scene[0] - lastSceneX;
     let dy = scene[1] - lastSceneY;

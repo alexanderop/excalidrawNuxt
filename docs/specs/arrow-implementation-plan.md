@@ -12,9 +12,9 @@ We have a **production-ready straight-line arrow and line system** with single-s
 
 ```mermaid
 pie title Arrow Feature Coverage
-    "Implemented" : 65
-    "Partial" : 10
-    "Not Started" : 25
+    "Implemented" : 90
+    "Partial" : 5
+    "Not Started" : 5
 ```
 
 ---
@@ -350,7 +350,7 @@ maxBindingDistance(zoom) {
 
 > Orthogonal arrows that route around obstacles with 90deg corners.
 
-### 6.1 Heading system `TODO`
+### 6.1 Heading system `DONE`
 
 **Why:** Elbow arrows need to know which edge of a shape to exit/enter from.
 
@@ -375,7 +375,7 @@ const HEADING_UP: Heading = [0, -1];
 - [ ] Implement `flipHeading()`, `compareHeading()`, `headingIsHorizontal()`
 - [ ] Use triangle search cones (SEARCH_CONE_MULTIPLIER = 2) for quadrant detection
 
-### 6.2 Non-uniform grid `TODO`
+### 6.2 Non-uniform grid `DONE`
 
 **Files:**
 
@@ -389,7 +389,7 @@ const HEADING_UP: Heading = [0, -1];
 - [ ] Add start/end constraint points based on heading
 - [ ] Variable-resolution grid that snaps to obstacle boundaries
 
-### 6.3 A\* pathfinding `TODO`
+### 6.3 A\* pathfinding `DONE`
 
 **Files:**
 
@@ -405,7 +405,7 @@ const HEADING_UP: Heading = [0, -1];
 - [ ] No backtracking (reverse direction forbidden)
 - [ ] Return array of orthogonal points
 
-### 6.4 Elbow arrow shape generation `TODO`
+### 6.4 Elbow arrow shape generation `DONE`
 
 **Files:**
 
@@ -424,7 +424,7 @@ cornerRadius = Math.min(16, distToNext / 2, distToPrev / 2);
 - [ ] Use `generator.path(svgPath)` for RoughJS rendering
 - [ ] Add `ELBOW_CORNER_RADIUS = 16` constant
 
-### 6.5 Elbow point validation `TODO`
+### 6.5 Elbow point validation `DONE`
 
 **Reference:** `arrow-tech-spec.md` Section 7 — Validation
 
@@ -434,7 +434,7 @@ cornerRadius = Math.min(16, distToNext / 2, distToPrev / 2);
 - [ ] `removeShortSegments()` — filter segments shorter than 1px
 - [ ] `getCornerPoints()` — keep only points where direction changes
 
-### 6.6 Fixed segments (user-anchored) `TODO`
+### 6.6 Fixed segments (user-anchored) `PARTIAL`
 
 **Why:** Users can drag segments to lock them. Only non-fixed segments reroute.
 
@@ -454,24 +454,28 @@ cornerRadius = Math.min(16, distToNext / 2, distToPrev / 2);
 
 > Improve arrow creation UX to match Excalidraw.
 
-### 7.1 Drag vs click detection `PARTIAL`
+### 7.1 Drag vs click detection `DONE`
 
 **Why:** Single drag creates a 2-point arrow. Clicks add points for multi-segment arrows. Need `LINE_CONFIRM_THRESHOLD` to distinguish.
 
 **Files:**
 
-- `app/features/tools/useDrawingInteraction.ts` — add distance check
+- `packages/core/src/features/linear-editor/constants.ts` — `LINE_CONFIRM_THRESHOLD = 8`
+- `packages/core/src/features/linear-editor/useMultiPointCreation.ts` — distance check + binding finalization
+- `packages/core/src/features/tools/useDrawingInteraction.ts` — wired `startMultiPoint` into creation flow
+- `packages/core/src/components/DrawVue.vue` — passes `startMultiPoint` to `useDrawingInteraction`
 
 **Reference:** `arrow-tech-spec.md` Section 9 — State Machine
 
 **Tasks:**
 
-- [ ] Add `LINE_CONFIRM_THRESHOLD = 8` constant
-- [ ] On pointerDown during multi-point mode: if distance to last point < 8px → finalize, else → add point
-- [ ] On pointerDown on binding target → finalize with binding
-- [ ] Ensure drag-to-create still works for single-segment arrows
+- [x] Add `LINE_CONFIRM_THRESHOLD = 8` constant
+- [x] On pointerDown during multi-point mode: if distance to last point < 8px → finalize, else → add point
+- [x] On pointerDown on binding target → finalize with binding
+- [x] Ensure drag-to-create still works for single-segment arrows
+- [x] Wire multi-point mode into creation flow (drag → add to scene → enter multi-point)
 
-### 7.2 Alt key — start inside shape `TODO`
+### 7.2 Alt key — start inside shape `DONE`
 
 **Why:** Holding Alt while creating an arrow marks it as starting inside a shape, which affects binding mode.
 
@@ -479,19 +483,24 @@ cornerRadius = Math.min(16, distToNext / 2, distToPrev / 2);
 
 **Tasks:**
 
-- [ ] Track Alt key state in `useDrawingInteraction`
-- [ ] When Alt held at creation start and pointer is inside a shape → set `startBinding.mode = 'inside'`
-- [ ] Arrow extends from the interior fixedPoint, not the edge
+- [x] Track Alt key state in `useDrawingInteraction` (`altKeyAtStart`)
+- [x] When Alt held at creation start and pointer is inside a shape → set `startBinding.mode = 'inside'`
+- [x] Arrow extends from the interior fixedPoint, not the edge (handled by existing `getPointFromFixedPoint` with mode='inside')
 
-### 7.3 Elbow arrow auto-finalize `TODO`
+### 7.3 Elbow arrow auto-finalize `DONE`
 
 **Why:** Elbow arrows always have exactly 2 user-set points (start + end). Middle points are auto-computed by A\*.
 
+**Files:**
+
+- `packages/core/src/features/tools/useDrawingInteraction.ts` — detects `isElbowArrow()` in pointerup
+- `packages/core/src/features/elbow/routeElbow.ts` — orchestrates A\* routing
+
 **Tasks:**
 
-- [ ] When tool is `arrow` with elbow subtype, finalize on first pointerUp (no multi-point)
-- [ ] Run A\* routing after finalization to compute middle points
-- [ ] Re-route on any subsequent drag of the elbow arrow
+- [x] When tool is `arrow` with elbow subtype, finalize on first pointerUp (no multi-point)
+- [x] Run A\* routing after finalization to compute middle points (`routeElbowArrow`)
+- [x] Re-route on any subsequent drag of the elbow arrow (via `routeElbowArrow` called from endpoint handlers)
 
 ---
 
@@ -550,7 +559,7 @@ type ArrowSubtype = "sharp" | "curved" | "elbow";
 
 **Current:** `shapeGenerator.ts` caches by `element.id + versionNonce`. This already invalidates when the element changes.
 
-### 9.2 Zoom-level cache invalidation `TODO`
+### 9.2 Zoom-level cache invalidation `DONE`
 
 **Why:** RoughJS roughness should reduce for small elements. Cache needs to account for zoom.
 
@@ -568,7 +577,7 @@ type ArrowSubtype = "sharp" | "curved" | "elbow";
 
 > Arrows can have bound text labels that move with the arrow.
 
-### 10.1 BoundElement text support `TODO`
+### 10.1 BoundElement text support `DONE`
 
 **Why:** Excalidraw allows text labels on arrows that auto-position at the midpoint.
 

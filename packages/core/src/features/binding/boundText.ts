@@ -1,7 +1,14 @@
-import type { ExcalidrawElement, ExcalidrawTextElement, ElementsMap } from "../elements/types";
+import type {
+  ExcalidrawElement,
+  ExcalidrawArrowElement,
+  ExcalidrawTextElement,
+  ElementsMap,
+} from "../elements/types";
 import { mutateElement } from "../elements/mutateElement";
+import { createElement } from "../elements/createElement";
 import { getBoundTextElement, BOUND_TEXT_PADDING } from "../elements";
 import { getFontString, measureText } from "../rendering/textMeasurement";
+import { getArrowMidpoint } from "./arrowMidpoint";
 
 /**
  * Bind a text element to a container shape.
@@ -81,4 +88,52 @@ export function updateBoundTextAfterContainerChange(
     x,
     y,
   });
+}
+
+/**
+ * Update the position of a text label bound to an arrow.
+ * Positions the text centered at the arrow's midpoint.
+ */
+export function updateBoundTextOnArrow(
+  arrow: ExcalidrawArrowElement,
+  elementMap: ElementsMap,
+): void {
+  const boundText = getBoundTextElement(arrow, elementMap);
+  if (!boundText) return;
+
+  const midpoint = getArrowMidpoint(arrow);
+
+  mutateElement(boundText, {
+    x: midpoint[0] - boundText.width / 2,
+    y: midpoint[1] - boundText.height / 2,
+  });
+}
+
+/**
+ * Create and bind a text element to an arrow.
+ * Returns the created text element positioned at the arrow's midpoint.
+ */
+export function createBoundTextForArrow(
+  arrow: ExcalidrawArrowElement,
+  text: string,
+  fontSize: number,
+  fontFamily: number,
+): ExcalidrawTextElement {
+  const midpoint = getArrowMidpoint(arrow);
+
+  const textElement = createElement("text", midpoint[0], midpoint[1], {
+    fontSize,
+    fontFamily,
+    text,
+    originalText: text,
+    containerId: arrow.id,
+  });
+
+  // Add text to the arrow's boundElements
+  const existing = arrow.boundElements ?? [];
+  mutateElement(arrow, {
+    boundElements: [...existing, { id: textElement.id, type: "text" as const }],
+  });
+
+  return textElement;
 }

@@ -7,7 +7,7 @@ import {
   computeFixedPoint,
   getPointFromFixedPoint,
 } from "./proximity";
-import { BASE_BINDING_GAP } from "./constants";
+import { BASE_BINDING_GAP, maxBindingDistance } from "./constants";
 
 describe("distanceToShapeEdge", () => {
   describe("rectangle", () => {
@@ -171,11 +171,27 @@ describe("getHoveredElementForBinding", () => {
 
   it("adjusts threshold based on zoom", () => {
     const rect = createTestElement({ id: "rect1", x: 0, y: 0, width: 100, height: 50 });
-    // Point 10px from edge — within threshold at zoom=1 (threshold=15) but outside at zoom=5 (threshold=3)
+    // maxBindingDistance(1) = 10, point is 10px from edge — exactly at threshold
     const resultZoom1 = getHoveredElementForBinding(createTestPoint(110, 25), [rect], 1, new Set());
-    const resultZoom5 = getHoveredElementForBinding(createTestPoint(110, 25), [rect], 5, new Set());
     expect(resultZoom1).not.toBeNull();
-    expect(resultZoom5).toBeNull();
+
+    // At low zoom the threshold grows; point 20px away should still bind at zoom=0.25
+    const resultLowZoom = getHoveredElementForBinding(
+      createTestPoint(120, 25),
+      [rect],
+      0.25,
+      new Set(),
+    );
+    expect(resultLowZoom).not.toBeNull();
+
+    // But 35px away should not bind even at zoom=0.25 (max threshold = 30)
+    const resultTooFar = getHoveredElementForBinding(
+      createTestPoint(135, 25),
+      [rect],
+      0.25,
+      new Set(),
+    );
+    expect(resultTooFar).toBeNull();
   });
 
   it("returns the closest element when multiple are near", () => {
@@ -212,5 +228,81 @@ describe("computeFixedPoint and getPointFromFixedPoint round-trip", () => {
     // Should project onto the right edge + gap
     expect(scenePoint[0]).toBeCloseTo(100 + BASE_BINDING_GAP, 1);
     expect(scenePoint[1]).toBeCloseTo(50, 1);
+  });
+});
+
+describe("getPointFromFixedPoint — inside mode", () => {
+  it("returns the fixedPoint scene coordinate directly for a rectangle", () => {
+    const el = createTestElement({ x: 0, y: 0, width: 100, height: 100 });
+    // fixedPoint [0.75, 0.25] → scene (75, 25) — no edge projection, no gap
+    const result = getPointFromFixedPoint([0.75, 0.25], el, "inside");
+    expect(result[0]).toBeCloseTo(75, 5);
+    expect(result[1]).toBeCloseTo(25, 5);
+  });
+
+  it("returns center for fixedPoint [0.5, 0.5]", () => {
+    const el = createTestElement({ x: 10, y: 20, width: 80, height: 60 });
+    const result = getPointFromFixedPoint([0.5, 0.5], el, "inside");
+    expect(result[0]).toBeCloseTo(50, 5);
+    expect(result[1]).toBeCloseTo(50, 5);
+  });
+
+  it("handles rotated elements in inside mode", () => {
+    const el = createTestElement({
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 100,
+      angle: (Math.PI / 2) as Radians,
+    });
+    // fixedPoint [1, 0.5] → local (100, 50), rotated 90 degrees around center (50, 50)
+    const result = getPointFromFixedPoint([1, 0.5], el, "inside");
+    // After 90 degree rotation of (100, 50) around (50, 50): → (50, 100)
+    expect(result[0]).toBeCloseTo(50, 1);
+    expect(result[1]).toBeCloseTo(100, 1);
+  });
+
+  it("orbit mode still projects onto edge with gap", () => {
+    const el = createTestElement({ x: 0, y: 0, width: 100, height: 100 });
+    const orbit = getPointFromFixedPoint([1, 0.5], el, "orbit");
+    const inside = getPointFromFixedPoint([1, 0.5], el, "inside");
+    // Orbit should be further from center (edge + gap) than inside (raw scene point)
+    const cx = 50;
+    const cy = 50;
+    const orbitDist = Math.hypot(orbit[0] - cx, orbit[1] - cy);
+    const insideDist = Math.hypot(inside[0] - cx, inside[1] - cy);
+    expect(orbitDist).toBeGreaterThan(insideDist);
+  });
+
+  it("defaults to orbit mode when mode is not specified", () => {
+    const el = createTestElement({ x: 0, y: 0, width: 100, height: 100 });
+    const defaultResult = getPointFromFixedPoint([1, 0.5], el);
+    const orbitResult = getPointFromFixedPoint([1, 0.5], el, "orbit");
+    expect(defaultResult[0]).toBeCloseTo(orbitResult[0], 5);
+    expect(defaultResult[1]).toBeCloseTo(orbitResult[1], 5);
+  });
+});
+
+describe("maxBindingDistance", () => {
+  it("returns base / 1.5 at zoom = 1", () => {
+    // base = max(5, 15) = 15, zoomValue = 1
+    // result = min(15 / 1.5, 30) = 10
+    expect(maxBindingDistance(1)).toBeCloseTo(10, 5);
+  });
+
+  it("returns same value for zoom > 1 (clamped to 1)", () => {
+    // zoom >= 1 → zoomValue = 1, so all high zooms give the same result
+    expect(maxBindingDistance(2)).toBeCloseTo(maxBindingDistance(1), 5);
+    expect(maxBindingDistance(5)).toBeCloseTo(maxBindingDistance(1), 5);
+  });
+
+  it("increases threshold at low zoom", () => {
+    // zoom = 0.5 → zoomValue = 0.5, result = min(15 / 0.75, 30) = 20
+    expect(maxBindingDistance(0.5)).toBeCloseTo(20, 5);
+  });
+
+  it("caps at base * 2", () => {
+    // Very low zoom → result capped at 30
+    expect(maxBindingDistance(0.1)).toBeCloseTo(30, 5);
   });
 });

@@ -8,7 +8,7 @@ import type {
   TextAlign,
 } from "../../elements/types";
 import { mutateElement } from "../../elements/mutateElement";
-import type { StyleDefaults, Roundness } from "../types";
+import type { ArrowSubtype, StyleDefaults, Roundness } from "../types";
 
 interface UsePropertyActionsOptions {
   selectedElements: ComputedRef<ExcalidrawElement[]>;
@@ -30,11 +30,26 @@ interface UsePropertyActionsReturn {
   changeFontSize: (size: number) => void;
   changeTextAlign: (align: TextAlign) => void;
   changeArrowhead: (position: "start" | "end", type: Arrowhead | null) => void;
+  changeArrowSubtype: (subtype: ArrowSubtype) => void;
   getFormValue: <T>(
     property: string,
     fallback: T,
     isRelevant?: (el: ExcalidrawElement) => boolean,
   ) => T | "mixed";
+}
+
+function getArrowSubtypeUpdates(subtype: ArrowSubtype): Record<string, unknown> {
+  switch (subtype) {
+    case "curved": {
+      return { roundness: { type: 2 }, elbowed: false };
+    }
+    case "elbow": {
+      return { roundness: null, elbowed: true };
+    }
+    default: {
+      return { roundness: null, elbowed: false };
+    }
+  }
 }
 
 export function usePropertyActions(options: UsePropertyActionsOptions): UsePropertyActionsReturn {
@@ -103,6 +118,17 @@ export function usePropertyActions(options: UsePropertyActionsOptions): UsePrope
     applyAndRemember(property, type);
   }
 
+  function changeArrowSubtype(subtype: ArrowSubtype): void {
+    onBeforeChange?.();
+
+    const arrowUpdates = getArrowSubtypeUpdates(subtype);
+    for (const el of selectedElements.value) {
+      mutateElement(el, arrowUpdates);
+    }
+    markDirty();
+    styleDefaults.arrowSubtype.value = subtype;
+  }
+
   function getFormValue<T>(
     property: string,
     fallback: T,
@@ -131,6 +157,7 @@ export function usePropertyActions(options: UsePropertyActionsOptions): UsePrope
     changeFontSize,
     changeTextAlign,
     changeArrowhead,
+    changeArrowSubtype,
     getFormValue,
   };
 }

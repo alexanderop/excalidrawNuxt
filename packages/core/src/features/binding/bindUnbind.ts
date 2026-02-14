@@ -1,11 +1,7 @@
-import type {
-  ExcalidrawElement,
-  ExcalidrawArrowElement,
-  FixedPointBinding,
-} from "../elements/types";
+import type { ExcalidrawElement, ExcalidrawArrowElement } from "../elements/types";
 import { isArrowElement } from "../elements/types";
 import { mutateElement } from "../elements/mutateElement";
-import type { BindableElement, BindingEndpoint } from "./types";
+import type { BindableElement, BindingEndpoint, BindingMode, BindingWithMode } from "./types";
 import { isBindableElement } from "./types";
 
 /**
@@ -17,12 +13,14 @@ export function bindArrowToElement(
   endpoint: BindingEndpoint,
   target: BindableElement,
   fixedPoint: readonly [number, number],
+  mode?: BindingMode,
 ): void {
-  const binding: FixedPointBinding = {
+  const binding: BindingWithMode = {
     elementId: target.id,
     fixedPoint: [fixedPoint[0], fixedPoint[1]],
     focus: 0,
     gap: 0,
+    ...(mode ? { mode } : {}),
   };
 
   const field = endpoint === "start" ? { startBinding: binding } : { endBinding: binding };
