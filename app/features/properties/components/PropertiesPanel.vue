@@ -6,16 +6,16 @@ import type {
   FillStyle,
   StrokeStyle,
   TextAlign,
-} from "~/features/elements/types";
-import type { Roundness } from "../types";
-import type { ToolType } from "~/features/tools/types";
-import { useStyleDefaults } from "../composables/useStyleDefaults";
-import { usePropertyActions } from "../composables/usePropertyActions";
-import { usePropertyVisibility } from "../composables/usePropertyVisibility";
-import { useActionRegistry } from "~/shared/useActionRegistry";
-import { useTheme } from "~/features/theme/useTheme";
-import { resolveColor } from "~/features/theme/colors";
+  Roundness,
+  ToolType,
+} from "@drawvue/core";
 import {
+  useStyleDefaults,
+  usePropertyActions,
+  usePropertyVisibility,
+  useActionRegistry,
+  useTheme,
+  resolveColor,
   hasStrokeColor,
   hasBackground,
   hasFillStyle,
@@ -23,7 +23,7 @@ import {
   hasStrokeStyle,
   hasRoughness,
   canChangeRoundness,
-} from "../propertyPredicates";
+} from "@drawvue/core";
 import ButtonIconSelect from "./ButtonIconSelect.vue";
 import OpacitySlider from "./OpacitySlider.vue";
 import ColorSwatch from "./ColorSwatch.vue";

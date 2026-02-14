@@ -1,11 +1,11 @@
 # CLAUDE.md
 
-Excalidraw Nuxt is a collaborative drawing app built with Nuxt 4 and Excalidraw.
+DrawVue is a collaborative drawing app built as a monorepo: a reusable Vue drawing library (`@drawvue/core`) consumed by a Nuxt 4 app.
 
 ## Commands
 
 ```
-bun dev           # Start dev server
+bun dev           # Start Nuxt dev server
 bun build         # Production build
 bun preview       # Preview production build
 bun lint          # Run oxlint then eslint (run-s lint:*)
@@ -13,16 +13,18 @@ bun typecheck     # Type-check with nuxi
 bun test          # Run all tests (vitest run --bail=1)
 bun test:unit     # Unit tests only (vitest --project unit)
 bun test:browser  # Browser tests only (vitest --project browser)
+bun core:build    # Build @drawvue/core library (unbuild)
+bun core:dev      # Dev mode for @drawvue/core (unbuild --stub)
 ```
 
 ## Stack
 
-- Nuxt 4 (Vue 3.5+), SSR disabled, **auto-imports disabled** (`imports: { autoImport: false }` in nuxt.config — all imports must be explicit)
-- Excalidraw (via @excalidraw/excalidraw)
+- **Monorepo** with Bun workspaces (`"workspaces": ["packages/*"]`)
+- **`@drawvue/core`** — framework-agnostic Vue drawing library (unbuild, peer dep on Vue 3.5+)
+- **Nuxt 4** (Vue 3.5+), SSR disabled, **auto-imports disabled** (`imports: { autoImport: false }` — all imports must be explicit)
 - Tailwind CSS v4 (via `@tailwindcss/vite`, not the Nuxt module)
-- TypeScript
-- RoughJS + perfect-freehand (canvas shape rendering)
-- VueUse (`@vueuse/core`)
+- TypeScript, RoughJS + perfect-freehand (canvas shape rendering)
+- VueUse (`@vueuse/core`), Shiki (code highlighting)
 - Bun package manager
 
 ## Colors
@@ -38,29 +40,105 @@ Defined in `app/assets/css/main.css` via `@theme`. Use these as Tailwind utiliti
 
 ## Excalidraw Reference Source
 
-The original Excalidraw source code lives in `excalidraw/` (git-ignored, not part of our build). When planning or implementing any feature, **always browse the Excalidraw source first** to understand how they solved the same problem. Use it as inspiration, then adapt and improve the approach for our Nuxt/Vue architecture — idiomatic composables, Vue reactivity, `<script setup>`, and our project conventions. Don't copy React patterns verbatim; translate them into clean Vue equivalents.
+The original Excalidraw source code lives in `excalidraw/` (git-ignored, not part of our build). When planning or implementing any feature, **always browse the Excalidraw source first** to understand how they solved the same problem. Use it as inspiration, then adapt and improve the approach for our Vue architecture — idiomatic composables, Vue reactivity, `<script setup>`, and our project conventions. Don't copy React patterns verbatim; translate them into clean Vue equivalents.
 
 ## Structure
 
-- `app/` - Vue application
-  - `features/` - Domain features (binding, canvas, code, elements, groups, linear-editor, rendering, selection, theme, tools) — isolated by lint rules
-  - `shared/` - Shared components and composables used across features
-  - `pages/` - Top-level page orchestrators
-  - `utils/` - Pure utilities (e.g. `tryCatch.ts`)
-  - `assets/` - CSS and static assets
-  - `__test-utils__/` - Test helpers (withSetup, custom commands, browser helpers, factories, mocks, matchers, serializers)
-- `excalidraw/` - Excalidraw source (reference only, git-ignored)
-- `public/` - Static assets
-- `nuxt.config.ts` - Nuxt configuration
-- `docs/` - Agent memory (gotchas, patterns, architecture, specs, diagrams)
+```
+packages/core/              # @drawvue/core — reusable drawing library
+├── src/
+│   ├── components/         # DrawVue.vue (main canvas component with slots)
+│   ├── context.ts          # DrawVueContext provide/inject system
+│   ├── index.ts            # Public API exports
+│   ├── features/           # All 16 domain feature modules:
+│   │   ├── binding/        #   Text binding to shapes
+│   │   ├── canvas/         #   Canvas layers, viewport, rendering orchestration
+│   │   ├── clipboard/      #   Element clipboard
+│   │   ├── code/           #   Code element rendering & Shiki integration
+│   │   ├── command-palette/ #  Command palette logic
+│   │   ├── context-menu/   #   Context menu items & composables
+│   │   ├── elements/       #   Element creation, mutation, types
+│   │   ├── groups/         #   Grouping utilities & composables
+│   │   ├── history/        #   Undo/redo system
+│   │   ├── image/          #   Image cache & interaction
+│   │   ├── linear-editor/  #   Arrow/line point editing
+│   │   ├── properties/     #   Property panel logic & style defaults
+│   │   ├── rendering/      #   Canvas rendering pipeline
+│   │   ├── selection/      #   Selection, hit testing, transforms
+│   │   ├── theme/          #   Theme management (dark/light)
+│   │   └── tools/          #   Tool interactions (draw, text, etc.)
+│   ├── shared/             # Action registry, keyboard shortcuts, math, random
+│   ├── utils/              # tryCatch
+│   ├── assets/             # theme.css
+│   └── __test-utils__/     # Unit test helpers (factories, mocks, matchers, withSetup, withDrawVue)
+├── build.config.ts         # unbuild library config
+├── vitest.config.ts        # Core unit tests (node env)
+├── package.json
+└── tsconfig.json
+
+app/                        # Nuxt consumer app (UI layer only)
+├── features/               # Presentation components only:
+│   ├── canvas/components/  #   BottomBar.vue (zoom/undo/redo)
+│   ├── tools/components/   #   DrawingToolbar.vue, toolIcons.ts
+│   ├── properties/components/ # PropertiesPanel.vue, ColorSwatch, ArrowheadPicker, etc.
+│   └── command-palette/    #   CommandPalette.vue
+├── pages/                  # index.vue (uses <DrawVue> with slots)
+├── assets/css/             # main.css (Tailwind + theme)
+├── __test-utils__/         # Browser test helpers (page objects, commands, Pointer, UI, etc.)
+│   └── browser/            #   DrawVueTestHarness.vue, CanvasGrid, API helpers
+├── *.browser.test.ts       # Browser integration tests (in feature dirs)
+excalidraw/                 # Excalidraw source (reference only, git-ignored)
+docs/                       # Agent memory (gotchas, patterns, architecture, specs)
+```
+
+## Import Patterns
+
+App code imports from the core library — never reach into internal paths:
+
+```typescript
+// In app/ components
+import { DrawVue } from "@drawvue/core";
+import { useStyleDefaults, Arrowhead, FillStyle } from "@drawvue/core";
+
+// In app/ test files
+import { getH, createTestElement, reseed, withDrawVue } from "@drawvue/core/test-utils";
+
+// Theme CSS
+import "@drawvue/core/theme.css";
+```
+
+Within `packages/core/src/`, use relative imports between features.
+
+## DrawVue Context System
+
+`@drawvue/core` uses Vue's provide/inject for multi-instance support. The `DrawVue` component provides a `DrawVueContext` containing all state slices:
+
+- `elements` — Element state (add, replace, query)
+- `tool` — Active tool management
+- `actionRegistry` — Registered action definitions
+- `clipboard` — Element clipboard
+- `imageCache` — Image caching
+- `styleDefaults` — Default style properties
+- `styleClipboard` — Style copy/paste
+- `commandPalette` — Command palette state
+
+Consumers use `useDrawVue()` to access the context. The `DrawVue` component provides slots: `#toolbar`, `#bottom-bar`, `#properties`.
 
 ## Canvas Testing
 
 Browser tests (`*.browser.test.ts`) test canvas interactions via Vitest browser mode + Playwright. **Never use `page.mouse`** for canvas events — iframe coordinate mismatches cause silent failures. Use the custom commands (`canvasDrag`, `canvasClick`, `canvasDblClick`) which dispatch `PointerEvent`s directly inside the iframe via `frame.evaluate`. See `app/__test-utils__/commands/`. Browser tests also have high-level helpers in `app/__test-utils__/browser/` (`Pointer`, `Keyboard`, `UI`, `CanvasGrid`, etc.).
 
+## Testing Architecture
+
+Three vitest projects:
+
+1. **`vitest.config.unit.ts`** — App-level unit tests
+2. **`vitest.config.browser.ts`** — Browser integration tests (Playwright)
+3. **`packages/core/vitest.config.ts`** — Core library unit tests (node env)
+
 ## Action Registry
 
-All user-triggerable operations (tools, clipboard, layers, flips, etc.) are defined as `ActionDefinition` objects and stored in a global `useActionRegistry` singleton (`app/shared/useActionRegistry.ts`). Each action has an `id` (namespaced like `clipboard:copy`, `layer:bring-to-front`, `tool:rectangle`), a `label`, an `icon`, optional keyboard shortcuts (`kbds`), a `handler`, and an optional `enabled` predicate.
+All user-triggerable operations (tools, clipboard, layers, flips, etc.) are defined as `ActionDefinition` objects and stored in a global `useActionRegistry` singleton (in `@drawvue/core`). Each action has an `id` (namespaced like `clipboard:copy`, `layer:bring-to-front`, `tool:rectangle`), a `label`, an `icon`, optional keyboard shortcuts (`kbds`), a `handler`, and an optional `enabled` predicate.
 
 Consumers never call handlers directly — they reference actions by ID:
 

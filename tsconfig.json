@@ -16,6 +16,9 @@
     },
     {
       "path": "./tsconfig.vitest.json"
+    },
+    {
+      "path": "./packages/core/tsconfig.json"
     }
   ]
 }

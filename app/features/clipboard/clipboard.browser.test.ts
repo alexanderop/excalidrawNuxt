@@ -2,14 +2,8 @@ import { userEvent } from "vitest/browser";
 import { CanvasPage } from "~/__test-utils__/browser";
 import { waitForPaint } from "~/__test-utils__/browser/waiters";
 import { API } from "~/__test-utils__/browser/api";
-import { useClipboard } from "~/features/clipboard";
 
 describe("clipboard (Cmd+C / Cmd+V)", () => {
-  // Reset global clipboard state before each test to prevent leakage
-  beforeEach(() => {
-    const { clipboard } = useClipboard();
-    clipboard.value = [];
-  });
   it("copies and pastes a selected element", async () => {
     const page = await CanvasPage.create();
 

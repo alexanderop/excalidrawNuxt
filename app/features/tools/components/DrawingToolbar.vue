@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { useToolStore } from "../useTool";
+import { useToolStore, useTheme } from "@drawvue/core";
 import { TOOL_ICONS } from "./toolIcons";
-import type { ToolType } from "../types";
-import { useTheme } from "~/features/theme";
+import type { ToolType } from "@drawvue/core";
 
 const { activeTool, setTool } = useToolStore();
 const { isDark, toggleTheme } = useTheme();

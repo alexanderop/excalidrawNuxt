@@ -1,5 +1,4 @@
-import type { ExcalidrawElement, ExcalidrawRectangleElement } from "~/features/elements/types";
-import type { ToolType } from "~/shared/toolTypes";
+import type { ExcalidrawElement, ExcalidrawRectangleElement, ToolType } from "@drawvue/core";
 import { API } from "../api";
 import { waitForPaint } from "../waiters";
 

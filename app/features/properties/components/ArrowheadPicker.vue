@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Arrowhead } from "~/features/elements/types";
+import type { Arrowhead } from "@drawvue/core";
 
 const { modelValue, label } = defineProps<{
   modelValue: Arrowhead | null | "mixed";

@@ -1,10 +1,13 @@
 import { CanvasPage } from "~/__test-utils__/browser";
 import { API } from "~/__test-utils__/browser/api";
 import { waitForPaint } from "~/__test-utils__/browser/waiters";
-import { getTransformHandles, getTransformHandleAtPosition } from "./transformHandles";
-import { pointFrom } from "~/shared/math";
-import type { GlobalPoint } from "~/shared/math";
-import { rotateElement } from "./rotateElement";
+import {
+  getTransformHandles,
+  getTransformHandleAtPosition,
+  pointFrom,
+  rotateElement,
+} from "@drawvue/core";
+import type { GlobalPoint } from "@drawvue/core";
 
 /** Return the center of the rotation handle in scene coordinates. */
 function rotationHandleCenter(el: Parameters<typeof getTransformHandles>[0], zoom: number) {

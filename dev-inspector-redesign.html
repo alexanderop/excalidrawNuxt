@@ -1,0 +1,1949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DrawVue Dev Inspector — Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ─── Reset & Tokens ─────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --base:       rgb(33, 39, 55);
+    --base-deep:  rgb(24, 28, 40);
+    --foreground: rgb(234, 237, 243);
+    --fg-dim:     rgb(140, 150, 175);
+    --fg-muted:   rgb(90, 100, 125);
+    --accent:     rgb(255, 107, 237);
+    --accent-dim: rgba(255, 107, 237, 0.15);
+    --accent-mid: rgba(255, 107, 237, 0.35);
+    --surface:    rgb(52, 63, 96);
+    --surface-hi: rgb(62, 75, 112);
+    --subdued:    rgb(138, 51, 123);
+    --edge:       rgb(171, 75, 153);
+
+    --green:      rgb(72, 199, 142);
+    --green-dim:  rgba(72, 199, 142, 0.15);
+    --blue:       rgb(96, 165, 250);
+    --blue-dim:   rgba(96, 165, 250, 0.12);
+    --amber:      rgb(251, 191, 36);
+    --amber-dim:  rgba(251, 191, 36, 0.12);
+    --red:        rgb(248, 113, 113);
+    --red-dim:    rgba(248, 113, 113, 0.12);
+    --orange:     rgb(251, 146, 60);
+    --cyan:       rgb(103, 232, 249);
+
+    --radius-sm:  4px;
+    --radius-md:  6px;
+    --radius-lg:  10px;
+
+    --font-ui:   'Outfit', -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+
+    --panel-w: 360px;
+    --header-h: 44px;
+    --tabs-h: 40px;
+    --search-h: 38px;
+  }
+
+  body {
+    font-family: var(--font-ui);
+    background: rgb(18, 20, 28);
+    color: var(--foreground);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 40px 20px;
+    min-height: 100vh;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+
+  /* ─── Panel Shell ─────────────────────────────── */
+  .inspector {
+    width: var(--panel-w);
+    height: 720px;
+    background: var(--base);
+    border: 1px solid rgba(171, 75, 153, 0.25);
+    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow:
+      0 0 0 1px rgba(0,0,0,0.3),
+      0 20px 60px rgba(0,0,0,0.4),
+      0 0 80px rgba(255, 107, 237, 0.04);
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  /* Glow line at top */
+  .inspector::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, var(--accent) 30%, var(--edge) 70%, transparent 100%);
+    opacity: 0.7;
+    z-index: 10;
+  }
+
+  /* ─── Header ──────────────────────────────────── */
+  .header {
+    height: var(--header-h);
+    padding: 0 12px 0 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--base-deep);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    flex-shrink: 0;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .header-icon {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    background: linear-gradient(135deg, var(--accent), var(--subdued));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .header-icon svg {
+    width: 11px;
+    height: 11px;
+    stroke: white;
+    fill: none;
+    stroke-width: 2;
+  }
+
+  .header-title {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--fg-dim);
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .header-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: transparent;
+    color: var(--fg-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+  .header-btn:hover {
+    background: var(--surface);
+    color: var(--foreground);
+  }
+
+  .header-btn svg {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+  }
+
+  /* ─── Tab Bar ─────────────────────────────────── */
+  .tab-bar {
+    height: var(--tabs-h);
+    display: flex;
+    align-items: stretch;
+    padding: 0 4px;
+    gap: 2px;
+    background: var(--base-deep);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0;
+  }
+
+  .tab-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: var(--fg-muted);
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    position: relative;
+    transition: color 0.15s;
+    padding: 0 4px;
+  }
+
+  .tab-btn:hover { color: var(--fg-dim); }
+
+  .tab-btn.active {
+    color: var(--accent);
+  }
+
+  .tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 8px; right: 8px;
+    height: 2px;
+    background: var(--accent);
+    border-radius: 2px 2px 0 0;
+  }
+
+  .tab-badge {
+    font-size: 10px;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    background: var(--surface);
+    color: var(--fg-dim);
+    padding: 1px 5px;
+    border-radius: 8px;
+    line-height: 1.4;
+  }
+
+  .tab-btn.active .tab-badge {
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+
+  /* ─── Search Bar ──────────────────────────────── */
+  .search-bar {
+    height: var(--search-h);
+    padding: 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--base-deep);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    flex-shrink: 0;
+  }
+
+  .search-bar svg {
+    width: 13px;
+    height: 13px;
+    stroke: var(--fg-muted);
+    fill: none;
+    stroke-width: 2;
+    flex-shrink: 0;
+  }
+
+  .search-bar input {
+    flex: 1;
+    border: none;
+    background: none;
+    color: var(--foreground);
+    font-family: var(--font-ui);
+    font-size: 12px;
+    outline: none;
+  }
+  .search-bar input::placeholder { color: var(--fg-muted); }
+
+  .search-kbd {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--fg-muted);
+    background: var(--surface);
+    padding: 2px 5px;
+    border-radius: 3px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  /* ─── Tab Content ─────────────────────────────── */
+  .tab-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: var(--surface) transparent;
+  }
+
+  .tab-content::-webkit-scrollbar {
+    width: 5px;
+  }
+  .tab-content::-webkit-scrollbar-track { background: transparent; }
+  .tab-content::-webkit-scrollbar-thumb {
+    background: var(--surface);
+    border-radius: 4px;
+  }
+
+  .tab-pane {
+    display: none;
+    padding: 6px;
+  }
+  .tab-pane.active { display: block; }
+
+  /* ─── Status Bar ──────────────────────────────── */
+  .status-bar {
+    height: 28px;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--base-deep);
+    border-top: 1px solid rgba(255,255,255,0.05);
+    flex-shrink: 0;
+    font-size: 10px;
+    color: var(--fg-muted);
+    font-family: var(--font-mono);
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    display: inline-block;
+    margin-right: 5px;
+    box-shadow: 0 0 6px rgba(72, 199, 142, 0.4);
+  }
+
+  /* ═══════════════════════════════════════════════
+     HISTORY TAB
+     ═══════════════════════════════════════════════ */
+
+  .history-summary {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 8px 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    margin-bottom: 4px;
+  }
+
+  .history-counter {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: var(--fg-dim);
+  }
+
+  .history-counter strong {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--foreground);
+    font-size: 13px;
+  }
+
+  .history-counter .slash {
+    color: var(--fg-muted);
+    font-size: 10px;
+  }
+
+  .history-nav-btns {
+    margin-left: auto;
+    display: flex;
+    gap: 3px;
+  }
+
+  .history-nav-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(255,255,255,0.08);
+    background: var(--surface);
+    color: var(--fg-dim);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    font-size: 12px;
+  }
+  .history-nav-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
+  }
+  .history-nav-btn.disabled {
+    opacity: 0.3;
+    pointer-events: none;
+  }
+
+  .history-nav-btn svg {
+    width: 12px; height: 12px;
+    stroke: currentColor; fill: none;
+    stroke-width: 2;
+  }
+
+  .history-section-label {
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--fg-muted);
+    padding: 10px 8px 4px;
+  }
+
+  /* Timeline */
+  .history-timeline {
+    position: relative;
+    padding-left: 24px;
+  }
+
+  .history-timeline::before {
+    content: '';
+    position: absolute;
+    left: 11px;
+    top: 4px;
+    bottom: 4px;
+    width: 1px;
+    background: rgba(255,255,255,0.06);
+  }
+
+  .history-entry {
+    position: relative;
+    padding: 7px 8px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: 1px;
+  }
+
+  .history-entry:hover {
+    background: rgba(255,255,255,0.03);
+  }
+
+  .history-entry::before {
+    content: '';
+    position: absolute;
+    left: -17px;
+    top: 14px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--surface-hi);
+    border: 1.5px solid var(--fg-muted);
+    transition: all 0.15s;
+    z-index: 1;
+  }
+
+  .history-entry.current {
+    background: var(--accent-dim);
+    border: 1px solid rgba(255, 107, 237, 0.2);
+  }
+
+  .history-entry.current::before {
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 8px rgba(255, 107, 237, 0.5);
+  }
+
+  .history-entry-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .history-entry-action {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--foreground);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .history-entry.current .history-entry-action {
+    color: var(--accent);
+  }
+
+  .history-entry .op-icon {
+    width: 18px;
+    height: 18px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    flex-shrink: 0;
+  }
+
+  .op-add { background: var(--green-dim); color: var(--green); }
+  .op-move { background: var(--blue-dim); color: var(--blue); }
+  .op-style { background: var(--amber-dim); color: var(--amber); }
+  .op-delete { background: var(--red-dim); color: var(--red); }
+  .op-resize { background: rgba(103,232,249,0.12); color: var(--cyan); }
+
+  .history-entry-time {
+    font-size: 10px;
+    color: var(--fg-muted);
+    font-family: var(--font-mono);
+    flex-shrink: 0;
+  }
+
+  .history-entry-meta {
+    margin-top: 3px;
+    font-size: 10px;
+    color: var(--fg-muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-left: 24px;
+  }
+
+  .history-entry-meta .el-count {
+    font-family: var(--font-mono);
+  }
+
+  .history-diff {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+  }
+  .diff-add { color: var(--green); }
+  .diff-rem { color: var(--red); }
+
+  /* ═══════════════════════════════════════════════
+     ELEMENTS TAB
+     ═══════════════════════════════════════════════ */
+
+  .elements-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 6px 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    margin-bottom: 4px;
+  }
+
+  .elements-count {
+    font-size: 11px;
+    color: var(--fg-dim);
+    font-family: var(--font-mono);
+  }
+  .elements-count strong {
+    color: var(--foreground);
+    font-weight: 600;
+  }
+
+  .type-filter {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .type-pill {
+    width: 24px;
+    height: 22px;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(255,255,255,0.06);
+    background: transparent;
+    color: var(--fg-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    font-size: 11px;
+  }
+
+  .type-pill:hover {
+    border-color: rgba(255,255,255,0.15);
+    color: var(--fg-dim);
+    background: var(--surface);
+  }
+  .type-pill.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
+  }
+
+  .type-pill svg {
+    width: 13px; height: 13px;
+    stroke: currentColor; fill: none;
+    stroke-width: 1.8;
+  }
+
+  /* Element Row */
+  .el-row {
+    border-radius: var(--radius-md);
+    margin-bottom: 2px;
+    transition: all 0.15s;
+    overflow: hidden;
+  }
+
+  .el-row-main {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .el-row:hover .el-row-main {
+    background: rgba(255,255,255,0.03);
+  }
+
+  .el-row.selected {
+    background: var(--accent-dim);
+    border: 1px solid rgba(255, 107, 237, 0.15);
+  }
+
+  .el-type-icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .el-type-icon svg {
+    width: 14px; height: 14px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.8;
+  }
+
+  .el-type-rect { background: rgba(96,165,250,0.12); color: var(--blue); }
+  .el-type-ellipse { background: rgba(251,191,36,0.12); color: var(--amber); }
+  .el-type-arrow { background: rgba(72,199,142,0.12); color: var(--green); }
+  .el-type-text { background: rgba(248,113,113,0.12); color: var(--red); }
+  .el-type-diamond { background: rgba(192,132,252,0.12); color: rgb(192,132,252); }
+  .el-type-freedraw { background: rgba(251,146,60,0.12); color: var(--orange); }
+
+  .el-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .el-info-top {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .el-id {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--foreground);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .el-selected-badge {
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+    background: var(--accent-dim);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  .el-dims {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--fg-muted);
+    margin-top: 1px;
+  }
+
+  .el-actions {
+    display: flex;
+    gap: 2px;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .el-row:hover .el-actions { opacity: 1; }
+
+  .el-action-btn {
+    width: 22px;
+    height: 22px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--surface);
+    color: var(--fg-dim);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+  .el-action-btn:hover {
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+  .el-action-btn svg {
+    width: 11px; height: 11px;
+    stroke: currentColor; fill: none;
+    stroke-width: 2;
+  }
+
+  /* Expanded element detail */
+  .el-detail {
+    display: none;
+    padding: 0 8px 8px 42px;
+  }
+
+  .el-row.expanded .el-detail { display: block; }
+
+  .el-detail-grid {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 2px 8px;
+    font-size: 11px;
+  }
+
+  .el-detail-key {
+    color: var(--fg-muted);
+    font-size: 10px;
+    padding: 2px 0;
+  }
+
+  .el-detail-val {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--foreground);
+    padding: 2px 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .color-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    border: 1px solid rgba(255,255,255,0.15);
+    flex-shrink: 0;
+  }
+
+  /* Minimap */
+  .el-minimap {
+    margin-top: 6px;
+    height: 48px;
+    background: rgba(0,0,0,0.2);
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(255,255,255,0.04);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .minimap-element {
+    position: absolute;
+    border: 1.5px solid var(--accent);
+    border-radius: 2px;
+    background: rgba(255, 107, 237, 0.08);
+  }
+
+  .minimap-others {
+    position: absolute;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 2px;
+    background: rgba(255,255,255,0.03);
+  }
+
+  /* ═══════════════════════════════════════════════
+     STATE TAB
+     ═══════════════════════════════════════════════ */
+
+  .state-section {
+    margin-bottom: 2px;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+
+  .state-section-header {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+    user-select: none;
+  }
+  .state-section-header:hover {
+    background: rgba(255,255,255,0.03);
+  }
+
+  .state-section-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .state-section-icon svg {
+    width: 12px; height: 12px;
+    stroke: currentColor; fill: none;
+    stroke-width: 2;
+  }
+
+  .sec-tool    .state-section-icon { background: var(--accent-dim); color: var(--accent); }
+  .sec-view    .state-section-icon { background: var(--blue-dim); color: var(--blue); }
+  .sec-sel     .state-section-icon { background: var(--green-dim); color: var(--green); }
+  .sec-layers  .state-section-icon { background: rgba(192,132,252,0.12); color: rgb(192,132,252); }
+  .sec-clip    .state-section-icon { background: var(--amber-dim); color: var(--amber); }
+  .sec-style   .state-section-icon { background: rgba(251,146,60,0.12); color: var(--orange); }
+
+  .state-section-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--fg-dim);
+    flex: 1;
+  }
+
+  .state-section-chevron {
+    width: 14px;
+    height: 14px;
+    color: var(--fg-muted);
+    transition: transform 0.2s;
+  }
+  .state-section.open .state-section-chevron {
+    transform: rotate(90deg);
+  }
+
+  .state-section-body {
+    display: none;
+    padding: 0 8px 8px 37px;
+  }
+  .state-section.open .state-section-body { display: block; }
+
+  .state-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 3px 0;
+    gap: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.02);
+  }
+
+  .state-key {
+    font-size: 11px;
+    color: var(--fg-muted);
+  }
+
+  .state-val {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--foreground);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    padding: 1px 4px;
+    border-radius: 3px;
+    transition: background 0.15s;
+  }
+  .state-val:hover {
+    background: var(--surface);
+  }
+
+  .state-val.flash {
+    animation: flash-val 0.6s ease-out;
+  }
+
+  @keyframes flash-val {
+    0% { background: var(--accent-dim); color: var(--accent); }
+    100% { background: transparent; }
+  }
+
+  .state-val-null {
+    color: var(--fg-muted);
+    font-style: italic;
+    font-weight: 400;
+  }
+
+  /* Canvas Layers Stack */
+  .layers-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-top: 4px;
+  }
+
+  .layer-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 8px;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(255,255,255,0.06);
+    font-size: 11px;
+    transition: all 0.15s;
+    cursor: default;
+  }
+
+  .layer-item:nth-child(1) {
+    border-color: rgba(255, 107, 237, 0.3);
+    background: rgba(255, 107, 237, 0.06);
+  }
+  .layer-item:nth-child(2) {
+    border-color: rgba(96, 165, 250, 0.2);
+    background: rgba(96, 165, 250, 0.04);
+    margin-left: 8px;
+  }
+  .layer-item:nth-child(3) {
+    border-color: rgba(72, 199, 142, 0.2);
+    background: rgba(72, 199, 142, 0.04);
+    margin-left: 16px;
+  }
+
+  .layer-name {
+    font-weight: 500;
+    color: var(--foreground);
+  }
+
+  .layer-meta {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--fg-muted);
+  }
+
+  .layer-desc {
+    font-size: 10px;
+    color: var(--fg-muted);
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+
+  /* ═══════════════════════════════════════════════
+     ACTIONS TAB
+     ═══════════════════════════════════════════════ */
+
+  .actions-section-label {
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--fg-muted);
+    padding: 10px 8px 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .actions-section-line {
+    flex: 1;
+    height: 1px;
+    background: rgba(255,255,255,0.05);
+  }
+
+  .action-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 8px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .action-row:hover {
+    background: rgba(255,255,255,0.04);
+  }
+
+  .action-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: var(--font-mono);
+  }
+
+  .act-tools   .action-icon { background: var(--accent-dim); color: var(--accent); }
+  .act-edit    .action-icon { background: var(--blue-dim); color: var(--blue); }
+  .act-layers  .action-icon { background: var(--green-dim); color: var(--green); }
+  .act-clip    .action-icon { background: var(--amber-dim); color: var(--amber); }
+  .act-hist    .action-icon { background: rgba(192,132,252,0.12); color: rgb(192,132,252); }
+
+  .action-label {
+    flex: 1;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--foreground);
+  }
+
+  .action-row.disabled .action-label {
+    color: var(--fg-muted);
+  }
+
+  .action-kbd {
+    display: flex;
+    gap: 3px;
+  }
+
+  .kbd {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--fg-muted);
+    background: var(--surface);
+    padding: 2px 5px;
+    border-radius: 3px;
+    border: 1px solid rgba(255,255,255,0.06);
+    line-height: 1.3;
+  }
+
+  .action-status {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    flex-shrink: 0;
+  }
+  .action-row.disabled .action-status {
+    background: var(--fg-muted);
+    opacity: 0.3;
+  }
+
+  .action-play {
+    width: 20px;
+    height: 20px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: transparent;
+    color: var(--fg-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: all 0.15s;
+  }
+  .action-row:hover .action-play { opacity: 1; }
+  .action-play:hover {
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+  .action-play svg {
+    width: 10px; height: 10px;
+    fill: currentColor;
+  }
+
+  /* Recently used */
+  .recent-actions {
+    padding: 4px 6px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    margin-bottom: 4px;
+  }
+
+  .recent-label {
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--fg-muted);
+    margin-bottom: 4px;
+  }
+
+  .recent-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .recent-pill {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--fg-dim);
+    background: var(--surface);
+    padding: 3px 8px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+  .recent-pill:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
+  }
+
+  /* ─── Comparison Wrapper ──────────────────────── */
+  .comparison {
+    text-align: center;
+    margin-bottom: 16px;
+    flex-basis: 100%;
+  }
+  .comparison h2 {
+    font-family: var(--font-ui);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--fg-dim);
+    margin-bottom: 4px;
+  }
+  .comparison p {
+    font-size: 12px;
+    color: var(--fg-muted);
+  }
+
+  .label-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--fg-muted);
+    margin-bottom: 12px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: var(--surface);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .label-tag.accent-tag {
+    color: var(--accent);
+    background: var(--accent-dim);
+    border-color: rgba(255, 107, 237, 0.2);
+  }
+
+  /* ─── Interactive JS ──────────────────────────── */
+  .inspector[data-tab] {}
+</style>
+</head>
+
+<body>
+
+<div class="comparison" style="flex-basis:100%;padding-top:20px;">
+  <h2>DrawVue Dev Inspector — Redesigned</h2>
+  <p>Click the tabs on each panel to explore. Each panel shows a different tab state.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PANEL 1: HISTORY TAB
+     ═══════════════════════════════════════════════════ -->
+<div style="text-align:center;">
+<span class="label-tag accent-tag">History Tab</span>
+<div class="inspector" id="panel-history">
+
+  <div class="header">
+    <div class="header-left">
+      <div class="header-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/></svg>
+      </div>
+      <span class="header-title">Dev Inspector</span>
+    </div>
+    <div class="header-actions">
+      <button class="header-btn" title="Pin panel">
+        <svg viewBox="0 0 24 24"><path d="M12 2v10m0 0l4-4m-4 4l-4-4M2 12h20"/></svg>
+      </button>
+      <button class="header-btn" title="Close">
+        <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab-btn active"><span>History</span><span class="tab-badge">5</span></button>
+    <button class="tab-btn"><span>Elements</span><span class="tab-badge">3</span></button>
+    <button class="tab-btn"><span>State</span></button>
+    <button class="tab-btn"><span>Actions</span></button>
+  </div>
+
+  <div class="search-bar">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
+    <input type="text" placeholder="Filter history entries…">
+    <span class="search-kbd">/</span>
+  </div>
+
+  <div class="tab-content">
+    <div class="tab-pane active">
+
+      <div class="history-summary">
+        <div class="history-counter">
+          Undo: <strong>4</strong><span class="slash">/</span>100
+        </div>
+        <div class="history-counter">
+          Redo: <strong>1</strong>
+        </div>
+        <div class="history-nav-btns">
+          <button class="history-nav-btn" title="Undo">
+            <svg viewBox="0 0 24 24"><path d="M3 10h13a4 4 0 010 8H7"/><path d="M7 6l-4 4 4 4"/></svg>
+          </button>
+          <button class="history-nav-btn" title="Redo">
+            <svg viewBox="0 0 24 24"><path d="M21 10H8a4 4 0 000 8h9"/><path d="M17 6l4 4-4 4"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Redo stack -->
+      <div class="history-section-label">Redo Stack</div>
+      <div class="history-timeline">
+        <div class="history-entry" style="opacity:0.5;">
+          <div class="history-entry-top">
+            <span class="history-entry-action">
+              <span class="op-icon op-style">S</span>
+              Changed fill color
+            </span>
+            <span class="history-entry-time">+2s</span>
+          </div>
+          <div class="history-entry-meta">
+            <span class="el-count">1 element</span>
+            <span class="history-diff"><span class="diff-rem">-hachure</span> <span class="diff-add">+solid</span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Current -->
+      <div class="history-section-label" style="color:var(--accent)">Current State</div>
+      <div class="history-timeline">
+        <div class="history-entry current">
+          <div class="history-entry-top">
+            <span class="history-entry-action">
+              <span class="op-icon op-move">M</span>
+              Moved 2 elements
+            </span>
+            <span class="history-entry-time">just now</span>
+          </div>
+          <div class="history-entry-meta">
+            <span class="el-count">3 el, 1 selected</span>
+            <span class="history-diff"><span class="diff-add">+dx:24 dy:12</span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Undo stack -->
+      <div class="history-section-label">Undo Stack</div>
+      <div class="history-timeline">
+        <div class="history-entry">
+          <div class="history-entry-top">
+            <span class="history-entry-action">
+              <span class="op-icon op-resize">R</span>
+              Resized rectangle
+            </span>
+            <span class="history-entry-time">3s ago</span>
+          </div>
+          <div class="history-entry-meta">
+            <span class="el-count">3 elements</span>
+            <span class="history-diff"><span class="diff-rem">-173x173</span> <span class="diff-add">+200x180</span></span>
+          </div>
+        </div>
+
+        <div class="history-entry">
+          <div class="history-entry-top">
+            <span class="history-entry-action">
+              <span class="op-icon op-add">+</span>
+              Added ellipse
+            </span>
+            <span class="history-entry-time">8s ago</span>
+          </div>
+          <div class="history-entry-meta">
+            <span class="el-count">3 elements</span>
+          </div>
+        </div>
+
+        <div class="history-entry">
+          <div class="history-entry-top">
+            <span class="history-entry-action">
+              <span class="op-icon op-add">+</span>
+              Added rectangle
+            </span>
+            <span class="history-entry-time">15s ago</span>
+          </div>
+          <div class="history-entry-meta">
+            <span class="el-count">2 elements</span>
+          </div>
+        </div>
+
+        <div class="history-entry">
+          <div class="history-entry-top">
+            <span class="history-entry-action">
+              <span class="op-icon op-add">+</span>
+              Added rectangle
+            </span>
+            <span class="history-entry-time">22s ago</span>
+          </div>
+          <div class="history-entry-meta">
+            <span class="el-count">1 element</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <span><span class="status-dot"></span>Live</span>
+    <span>` to toggle</span>
+  </div>
+
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PANEL 2: ELEMENTS TAB
+     ═══════════════════════════════════════════════════ -->
+<div style="text-align:center;">
+<span class="label-tag accent-tag">Elements Tab</span>
+<div class="inspector" id="panel-elements">
+
+  <div class="header">
+    <div class="header-left">
+      <div class="header-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/></svg>
+      </div>
+      <span class="header-title">Dev Inspector</span>
+    </div>
+    <div class="header-actions">
+      <button class="header-btn" title="Pin panel">
+        <svg viewBox="0 0 24 24"><path d="M12 2v10m0 0l4-4m-4 4l-4-4M2 12h20"/></svg>
+      </button>
+      <button class="header-btn" title="Close">
+        <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab-btn"><span>History</span><span class="tab-badge">5</span></button>
+    <button class="tab-btn active"><span>Elements</span><span class="tab-badge">3</span></button>
+    <button class="tab-btn"><span>State</span></button>
+    <button class="tab-btn"><span>Actions</span></button>
+  </div>
+
+  <div class="search-bar">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
+    <input type="text" placeholder="Search elements by ID, type, or property…">
+    <span class="search-kbd">/</span>
+  </div>
+
+  <div class="tab-content">
+    <div class="tab-pane active">
+
+      <div class="elements-toolbar">
+        <span class="elements-count">Total: <strong>3</strong></span>
+        <div class="type-filter">
+          <button class="type-pill active" title="All types">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="6" cy="12" r="1"/><circle cx="18" cy="12" r="1"/></svg>
+          </button>
+          <button class="type-pill" title="Rectangle">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+          </button>
+          <button class="type-pill" title="Ellipse">
+            <svg viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="10" ry="8"/></svg>
+          </button>
+          <button class="type-pill" title="Diamond">
+            <svg viewBox="0 0 24 24"><path d="M12 2l10 10-10 10L2 12z"/></svg>
+          </button>
+          <button class="type-pill" title="Arrow">
+            <svg viewBox="0 0 24 24"><path d="M5 12h14m-4-4l4 4-4 4"/></svg>
+          </button>
+          <button class="type-pill" title="Text">
+            <svg viewBox="0 0 24 24"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Element 1: Rectangle -->
+      <div class="el-row">
+        <div class="el-row-main">
+          <div class="el-type-icon el-type-rect">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+          </div>
+          <div class="el-info">
+            <div class="el-info-top">
+              <span class="el-id">7xGXcG6–</span>
+            </div>
+            <div class="el-dims">(576, 310) · 173 × 173</div>
+          </div>
+          <div class="el-actions">
+            <button class="el-action-btn" title="Select on canvas">
+              <svg viewBox="0 0 24 24"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51z"/></svg>
+            </button>
+            <button class="el-action-btn" title="Copy ID">
+              <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Element 2: Rectangle -->
+      <div class="el-row">
+        <div class="el-row-main">
+          <div class="el-type-icon el-type-rect">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+          </div>
+          <div class="el-info">
+            <div class="el-info-top">
+              <span class="el-id">mRe0v29g</span>
+            </div>
+            <div class="el-dims">(923, 306) · 142 × 204</div>
+          </div>
+          <div class="el-actions">
+            <button class="el-action-btn" title="Select on canvas">
+              <svg viewBox="0 0 24 24"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51z"/></svg>
+            </button>
+            <button class="el-action-btn" title="Copy ID">
+              <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Element 3: Rectangle (selected + expanded) -->
+      <div class="el-row selected expanded">
+        <div class="el-row-main">
+          <div class="el-type-icon el-type-rect">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+          </div>
+          <div class="el-info">
+            <div class="el-info-top">
+              <span class="el-id">uavkvHmt</span>
+              <span class="el-selected-badge">selected</span>
+            </div>
+            <div class="el-dims">(1246, 263) · 140 × 209</div>
+          </div>
+          <div class="el-actions" style="opacity:1">
+            <button class="el-action-btn" title="Select on canvas">
+              <svg viewBox="0 0 24 24"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51z"/></svg>
+            </button>
+            <button class="el-action-btn" title="Copy ID">
+              <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="el-detail" style="display:block">
+          <div class="el-detail-grid">
+            <span class="el-detail-key">id</span>
+            <span class="el-detail-val">uavkvHmt-full-id</span>
+            <span class="el-detail-key">type</span>
+            <span class="el-detail-val">rectangle</span>
+            <span class="el-detail-key">version</span>
+            <span class="el-detail-val">4</span>
+            <span class="el-detail-key">angle</span>
+            <span class="el-detail-val">0</span>
+            <span class="el-detail-key">stroke</span>
+            <span class="el-detail-val"><span class="color-dot" style="background:#1e1e1e"></span>#1e1e1e</span>
+            <span class="el-detail-key">background</span>
+            <span class="el-detail-val"><span class="color-dot" style="background:transparent;border-style:dashed"></span>transparent</span>
+            <span class="el-detail-key">fill</span>
+            <span class="el-detail-val">hachure</span>
+            <span class="el-detail-key">strokeW</span>
+            <span class="el-detail-val">2</span>
+            <span class="el-detail-key">opacity</span>
+            <span class="el-detail-val">100%</span>
+            <span class="el-detail-key">roughness</span>
+            <span class="el-detail-val">1</span>
+            <span class="el-detail-key">groups</span>
+            <span class="el-detail-val state-val-null">none</span>
+            <span class="el-detail-key">bound</span>
+            <span class="el-detail-val state-val-null">none</span>
+          </div>
+          <div class="el-minimap">
+            <div class="minimap-others" style="left:12%;top:22%;width:22%;height:50%"></div>
+            <div class="minimap-others" style="left:42%;top:24%;width:18%;height:58%"></div>
+            <div class="minimap-element" style="left:68%;top:16%;width:18%;height:60%"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <span><span class="status-dot"></span>Live</span>
+    <span>` to toggle</span>
+  </div>
+
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PANEL 3: STATE TAB
+     ═══════════════════════════════════════════════════ -->
+<div style="text-align:center;">
+<span class="label-tag accent-tag">State Tab</span>
+<div class="inspector" id="panel-state">
+
+  <div class="header">
+    <div class="header-left">
+      <div class="header-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/></svg>
+      </div>
+      <span class="header-title">Dev Inspector</span>
+    </div>
+    <div class="header-actions">
+      <button class="header-btn" title="Pin panel">
+        <svg viewBox="0 0 24 24"><path d="M12 2v10m0 0l4-4m-4 4l-4-4M2 12h20"/></svg>
+      </button>
+      <button class="header-btn" title="Close">
+        <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab-btn"><span>History</span><span class="tab-badge">5</span></button>
+    <button class="tab-btn"><span>Elements</span><span class="tab-badge">3</span></button>
+    <button class="tab-btn active"><span>State</span></button>
+    <button class="tab-btn"><span>Actions</span></button>
+  </div>
+
+  <div class="tab-content">
+    <div class="tab-pane active">
+
+      <!-- Tool -->
+      <div class="state-section sec-tool open">
+        <div class="state-section-header">
+          <div class="state-section-icon">
+            <svg viewBox="0 0 24 24"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51z"/></svg>
+          </div>
+          <span class="state-section-title">Tool</span>
+          <svg class="state-section-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="state-section-body">
+          <div class="state-row">
+            <span class="state-key">activeTool</span>
+            <span class="state-val" style="color:var(--accent)">selection</span>
+          </div>
+          <div class="state-row">
+            <span class="state-key">newElement</span>
+            <span class="state-val state-val-null">null</span>
+          </div>
+          <div class="state-row">
+            <span class="state-key">multiElement</span>
+            <span class="state-val state-val-null">null</span>
+          </div>
+          <div class="state-row">
+            <span class="state-key">editingText</span>
+            <span class="state-val state-val-null">null</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Viewport -->
+      <div class="state-section sec-view open">
+        <div class="state-section-header">
+          <div class="state-section-icon">
+            <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>
+          </div>
+          <span class="state-section-title">Viewport</span>
+          <svg class="state-section-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="state-section-body">
+          <div class="state-row">
+            <span class="state-key">scroll</span>
+            <span class="state-val">0, 0</span>
+          </div>
+          <div class="state-row">
+            <span class="state-key">zoom</span>
+            <span class="state-val">100%</span>
+          </div>
+          <div class="state-row">
+            <span class="state-key">elements</span>
+            <span class="state-val">3</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Selection -->
+      <div class="state-section sec-sel open">
+        <div class="state-section-header">
+          <div class="state-section-icon">
+            <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3zM8 8h8v8H8z"/></svg>
+          </div>
+          <span class="state-section-title">Selection</span>
+          <svg class="state-section-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="state-section-body">
+          <div class="state-row">
+            <span class="state-key">count</span>
+            <span class="state-val" style="color:var(--green)">1</span>
+          </div>
+          <div class="state-row">
+            <span class="state-key">IDs</span>
+            <span class="state-val">uavkvH</span>
+          </div>
+          <div class="state-row">
+            <span class="state-key">bounds</span>
+            <span class="state-val" style="font-size:10px">[1246,263,1386,471]</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Canvas Layers -->
+      <div class="state-section sec-layers open">
+        <div class="state-section-header">
+          <div class="state-section-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          </div>
+          <span class="state-section-title">Canvas Layers</span>
+          <svg class="state-section-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="state-section-body">
+          <div class="layers-stack">
+            <div class="layer-item">
+              <span class="layer-name" style="color:var(--accent)">Interactive</span>
+              <span class="layer-meta">z:2 events</span>
+            </div>
+            <div class="layer-item">
+              <span class="layer-name" style="color:var(--blue)">NewElement</span>
+              <span class="layer-meta">z:1 no-ptr</span>
+            </div>
+            <div class="layer-item">
+              <span class="layer-name" style="color:var(--green)">Static</span>
+              <span class="layer-meta">z:1 no-ptr</span>
+            </div>
+          </div>
+          <div class="layer-desc">
+            Static: grid + committed elements (RoughJS)<br>
+            NewElement: element being drawn<br>
+            Interactive: selection boxes, handles
+          </div>
+        </div>
+      </div>
+
+      <!-- Clipboard & Theme -->
+      <div class="state-section sec-clip open">
+        <div class="state-section-header">
+          <div class="state-section-icon">
+            <svg viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
+          </div>
+          <span class="state-section-title">Clipboard & Theme</span>
+          <svg class="state-section-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="state-section-body">
+          <div class="state-row">
+            <span class="state-key">clipboard</span>
+            <span class="state-val state-val-null">0 elements</span>
+          </div>
+          <div class="state-row">
+            <span class="state-key">storedStyles</span>
+            <span class="state-val state-val-null">no</span>
+          </div>
+          <div class="state-row">
+            <span class="state-key">theme</span>
+            <span class="state-val">dark</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Style Defaults -->
+      <div class="state-section sec-style open">
+        <div class="state-section-header">
+          <div class="state-section-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>
+          </div>
+          <span class="state-section-title">Style Defaults</span>
+          <svg class="state-section-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="state-section-body">
+          <div class="state-row">
+            <span class="state-key">stroke</span>
+            <span class="state-val"><span class="color-dot" style="background:#1e1e1e"></span>#1e1e1e</span>
+          </div>
+          <div class="state-row">
+            <span class="state-key">background</span>
+            <span class="state-val"><span class="color-dot" style="background:transparent;border-style:dashed"></span>transparent</span>
+          </div>
+          <div class="state-row">
+            <span class="state-key">fill</span>
+            <span class="state-val">hachure</span>
+          </div>
+          <div class="state-row">
+            <span class="state-key">strokeW</span>
+            <span class="state-val">2</span>
+          </div>
+          <div class="state-row">
+            <span class="state-key">opacity</span>
+            <span class="state-val">100%</span>
+          </div>
+          <div class="state-row">
+            <span class="state-key">roughness</span>
+            <span class="state-val">1</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <span><span class="status-dot"></span>Live</span>
+    <span>` to toggle</span>
+  </div>
+
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PANEL 4: ACTIONS TAB
+     ═══════════════════════════════════════════════════ -->
+<div style="text-align:center;">
+<span class="label-tag accent-tag">Actions Tab</span>
+<div class="inspector" id="panel-actions">
+
+  <div class="header">
+    <div class="header-left">
+      <div class="header-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/></svg>
+      </div>
+      <span class="header-title">Dev Inspector</span>
+    </div>
+    <div class="header-actions">
+      <button class="header-btn" title="Pin panel">
+        <svg viewBox="0 0 24 24"><path d="M12 2v10m0 0l4-4m-4 4l-4-4M2 12h20"/></svg>
+      </button>
+      <button class="header-btn" title="Close">
+        <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab-btn"><span>History</span><span class="tab-badge">5</span></button>
+    <button class="tab-btn"><span>Elements</span><span class="tab-badge">3</span></button>
+    <button class="tab-btn"><span>State</span></button>
+    <button class="tab-btn active"><span>Actions</span></button>
+  </div>
+
+  <div class="search-bar">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
+    <input type="text" placeholder="Search actions…">
+    <span class="search-kbd">/</span>
+  </div>
+
+  <div class="tab-content">
+    <div class="tab-pane active">
+
+      <!-- Recently Used -->
+      <div class="recent-actions">
+        <div class="recent-label">Recently Used</div>
+        <div class="recent-pills">
+          <span class="recent-pill">Rectangle</span>
+          <span class="recent-pill">Undo</span>
+          <span class="recent-pill">Duplicate</span>
+          <span class="recent-pill">Copy</span>
+        </div>
+      </div>
+
+      <!-- Tools -->
+      <div class="actions-section-label">
+        Tools
+        <span class="actions-section-line"></span>
+      </div>
+
+      <div class="action-row act-tools">
+        <div class="action-icon">S</div>
+        <span class="action-label">Selection</span>
+        <div class="action-kbd"><span class="kbd">V</span></div>
+        <span class="action-status"></span>
+        <button class="action-play"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z"/></svg></button>
+      </div>
+
+      <div class="action-row act-tools">
+        <div class="action-icon">H</div>
+        <span class="action-label">Hand (Pan)</span>
+        <div class="action-kbd"><span class="kbd">H</span></div>
+        <span class="action-status"></span>
+        <button class="action-play"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z"/></svg></button>
+      </div>
+
+      <div class="action-row act-tools">
+        <div class="action-icon">R</div>
+        <span class="action-label">Rectangle</span>
+        <div class="action-kbd"><span class="kbd">R</span></div>
+        <span class="action-status"></span>
+        <button class="action-play"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z"/></svg></button>
+      </div>
+
+      <div class="action-row act-tools">
+        <div class="action-icon">E</div>
+        <span class="action-label">Ellipse</span>
+        <div class="action-kbd"><span class="kbd">O</span></div>
+        <span class="action-status"></span>
+        <button class="action-play"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z"/></svg></button>
+      </div>
+
+      <div class="action-row act-tools">
+        <div class="action-icon">A</div>
+        <span class="action-label">Arrow</span>
+        <div class="action-kbd"><span class="kbd">A</span></div>
+        <span class="action-status"></span>
+        <button class="action-play"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z"/></svg></button>
+      </div>
+
+      <!-- Edit Actions -->
+      <div class="actions-section-label">
+        Edit
+        <span class="actions-section-line"></span>
+      </div>
+
+      <div class="action-row act-edit">
+        <div class="action-icon">D</div>
+        <span class="action-label">Delete</span>
+        <div class="action-kbd"><span class="kbd">Del</span></div>
+        <span class="action-status"></span>
+        <button class="action-play"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z"/></svg></button>
+      </div>
+
+      <div class="action-row act-edit">
+        <div class="action-icon">D</div>
+        <span class="action-label">Duplicate</span>
+        <div class="action-kbd"><span class="kbd">Cmd</span><span class="kbd">D</span></div>
+        <span class="action-status"></span>
+        <button class="action-play"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z"/></svg></button>
+      </div>
+
+      <div class="action-row act-edit">
+        <div class="action-icon">A</div>
+        <span class="action-label">Select All</span>
+        <div class="action-kbd"><span class="kbd">Cmd</span><span class="kbd">A</span></div>
+        <span class="action-status"></span>
+        <button class="action-play"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z"/></svg></button>
+      </div>
+
+      <div class="action-row act-edit disabled">
+        <div class="action-icon">G</div>
+        <span class="action-label">Group</span>
+        <div class="action-kbd"><span class="kbd">Cmd</span><span class="kbd">G</span></div>
+        <span class="action-status"></span>
+        <button class="action-play"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z"/></svg></button>
+      </div>
+
+      <!-- Layers -->
+      <div class="actions-section-label">
+        Layers
+        <span class="actions-section-line"></span>
+      </div>
+
+      <div class="action-row act-layers">
+        <div class="action-icon">F</div>
+        <span class="action-label">Bring to Front</span>
+        <div class="action-kbd"><span class="kbd">]</span></div>
+        <span class="action-status"></span>
+        <button class="action-play"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z"/></svg></button>
+      </div>
+
+      <div class="action-row act-layers">
+        <div class="action-icon">B</div>
+        <span class="action-label">Send to Back</span>
+        <div class="action-kbd"><span class="kbd">[</span></div>
+        <span class="action-status"></span>
+        <button class="action-play"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z"/></svg></button>
+      </div>
+
+      <!-- Clipboard -->
+      <div class="actions-section-label">
+        Clipboard
+        <span class="actions-section-line"></span>
+      </div>
+
+      <div class="action-row act-clip">
+        <div class="action-icon">C</div>
+        <span class="action-label">Copy</span>
+        <div class="action-kbd"><span class="kbd">Cmd</span><span class="kbd">C</span></div>
+        <span class="action-status"></span>
+        <button class="action-play"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z"/></svg></button>
+      </div>
+
+      <div class="action-row act-clip">
+        <div class="action-icon">V</div>
+        <span class="action-label">Paste</span>
+        <div class="action-kbd"><span class="kbd">Cmd</span><span class="kbd">V</span></div>
+        <span class="action-status"></span>
+        <button class="action-play"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z"/></svg></button>
+      </div>
+
+      <!-- History -->
+      <div class="actions-section-label">
+        History
+        <span class="actions-section-line"></span>
+      </div>
+
+      <div class="action-row act-hist">
+        <div class="action-icon">U</div>
+        <span class="action-label">Undo</span>
+        <div class="action-kbd"><span class="kbd">Cmd</span><span class="kbd">Z</span></div>
+        <span class="action-status"></span>
+        <button class="action-play"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z"/></svg></button>
+      </div>
+
+      <div class="action-row act-hist disabled">
+        <div class="action-icon">R</div>
+        <span class="action-label">Redo</span>
+        <div class="action-kbd"><span class="kbd">Cmd</span><span class="kbd">Shift</span><span class="kbd">Z</span></div>
+        <span class="action-status"></span>
+        <button class="action-play"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z"/></svg></button>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <span><span class="status-dot"></span>Live</span>
+    <span>` to toggle</span>
+  </div>
+
+</div>
+</div>
+
+<script>
+  // Toggle section collapse
+  document.querySelectorAll('.state-section-header').forEach(header => {
+    header.addEventListener('click', () => {
+      header.parentElement.classList.toggle('open');
+    });
+  });
+
+  // Toggle element expand
+  document.querySelectorAll('.el-row-main').forEach(row => {
+    row.addEventListener('click', () => {
+      row.parentElement.classList.toggle('expanded');
+    });
+  });
+
+  // Type pill toggle
+  document.querySelectorAll('.type-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('.type-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+    });
+  });
+
+  // Copy value on click
+  document.querySelectorAll('.state-val:not(.state-val-null)').forEach(val => {
+    val.addEventListener('click', () => {
+      val.classList.remove('flash');
+      void val.offsetWidth;
+      val.classList.add('flash');
+    });
+  });
+</script>
+
+</body>
+</html>

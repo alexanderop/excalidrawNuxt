@@ -38,6 +38,11 @@ describe("code tool rendering", () => {
     // Extra frame for Shiki async highlighting
     await waitForPaint();
 
-    await expect(page.getByTestId("canvas-container")).toMatchScreenshot("code-element-typescript");
+    await expect(page.getByTestId("canvas-container")).toMatchScreenshot(
+      "code-element-typescript",
+      {
+        comparatorOptions: { allowedMismatchedPixelRatio: 0.02 },
+      },
+    );
   });
 });

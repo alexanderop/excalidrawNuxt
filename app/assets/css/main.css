@@ -1,14 +1,6 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
-
-@theme {
-  --color-base: rgb(33, 39, 55);
-  --color-foreground: rgb(234, 237, 243);
-  --color-accent: rgb(255, 107, 237);
-  --color-surface: rgb(52, 63, 96);
-  --color-subdued: rgb(138, 51, 123);
-  --color-edge: rgb(171, 75, 153);
-}
+@import "@drawvue/core/theme.css";
 
 html,
 body,

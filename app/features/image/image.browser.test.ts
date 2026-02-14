@@ -1,9 +1,8 @@
 import { page as vitestPage } from "vitest/browser";
 import { onTestFinished } from "vitest";
 import { CanvasPage, API } from "~/__test-utils__/browser";
-import { createElement } from "~/features/elements/createElement";
-import { useImageCache } from "~/features/image/useImageCache";
-import type { FileId } from "~/features/image/types";
+import { createElement } from "@drawvue/core";
+import type { FileId } from "@drawvue/core";
 
 /**
  * Create a solid-colored test image as an HTMLImageElement.
@@ -32,7 +31,7 @@ async function addTestImage(
   height: number,
   color: string,
 ): Promise<void> {
-  const { addImage, $reset } = useImageCache();
+  const { addImage, $reset } = API.h.imageCache;
   const img = await createTestImage(width, height, color);
   addImage(fileId, img, "image/png");
   onTestFinished(() => $reset());

@@ -1,5 +1,5 @@
 import type { RenderResult } from "vitest-browser-vue";
-import type { ExcalidrawElement } from "~/features/elements/types";
+import type { ExcalidrawElement } from "@drawvue/core";
 import { Pointer } from "./Pointer";
 import { Keyboard } from "./Keyboard";
 import { CanvasGrid } from "./CanvasGrid";

@@ -1,0 +1,39 @@
+{
+  "name": "@drawvue/core",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./theme.css": "./src/assets/theme.css",
+    "./test-utils": "./src/__test-utils__/index.ts"
+  },
+  "scripts": {
+    "build": "unbuild",
+    "dev": "unbuild --stub",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@excalidraw/common": "0.18.0-f0063e113",
+    "@excalidraw/element": "0.18.0-f0063e113",
+    "@excalidraw/math": "0.18.0-f0063e113",
+    "@vueuse/core": "^14.2.0",
+    "nanoid": "^5.1.6",
+    "perfect-freehand": "^1.2.3",
+    "roughjs": "^4.6.6",
+    "shiki": "^3.22.0",
+    "tinycolor2": "^1.6.0"
+  },
+  "devDependencies": {
+    "@types/tinycolor2": "^1.4.6",
+    "@vitejs/plugin-vue": "^5.2.4",
+    "typescript": "^5.9.3",
+    "unbuild": "^3.5.0",
+    "vitest": "^4.0.0",
+    "vue": "^3.5.27"
+  },
+  "peerDependencies": {
+    "vue": "^3.5.0"
+  }
+}

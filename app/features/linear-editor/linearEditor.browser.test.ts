@@ -1,6 +1,6 @@
 import { commands, userEvent } from "vitest/browser";
 import { API, CanvasPage, waitForPaint } from "~/__test-utils__/browser";
-import { isArrowElement } from "~/features/elements/types";
+import { isArrowElement } from "@drawvue/core";
 
 const SEL = '[data-testid="interactive-canvas"]';
 
@@ -64,7 +64,7 @@ describe("linear editor (point editing)", () => {
     expect(isArrowElement(arrow!)).toBe(true);
 
     // Arrow should have at least 2 points (start and end)
-    const arrowEl = arrow as import("~/features/elements/types").ExcalidrawArrowElement;
+    const arrowEl = arrow as import("@drawvue/core").ExcalidrawArrowElement;
     expect(arrowEl.points.length).toBeGreaterThanOrEqual(2);
     // Width should be positive (arrow goes left to right)
     expect(arrowEl.width).toBeGreaterThan(0);

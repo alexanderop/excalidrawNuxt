@@ -1,5 +1,5 @@
 import { expect } from "vitest";
-import type { ExcalidrawElement } from "~/features/elements/types";
+import type { ExcalidrawElement } from "@drawvue/core";
 import { API } from "../browser/api";
 
 export function assertElements(

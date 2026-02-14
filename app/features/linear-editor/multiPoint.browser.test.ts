@@ -1,6 +1,6 @@
 import { userEvent } from "vitest/browser";
 import { API, CanvasPage, waitForPaint } from "~/__test-utils__/browser";
-import { isArrowElement } from "~/features/elements/types";
+import { isArrowElement } from "@drawvue/core";
 
 describe("multi-point creation", () => {
   it("creates an arrow with drag and enters it into the scene", async () => {

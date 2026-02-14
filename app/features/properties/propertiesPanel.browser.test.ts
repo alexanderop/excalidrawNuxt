@@ -1,8 +1,5 @@
 import { API, CanvasPage, waitForPaint } from "~/__test-utils__/browser";
-import { createElement } from "~/features/elements/createElement";
-import { resolveColor } from "~/features/theme/colors";
-import { useTheme } from "~/features/theme/useTheme";
-import { DEFAULT_STROKE_COLOR } from "~/features/elements/constants";
+import { createElement, resolveColor, useTheme, DEFAULT_STROKE_COLOR } from "@drawvue/core";
 
 /**
  * Helper: add an element programmatically, select it, and flush.
@@ -230,6 +227,7 @@ describe("PropertiesPanel dark mode colors", () => {
     const swatchButton = page.screen.getByLabelText("Stroke color");
     await expect.element(swatchButton).toBeVisible();
 
+    // eslint-disable-next-line no-restricted-syntax -- testing computed CSS style requires DOM traversal
     const swatchSpan = swatchButton.element()!.querySelector("span:last-child") as HTMLElement;
     expect(swatchSpan.style.backgroundColor).toBeTruthy();
 

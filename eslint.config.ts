@@ -72,7 +72,7 @@ export default defineConfigWithVueTs(
   // =============================================
   {
     name: "app/typescript-style",
-    files: ["app/**/*.{ts,vue}"],
+    files: ["app/**/*.{ts,vue}", "packages/core/src/**/*.ts"],
     rules: {
       // Cyclomatic complexity
       complexity: ["warn", { max: 10 }],
@@ -102,7 +102,7 @@ export default defineConfigWithVueTs(
         {
           selector: "TryStatement",
           message:
-            "Use tryCatch() from ~/utils/tryCatch instead of try/catch. Returns Result<T> tuple: [error, null] | [null, data].",
+            "Use tryCatch() from @drawvue/core instead of try/catch. Returns Result<T> tuple: [error, null] | [null, data].",
         },
         // No hardcoded route strings
         {
@@ -155,63 +155,10 @@ export default defineConfigWithVueTs(
         "error",
         {
           zones: [
-            // Shared code cannot import from features or pages
-            {
-              target: [
-                "./app/components",
-                "./app/composables",
-                "./app/utils",
-                "./app/types",
-                "./app/stores",
-                "./app/shared",
-              ],
-              from: ["./app/features", "./app/pages"],
-            },
             // Features cannot import from pages (pages are top-level orchestrators)
             {
               target: "./app/features",
               from: "./app/pages",
-            },
-            // Cross-feature isolation: features cannot import from each other
-            {
-              target: "./app/features/code",
-              from: "./app/features",
-              except: ["./code", "./theme", "./elements", "./selection", "./tools"],
-            },
-            {
-              target: "./app/features/groups",
-              from: "./app/features",
-              except: ["./groups", "./theme"],
-            },
-            {
-              target: "./app/features/linear-editor",
-              from: "./app/features",
-              except: ["./linear-editor", "./theme"],
-            },
-            {
-              target: "./app/features/image",
-              from: "./app/features",
-              except: ["./image", "./theme", "./elements", "./selection", "./tools"],
-            },
-            {
-              target: "./app/features/rendering",
-              from: "./app/features",
-              except: ["./rendering", "./theme", "./code", "./image"],
-            },
-            {
-              target: "./app/features/selection",
-              from: "./app/features",
-              except: ["./selection", "./theme"],
-            },
-            {
-              target: "./app/features/tools",
-              from: "./app/features",
-              except: ["./tools", "./theme", "./code", "./properties"],
-            },
-            {
-              target: "./app/features/command-palette",
-              from: "./app/features",
-              except: ["./command-palette"],
             },
           ],
         },
@@ -224,7 +171,14 @@ export default defineConfigWithVueTs(
   // =============================================
   {
     name: "app/vitest-rules",
-    files: ["app/**/__tests__/**/*.{ts,spec.ts}", "app/**/*.test.ts", "app/**/*.spec.ts"],
+    files: [
+      "app/**/__tests__/**/*.{ts,spec.ts}",
+      "app/**/*.test.ts",
+      "app/**/*.spec.ts",
+      "packages/core/src/**/__tests__/**/*.{ts,spec.ts}",
+      "packages/core/src/**/*.test.ts",
+      "packages/core/src/**/*.spec.ts",
+    ],
     plugins: { vitest: pluginVitest },
     rules: {
       ...pluginVitest.configs.recommended.rules,
@@ -261,7 +215,7 @@ export default defineConfigWithVueTs(
   // =============================================
   {
     name: "app/vitest-unit-flat-tests",
-    files: ["app/**/*.unit.test.ts"],
+    files: ["app/**/*.unit.test.ts", "packages/core/src/**/*.unit.test.ts"],
     rules: {
       "vitest/no-hooks": ["warn", { allow: ["beforeAll", "afterAll"] }],
     },

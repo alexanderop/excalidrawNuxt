@@ -1,4 +1,4 @@
-import type { ToolType } from "../types";
+import type { ToolType } from "@drawvue/core";
 
 interface ToolIconDef {
   viewBox: string;

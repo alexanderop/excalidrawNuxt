@@ -1,7 +1,7 @@
 import { render } from "vitest-browser-vue";
 import { onTestFinished } from "vitest";
-import CanvasContainer from "~/features/canvas/components/CanvasContainer.vue";
-import { reseed, restoreSeed } from "../../deterministicSeed";
+import DrawVueTestHarness from "../DrawVueTestHarness.vue";
+import { reseed, restoreSeed } from "@drawvue/core/test-utils";
 import { waitForCanvasReady } from "../waiters";
 import { API } from "../api";
 import { Keyboard } from "../Keyboard";
@@ -32,14 +32,14 @@ export class CanvasPage {
     onTestFinished(() => restoreSeed());
 
     // Reset global state so tests don't leak elements/selection across each other.
-    // Guard: __h is only available after the first CanvasContainer mount.
+    // Guard: __h is only available after the first DrawVue mount.
     if (globalThis.__h) {
       API.setElements([]);
       API.clearSelection();
       API.setTool("selection");
     }
 
-    const screen = render(CanvasContainer);
+    const screen = render(DrawVueTestHarness);
     await waitForCanvasReady();
 
     return new CanvasPage(screen);

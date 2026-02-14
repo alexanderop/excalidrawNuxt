@@ -1,6 +1,6 @@
 import { CanvasPage } from "~/__test-utils__/browser";
 
-describe("CanvasContainer", () => {
+describe("DrawVue", () => {
   it("renders the interactive canvas", async () => {
     const page = await CanvasPage.create();
     const canvas = page.screen.getByTestId("interactive-canvas");

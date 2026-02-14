@@ -1,5 +1,5 @@
 import { commands } from "vitest/browser";
-import type { ExcalidrawElement } from "~/features/elements/types";
+import type { ExcalidrawElement } from "@drawvue/core";
 
 const CANVAS_SELECTOR = '[data-testid="interactive-canvas"]';
 

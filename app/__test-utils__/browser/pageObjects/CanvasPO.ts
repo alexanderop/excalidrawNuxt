@@ -1,4 +1,4 @@
-import type { ExcalidrawElement } from "~/features/elements/types";
+import type { ExcalidrawElement } from "@drawvue/core";
 import { CanvasGrid } from "../CanvasGrid";
 import type { Cell } from "../CanvasGrid";
 import { Pointer } from "../Pointer";

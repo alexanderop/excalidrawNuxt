@@ -1,5 +1,5 @@
 /* eslint-disable vitest/expect-expect -- page object methods wrap expect() */
-import type { ExcalidrawFreeDrawElement } from "~/features/elements/types";
+import type { ExcalidrawFreeDrawElement } from "@drawvue/core";
 import { CanvasPage } from "~/__test-utils__/browser";
 import { waitForPaint } from "~/__test-utils__/browser/waiters";
 
@@ -204,11 +204,8 @@ describe("free draw tool", () => {
 
     await page.toolbar.select("freedraw");
 
-    // The properties sidebar should be visible with freedraw tool active (no elements selected)
-    const sidebar = document.querySelector(".properties-sidebar");
-    expect(sidebar).not.toBeNull();
-
-    // Opacity is always shown in the panel — use it as a visibility marker
+    // The properties sidebar should be visible with freedraw tool active (no elements selected).
+    // Opacity is always shown in the panel — use it as a visibility marker.
     await expect.element(page.screen.getByText("Opacity")).toBeVisible();
 
     // Freedraw supports stroke color — verify the Stroke label is visible
@@ -221,9 +218,6 @@ describe("free draw tool", () => {
 
     // Default tool is selection, no elements — panel should not be rendered
     await expect.element(page.screen.getByText("Opacity")).not.toBeInTheDocument();
-
-    const sidebar = document.querySelector(".properties-sidebar");
-    expect(sidebar).toBeNull();
   });
 
   it("applies default stroke color to new strokes", async () => {

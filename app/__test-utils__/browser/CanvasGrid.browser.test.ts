@@ -1,12 +1,12 @@
 import { render } from "vitest-browser-vue";
-import CanvasContainer from "~/features/canvas/components/CanvasContainer.vue";
+import DrawVueTestHarness from "./DrawVueTestHarness.vue";
 import { UI } from "./UI";
 import { CanvasGrid } from "./CanvasGrid";
 
 describe("CanvasGrid browser integration", () => {
   // eslint-disable-next-line vitest/expect-expect -- assertion delegated to ui.expectToolActive
   it("draws a rectangle with grid coords and auto-resets tool", async () => {
-    const screen = render(CanvasContainer);
+    const screen = render(DrawVueTestHarness);
     const ui = new UI(screen);
 
     await ui.createElementAtCells("rectangle", [2, 2], [5, 5]);
@@ -16,7 +16,7 @@ describe("CanvasGrid browser integration", () => {
 
   // eslint-disable-next-line vitest/expect-expect -- assertion delegated to ui.expectToolActive
   it("clicks center of drawn rectangle to select it", async () => {
-    const screen = render(CanvasContainer);
+    const screen = render(DrawVueTestHarness);
     const ui = new UI(screen);
 
     await ui.createElementAtCells("rectangle", [2, 2], [6, 5]);
@@ -29,7 +29,7 @@ describe("CanvasGrid browser integration", () => {
 
   // eslint-disable-next-line vitest/expect-expect -- assertion delegated to ui.expectToolActive
   it("drags with grid coords same as pixel-based drag", async () => {
-    const screen = render(CanvasContainer);
+    const screen = render(DrawVueTestHarness);
     const ui = new UI(screen);
 
     // Draw arrow with grid API
@@ -43,7 +43,7 @@ describe("CanvasGrid browser integration", () => {
 
 describe("showGridOverlay", () => {
   it("injects an SVG overlay into the DOM", async () => {
-    render(CanvasContainer);
+    render(DrawVueTestHarness);
     const grid = new CanvasGrid();
 
     await grid.showOverlay(30_000);
@@ -55,7 +55,7 @@ describe("showGridOverlay", () => {
   });
 
   it("renders the correct number of grid lines", async () => {
-    render(CanvasContainer);
+    render(DrawVueTestHarness);
     const grid = new CanvasGrid();
 
     await grid.showOverlay(30_000);
@@ -69,7 +69,7 @@ describe("showGridOverlay", () => {
   });
 
   it("renders cell labels for every cell", async () => {
-    render(CanvasContainer);
+    render(DrawVueTestHarness);
     const grid = new CanvasGrid();
 
     await grid.showOverlay(30_000);
@@ -86,7 +86,7 @@ describe("showGridOverlay", () => {
   });
 
   it("sets pointer-events to none so it does not block interactions", async () => {
-    render(CanvasContainer);
+    render(DrawVueTestHarness);
     const grid = new CanvasGrid();
 
     await grid.showOverlay(30_000);
@@ -97,7 +97,7 @@ describe("showGridOverlay", () => {
   });
 
   it("auto-removes after the specified duration", async () => {
-    render(CanvasContainer);
+    render(DrawVueTestHarness);
     const grid = new CanvasGrid();
 
     await grid.showOverlay(100);
@@ -112,7 +112,7 @@ describe("showGridOverlay", () => {
   });
 
   it("replaces a previous overlay when called again", async () => {
-    render(CanvasContainer);
+    render(DrawVueTestHarness);
     const grid = new CanvasGrid();
 
     await grid.showOverlay(30_000);

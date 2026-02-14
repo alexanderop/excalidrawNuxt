@@ -1,4 +1,4 @@
-import type { ExcalidrawElement } from "~/features/elements/types";
+import type { ExcalidrawElement } from "@drawvue/core";
 import type { Cell } from "../CanvasGrid";
 import { API } from "../api";
 import { assertSelectedElements } from "../../matchers/assertSelectedElements";

@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { defineShortcuts } from "#imports";
-import { useCommandPalette } from "./useCommandPalette";
-import { COMMAND_GROUP_DEFS } from "./commandGroups";
-import { useActionRegistry } from "~/shared/useActionRegistry";
+import {
+  useKeyboardShortcuts,
+  useActionRegistry,
+  useCommandPalette,
+  COMMAND_GROUP_DEFS,
+} from "@drawvue/core";
 
 defineExpose({});
 
 const { isOpen, execute } = useCommandPalette();
 const { get, isEnabled } = useActionRegistry();
 
-defineShortcuts({
+useKeyboardShortcuts({
   meta_k: {
     handler: () => {
       isOpen.value = !isOpen.value;

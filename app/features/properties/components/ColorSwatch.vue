@@ -1,11 +1,16 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, useTemplateRef } from "vue";
 import { useEventListener, whenever } from "@vueuse/core";
-import { COLOR_PALETTE, COLOR_NAMES, getTopPickColors, isStandardColor } from "../palette";
-import type { ColorName } from "../palette";
-import { useStyleDefaults } from "../composables/useStyleDefaults";
-import { useTheme } from "~/features/theme/useTheme";
-import { resolveColor } from "~/features/theme/colors";
+import {
+  COLOR_PALETTE,
+  COLOR_NAMES,
+  getTopPickColors,
+  isStandardColor,
+  useStyleDefaults,
+  useTheme,
+  resolveColor,
+} from "@drawvue/core";
+import type { ColorName } from "@drawvue/core";
 
 type ShadeIndex = 0 | 1 | 2 | 3 | 4;
 
