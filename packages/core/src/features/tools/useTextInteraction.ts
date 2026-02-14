@@ -2,7 +2,7 @@ import { shallowRef } from "vue";
 import type { Ref, ShallowRef } from "vue";
 import { useEventListener } from "@vueuse/core";
 import type { ExcalidrawElement, ExcalidrawTextElement, ElementsMap } from "../elements/types";
-import { isTextElement } from "../elements/types";
+import { isTextElement, isArrowElement } from "../elements/types";
 import type { ToolType } from "./types";
 import type { GlobalPoint } from "../../shared/math";
 import { createElement } from "../elements/createElement";
@@ -11,8 +11,18 @@ import { getElementAtPosition } from "../selection/hitTest";
 import { getFontString, measureText } from "../rendering/textMeasurement";
 import { resolveColor } from "../theme";
 import type { Theme } from "../theme/types";
-import { isTextBindableContainer, getBoundTextElement, BOUND_TEXT_PADDING } from "../elements";
-import { bindTextToContainer, unbindTextFromContainer } from "../binding";
+import {
+  isTextBindableContainer,
+  getBoundTextElement,
+  getBoundTextMaxWidth,
+  BOUND_TEXT_PADDING,
+} from "../elements";
+import {
+  bindTextToContainer,
+  unbindTextFromContainer,
+  updateBoundArrowEndpoints,
+} from "../binding";
+import { getArrowMidpoint } from "../binding/arrowMidpoint";
 import { isCodeElement } from "../code";
 
 interface UseTextInteractionOptions {
@@ -101,9 +111,22 @@ export function useTextInteraction(options: UseTextInteractionOptions): UseTextI
     textarea.setAttribute("wrap", "soft");
     textarea.style.textAlign = "center";
 
-    const maxWidth = container.width - BOUND_TEXT_PADDING * 2;
+    const maxWidth = getContainerMaxWidth(container);
     textarea.style.width = `${maxWidth}px`;
 
+    // Arrows: position at the geometric midpoint of the path, not the bounding box center
+    if (isArrowElement(container)) {
+      const midpoint = getArrowMidpoint(container);
+      const viewX = (midpoint[0] + scrollX.value) * zoom.value - (maxWidth * zoom.value) / 2;
+      const viewY = (midpoint[1] + scrollY.value) * zoom.value;
+      textarea.style.left = `${viewX}px`;
+      textarea.style.top = `${viewY}px`;
+      textarea.style.transform = `scale(${zoom.value}) translateY(-50%)`;
+      textarea.style.transformOrigin = "0 0";
+      return;
+    }
+
+    // Shapes: position at bounding box center
     const cx = container.x + container.width / 2;
     const cy = container.y + container.height / 2;
     const viewX = (cx + scrollX.value) * zoom.value - (maxWidth * zoom.value) / 2;
@@ -112,6 +135,14 @@ export function useTextInteraction(options: UseTextInteractionOptions): UseTextI
     textarea.style.top = `${viewY}px`;
     textarea.style.transform = `scale(${zoom.value}) translateY(-50%)`;
     textarea.style.transformOrigin = "0 0";
+  }
+
+  /** Get the max text width for a container, using Excalidraw's arrow-specific fraction. */
+  function getContainerMaxWidth(container: ExcalidrawElement): number {
+    if (isArrowElement(container)) {
+      return getBoundTextMaxWidth(container, null);
+    }
+    return container.width - BOUND_TEXT_PADDING * 2;
   }
 
   function styleStandaloneTextarea(
@@ -196,23 +227,30 @@ export function useTextInteraction(options: UseTextInteractionOptions): UseTextI
     container: ExcalidrawElement,
   ): void {
     const font = getFontString(element.fontSize, element.fontFamily);
-    const maxWidth = container.width - BOUND_TEXT_PADDING * 2;
-    const { height } = measureText(textarea.value, font, element.lineHeight);
+    const maxWidth = getContainerMaxWidth(container);
+    const metrics = measureText(textarea.value, font, element.lineHeight);
 
-    // Auto-grow container if text overflows
-    const minContainerHeight = height + BOUND_TEXT_PADDING * 2;
-    if (container.height < minContainerHeight) {
-      mutateElement(container, { height: minContainerHeight });
+    // Auto-grow container if text overflows — but NEVER resize arrows
+    if (!isArrowElement(container)) {
+      const minContainerHeight = metrics.height + BOUND_TEXT_PADDING * 2;
+      if (container.height < minContainerHeight) {
+        mutateElement(container, { height: minContainerHeight });
+        // Cascade: update arrows bound to this container after resize
+        updateBoundArrowEndpoints(container, elements.value);
+      }
     }
+
+    // For arrows: use actual measured width (maxWidth is only the wrapping constraint)
+    const textWidth = isArrowElement(container) ? Math.min(metrics.width, maxWidth) : maxWidth;
 
     mutateElement(element, {
       text: textarea.value,
       originalText: textarea.value,
-      width: maxWidth,
-      height,
+      width: textWidth,
+      height: metrics.height,
     });
 
-    textarea.style.height = `${height}px`;
+    textarea.style.height = `${metrics.height}px`;
 
     markStaticDirty();
     markInteractiveDirty();
@@ -268,16 +306,34 @@ export function useTextInteraction(options: UseTextInteractionOptions): UseTextI
     }
 
     const font = getFontString(element.fontSize, element.fontFamily);
-    const maxWidth = container.width - BOUND_TEXT_PADDING * 2;
-    const { height } = measureText(rawText, font, element.lineHeight);
+    const maxWidth = getContainerMaxWidth(container);
+    const { width: measuredWidth, height } = measureText(rawText, font, element.lineHeight);
 
-    // Grow container if needed
+    // Arrows: position text at the geometric midpoint, NEVER resize the arrow
+    // Use actual measured text width (maxWidth is only the wrapping constraint)
+    if (isArrowElement(container)) {
+      const midpoint = getArrowMidpoint(container);
+      const textWidth = Math.min(measuredWidth, maxWidth);
+      mutateElement(element, {
+        text: rawText,
+        originalText: rawText,
+        width: textWidth,
+        height,
+        x: midpoint[0] - textWidth / 2,
+        y: midpoint[1] - height / 2,
+      });
+      return;
+    }
+
+    // Shapes: grow container if needed, center text within bounding box
     const minContainerHeight = height + BOUND_TEXT_PADDING * 2;
     if (container.height < minContainerHeight) {
       mutateElement(container, { height: minContainerHeight });
     }
 
-    // Center text within container
+    // Cascade: update arrows bound to this container after potential resize
+    updateBoundArrowEndpoints(container, elements.value);
+
     const x = container.x + (container.width - maxWidth) / 2;
     const y = container.y + (container.height - height) / 2;
 
@@ -303,8 +359,10 @@ export function useTextInteraction(options: UseTextInteractionOptions): UseTextI
   }
 
   function createBoundTextAndEdit(container: ExcalidrawElement): void {
-    const cx = container.x + container.width / 2;
-    const cy = container.y + container.height / 2;
+    // Arrows: use geometric midpoint of the path, not bounding box center
+    const [cx, cy] = isArrowElement(container)
+      ? getArrowMidpoint(container)
+      : [container.x + container.width / 2, container.y + container.height / 2];
     const element = createElement("text", cx, cy, {
       containerId: container.id,
       textAlign: "center",

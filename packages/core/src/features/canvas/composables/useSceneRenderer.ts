@@ -57,6 +57,8 @@ interface UseSceneRendererOptions {
   lastCursorPoint?: ShallowRef<GlobalPoint | null>;
   // Binding highlights
   suggestedBindings?: ShallowRef<readonly ExcalidrawElement[]>;
+  // Midpoint hover for selection-mode handles
+  hoveredMidpoint?: ShallowRef<{ elementId: string; segmentIndex: number } | null>;
   // Group selection
   selectedGroupIds?: ShallowRef<ReadonlySet<string>>;
   // Text editing — hide element being edited (textarea overlay replaces canvas-drawn text)
@@ -133,6 +135,7 @@ export function useSceneRenderer(options: UseSceneRendererOptions): UseSceneRend
     multiElement,
     lastCursorPoint,
     suggestedBindings,
+    hoveredMidpoint,
     selectedGroupIds,
     editingTextElement,
     editingCodeElement,
@@ -215,6 +218,7 @@ export function useSceneRenderer(options: UseSceneRendererOptions): UseSceneRend
         multiPointState: buildMultiPointState(multiElement, lastCursorPoint),
         suggestedBindings: suggestedBindings?.value ?? null,
         selectedGroupIds: selectedGroupIds?.value,
+        hoveredMidpoint: hoveredMidpoint?.value ?? null,
       });
       ctx.restore();
     },

@@ -11,6 +11,7 @@ import type {
   ToolType,
 } from "@drawvue/core";
 import {
+  useDrawVue,
   useStyleDefaults,
   usePropertyActions,
   usePropertyVisibility,
@@ -50,6 +51,7 @@ const emit = defineEmits<{
 
 const { execute } = useActionRegistry();
 const { theme } = useTheme();
+const { elements: allElements } = useDrawVue();
 
 const styleDefaults = useStyleDefaults();
 
@@ -60,6 +62,7 @@ const actions = usePropertyActions({
   styleDefaults,
   markDirty: () => emit("mark-dirty"),
   onBeforeChange: () => emit("will-change"),
+  elements: allElements.elements,
 });
 
 const {

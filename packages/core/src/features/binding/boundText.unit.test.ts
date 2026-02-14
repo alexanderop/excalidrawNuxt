@@ -27,6 +27,9 @@ vi.mock("../elements", () => ({
     if (!bound) return null;
     return elementMap.get(bound.id) ?? null;
   },
+  // Fixed return for predictable test expectations;
+  // the real implementation (from @excalidraw/element) is tested upstream.
+  getBoundTextMaxWidth: () => 140,
   BOUND_TEXT_PADDING: 5,
 }));
 
@@ -169,7 +172,7 @@ describe("updateBoundTextAfterContainerChange", () => {
 });
 
 describe("updateBoundTextOnArrow", () => {
-  it("positions text centered at arrow midpoint", () => {
+  it("positions text centered at arrow midpoint using getBoundTextMaxWidth", () => {
     const textEl = createTestTextElement({
       id: "text-1",
       containerId: "arrow-1",
@@ -190,10 +193,13 @@ describe("updateBoundTextOnArrow", () => {
 
     updateBoundTextOnArrow(arrow, elementMap);
 
-    // Mock getArrowMidpoint returns (0 + 200/2, 0 + 100/2) = (100, 50)
-    // Text centered: x = 100 - 40/2 = 80, y = 50 - 20/2 = 40
-    expect(textEl.x).toBe(80);
+    // Mock getArrowMidpoint returns (100, 50)
+    // measureText returns width=80, getBoundTextMaxWidth=140 → textWidth = min(80,140) = 80
+    // x = 100 - 80/2 = 60, y = 50 - 20/2 = 40
+    expect(textEl.x).toBe(60);
     expect(textEl.y).toBe(40);
+    expect(textEl.width).toBe(80);
+    expect(textEl.height).toBe(20);
   });
 
   it("does nothing when no bound text exists", () => {
@@ -232,9 +238,10 @@ describe("updateBoundTextOnArrow", () => {
       [arrow.id, arrow],
     ]);
 
-    // First positioning: midpoint at (50, 0) => text at (30, -10)
+    // First positioning: midpoint at (50, 0), measuredWidth=80, textWidth=min(80,140)=80
+    // x = 50 - 40 = 10, y = 0 - 10 = -10
     updateBoundTextOnArrow(arrow, elementMap);
-    expect(textEl.x).toBe(30);
+    expect(textEl.x).toBe(10);
     expect(textEl.y).toBe(-10);
 
     // Mutate arrow points (simulate moving end point)
@@ -242,9 +249,10 @@ describe("updateBoundTextOnArrow", () => {
       points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(200, 100)],
     });
 
-    // Reposition: midpoint at (100, 50) => text at (80, 40)
+    // Reposition: midpoint at (100, 50)
+    // x = 100 - 40 = 60, y = 50 - 10 = 40
     updateBoundTextOnArrow(arrow, elementMap);
-    expect(textEl.x).toBe(80);
+    expect(textEl.x).toBe(60);
     expect(textEl.y).toBe(40);
   });
 });

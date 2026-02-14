@@ -19,6 +19,8 @@ interface BindingCandidate {
 
 /**
  * Find the closest bindable shape within proximity threshold.
+ * A point qualifies if it is INSIDE the shape or within the binding
+ * distance of its edge (matching Excalidraw's bindingBorderTest).
  * Returns the element and the normalized fixedPoint (0-1 ratio on bbox).
  */
 export function getHoveredElementForBinding(
@@ -36,8 +38,11 @@ export function getHoveredElementForBinding(
     if (!isBindableElement(el)) continue;
     if (excludeIds.has(el.id)) continue;
 
+    const inside = isPointInsideShape(point, el);
     const dist = distanceToShapeEdge(point, el);
-    if (dist <= threshold && dist < closestDist) {
+
+    // Accept if point is inside the shape OR within binding distance of its edge
+    if ((inside || dist <= threshold) && dist < closestDist) {
       closestDist = dist;
       closest = {
         element: el,
@@ -120,6 +125,52 @@ function distanceToDiamondEdge(point: GlobalPoint, el: BindableElement): number 
     if (d < minDist) minDist = d;
   }
   return minDist;
+}
+
+/**
+ * Check whether a scene point is inside a shape (accounting for rotation).
+ */
+export function isPointInsideShape(point: GlobalPoint, element: BindableElement): boolean {
+  const cx = element.x + element.width / 2;
+  const cy = element.y + element.height / 2;
+  const unrotated =
+    element.angle === 0
+      ? point
+      : pointRotateRads(point, pointFrom<GlobalPoint>(cx, cy), -element.angle as Radians);
+
+  const px = unrotated[0];
+  const py = unrotated[1];
+
+  if (element.type === "rectangle") {
+    return (
+      px >= element.x &&
+      px <= element.x + element.width &&
+      py >= element.y &&
+      py <= element.y + element.height
+    );
+  }
+
+  if (element.type === "ellipse") {
+    const rx = element.width / 2;
+    const ry = element.height / 2;
+    if (rx === 0 || ry === 0) return false;
+    const dx = (px - cx) / rx;
+    const dy = (py - cy) / ry;
+    return dx * dx + dy * dy <= 1;
+  }
+
+  if (element.type === "diamond") {
+    // Diamond: check if the point is inside the rhombus
+    // using the sum of normalized distances from center
+    const hw = element.width / 2;
+    const hh = element.height / 2;
+    if (hw === 0 || hh === 0) return false;
+    const dx = Math.abs(px - cx) / hw;
+    const dy = Math.abs(py - cy) / hh;
+    return dx + dy <= 1;
+  }
+
+  return false;
 }
 
 /**

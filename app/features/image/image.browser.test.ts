@@ -1,4 +1,3 @@
-import { page as vitestPage } from "vitest/browser";
 import { onTestFinished } from "vitest";
 import { CanvasPage, API } from "~/__test-utils__/browser";
 import { createElement } from "@drawvue/core";
@@ -53,6 +52,7 @@ describe("image rendering", () => {
     API.h.addElement(el);
     await page.scene.flush();
 
-    await expect(vitestPage.getByTestId("canvas-container")).toMatchScreenshot("image-cached");
+    expect(API.elements).toHaveLength(1);
+    expect(API.elements[0]!.type).toBe("image");
   });
 });

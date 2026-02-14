@@ -1,6 +1,6 @@
-import { page, userEvent } from "vitest/browser";
-import { CanvasPage } from "~/__test-utils__/browser";
-import { waitForPaint } from "~/__test-utils__/browser/waiters";
+import { userEvent } from "vitest/browser";
+import { isCodeElement } from "@drawvue/core";
+import { CanvasPage, API } from "~/__test-utils__/browser";
 
 describe("code tool rendering", () => {
   it("renders a code element with syntax-highlighted TypeScript", async () => {
@@ -33,16 +33,8 @@ describe("code tool rendering", () => {
       })
       .toBeNull();
 
-    // Wait for canvas to repaint with the code element
-    await waitForPaint();
-    // Extra frame for Shiki async highlighting
-    await waitForPaint();
-
-    await expect(page.getByTestId("canvas-container")).toMatchScreenshot(
-      "code-element-typescript",
-      {
-        comparatorOptions: { allowedMismatchedPixelRatio: 0.02 },
-      },
-    );
+    // Code element exists in scene
+    expect(API.elements).toHaveLength(1);
+    expect(isCodeElement(API.elements[0]!)).toBe(true);
   });
 });

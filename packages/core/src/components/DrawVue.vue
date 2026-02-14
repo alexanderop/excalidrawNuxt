@@ -344,7 +344,7 @@ const { newFreeDrawElement, finalizeFreeDrawIfActive } = useFreeDrawInteraction(
   markNewElementDirty: dirty.markNewElementDirty,
 });
 
-const { selectionBox, cursorStyle } = useSelectionInteraction({
+const { selectionBox, cursorStyle, hoveredMidpoint } = useSelectionInteraction({
   ...shared,
   activeTool,
   spaceHeld,
@@ -389,6 +389,7 @@ const { markStaticDirty, markNewElementDirty, markInteractiveDirty } = useSceneR
   multiElement,
   lastCursorPoint,
   suggestedBindings,
+  hoveredMidpoint,
   selectedGroupIds,
   editingTextElement,
   editingCodeElement,

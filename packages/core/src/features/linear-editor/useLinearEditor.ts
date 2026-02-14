@@ -10,11 +10,14 @@ import type {
 import { isArrowElement } from "../elements/types";
 import { mutateElement } from "../elements/mutateElement";
 import type { GlobalPoint } from "../../shared/math";
+import type { BindableElement } from "../binding";
 import {
   getHoveredElementForBinding,
   bindArrowToElement,
   unbindArrowEndpoint,
   updateArrowEndpoint,
+  updateArrowBindings,
+  computeFixedPoint,
 } from "../binding";
 import {
   hitTestPointHandles,
@@ -36,13 +39,34 @@ function commitEndpointBinding(
   excludeIds: ReadonlySet<string>,
 ): void {
   const binding = endpoint === "start" ? el.startBinding : el.endBinding;
-  if (binding) unbindArrowEndpoint(el, endpoint, allElements);
 
+  // Try to find a new binding candidate at the current pointer position
   const candidate = getHoveredElementForBinding(scene, allElements, zoomValue, excludeIds);
-  if (!candidate) return;
 
-  bindArrowToElement(el, endpoint, candidate.element, candidate.fixedPoint);
-  updateArrowEndpoint(el, endpoint, candidate.element);
+  if (candidate) {
+    // Found a candidate — unbind old if different, then bind to new
+    if (binding && binding.elementId !== candidate.element.id) {
+      unbindArrowEndpoint(el, endpoint, allElements);
+    }
+    bindArrowToElement(el, endpoint, candidate.element, candidate.fixedPoint);
+    updateArrowEndpoint(el, endpoint, candidate.element);
+    return;
+  }
+
+  // No candidate found — check if existing binding is still valid.
+  // If the endpoint is still near its currently-bound element, keep the
+  // binding and just update the fixedPoint to match the new position.
+  if (binding) {
+    const boundEl = allElements.find((e) => e.id === binding.elementId);
+    if (boundEl && !boundEl.isDeleted) {
+      const newFixedPoint = computeFixedPoint(scene, boundEl as BindableElement);
+      bindArrowToElement(el, endpoint, boundEl as BindableElement, newFixedPoint);
+      updateArrowEndpoint(el, endpoint, boundEl as BindableElement);
+      return;
+    }
+    // Bound element was deleted — clean up
+    unbindArrowEndpoint(el, endpoint, allElements);
+  }
 }
 
 interface UseLinearEditorOptions {
@@ -213,11 +237,12 @@ export function useLinearEditor(options: UseLinearEditorOptions): UseLinearEdito
       if (selectedPointIndices.value.size > 0) {
         applyPointMutation(el, selectedPointIndices.value, dx, dy);
 
-        // Show binding highlight when dragging an endpoint (arrows only — lines don't bind)
         if (isArrowElement(el)) {
           const indices = selectedPointIndices.value;
           const isEndpoint = indices.has(0) || indices.has(el.points.length - 1);
+
           if (isEndpoint) {
+            // Show binding highlight when dragging an endpoint
             _excludeIds.clear();
             _excludeIds.add(el.id);
             const candidate = getHoveredElementForBinding(
@@ -228,6 +253,10 @@ export function useLinearEditor(options: UseLinearEditorOptions): UseLinearEdito
             );
             suggestedBindings.value = candidate ? [candidate.element] : [];
           }
+
+          // Re-snap bound endpoints after any point mutation (keeps bindings intact
+          // when dragging middle points to reshape the curve)
+          updateArrowBindings(el, elements.value);
         }
       }
       return;
@@ -276,6 +305,18 @@ export function useLinearEditor(options: UseLinearEditorOptions): UseLinearEdito
     const el = editingElement.value;
     if (!el) return;
     if (selectedPointIndices.value.size === 0) return;
+
+    // Clean up bindings when deleting endpoint points on arrows
+    if (isArrowElement(el)) {
+      const indices = selectedPointIndices.value;
+      if (indices.has(0)) {
+        unbindArrowEndpoint(el, "start", elements.value);
+      }
+      if (indices.has(el.points.length - 1)) {
+        unbindArrowEndpoint(el, "end", elements.value);
+      }
+    }
+
     const newPoints = removePoints(el.points, selectedPointIndices.value);
     if (!newPoints) return;
     const dims = getSizeFromPoints(newPoints);

@@ -4,9 +4,10 @@ import type {
   ExcalidrawTextElement,
   ElementsMap,
 } from "../elements/types";
+import { isArrowElement } from "../elements/types";
 import { mutateElement } from "../elements/mutateElement";
 import { createElement } from "../elements/createElement";
-import { getBoundTextElement, BOUND_TEXT_PADDING } from "../elements";
+import { getBoundTextElement, getBoundTextMaxWidth, BOUND_TEXT_PADDING } from "../elements";
 import { getFontString, measureText } from "../rendering/textMeasurement";
 import { getArrowMidpoint } from "./arrowMidpoint";
 
@@ -64,6 +65,12 @@ export function updateBoundTextAfterContainerChange(
   container: ExcalidrawElement,
   elementMap: ElementsMap,
 ): void {
+  // Arrows have their own handler — delegate to it
+  if (isArrowElement(container)) {
+    updateBoundTextOnArrow(container, elementMap);
+    return;
+  }
+
   const boundText = getBoundTextElement(container, elementMap);
   if (!boundText) return;
 
@@ -92,7 +99,9 @@ export function updateBoundTextAfterContainerChange(
 
 /**
  * Update the position of a text label bound to an arrow.
- * Positions the text centered at the arrow's midpoint.
+ * Positions the text centered at the arrow's geometric midpoint.
+ * Arrow labels use a constrained width (70% of arrow width, min fontSize×11).
+ * Arrows are NEVER resized to fit text.
  */
 export function updateBoundTextOnArrow(
   arrow: ExcalidrawArrowElement,
@@ -102,10 +111,24 @@ export function updateBoundTextOnArrow(
   if (!boundText) return;
 
   const midpoint = getArrowMidpoint(arrow);
+  const maxWidth = getBoundTextMaxWidth(arrow, boundText);
+  const font = getFontString(boundText.fontSize, boundText.fontFamily);
+  const { width: measuredWidth, height } = measureText(
+    boundText.originalText,
+    font,
+    boundText.lineHeight,
+  );
+
+  // Use actual measured text width, not the wrapping constraint (maxWidth).
+  // maxWidth is only the line-wrap limit; the element width must reflect
+  // the real text extent so the background rect doesn't cover the arrow.
+  const textWidth = Math.min(measuredWidth, maxWidth);
 
   mutateElement(boundText, {
-    x: midpoint[0] - boundText.width / 2,
-    y: midpoint[1] - boundText.height / 2,
+    width: textWidth,
+    height,
+    x: midpoint[0] - textWidth / 2,
+    y: midpoint[1] - height / 2,
   });
 }
 

@@ -78,6 +78,8 @@ export function useDrawingInteraction(
   let originY = 0;
   /** Track Alt key state at drag start for binding mode */
   let altKeyAtStart = false;
+  /** True when user dragged (not just clicked) — used to skip multi-point mode for arrows */
+  let hasDragged = false;
 
   useEventListener(canvasRef, "pointerdown", (e: PointerEvent) => {
     if (spaceHeld.value || isPanning.value) return;
@@ -91,6 +93,7 @@ export function useDrawingInteraction(
     originX = scene[0];
     originY = scene[1];
     altKeyAtStart = e.altKey;
+    hasDragged = false;
 
     newElement.value = createElement(tool, originX, originY, getStyleOverrides());
 
@@ -100,6 +103,7 @@ export function useDrawingInteraction(
   useEventListener(canvasRef, "pointermove", (e: PointerEvent) => {
     if (!newElement.value) return;
 
+    hasDragged = true;
     const scene = toScene(e.offsetX, e.offsetY);
 
     if (isLinearTool(activeTool.value)) {
@@ -273,7 +277,18 @@ export function useDrawingInteraction(
         return;
       }
 
-      // Non-elbow linear: bind start only, then enter multi-point mode
+      // Arrows created via click-and-drag finalize immediately (no multi-point)
+      if (isArrowElement(el) && hasDragged) {
+        tryBindArrowEndpoints(el, bindingMode);
+        options.onInteractionEnd?.();
+        setTool("selection");
+        newElement.value = null;
+        markNewElementDirty();
+        markStaticDirty();
+        return;
+      }
+
+      // Single-click linear: bind start only, then enter multi-point mode
       if (isArrowElement(el)) {
         tryBindArrowStart(el, bindingMode);
       }

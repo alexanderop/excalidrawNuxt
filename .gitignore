@@ -27,6 +27,7 @@ logs
 # Test coverage
 coverage/
 
-# Excalidraw local project
+# Reference source projects (git-ignored, not part of build)
 excalidraw/
+tldraw/
 .vitest-attachments/

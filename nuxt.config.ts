@@ -10,7 +10,7 @@ export default defineNuxtConfig({
 
   typescript: {
     tsConfig: {
-      exclude: ["../app/**/*.test.ts", "../app/__test-utils__/**/*"],
+      exclude: ["../app/**/*.test.ts", "../app/__test-utils__/**/*", "../tldraw/**/*"],
     },
   },
 

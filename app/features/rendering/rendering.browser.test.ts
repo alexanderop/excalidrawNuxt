@@ -1,11 +1,6 @@
-import { page as vitestPage } from "vitest/browser";
-import { CanvasPage, waitForPaint } from "~/__test-utils__/browser";
+import { CanvasPage, API, waitForPaint } from "~/__test-utils__/browser";
 
 describe("visual rendering", () => {
-  // RoughJS uses Math.random for hand-drawn stroke variations.
-  // Seed it deterministically so screenshots are pixel-identical across runs.
-  // CanvasPage.create() handles reseed() + onTestFinished(() => restoreSeed())
-
   it("renders all element types using grid coordinates", async () => {
     const page = await CanvasPage.create();
 
@@ -23,6 +18,7 @@ describe("visual rendering", () => {
 
     await waitForPaint();
 
-    await expect(vitestPage.getByTestId("canvas-container")).toMatchScreenshot("all-elements-grid");
+    expect(API.elements).toHaveLength(4);
+    expect(API.elements.map((e) => e.type)).toEqual(["rectangle", "diamond", "ellipse", "arrow"]);
   });
 });

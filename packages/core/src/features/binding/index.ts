@@ -27,6 +27,7 @@ export {
 export {
   getHoveredElementForBinding,
   distanceToShapeEdge,
+  isPointInsideShape,
   computeFixedPoint,
   getPointFromFixedPoint,
 } from "./proximity";

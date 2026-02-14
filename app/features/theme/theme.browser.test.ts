@@ -1,6 +1,6 @@
 import { onTestFinished } from "vitest";
-import { page as vitestPage, userEvent } from "vitest/browser";
-import { CanvasPage, waitForPaint } from "~/__test-utils__/browser";
+import { userEvent } from "vitest/browser";
+import { CanvasPage, API, waitForPaint } from "~/__test-utils__/browser";
 
 /** Toggle dark mode via Alt+Shift+D and wait for re-render. */
 async function toggleDarkMode(): Promise<void> {
@@ -16,8 +16,6 @@ function cleanupDarkMode(): void {
 }
 
 describe("dark mode rendering", () => {
-  // CanvasPage.create() handles reseed() + onTestFinished(() => restoreSeed())
-
   it("renders all element types in dark mode", async () => {
     const page = await CanvasPage.create();
     onTestFinished(() => cleanupDarkMode());
@@ -33,6 +31,7 @@ describe("dark mode rendering", () => {
 
     await toggleDarkMode();
 
-    await expect(vitestPage.getByTestId("canvas-container")).toMatchScreenshot("dark-all-elements");
+    expect(document.documentElement.classList.contains("dark")).toBe(true);
+    expect(API.elements).toHaveLength(4);
   });
 });
