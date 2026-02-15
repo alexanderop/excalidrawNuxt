@@ -11,7 +11,6 @@ export default defineConfig({
     globals: true,
   },
   resolve: {
-    conditions: ["development"],
     alias: {
       "@excalidraw/math/ellipse": "@excalidraw/math",
     },
