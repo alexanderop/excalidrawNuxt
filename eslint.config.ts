@@ -16,6 +16,7 @@ export default defineConfigWithVueTs(
       "**/.nuxt/**",
       "**/.output/**",
       "excalidraw/**",
+      "tldraw/**",
       "eslint-rules/**",
     ],
   },

@@ -12,6 +12,12 @@ import {
 } from "../linear-editor/renderLinearEditor";
 import { renderSuggestedBinding } from "../binding/renderBindingHighlight";
 import { getCommonBounds, getElementBounds } from "../selection/bounds";
+import { getMidpointPositions } from "../linear-editor/pointHandles";
+import {
+  MIDPOINT_HANDLE_RADIUS,
+  MIDPOINT_HIT_THRESHOLD,
+  LINEAR_EDITOR_COLORS,
+} from "../linear-editor/constants";
 
 export interface LinearEditorRenderState {
   element: ExcalidrawLinearElement;
@@ -173,6 +179,45 @@ function isElementInSelectedGroup(
   return element.groupIds.some((gid) => selectedGroupIds.has(gid));
 }
 
+function renderMidpointHandles(
+  ctx: CanvasRenderingContext2D,
+  element: ExcalidrawLinearElement,
+  zoom: number,
+  theme: Theme,
+  hoveredSegmentIndex: number | null,
+): void {
+  const midpoints = getMidpointPositions(element);
+  const colors = LINEAR_EDITOR_COLORS[theme];
+  const lineWidth = 1 / zoom;
+
+  ctx.save();
+  ctx.lineWidth = lineWidth;
+
+  for (const [i, midpoint] of midpoints.entries()) {
+    // Skip rendering if segment is too short
+    const scenePoints = element.points;
+    const a = scenePoints[i];
+    const b = scenePoints[i + 1];
+    if (a && b) {
+      const segLen = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      if (segLen < (MIDPOINT_HIT_THRESHOLD * 4) / zoom) continue;
+    }
+
+    const isHovered = hoveredSegmentIndex === i;
+    const radius = (isHovered ? MIDPOINT_HANDLE_RADIUS + 1.5 : MIDPOINT_HANDLE_RADIUS) / zoom;
+
+    ctx.fillStyle = isHovered ? colors.midpointStroke : colors.midpointFill;
+    ctx.strokeStyle = colors.midpointStroke;
+
+    ctx.beginPath();
+    ctx.arc(midpoint[0], midpoint[1], radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
 function renderSelectedElements(
   ctx: CanvasRenderingContext2D,
   selectedElements: readonly ExcalidrawElement[],
@@ -180,12 +225,19 @@ function renderSelectedElements(
   linearEditorState: LinearEditorRenderState | null | undefined,
   selectedGroupIds: ReadonlySet<string> | undefined,
   theme: Theme,
+  hoveredMidpoint?: { elementId: string; segmentIndex: number } | null,
 ): void {
   for (const el of selectedElements) {
     if (linearEditorState && el.id === linearEditorState.element.id) continue;
     if (isElementInSelectedGroup(el, selectedGroupIds)) continue;
     renderSelectionBorder(ctx, el, zoom, theme);
     renderTransformHandles(ctx, getTransformHandles(el, zoom), zoom, theme);
+
+    // Render midpoint handles for selected 2-point linear elements
+    if (isLinearElement(el) && el.points.length === 2) {
+      const hoveredIdx = hoveredMidpoint?.elementId === el.id ? hoveredMidpoint.segmentIndex : null;
+      renderMidpointHandles(ctx, el, zoom, theme, hoveredIdx);
+    }
   }
 
   if (!selectedGroupIds || selectedGroupIds.size === 0) return;
@@ -218,6 +270,7 @@ export interface InteractiveSceneOptions {
   multiPointState?: MultiPointRenderState | null;
   suggestedBindings?: readonly ExcalidrawElement[] | null;
   selectedGroupIds?: ReadonlySet<string>;
+  hoveredMidpoint?: { elementId: string; segmentIndex: number } | null;
 }
 
 export function renderInteractiveScene(options: InteractiveSceneOptions): void {
@@ -231,6 +284,7 @@ export function renderInteractiveScene(options: InteractiveSceneOptions): void {
     multiPointState,
     suggestedBindings,
     selectedGroupIds,
+    hoveredMidpoint,
   } = options;
 
   if (suggestedBindings) {
@@ -239,7 +293,15 @@ export function renderInteractiveScene(options: InteractiveSceneOptions): void {
     }
   }
 
-  renderSelectedElements(ctx, selectedElements, zoom, linearEditorState, selectedGroupIds, theme);
+  renderSelectedElements(
+    ctx,
+    selectedElements,
+    zoom,
+    linearEditorState,
+    selectedGroupIds,
+    theme,
+    hoveredMidpoint,
+  );
 
   if (selectionBox) {
     renderSelectionBox(ctx, selectionBox, zoom, theme);

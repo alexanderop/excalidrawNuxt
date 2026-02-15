@@ -1,11 +1,11 @@
 import { provide, inject, type InjectionKey } from "vue";
 import type { ShallowRef, Ref, ComputedRef } from "vue";
-import type { ExcalidrawElement, ElementsMap, MutableElement } from "./features/elements/types";
+import type { ExcalidrawElement, ElementsMap } from "./features/elements/types";
 import type { ToolType } from "./features/tools/types";
 import type { ActionRegistry, ActionId } from "./shared/useActionRegistry";
 import type { FileId, ImageCacheEntry } from "./features/image/types";
 import type { FillStyle, StrokeStyle, TextAlign, Arrowhead } from "./features/elements/types";
-import type { Roundness } from "./features/properties/types";
+import type { ArrowSubtype, Roundness } from "./features/properties/types";
 import { createElements } from "./features/elements/useElements";
 import { createToolStore } from "./features/tools/useTool";
 import { createActionRegistry } from "./shared/useActionRegistry";
@@ -67,13 +67,14 @@ export interface StyleDefaultsSlice {
   opacity: Ref<number>;
   roughness: Ref<number>;
   roundness: Ref<Roundness>;
+  arrowSubtype: Ref<ArrowSubtype>;
   fontFamily: Ref<number>;
   fontSize: Ref<number>;
   textAlign: Ref<TextAlign>;
   startArrowhead: Ref<Arrowhead | null>;
   endArrowhead: Ref<Arrowhead | null>;
   recentColors: Ref<string[]>;
-  getStyleOverrides: () => Partial<MutableElement>;
+  getStyleOverrides: () => Record<string, unknown>;
 }
 
 export interface StyleClipboardSlice {

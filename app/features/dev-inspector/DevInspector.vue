@@ -6,23 +6,22 @@ import HistoryTab from "./tabs/HistoryTab.vue";
 import ElementsTab from "./tabs/ElementsTab.vue";
 import StateTab from "./tabs/StateTab.vue";
 import ActionsTab from "./tabs/ActionsTab.vue";
+import LayersTab from "./tabs/LayersTab.vue";
 
 const isOpen = ref(false);
-const activeTab = ref<"history" | "elements" | "state" | "actions">("history");
+const activeTab = ref<"history" | "elements" | "layers" | "state" | "actions">("history");
 
 const ctx = useDrawVue();
-
-// Access window.__h for state not available via context
 const h = (globalThis as unknown as Record<string, Record<string, unknown>>).__h;
 
 const TABS = [
   { id: "history" as const, label: "History" },
   { id: "elements" as const, label: "Elements" },
+  { id: "layers" as const, label: "Layers" },
   { id: "state" as const, label: "State" },
   { id: "actions" as const, label: "Actions" },
 ];
 
-// Toggle via backtick key
 const activeEl = useActiveElement();
 useEventListener(document, "keydown", (e: KeyboardEvent) => {
   if (isTypingElement(activeEl.value)) return;
@@ -32,7 +31,6 @@ useEventListener(document, "keydown", (e: KeyboardEvent) => {
   }
 });
 
-// Derived state from window.__h
 const selectedIds = computed(
   () => (h?.selectedIds as { value: ReadonlySet<string> })?.value ?? new Set<string>(),
 );
@@ -43,7 +41,6 @@ const currentElementCount = computed(
 );
 const currentSelectedCount = computed(() => selectedIds.value.size);
 
-// Tab badge counts
 const historyCount = computed(() => {
   if (!history.value) return 0;
   const undoLen = (history.value.undoStack as { value: readonly unknown[] })?.value?.length ?? 0;
@@ -54,6 +51,7 @@ const historyCount = computed(() => {
 function tabBadge(tabId: string): number | null {
   if (tabId === "history" && historyCount.value > 0) return historyCount.value;
   if (tabId === "elements" && currentElementCount.value > 0) return currentElementCount.value;
+  if (tabId === "layers") return 3;
   return null;
 }
 
@@ -185,6 +183,8 @@ function handleSelect(id: string): void {
         :selected-ids="selectedIds"
         @select="handleSelect"
       />
+
+      <LayersTab v-if="activeTab === 'layers'" />
 
       <StateTab v-if="activeTab === 'state'" />
 

@@ -158,4 +158,43 @@ describe("useMultiPointCreation", () => {
     // Should not throw and not call markStaticDirty
     expect(opts.markStaticDirty).not.toHaveBeenCalled();
   });
+
+  it("finalizes when clicking within LINE_CONFIRM_THRESHOLD of last point", () => {
+    const opts = createSetup();
+    using ctx = withSetup(() => useMultiPointCreation(opts));
+
+    const arrow = createTestArrowElement({
+      x: 0,
+      y: 0,
+      points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(100, 0)],
+    });
+    ctx.startMultiPoint(arrow);
+
+    // Click 5px away from last point (100, 0) — within threshold of 8px
+    fire("pointerdown", { offsetX: 103, offsetY: 4, button: 0 });
+
+    expect(ctx.multiElement.value).toBeNull();
+    expect(opts.onFinalize).toHaveBeenCalledOnce();
+    // Should NOT have added a point
+    expect(arrow.points).toHaveLength(2);
+  });
+
+  it("adds point when clicking beyond LINE_CONFIRM_THRESHOLD", () => {
+    const opts = createSetup();
+    using ctx = withSetup(() => useMultiPointCreation(opts));
+
+    const arrow = createTestArrowElement({
+      x: 0,
+      y: 0,
+      points: [pointFrom<LocalPoint>(0, 0), pointFrom<LocalPoint>(100, 0)],
+    });
+    ctx.startMultiPoint(arrow);
+
+    // Click 50px away from last point (100, 0) — beyond threshold
+    fire("pointerdown", { offsetX: 150, offsetY: 0, button: 0 });
+
+    expect(ctx.multiElement.value).not.toBeNull();
+    expect(arrow.points).toHaveLength(3);
+    expect(arrow.points[2]).toEqual([150, 0]);
+  });
 });

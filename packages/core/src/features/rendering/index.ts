@@ -1,5 +1,11 @@
 export { renderGrid, GRID_SPACING } from "./renderGrid";
-export { generateShape, clearShapeCache, pruneShapeCache } from "./shapeGenerator";
+export {
+  generateShape,
+  clearShapeCache,
+  pruneShapeCache,
+  getZoomBucket,
+  adjustRoughness,
+} from "./shapeGenerator";
 export { renderElement } from "./renderElement";
 export { renderScene } from "./renderScene";
 export { measureText, getFontString, getLineHeightInPx } from "./textMeasurement";

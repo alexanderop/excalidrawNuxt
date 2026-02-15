@@ -124,14 +124,17 @@ export {
 export type { Rectangle } from "@excalidraw/math";
 
 // ---------------------------------------------------------------------------
-// Curves (5 functions + 1 type)
+// Curves (8 functions + 1 type)
 // ---------------------------------------------------------------------------
 export {
   curve,
+  bezierEquation,
   curvePointDistance,
   curveClosestPoint,
   curveIntersectLineSegment,
   curveLength,
+  curvePointAtLength,
+  curveCatmullRomCubicApproxPoints,
 } from "@excalidraw/math";
 
 export type { Curve } from "@excalidraw/math";

@@ -1,5 +1,7 @@
-import { createTestElement } from "../../__test-utils__/factories/element";
+import { createTestElement, createTestArrowElement } from "../../__test-utils__/factories/element";
 import { createTestPoint } from "../../__test-utils__/factories/point";
+import { pointFrom } from "../../shared/math";
+import type { LocalPoint } from "../../shared/math";
 import { hitTest, getElementAtPosition } from "./hitTest";
 
 describe("hitTest", () => {
@@ -215,6 +217,52 @@ describe("getElementAtPosition", () => {
       backgroundColor: "#f00",
     });
     expect(getElementAtPosition(createTestPoint(200, 200), [el], 1)).toBeNull();
+  });
+});
+
+describe("curved arrow hitTest", () => {
+  it("hits a point near the curved path", () => {
+    const el = createTestArrowElement({
+      x: 0,
+      y: 0,
+      points: [
+        pointFrom<LocalPoint>(0, 0),
+        pointFrom<LocalPoint>(50, 50),
+        pointFrom<LocalPoint>(100, 0),
+      ] as readonly LocalPoint[],
+      roundness: { type: 2 },
+    });
+    // The Catmull-Rom curve passes through (50, 50) — test near that point
+    expect(hitTest(createTestPoint(50, 50), el as Parameters<typeof hitTest>[1], 1)).toBe(true);
+  });
+
+  it("misses a point far from the curved path", () => {
+    const el = createTestArrowElement({
+      x: 0,
+      y: 0,
+      points: [
+        pointFrom<LocalPoint>(0, 0),
+        pointFrom<LocalPoint>(50, 50),
+        pointFrom<LocalPoint>(100, 0),
+      ] as readonly LocalPoint[],
+      roundness: { type: 2 },
+    });
+    expect(hitTest(createTestPoint(50, -50), el as Parameters<typeof hitTest>[1], 1)).toBe(false);
+  });
+
+  it("hits start point of a curved arrow", () => {
+    const el = createTestArrowElement({
+      x: 10,
+      y: 10,
+      points: [
+        pointFrom<LocalPoint>(0, 0),
+        pointFrom<LocalPoint>(50, 50),
+        pointFrom<LocalPoint>(100, 0),
+      ] as readonly LocalPoint[],
+      roundness: { type: 2 },
+    });
+    // Near the start point (10, 10)
+    expect(hitTest(createTestPoint(10, 10), el as Parameters<typeof hitTest>[1], 1)).toBe(true);
   });
 });
 

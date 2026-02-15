@@ -251,6 +251,8 @@ All browser helpers are re-exported from `~/__test-utils__/browser`:
 
 ```ts
 import {
+  TestDrawVue, // <-- preferred for new tests
+  CanvasPage, // legacy page-object approach
   UI,
   Pointer,
   Keyboard,
@@ -409,15 +411,15 @@ describe("visual rendering", () => {
 
 Reference screenshots are stored in `__screenshots__/` next to the test file.
 
-### CanvasPage seeding pitfall
+### TestDrawVue / CanvasPage seeding pitfall
 
-`CanvasPage.create()` already calls `reseed()` and registers `restoreSeed()` with `onTestFinished()`.
-Do not also add `beforeEach(reseed)` / `afterEach(restoreSeed)` in the same file when using `CanvasPage`.
+Both `TestDrawVue.create()` and `CanvasPage.create()` call `reseed()` and register `restoreSeed()` with `onTestFinished()`.
+Do not also add `beforeEach(reseed)` / `afterEach(restoreSeed)` in the same file when using either.
 
 Double-seeding can restore `Math.random` to an already-seeded generator and leak deterministic RNG state across tests.
 
-- Using `CanvasPage.create()`: no manual seed hooks
-- Not using `CanvasPage.create()`: keep manual `reseed()` / `restoreSeed()` hooks
+- Using `TestDrawVue.create()` or `CanvasPage.create()`: no manual seed hooks
+- Not using either: keep manual `reseed()` / `restoreSeed()` hooks
 
 ## Canvas Grid Testing
 
@@ -494,9 +496,135 @@ await ui.grid.showOverlay(10000); // custom duration (ms)
 
 `toPixels([col, row])` → `((col + 0.5) * cellWidth, (row + 0.5) * cellHeight)` — the center of the cell. Fractional cells work naturally: `[2.5, 3.5]` targets the boundary between cells.
 
-## Page Object Pattern (Browser Tests)
+## TestDrawVue (Browser Tests) — Preferred
 
-For new browser tests, use `CanvasPage` instead of constructing `UI` + `render` + `waitForCanvasReady` manually. `CanvasPage.create()` handles rendering, seeding, and cleanup automatically.
+`TestDrawVue` is a unified test helper for browser tests, inspired by tldraw's `TestEditor`. It consolidates `CanvasPage`, page objects, `API`, `Pointer`, `Keyboard`, and `CanvasGrid` into a **single flat API**. One import, one variable, flat autocomplete.
+
+```ts
+import { TestDrawVue } from "~/__test-utils__/browser";
+
+describe("my feature", () => {
+  it("draws a rectangle", async () => {
+    const td = await TestDrawVue.create();
+
+    await td.createElementAtCells("rectangle", [2, 2], [5, 5]);
+
+    td.expectElementCount(1);
+    td.expectElementType(0, "rectangle");
+    td.expectToolToBe("selection");
+  });
+});
+```
+
+### API Overview
+
+```ts
+const td = await TestDrawVue.create();
+
+// ── Elements ──────────────────────────────────
+const el = td.addElement({ x: 50, width: 80 });          // programmatic (no pointer)
+const [a, b] = td.addElements({ x: 0 }, { x: 100 });    // multiple
+const ref = await td.createElement("rect", [2,2], [5,5]); // tool + drag + live accessor
+await td.createElementAtCells("rect", [2,2], [5,5]);      // tool + drag (no accessor)
+td.elements;                                               // readonly ExcalidrawElement[]
+td.elementCount;                                           // number
+td.getElement(id);                                         // by ID (throws if missing)
+td.getLastElement<TLArrowShape>();                         // last element
+
+// ── Selection ─────────────────────────────────
+await td.clickElement(el);                                 // click center
+await td.shiftClickElement(el);                            // shift-click
+await td.boxSelect([0, 0], [8, 4]);                        // drag selection box
+await td.selectElements(el1, el2);                         // click first, shift-click rest
+td.select(el1, el2);                                       // programmatic (no pointer)
+td.clearSelection();                                       // programmatic
+td.selectedElements;                                       // ExcalidrawElement[]
+td.selectedIds;                                            // string[]
+
+// ── Tools ─────────────────────────────────────
+td.activeTool;                                             // ToolType
+td.setTool("rectangle");                                   // programmatic
+await td.selectTool("rectangle");                          // via keyboard shortcut
+
+// ── Grid interactions ─────────────────────────
+await td.click([3, 3]);                                    // click cell
+await td.clickCenter([2, 2], [5, 5]);                      // click region center
+await td.dblClick([3, 3]);                                 // double-click cell
+await td.drag([1, 1], [4, 4]);                             // drag between cells
+
+// ── Keyboard ──────────────────────────────────
+await td.keyPress("r");                                    // single key
+await td.undo();                                           // Ctrl+Z
+await td.redo();                                           // Ctrl+Shift+Z
+await td.group();                                          // Ctrl+G
+await td.ungroup();                                        // Ctrl+Shift+G
+await td.deleteSelected();                                 // Delete key
+await td.withModifiers({ shiftKey: true }, async () => {
+  await td.click([3, 3]);
+});
+
+// ── Viewport ──────────────────────────────────
+td.scrollX; td.scrollY; td.zoom;
+td.panBy(dx, dy);
+td.zoomBy(delta, center?);
+
+// ── Rendering ─────────────────────────────────
+await td.flush();                                          // markStaticDirty + waitForPaint
+
+// ── Assertions ────────────────────────────────
+td.expectToolToBe("selection");
+td.expectElementCount(2);
+td.expectElementType(0, "rectangle");
+td.expectSelected(id1, id2);                               // order-agnostic
+td.expectNoneSelected();
+td.checkpoint("after draw");                               // named snapshot
+await td.expectToolActive("selection");                    // checks aria-pressed
+```
+
+### Raw helpers still accessible
+
+For edge cases, the underlying helpers are exposed as properties:
+
+```ts
+td.pointer; // Pointer instance
+td.keyboard; // Keyboard instance
+td.grid; // CanvasGrid instance
+td.screen; // vitest-browser-vue render result
+```
+
+### Migration from `CanvasPage`
+
+| Before (`CanvasPage`)                                   | After (`TestDrawVue`)                           |
+| ------------------------------------------------------- | ----------------------------------------------- |
+| `const page = await CanvasPage.create()`                | `const td = await TestDrawVue.create()`         |
+| `page.canvas.createElementAtCells('rect', [2,2],[5,5])` | `td.createElementAtCells('rect', [2,2], [5,5])` |
+| `page.canvas.createElement('rect', [2,2], [5,5])`       | `td.createElement('rect', [2,2], [5,5])`        |
+| `page.canvas.click([3, 3])`                             | `td.click([3, 3])`                              |
+| `page.canvas.clickCenter([2,2], [5,5])`                 | `td.clickCenter([2,2], [5,5])`                  |
+| `page.canvas.dblClick([3, 3])`                          | `td.dblClick([3, 3])`                           |
+| `page.scene.addElement({ x: 50 })`                      | `td.addElement({ x: 50 })`                      |
+| `page.scene.addElements({ x: 0 }, { x: 100 })`          | `td.addElements({ x: 0 }, { x: 100 })`          |
+| `page.scene.flush()`                                    | `td.flush()`                                    |
+| `page.scene.expectElementCount(2)`                      | `td.expectElementCount(2)`                      |
+| `page.scene.expectElementType(0, "rectangle")`          | `td.expectElementType(0, "rectangle")`          |
+| `page.scene.elements[0]`                                | `td.elements[0]`                                |
+| `page.scene.activeTool`                                 | `td.activeTool`                                 |
+| `page.selection.clear()`                                | `td.clearSelection()`                           |
+| `page.selection.setSelected(el1, el2)`                  | `td.select(el1, el2)`                           |
+| `page.selection.boxSelect([0,0], [8,4])`                | `td.boxSelect([0,0], [8,4])`                    |
+| `page.selection.clickElement(el)`                       | `td.clickElement(el)`                           |
+| `page.selection.expectSelected(id1, id2)`               | `td.expectSelected(id1, id2)`                   |
+| `page.selection.expectNoneSelected()`                   | `td.expectNoneSelected()`                       |
+| `page.toolbar.select("rectangle")`                      | `td.selectTool("rectangle")`                    |
+| `page.toolbar.expectActive("selection")`                | `td.expectToolActive("selection")`              |
+| `page.keyboard.undo()`                                  | `td.undo()`                                     |
+| `waitForPaint()`                                        | `td.flush()`                                    |
+
+`CanvasPage` and the page objects remain available for existing tests — no need to migrate all at once.
+
+## CanvasPage (Browser Tests) — Legacy
+
+`CanvasPage` is the older page-object approach. It still works but new tests should prefer `TestDrawVue`.
 
 ```ts
 import { CanvasPage } from "~/__test-utils__/browser";
@@ -513,62 +641,7 @@ describe("my feature", () => {
 });
 ```
 
-### Sub-objects
-
-| Object           | Import        | Purpose                                                        |
-| ---------------- | ------------- | -------------------------------------------------------------- |
-| `page.toolbar`   | `ToolbarPO`   | Tool selection via keyboard shortcuts, aria-pressed assertions |
-| `page.canvas`    | `CanvasPO`    | Drawing, clicking, and element creation on the canvas grid     |
-| `page.selection` | `SelectionPO` | Click/shift-click/box-select elements, assert selection state  |
-| `page.scene`     | `ScenePO`     | Programmatic element setup, flush rendering, element queries   |
-| `page.keyboard`  | `Keyboard`    | Raw keyboard input, undo/redo, modifier key contexts           |
-
-### Key methods
-
-```ts
-// ToolbarPO
-await page.toolbar.select("rectangle");
-await page.toolbar.expectActive("selection");
-
-// CanvasPO — grid-based interactions
-await page.canvas.draw([1, 1], [4, 4]); // raw drag
-await page.canvas.click([3, 3]); // click cell
-await page.canvas.clickCenter([1, 1], [4, 4]); // click region center
-const ref = await page.canvas.createElement("rectangle", [2, 2], [5, 5]); // tool + drag + live accessor
-
-// SelectionPO
-await page.selection.clickElement(el);
-await page.selection.shiftClickElement(el);
-await page.selection.boxSelect([0, 0], [8, 4]);
-page.selection.setSelected(el1, el2); // programmatic
-page.selection.clear();
-page.selection.expectSelected(id1, id2);
-page.selection.expectNoneSelected();
-
-// ScenePO — programmatic scene setup
-const el = page.scene.addElement({ x: 50, width: 80 });
-const [a, b] = page.scene.addElements({ x: 0 }, { x: 100 });
-await page.scene.flush(); // markStaticDirty + waitForPaint
-page.scene.expectElementCount(2);
-page.scene.expectElementType(0, "rectangle");
-page.scene.activeTool; // read current tool
-```
-
-### Migration from `UI`
-
-| Before (`UI`)                                                         | After (`CanvasPage`)                                       |
-| --------------------------------------------------------------------- | ---------------------------------------------------------- |
-| `render(CanvasContainer)` + `waitForCanvasReady()` + `new UI(screen)` | `CanvasPage.create()`                                      |
-| `ui.clickTool('rectangle')`                                           | `page.toolbar.select('rectangle')`                         |
-| `ui.expectToolActive('selection')`                                    | `page.toolbar.expectActive('selection')`                   |
-| `ui.createElementAtCells('rect', [2,2], [5,5])`                       | `page.canvas.createElementAtCells('rect', [2,2], [5,5])`   |
-| `ui.createElement('rect', [2,2], [5,5])`                              | `page.canvas.createElement('rect', [2,2], [5,5])`          |
-| `ui.grid.drag(...)`                                                   | `page.canvas.draw(...)` or `page.selection.boxSelect(...)` |
-| `API.addElement(...)` + `API.h.markStaticDirty()` + `waitForPaint()`  | `page.scene.addElement(...)` + `page.scene.flush()`        |
-| `assertSelectedElements(id1, id2)`                                    | `page.selection.expectSelected(id1, id2)`                  |
-| `API.clearSelection()`                                                | `page.selection.clear()`                                   |
-
-The `UI` class remains available for existing tests — no need to migrate all at once.
+Sub-objects: `page.toolbar` (ToolbarPO), `page.canvas` (CanvasPO), `page.selection` (SelectionPO), `page.scene` (ScenePO), `page.keyboard` (Keyboard).
 
 ## ESLint Enforcement
 

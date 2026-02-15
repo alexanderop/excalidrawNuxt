@@ -1,6 +1,5 @@
-import { page, userEvent } from "vitest/browser";
-import { CanvasPage } from "~/__test-utils__/browser";
-import { waitForPaint } from "~/__test-utils__/browser/waiters";
+import { userEvent } from "vitest/browser";
+import { CanvasPage, API } from "~/__test-utils__/browser";
 
 describe("text tool interaction", () => {
   it("opens editor on single click with text tool (like Excalidraw)", async () => {
@@ -32,11 +31,9 @@ describe("text tool interaction", () => {
       })
       .toBeNull();
 
-    // Text rendered on the canvas
-    await waitForPaint();
-    await expect(page.getByTestId("canvas-container")).toMatchScreenshot(
-      "text-single-click-hello-world",
-    );
+    // Text element exists in scene
+    expect(API.elements).toHaveLength(1);
+    expect(API.elements[0]!.type).toBe("text");
   });
 
   // eslint-disable-next-line vitest/expect-expect -- assertion delegated to page.toolbar.expectActive

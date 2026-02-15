@@ -33,7 +33,6 @@ export function withDrawVue<T extends object>(
     drawVue: drawVueCtx,
     [Symbol.dispose]() {
       scope.stop();
-      app.unmount();
     },
   });
 }

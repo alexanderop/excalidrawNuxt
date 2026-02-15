@@ -74,13 +74,14 @@ export function renderElement(
   element: ExcalidrawElement,
   theme: Theme,
   imageCache?: ReadonlyMap<FileId, ImageCacheEntry>,
+  zoom = 1,
 ): void {
   if (element.isDeleted) return;
   if (renderSpecialElement(ctx, element, theme, imageCache)) return;
   if (isLinearElement(element) && element.points.length < 2) return;
   if (isZeroSizeShape(element)) return;
 
-  renderRoughShape(ctx, rc, element, theme);
+  renderRoughShape(ctx, rc, element, theme, zoom);
 }
 
 function renderRoughShape(
@@ -88,11 +89,12 @@ function renderRoughShape(
   rc: RoughCanvas,
   element: ExcalidrawElement,
   theme: Theme,
+  zoom = 1,
 ): void {
   ctx.save();
   applyElementTransform(ctx, element);
 
-  const drawable = generateShape(element, theme);
+  const drawable = generateShape(element, theme, zoom);
   rc.draw(drawable);
 
   if (isArrowElement(element)) {

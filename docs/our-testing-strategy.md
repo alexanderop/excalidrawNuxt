@@ -156,17 +156,25 @@ We mirror Excalidraw's layered approach but adapted for Vue and real browsers:
 ```
 +==================================================================+
 |                                                                  |
-|  Layer 4:  Test files                                            |
-|            ui.createElement('rectangle', [2,2], [5,5])           |
-|            assertSelectedElements(rect.id)                       |
-|            checkpoint('after draw')                               |
+|  Layer 5:  Test files                                            |
+|            td.createElement('rectangle', [2,2], [5,5])           |
+|            td.expectSelected(rect.id)                            |
+|            td.checkpoint('after draw')                            |
 |                                                                  |
 +==================================================================+
 |                                                                  |
-|  Layer 3:  UI + CanvasGrid + Matchers                            |
-|            UI.clickTool() -- keyboard shortcut to select tool    |
-|            UI.createElement() -- tool + drag + returns accessor  |
-|            UI.group() / ungroup() / deleteSelected()             |
+|  Layer 4:  TestDrawVue (unified facade)                          |
+|            Flat API combining all layers below                   |
+|            td.createElement / td.addElement / td.boxSelect       |
+|            td.expectElementCount / td.expectSelected             |
+|            td.undo / td.group / td.flush                         |
+|            Inspired by tldraw's TestEditor pattern               |
+|                                                                  |
++==================================================================+
+|                                                                  |
+|  Layer 3:  CanvasPage + Page Objects + Matchers (legacy)         |
+|            CanvasPage.create() -> page.canvas / page.selection   |
+|            UI.clickTool() / UI.createElement()                   |
 |            CanvasGrid -- logical cells -> pixel coordinates      |
 |            assertElements / assertSelectedElements               |
 |            toCloselyEqualPoints / checkpoint                     |
@@ -200,25 +208,28 @@ We mirror Excalidraw's layered approach but adapted for Vue and real browsers:
 +==================================================================+
 ```
 
-Compare this to Excalidraw's 5-layer stack:
+Compare this to tldraw's and Excalidraw's stacks:
 
 ```
-Excalidraw                          Us
-----------                          --
-Layer 4: Test files                 Layer 4: Test files + matchers
-Layer 3: UI helper (React)          Layer 3: UI + CanvasGrid (Vue)
-Layer 2: Pointer + Keyboard (sync)  Layer 2: API + TestHook (globalThis.__h)
-Layer 1: API + window.h             Layer 1: Pointer + Keyboard (async)
-Layer 0: @testing-library/react     Layer 0: Browser commands (iframe)
+tldraw                          Excalidraw                  Us
+------                          ----------                  --
+Layer 3: Test files             Layer 4: Test files         Layer 5: Test files
+Layer 2: TestEditor (unified)   Layer 3: UI (React)         Layer 4: TestDrawVue (unified facade)
+Layer 1: Editor API (sync)      Layer 2: Pointer/Keyboard   Layer 3: CanvasPage + POs (legacy)
+Layer 0: jsdom                  Layer 1: API + window.h     Layer 2: API + TestHook
+                                Layer 0: @testing-library   Layer 1: Pointer + Keyboard (async)
+                                                            Layer 0: Browser commands (iframe)
 ```
 
 Key differences:
 
+- **TestDrawVue** is a thin facade (like tldraw's TestEditor) that flattens
+  all layers into a single class — one import, one variable, flat autocomplete
 - Our helpers are **async** (real browser events are async)
 - We have `globalThis.__h` (analogous to Excalidraw's `window.h`) for direct
   reactive state access via the `API` class
-- We have `CanvasGrid` which Excalidraw doesn't -- logical cell coordinates
-  instead of raw pixels
+- We have `CanvasGrid` which neither tldraw nor Excalidraw has -- logical cell
+  coordinates instead of raw pixels
 
 ---
 
@@ -484,64 +495,89 @@ and the composable's handler runs.
 
 ## Browser Tests: The Confidence Layer
 
-Browser tests render real Vue components in real Chromium:
+Browser tests render real Vue components in real Chromium.
 
-### Drawing a rectangle (full workflow)
+### TestDrawVue — the preferred approach
+
+`TestDrawVue` is a unified facade (inspired by tldraw's `TestEditor`) that
+flattens all browser helpers into a single flat API. One import, one variable:
 
 ```typescript
+import { TestDrawVue } from "~/__test-utils__/browser";
+
 it("creates a rectangle on drag", async () => {
-  const screen = render(CanvasContainer);
-  await waitForCanvasReady();
-  const ui = new UI(screen);
+  const td = await TestDrawVue.create();
 
-  await ui.createElementAtCells("rectangle", [2, 2], [5, 5]);
+  await td.createElementAtCells("rectangle", [2, 2], [5, 5]);
 
-  expect(API.elements).toHaveLength(1);
-  expect(API.elements[0]!.type).toBe("rectangle");
-  expect(API.elements[0]!.width).toBeGreaterThan(0);
-  expect(API.activeTool).toBe("selection");
+  td.expectElementCount(1);
+  td.expectElementType(0, "rectangle");
+  expect(td.elements[0]!.width).toBeGreaterThan(0);
+  td.expectToolToBe("selection");
 });
 ```
+
+No more `page.canvas.`, `page.selection.`, `page.scene.` — just `td.`.
+
+### Selection with TestDrawVue
+
+```typescript
+it("box-selects multiple elements", async () => {
+  const td = await TestDrawVue.create();
+
+  const r1 = await td.createElement("rectangle", [1, 1], [3, 3]);
+  const r2 = await td.createElement("ellipse", [5, 1], [7, 3]);
+  td.clearSelection();
+  await td.flush();
+
+  await td.boxSelect([0, 0], [8, 4]);
+  await td.flush();
+
+  td.expectSelected(r1.id, r2.id);
+});
+```
+
+### Programmatic setup + interaction
+
+```typescript
+it("programmatic setSelected works", async () => {
+  const td = await TestDrawVue.create();
+
+  const r1 = td.addElement({ x: 50, y: 50, width: 60, height: 60 });
+  const r2 = td.addElement({ x: 200, y: 50, width: 60, height: 60 });
+  await td.flush();
+
+  td.select(r1, r2);
+  td.expectSelected(r1.id, r2.id);
+});
+```
+
+### Undo/redo
+
+```typescript
+it("undo restores deleted element", async () => {
+  const td = await TestDrawVue.create();
+
+  await td.createElementAtCells("rectangle", [2, 2], [5, 5]);
+  td.expectElementCount(1);
+
+  await td.deleteSelected();
+  td.expectElementCount(0);
+
+  await td.undo();
+  td.expectElementCount(1);
+});
+```
+
+### Raw helpers for edge cases
+
+`td.pointer`, `td.keyboard`, `td.grid`, and `td.screen` are still accessible
+for scenarios that need the underlying helpers directly.
 
 **vs Excalidraw**: They check `h.state.activeTool.type`. We check
-`API.activeTool` (which reads from our `globalThis.__h` test hook).
-Both provide direct state access -- we can also check `aria-pressed` on
-toolbar buttons for DOM-level assertions.
-
-### Using the grid for readability
-
-```typescript
-it("draws a rectangle at grid cells", async () => {
-  const screen = render(CanvasContainer);
-  const ui = new UI(screen);
-
-  await ui.createElementAtCells("rectangle", [2, 2], [5, 5]);
-
-  // Assert via DOM
-  const selectionBtn = screen.getByRole("button", { name: "Selection" });
-  await expect.element(selectionBtn).toHaveAttribute("aria-pressed", "true");
-});
-```
-
-### Bound text editing
-
-```typescript
-it("double-click on rectangle creates bound text", async () => {
-  const screen = render(CanvasContainer);
-  await waitForCanvasReady();
-
-  await userEvent.keyboard("2");
-  await commands.canvasDrag(SEL, 80, 80, 250, 200);
-  await waitForPaint();
-
-  // Double-click at center opens text editor
-  await userEvent.keyboard("1");
-  await commands.canvasDblClick(SEL, 165, 140);
-
-  const textarea = screen.getByRole("textbox");
-  await expect.element(textarea).toBeVisible();
-});
-```
+`td.activeTool` (which reads from our `globalThis.__h` test hook).
+Both provide direct state access — we can also use `td.expectToolActive()`
+for DOM-level aria-pressed assertions.
 
 ### Screenshot tests (visual regression)
 
@@ -689,13 +725,15 @@ capture, matchMedia...). Ours is ~25 lines. Real browsers don't need mocks.
 app/
   __test-utils__/
     browser/
+      TestDrawVue.ts      <-- Unified facade (preferred for new tests)
       Pointer.ts          <-- Pointer class (drag, clickAt, clickOn, select, withModifiers)
       Keyboard.ts         <-- Keyboard class (press, withModifierKeys, undo, redo)
-      UI.ts               <-- High-level: clickTool, createElement, group, ungroup
+      UI.ts               <-- High-level: clickTool, createElement, group, ungroup (legacy)
       CanvasGrid.ts       <-- Logical grid -> pixel mapping
       api.ts              <-- API class wrapping globalThis.__h test hook
       checkpoint.ts       <-- Checkpoint snapshot pattern
       waiters.ts          <-- waitForCanvasReady, waitForPaint
+      pageObjects/        <-- CanvasPage, ToolbarPO, CanvasPO, etc. (legacy)
       index.ts            <-- Re-exports all browser helpers
     commands/
       canvasDrag.ts       <-- Browser command: drag on canvas
@@ -808,6 +846,15 @@ Rules of thumb:
 | `waitFor` init         | `waitFor(() => canvas && !isLoading)`    | `waitForCanvasReady()` polling `style.width`              |
 | Canvas element ref     | `GlobalTestState.interactiveCanvas`      | `CANVAS_SELECTOR` constant                                |
 
+## What We Took From tldraw
+
+| Pattern                  | tldraw's Version                                                             | Our Version                                                                      |
+| ------------------------ | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Unified TestEditor class | `TestEditor` (850+ lines): pointer, keyboard, state, assertions in one class | `TestDrawVue`: flat facade wrapping Pointer, Keyboard, Grid, API                 |
+| Built-in assertions      | `editor.expectToBeIn('select.idle')`, `editor.expectShapeToMatch(...)`       | `td.expectToolToBe(...)`, `td.expectElementCount(...)`, `td.expectSelected(...)` |
+| `getLastCreatedShape()`  | Returns last shape by creation order                                         | `td.getLastElement<T>()` returns last element in scene                           |
+| Fast E2E reset           | `hardResetEditor()` reuses page, resets state                                | `TestDrawVue.create()` resets via `API` if `__h` already exists                  |
+
 ## What We Added
 
 | Pattern                                 | Why                                                           |
@@ -819,6 +866,7 @@ Rules of thumb:
 | **Flat test philosophy**                | Each `it()` self-contained, no shared mutable state           |
 | **`showGridOverlay` debug command**     | Visual debugging for canvas test coordinates                  |
 | **Separate unit/browser configs**       | Unit tests stay fast in Node; browser tests only when needed  |
+| **TestDrawVue unified facade**          | tldraw-inspired single class replacing scattered page objects |
 
 ## What We Intentionally Don't Have
 
@@ -850,9 +898,23 @@ Rules of thumb:
 |  [x] API class (window.h equiv)    -> browser/api.ts + testHook.ts |
 |  [x] UI.createElement (accessor)   -> browser/UI.ts                |
 |  [x] UI.group / ungroup / delete   -> browser/UI.ts                |
+|  [x] TestDrawVue unified facade    -> browser/TestDrawVue.ts       |
+|      (tldraw TestEditor inspired)     Flat API, built-in assertions|
 +-------------------------------------------------------------------+
 |  TODO                           Priority   Inspiration             |
 +-------------------------------------------------------------------+
+|  Migrate remaining tests to      Medium    tldraw unified pattern  |
+|  TestDrawVue (from CanvasPage)                                     |
+|                                                                    |
+|  toCloselyMatchObject matcher    Low       tldraw float tolerance  |
+|  for partial object matching                on nested objects      |
+|                                                                    |
+|  Fluent scene builder API        Low       tldraw JSX shape        |
+|  td.scene().addRect().addArrow()           creation syntax         |
+|                                                                    |
+|  State machine transition tests  Low       tldraw expectToBeIn()   |
+|  td.expectToolState('select.idle')                                 |
+|                                                                    |
 |  Multi-touch Pointer             Low       Excalidraw finger1,     |
 |  instances for pinch/zoom                  finger2 Pointers        |
 |                                                                    |
@@ -873,11 +935,14 @@ and screenshot-test visual output for pixel-level regression safety.**
   User intent:    "draw a rectangle at cells [2,2] to [5,5]"
                           |
                           v
-  Test code:      await ui.createElementAtCells('rectangle', [2,2], [5,5])
+  Test code:      const td = await TestDrawVue.create()
+                  await td.createElementAtCells('rectangle', [2,2], [5,5])
+                  td.expectElementCount(1)
+                  td.expectToolToBe('selection')
                           |
                           v
-  UI class:       await keyboard.press('2')     // select tool
-                  await grid.drag([2,2], [5,5]) // drag on canvas
+  TestDrawVue:    await td.selectTool('rectangle')  // keyboard shortcut
+                  await td.grid.drag([2,2], [5,5])  // grid drag
                           |
                           v
   CanvasGrid:     toPixels([2,2]) -> { x: 200, y: 200 }
@@ -895,10 +960,10 @@ and screenshot-test visual output for pixel-level regression safety.**
                   -> canvas re-renders -> real pixels on screen
                           |
                           v
-  Test asserts:   await expect.element(selectionBtn)
-                    .toHaveAttribute('aria-pressed', 'true')
-                  await expect(container).toMatchScreenshot('rectangle')
+  Assertions:     td.expectElementCount(1)       // via API.elements
+                  td.expectToolToBe('selection')  // via API.activeTool
+                  await td.expectToolActive('selection')  // via aria-pressed
 ```
 
-We get the best of both worlds: Excalidraw's thoughtful helper abstractions
-AND the confidence of real browser rendering.
+We get the best of three worlds: Excalidraw's thoughtful helper abstractions,
+tldraw's unified TestEditor pattern, AND the confidence of real browser rendering.

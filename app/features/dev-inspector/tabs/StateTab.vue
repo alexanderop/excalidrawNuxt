@@ -30,11 +30,7 @@ const editingTextElement = computed(
   () => (h?.editingTextElement as { value: ExcalidrawElement | null })?.value ?? null,
 );
 
-// ── Collapsible sections ───────────────────────────────────────────
-
-const openSections = ref(
-  new Set(["tool", "viewport", "selection", "layers", "clipboard", "style"]),
-);
+const openSections = ref(new Set(["tool", "viewport", "selection", "clipboard", "style"]));
 
 function toggleSection(id: string): void {
   if (openSections.value.has(id)) {
@@ -43,8 +39,6 @@ function toggleSection(id: string): void {
   }
   openSections.value.add(id);
 }
-
-// ── Flash animation on value click ─────────────────────────────────
 
 const flashingKey = ref<string | null>(null);
 
@@ -56,8 +50,6 @@ async function flashValue(key: string): Promise<void> {
     flashingKey.value = null;
   }, 600);
 }
-
-// ── Section configuration ──────────────────────────────────────────
 
 const SECTION_ICONS = {
   tool: {
@@ -71,10 +63,6 @@ const SECTION_ICONS = {
   selection: {
     svg: "M3 3h18v18H3zM8 8h8v8H8z",
     classes: "bg-green-400/[0.12] text-green-400",
-  },
-  layers: {
-    svg: "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5",
-    classes: "bg-purple-400/[0.12] text-purple-400",
   },
   clipboard: {
     svg: "M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2M8 2h8v4H8z",
@@ -326,69 +314,6 @@ const nonDeletedCount = computed(
               selectionBounds.y2
             }}]
           </span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Canvas Layers section -->
-    <div class="overflow-hidden rounded-md">
-      <div
-        class="flex cursor-pointer select-none items-center gap-[7px] px-2 py-[7px] transition-colors hover:bg-white/[0.03]"
-        @click="toggleSection('layers')"
-      >
-        <div
-          class="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-[5px]"
-          :class="SECTION_ICONS.layers.classes"
-        >
-          <svg
-            class="h-3 w-3"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path :d="SECTION_ICONS.layers.svg" />
-          </svg>
-        </div>
-        <span class="flex-1 text-[11px] font-semibold uppercase tracking-wide text-foreground/60"
-          >Canvas Layers</span
-        >
-        <svg
-          class="h-3.5 w-3.5 text-foreground/30 transition-transform duration-200"
-          :class="{ 'rotate-90': openSections.has('layers') }"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <path d="M9 18l6-6-6-6" />
-        </svg>
-      </div>
-      <div v-if="openSections.has('layers')" class="space-y-0 px-2 pb-2 pl-9">
-        <div class="flex flex-col gap-[3px]">
-          <div
-            class="flex items-center justify-between rounded border border-accent/30 bg-accent/[0.06] px-2 py-[5px] text-[11px]"
-          >
-            <span class="font-medium text-accent">Interactive</span>
-            <span class="font-mono text-[10px] text-foreground/40">z:2 events</span>
-          </div>
-          <div
-            class="ml-2 flex items-center justify-between rounded border border-blue-400/20 bg-blue-400/[0.04] px-2 py-[5px] text-[11px]"
-          >
-            <span class="font-medium text-blue-400">NewElement</span>
-            <span class="font-mono text-[10px] text-foreground/40">z:1 no-ptr</span>
-          </div>
-          <div
-            class="ml-4 flex items-center justify-between rounded border border-green-400/20 bg-green-400/[0.04] px-2 py-[5px] text-[11px]"
-          >
-            <span class="font-medium text-green-400">Static</span>
-            <span class="font-mono text-[10px] text-foreground/40">z:1 no-ptr</span>
-          </div>
-        </div>
-        <div class="mt-1.5 space-y-0.5 text-[10px] leading-relaxed text-foreground/30">
-          <div>Static: grid + committed elements (RoughJS)</div>
-          <div>NewElement: element being drawn</div>
-          <div>Interactive: selection boxes, handles</div>
         </div>
       </div>
     </div>

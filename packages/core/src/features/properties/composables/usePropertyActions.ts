@@ -1,4 +1,4 @@
-import type { ComputedRef } from "vue";
+import type { ComputedRef, ShallowRef } from "vue";
 import type {
   ExcalidrawElement,
   Arrowhead,
@@ -7,14 +7,18 @@ import type {
   StrokeStyle,
   TextAlign,
 } from "../../elements/types";
+import { isArrowElement } from "../../elements/types";
 import { mutateElement } from "../../elements/mutateElement";
-import type { StyleDefaults, Roundness } from "../types";
+import { updateArrowBindings } from "../../binding";
+import type { ArrowSubtype, StyleDefaults, Roundness } from "../types";
 
 interface UsePropertyActionsOptions {
   selectedElements: ComputedRef<ExcalidrawElement[]>;
   styleDefaults: StyleDefaults;
   markDirty: () => void;
   onBeforeChange?: () => void;
+  /** All scene elements — needed to update arrow bindings after geometry changes */
+  elements?: ShallowRef<readonly ExcalidrawElement[]>;
 }
 
 interface UsePropertyActionsReturn {
@@ -30,6 +34,7 @@ interface UsePropertyActionsReturn {
   changeFontSize: (size: number) => void;
   changeTextAlign: (align: TextAlign) => void;
   changeArrowhead: (position: "start" | "end", type: Arrowhead | null) => void;
+  changeArrowSubtype: (subtype: ArrowSubtype) => void;
   getFormValue: <T>(
     property: string,
     fallback: T,
@@ -37,8 +42,32 @@ interface UsePropertyActionsReturn {
   ) => T | "mixed";
 }
 
+function getArrowSubtypeUpdates(subtype: ArrowSubtype): Record<string, unknown> {
+  switch (subtype) {
+    case "curved": {
+      return { roundness: { type: 2 }, elbowed: false };
+    }
+    case "elbow": {
+      return { roundness: null, elbowed: true };
+    }
+    default: {
+      return { roundness: null, elbowed: false };
+    }
+  }
+}
+
 export function usePropertyActions(options: UsePropertyActionsOptions): UsePropertyActionsReturn {
-  const { selectedElements, styleDefaults, markDirty, onBeforeChange } = options;
+  const { selectedElements, styleDefaults, markDirty, onBeforeChange, elements } = options;
+
+  /** Re-snap arrow endpoints after geometry-affecting property changes */
+  function updateArrowBindingsForSelected(): void {
+    if (!elements) return;
+    for (const el of selectedElements.value) {
+      if (isArrowElement(el)) {
+        updateArrowBindings(el, elements.value);
+      }
+    }
+  }
 
   function applyAndRemember<K extends keyof StyleDefaults>(
     key: K,
@@ -84,6 +113,7 @@ export function usePropertyActions(options: UsePropertyActionsOptions): UsePrope
   function changeRoundness(type: Roundness): void {
     const roundness = type === "sharp" ? null : { type: 3 as const };
     applyAndRemember("roundness", type, { roundness });
+    updateArrowBindingsForSelected();
   }
 
   function changeFontFamily(family: number): void {
@@ -101,6 +131,18 @@ export function usePropertyActions(options: UsePropertyActionsOptions): UsePrope
   function changeArrowhead(position: "start" | "end", type: Arrowhead | null): void {
     const property = position === "start" ? "startArrowhead" : "endArrowhead";
     applyAndRemember(property, type);
+  }
+
+  function changeArrowSubtype(subtype: ArrowSubtype): void {
+    onBeforeChange?.();
+
+    const arrowUpdates = getArrowSubtypeUpdates(subtype);
+    for (const el of selectedElements.value) {
+      mutateElement(el, arrowUpdates);
+    }
+    updateArrowBindingsForSelected();
+    markDirty();
+    styleDefaults.arrowSubtype.value = subtype;
   }
 
   function getFormValue<T>(
@@ -131,6 +173,7 @@ export function usePropertyActions(options: UsePropertyActionsOptions): UsePrope
     changeFontSize,
     changeTextAlign,
     changeArrowhead,
+    changeArrowSubtype,
     getFormValue,
   };
 }

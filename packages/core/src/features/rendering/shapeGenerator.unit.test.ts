@@ -1,5 +1,7 @@
-import { generateShape, clearShapeCache } from "./shapeGenerator";
-import { createTestElement } from "../../__test-utils__/factories/element";
+import { pointFrom } from "../../shared/math";
+import type { LocalPoint } from "../../shared/math";
+import { generateShape, clearShapeCache, getZoomBucket, adjustRoughness } from "./shapeGenerator";
+import { createTestElement, createTestArrowElement } from "../../__test-utils__/factories/element";
 
 describe("shapeGenerator", () => {
   describe("generateShape", () => {
@@ -83,6 +85,69 @@ describe("shapeGenerator", () => {
     });
   });
 
+  describe("arrow shape generation", () => {
+    it("generates a curve drawable for a rounded arrow", () => {
+      clearShapeCache();
+      const element = createTestArrowElement({ roundness: { type: 2 } });
+      const drawable = generateShape(element as Parameters<typeof generateShape>[0], "light");
+      expect(drawable.shape).toBe("curve");
+    });
+
+    it("generates a linearPath drawable for a sharp arrow", () => {
+      clearShapeCache();
+      const element = createTestArrowElement({ roundness: null });
+      const drawable = generateShape(element as Parameters<typeof generateShape>[0], "light");
+      expect(drawable.shape).toBe("linearPath");
+    });
+
+    it("generates a path drawable for an elbow arrow", () => {
+      clearShapeCache();
+      const element = createTestArrowElement({
+        elbowed: true,
+        roundness: null,
+        points: [
+          pointFrom<LocalPoint>(0, 0),
+          pointFrom<LocalPoint>(50, 0),
+          pointFrom<LocalPoint>(50, 50),
+          pointFrom<LocalPoint>(100, 50),
+        ] as readonly LocalPoint[],
+      });
+      const drawable = generateShape(element as Parameters<typeof generateShape>[0], "light");
+      expect(drawable.shape).toBe("path");
+    });
+  });
+
+  describe("stroke styles", () => {
+    it("applies dashed stroke style with correct dash array", () => {
+      clearShapeCache();
+      const element = createTestElement({ strokeStyle: "dashed", strokeWidth: 2 });
+      const drawable = generateShape(element, "light");
+
+      expect(drawable.options.strokeLineDash).toEqual([8, 10]); // [8, 8 + 2]
+      expect(drawable.options.disableMultiStroke).toBe(true);
+      expect(drawable.options.strokeWidth).toBe(2.5); // 2 + 0.5
+    });
+
+    it("applies dotted stroke style with correct dash array", () => {
+      clearShapeCache();
+      const element = createTestElement({ strokeStyle: "dotted", strokeWidth: 2 });
+      const drawable = generateShape(element, "light");
+
+      expect(drawable.options.strokeLineDash).toEqual([1.5, 8]); // [1.5, 6 + 2]
+      expect(drawable.options.disableMultiStroke).toBe(true);
+      expect(drawable.options.strokeWidth).toBe(2.5);
+    });
+
+    it("does not apply dash for solid stroke style", () => {
+      clearShapeCache();
+      const element = createTestElement({ strokeStyle: "solid" });
+      const drawable = generateShape(element, "light");
+
+      expect(drawable.options.strokeLineDash).toBeUndefined();
+      expect(drawable.options.disableMultiStroke).toBeFalsy();
+    });
+  });
+
   describe("caching", () => {
     it("caches drawable by element id and nonce", () => {
       clearShapeCache();
@@ -124,6 +189,81 @@ describe("shapeGenerator", () => {
 
       const second = generateShape(element, "light");
       expect(first).not.toBe(second);
+    });
+
+    it("produces different cache entries for different zoom buckets", () => {
+      clearShapeCache();
+      const element = createTestElement();
+      const atLowZoom = generateShape(element, "light", 0.3);
+      const atMidZoom = generateShape(element, "light", 0.8);
+
+      expect(atLowZoom).not.toBe(atMidZoom);
+    });
+
+    it("uses same cache entry for zooms in the same bucket", () => {
+      clearShapeCache();
+      const element = createTestElement();
+      const first = generateShape(element, "light", 0.3);
+      const second = generateShape(element, "light", 0.4);
+
+      expect(first).toBe(second);
+    });
+  });
+
+  describe("getZoomBucket", () => {
+    it("returns bucket 0 for zoom <= 0.5", () => {
+      expect(getZoomBucket(0.1)).toBe(0);
+      expect(getZoomBucket(0.5)).toBe(0);
+    });
+
+    it("returns bucket 1 for zoom > 0.5 and <= 1", () => {
+      expect(getZoomBucket(0.6)).toBe(1);
+      expect(getZoomBucket(1)).toBe(1);
+    });
+
+    it("returns bucket 2 for zoom > 1 and <= 2", () => {
+      expect(getZoomBucket(1.5)).toBe(2);
+      expect(getZoomBucket(2)).toBe(2);
+    });
+
+    it("returns bucket 3 for zoom > 2", () => {
+      expect(getZoomBucket(2.1)).toBe(3);
+      expect(getZoomBucket(5)).toBe(3);
+    });
+  });
+
+  describe("adjustRoughness", () => {
+    it("returns half roughness for elements smaller than 30", () => {
+      expect(adjustRoughness(2, 20)).toBe(1);
+      expect(adjustRoughness(4, 10)).toBe(2);
+    });
+
+    it("returns 75% roughness for elements between 30 and 60", () => {
+      expect(adjustRoughness(2, 40)).toBe(1.5);
+      expect(adjustRoughness(4, 50)).toBe(3);
+    });
+
+    it("returns full roughness for elements 60 or larger", () => {
+      expect(adjustRoughness(2, 60)).toBe(2);
+      expect(adjustRoughness(2, 100)).toBe(2);
+    });
+  });
+
+  describe("preserveVertices", () => {
+    it("sets preserveVertices to true when roughness is less than 2", () => {
+      clearShapeCache();
+      const element = createTestElement({ roughness: 1 });
+      const drawable = generateShape(element, "light");
+
+      expect(drawable.options.preserveVertices).toBe(true);
+    });
+
+    it("does not set preserveVertices when roughness is 2 or greater", () => {
+      clearShapeCache();
+      const element = createTestElement({ roughness: 2 });
+      const drawable = generateShape(element, "light");
+
+      expect(drawable.options.preserveVertices).toBeFalsy();
     });
   });
 });

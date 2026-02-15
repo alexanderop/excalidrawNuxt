@@ -54,6 +54,28 @@ describe("bindArrowToElement", () => {
 
     expect(rect.boundElements).toHaveLength(1);
   });
+
+  it("includes mode in binding when provided", () => {
+    const arrow = createTestArrowElement({ id: "arrow1" });
+    const rect = createTestElement({ id: "rect1", x: 0, y: 0, width: 100, height: 50 });
+
+    bindArrowToElement(arrow, "start", rect, [0.5, 0.5], "inside");
+
+    expect(arrow.startBinding).not.toBeNull();
+    const binding = arrow.startBinding as Record<string, unknown>;
+    expect(binding["mode"]).toBe("inside");
+  });
+
+  it("omits mode from binding when not provided", () => {
+    const arrow = createTestArrowElement({ id: "arrow1" });
+    const rect = createTestElement({ id: "rect1", x: 0, y: 0, width: 100, height: 50 });
+
+    bindArrowToElement(arrow, "start", rect, [0.5, 0.5]);
+
+    expect(arrow.startBinding).not.toBeNull();
+    const binding = arrow.startBinding as Record<string, unknown>;
+    expect(binding["mode"]).toBeUndefined();
+  });
 });
 
 describe("unbindArrowEndpoint", () => {

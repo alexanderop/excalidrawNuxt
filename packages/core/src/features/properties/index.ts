@@ -4,7 +4,7 @@ export { usePropertyActions } from "./composables/usePropertyActions";
 export { usePropertyVisibility } from "./composables/usePropertyVisibility";
 export { useStyleClipboard, createStyleClipboard } from "./composables/useStyleClipboard";
 export type { UseStyleClipboardReturn } from "./composables/useStyleClipboard";
-export type { StyleDefaults, Roundness } from "./types";
+export type { StyleDefaults, Roundness, ArrowSubtype } from "./types";
 export {
   COLOR_PALETTE,
   COLOR_NAMES,

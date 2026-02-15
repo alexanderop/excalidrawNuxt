@@ -1,5 +1,6 @@
 import { pointFrom, pointDistance, pointCenter } from "../../shared/math";
 import type { GlobalPoint, LocalPoint } from "../../shared/math";
+import { curveCatmullRomToBezier, bezierPoint } from "../../shared/curve";
 import type { ExcalidrawLinearElement } from "../elements/types";
 import { POINT_HIT_THRESHOLD, MIDPOINT_HIT_THRESHOLD } from "./constants";
 
@@ -12,8 +13,19 @@ export function getPointPositions(element: ExcalidrawLinearElement): GlobalPoint
 
 /**
  * Get scene-space midpoint positions between consecutive points.
+ * For curved elements (roundness !== null), midpoints lie on the Bezier curve at t=0.5.
+ * For straight elements, midpoints are linear interpolations.
  */
 export function getMidpointPositions(element: ExcalidrawLinearElement): GlobalPoint[] {
+  // For curved elements, compute midpoints on the Bezier curve
+  if ("roundness" in element && element.roundness !== null) {
+    const curves = curveCatmullRomToBezier(element.points);
+    return curves.map((curve) => {
+      const mid = bezierPoint(curve, 0.5);
+      return pointFrom<GlobalPoint>(mid[0] + element.x, mid[1] + element.y);
+    });
+  }
+
   const scenePoints = getPointPositions(element);
   const midpoints: GlobalPoint[] = [];
   for (let i = 0; i < scenePoints.length - 1; i++) {
