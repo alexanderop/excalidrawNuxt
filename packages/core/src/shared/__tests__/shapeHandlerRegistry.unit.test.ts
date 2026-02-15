@@ -42,7 +42,7 @@ describe("createShapeHandlerRegistry", () => {
     const element = createTestElement({ type: "rectangle" });
 
     expect(() => registry.getHandler(element)).toThrow(
-      "No shape handler registered for type: rectangle",
+      'No shape handler registered for element type: "rectangle"',
     );
   });
 
