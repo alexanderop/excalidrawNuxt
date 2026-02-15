@@ -8,7 +8,12 @@ import {
 } from "@excalidraw/element";
 import type { ElementsMap, ExcalidrawElement, ExcalidrawFreeDrawElement } from "../elements/types";
 import { isFreeDrawElement, isLinearElement } from "../elements/types";
-import { lineSegment, pointFrom, distanceToLineSegment } from "../../shared/math";
+import {
+  lineSegment,
+  pointFrom,
+  distanceToLineSegment,
+  segmentsIntersectAt,
+} from "../../shared/math";
 import type { GlobalPoint, LineSegment } from "../../shared/math";
 import type { Bounds } from "../selection/bounds";
 
@@ -20,6 +25,7 @@ function lineSegmentsDistance(
   seg1: LineSegment<GlobalPoint>,
   seg2: LineSegment<GlobalPoint>,
 ): number {
+  if (segmentsIntersectAt(seg1, seg2) !== null) return 0;
   const d1 = distanceToLineSegment(seg1[0], seg2);
   const d2 = distanceToLineSegment(seg1[1], seg2);
   const d3 = distanceToLineSegment(seg2[0], seg1);
