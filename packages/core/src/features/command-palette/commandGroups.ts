@@ -22,6 +22,7 @@ export const COMMAND_GROUP_DEFS: CommandGroupDef[] = [
       "tool:code",
       "tool:line",
       "tool:image",
+      "tool:eraser",
     ],
   },
   {

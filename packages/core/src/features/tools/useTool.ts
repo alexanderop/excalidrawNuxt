@@ -51,6 +51,7 @@ export const KEY_TO_TOOL: Record<string, ToolType> = {
   "0": "code",
   i: "image",
   "9": "image",
+  e: "eraser",
 };
 
 export function useToolStore(): UseToolStoreReturn {

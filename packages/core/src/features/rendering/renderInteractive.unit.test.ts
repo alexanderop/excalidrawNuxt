@@ -19,6 +19,7 @@ describe("renderInteractiveScene", () => {
     renderInteractiveScene({
       ctx,
       selectedElements: [],
+      elements: [],
       zoom: 1,
       selectionBox: null,
       theme: "light",
@@ -38,6 +39,7 @@ describe("renderInteractiveScene", () => {
     renderInteractiveScene({
       ctx,
       selectedElements: [element],
+      elements: [element],
       zoom: 1,
       selectionBox: null,
       theme: "light",
@@ -54,6 +56,7 @@ describe("renderInteractiveScene", () => {
     renderInteractiveScene({
       ctx,
       selectedElements: [element],
+      elements: [element],
       zoom: 1,
       selectionBox: null,
       theme: "light",
@@ -76,6 +79,7 @@ describe("renderInteractiveScene", () => {
     renderInteractiveScene({
       ctx,
       selectedElements: [],
+      elements: [],
       zoom: 1,
       selectionBox: box,
       theme: "light",
@@ -117,6 +121,7 @@ describe("renderInteractiveScene", () => {
     renderInteractiveScene({
       ctx,
       selectedElements: [arrow],
+      elements: [arrow],
       zoom: 1,
       selectionBox: null,
       theme: "light",
@@ -145,6 +150,7 @@ describe("renderInteractiveScene", () => {
     renderInteractiveScene({
       ctx,
       selectedElements: [],
+      elements: [],
       zoom: 1,
       selectionBox: null,
       theme: "light",
@@ -181,6 +187,7 @@ describe("renderInteractiveScene", () => {
     renderInteractiveScene({
       ctx,
       selectedElements: [el1, el2],
+      elements: [el1, el2],
       zoom: 1,
       selectionBox: null,
       theme: "light",
@@ -221,6 +228,7 @@ describe("renderInteractiveScene", () => {
     renderInteractiveScene({
       ctx,
       selectedElements: [el1, el2],
+      elements: [el1, el2],
       zoom: 1,
       selectionBox: null,
       theme: "light",
@@ -239,6 +247,7 @@ describe("renderInteractiveScene", () => {
     renderInteractiveScene({
       ctx,
       selectedElements: [],
+      elements: [],
       zoom: 1,
       selectionBox: null,
       theme: "light",
@@ -260,6 +269,7 @@ describe("renderInteractiveScene", () => {
     renderInteractiveScene({
       ctx,
       selectedElements: [element],
+      elements: [element],
       zoom,
       selectionBox: null,
       theme: "light",
