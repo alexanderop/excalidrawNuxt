@@ -107,6 +107,13 @@ describe("eraserTest", () => {
     it("returns false when segment is far from arrow", () => {
       expect(eraserTest(seg(0, 200, 10, 200), arrow, emptyMap, 1)).toBe(false);
     });
+
+    it("returns true when eraser trail crosses through arrow (crossing segments)", () => {
+      // Arrow goes roughly from (10,10) to (110,60)
+      // Eraser trail crosses it perpendicularly — endpoints are far from the arrow
+      // but the segments intersect
+      expect(eraserTest(seg(60, 0, 60, 70), arrow, emptyMap, 1)).toBe(true);
+    });
   });
 
   describe("bounding box rejection", () => {
