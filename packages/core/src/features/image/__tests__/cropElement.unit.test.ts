@@ -3,6 +3,7 @@ import { createTestImageElement } from "../../../__test-utils__/factories/elemen
 import { pointFrom } from "../../../shared/math";
 import type { GlobalPoint, Radians } from "../../../shared/math";
 import type { ImageCrop } from "@excalidraw/element/types";
+import type { ExcalidrawImageElement } from "../types";
 import {
   cropElement,
   getUncroppedWidthAndHeight,
@@ -15,7 +16,7 @@ import type { CropHandleType } from "../cropElement";
  * Factory: image element at (100, 100) with 200x100 dimensions.
  * `naturalWidth` / `naturalHeight` represent the original image pixels.
  */
-function makeImage(overrides: Record<string, unknown> = {}) {
+function makeImage(overrides: Partial<Omit<ExcalidrawImageElement, "type">> = {}) {
   return createTestImageElement({
     x: 100,
     y: 100,

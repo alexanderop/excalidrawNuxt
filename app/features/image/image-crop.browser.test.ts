@@ -2,7 +2,7 @@ import { onTestFinished } from "vitest";
 import { commands, userEvent } from "vitest/browser";
 import { CanvasPage, API, waitForPaint } from "~/__test-utils__/browser";
 import { createElement } from "@drawvue/core";
-import type { FileId, ExcalidrawImageElement } from "@drawvue/core";
+import type { FileId } from "@drawvue/core";
 
 const SEL = '[data-testid="interactive-canvas"]';
 
@@ -11,7 +11,8 @@ function createTestImage(width: number, height: number, color: string): Promise<
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
-  const ctx = canvas.getContext("2d")!;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Failed to get 2d context for test image");
   ctx.fillStyle = color;
   ctx.fillRect(0, 0, width, height);
 
@@ -55,7 +56,7 @@ async function setupImageElement(page: Awaited<ReturnType<typeof CanvasPage.crea
   API.setSelectedElements([el]);
   await page.scene.flush();
 
-  return el as ExcalidrawImageElement;
+  return el;
 }
 
 describe("image crop — enter/exit crop mode", () => {

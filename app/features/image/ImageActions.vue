@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, watch, ref } from "vue";
-import { useEventListener } from "@vueuse/core";
+import { useEventListener, useTimeoutFn } from "@vueuse/core";
 import { useImageActions } from "~/composables/useImageActions";
 
 const ERROR_DISPLAY_MS = 4000;
@@ -17,13 +17,20 @@ const {
 
 const showError = ref(false);
 
+const { start: startErrorTimer, stop: stopErrorTimer } = useTimeoutFn(
+  () => {
+    showError.value = false;
+  },
+  ERROR_DISPLAY_MS,
+  { immediate: false },
+);
+
 // Show a temporary error toast when segmentation fails
 watch(segStatus, (val) => {
   if (val !== "error") return;
+  stopErrorTimer();
   showError.value = true;
-  setTimeout(() => {
-    showError.value = false;
-  }, ERROR_DISPLAY_MS);
+  startErrorTimer();
 });
 
 const statusLabel = computed(() => {

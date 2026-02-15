@@ -1,6 +1,6 @@
 import type { ExcalidrawElement, ExcalidrawLinearElement } from "../elements/types";
 import { isLinearElement } from "../elements/types";
-import type { ExcalidrawImageElement } from "../image/types";
+import { isImageElement } from "../image/types";
 import type { GlobalPoint } from "../../shared/math";
 import type { Theme } from "../theme/types";
 import { SELECTION_COLORS, SELECTION_LINE_WIDTH, SELECTION_PADDING } from "../selection/constants";
@@ -324,10 +324,14 @@ function renderEraserTrail(
   ctx.lineWidth = 5 / zoom;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
+  const first = trailPoints[0];
+  if (!first) return;
   ctx.beginPath();
-  ctx.moveTo(trailPoints[0]![0], trailPoints[0]![1]);
+  ctx.moveTo(first[0], first[1]);
   for (let i = 1; i < trailPoints.length; i++) {
-    ctx.lineTo(trailPoints[i]![0], trailPoints[i]![1]);
+    const pt = trailPoints[i];
+    if (!pt) continue;
+    ctx.lineTo(pt[0], pt[1]);
   }
   ctx.stroke();
   ctx.restore();
@@ -387,10 +391,10 @@ export function renderInteractiveScene(options: InteractiveSceneOptions): void {
 
   // Render crop handles for the element being cropped
   if (croppingElementId) {
-    const croppingElement = elements.find((el) => el.id === croppingElementId);
-    if (croppingElement && croppingElement.type === "image") {
+    const croppingElement = elements.find((el) => el.id === croppingElementId) ?? null;
+    if (isImageElement(croppingElement)) {
       renderSelectionBorder(ctx, croppingElement, zoom, theme);
-      renderCropHandles(ctx, croppingElement as ExcalidrawImageElement, zoom, theme);
+      renderCropHandles(ctx, croppingElement, zoom, theme);
     }
   }
 

@@ -160,9 +160,10 @@ useEventListener(document, "keydown", (e: KeyboardEvent) => {
   if (!e.metaKey || !e.altKey) return;
 
   if (e.code === "KeyC") {
-    if (selectedElements.value.length === 0) return;
+    const first = selectedElements.value[0];
+    if (!first) return;
     e.preventDefault();
-    copyStyles(selectedElements.value[0]!);
+    copyStyles(first);
     return;
   }
 
@@ -609,7 +610,10 @@ register([
     label: "Copy Styles",
     icon: "i-lucide-paintbrush",
     kbds: ["meta", "alt", "C"],
-    handler: () => copyStyles(selectedElements.value[0]!),
+    handler: () => {
+      const first = selectedElements.value[0];
+      if (first) copyStyles(first);
+    },
     enabled: () => selectedElements.value.length > 0,
   },
   {
@@ -672,6 +676,8 @@ ctx.crop.value = { croppingElementId, enterCropMode, exitCropMode };
 
 // Test hook — expose reactive state for browser tests (Excalidraw's window.h pattern).
 // Always available (SSR disabled, zero overhead — just window property assignments).
+// Type declared via `declare global { var __h }` in testHook.ts, but that ambient
+// declaration isn't in Nuxt's typecheck scope, so we assert through unknown.
 (globalThis as unknown as Record<string, unknown>).__h = {
   elements,
   elementMap,

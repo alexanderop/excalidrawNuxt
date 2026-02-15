@@ -67,11 +67,11 @@ export function useImageActions() {
       handler() {
         void handleRemoveBackground();
       },
-      enabled: () =>
-        selectedElements.value.length === 1 &&
-        isInitializedImageElement(selectedElements.value[0]!) &&
-        !selectedElements.value[0]!.locked &&
-        !isAnythingProcessing.value,
+      enabled: () => {
+        if (selectedElements.value.length !== 1) return false;
+        const el = selectedElements.value[0];
+        return !!el && isInitializedImageElement(el) && !el.locked && !isAnythingProcessing.value;
+      },
     },
     {
       id: "image:split-objects",
@@ -80,11 +80,11 @@ export function useImageActions() {
       handler() {
         void handleSplitObjects();
       },
-      enabled: () =>
-        selectedElements.value.length === 1 &&
-        isInitializedImageElement(selectedElements.value[0]!) &&
-        !selectedElements.value[0]!.locked &&
-        !isAnythingProcessing.value,
+      enabled: () => {
+        if (selectedElements.value.length !== 1) return false;
+        const el = selectedElements.value[0];
+        return !!el && isInitializedImageElement(el) && !el.locked && !isAnythingProcessing.value;
+      },
     },
     {
       id: "image:crop",
@@ -96,12 +96,16 @@ export function useImageActions() {
         if (!el || !isInitializedImageElement(el)) return;
         cropSlice.enterCropMode(el.id);
       },
-      enabled: () =>
-        !!cropSlice &&
-        selectedElements.value.length === 1 &&
-        isInitializedImageElement(selectedElements.value[0]!) &&
-        !isAnythingProcessing.value &&
-        !cropSlice.croppingElementId.value,
+      enabled: () => {
+        if (!cropSlice || selectedElements.value.length !== 1) return false;
+        const el = selectedElements.value[0];
+        return (
+          !!el &&
+          isInitializedImageElement(el) &&
+          !isAnythingProcessing.value &&
+          !cropSlice.croppingElementId.value
+        );
+      },
     },
     {
       id: "image:reset-crop",

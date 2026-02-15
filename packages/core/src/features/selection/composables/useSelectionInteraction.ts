@@ -5,7 +5,7 @@ import { useKeyboardShortcuts } from "../../../shared/useKeyboardShortcuts";
 import type { ExcalidrawElement, ExcalidrawLinearElement, ElementsMap } from "../../elements/types";
 import { isArrowElement, isLinearElement } from "../../elements/types";
 import type { ExcalidrawImageElement } from "../../image/types";
-import { isImageElement, isInitializedImageElement } from "../../image/types";
+import { isInitializedImageElement } from "../../image/types";
 import { mutateElement } from "../../elements/mutateElement";
 import type { Box, GlobalPoint } from "../../../shared/math";
 import type { ToolType } from "../../tools/types";
@@ -572,7 +572,7 @@ export function useSelectionInteraction(
     if (!hitElement) return;
 
     // Image crop: double-click an initialized image to enter crop mode
-    if (isImageElement(hitElement) && isInitializedImageElement(hitElement) && onDoubleClickImage) {
+    if (isInitializedImageElement(hitElement) && onDoubleClickImage) {
       onDoubleClickImage(hitElement);
       return;
     }

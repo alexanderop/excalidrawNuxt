@@ -93,6 +93,11 @@ export function useObjectSegmentation() {
   async function segmentObjects(img: HTMLImageElement): Promise<ProcessedSegment[] | null> {
     return new Promise((resolve) => {
       const w = ensureWorker();
+      // Settle any previous pending promise before starting a new one
+      if (pendingResolve) {
+        pendingResolve(null);
+        pendingResolve = null;
+      }
       // Store resolve so handleWorkerError can settle the promise on crash
       pendingResolve = resolve;
 
@@ -111,11 +116,19 @@ export function useObjectSegmentation() {
             w.removeEventListener("message", handleMessage);
             pendingResolve = null;
             status.value = "compositing";
-            void compositeMasks(img, msg.masks).then((segments) => {
-              status.value = "idle";
-              resetAfterDone();
-              resolve(segments);
-            });
+            compositeMasks(img, msg.masks)
+              .then((segments) => {
+                status.value = "idle";
+                resetAfterDone();
+                resolve(segments);
+              })
+              .catch((error: unknown) => {
+                console.error("[segmentation] Compositing failed:", error);
+                status.value = "error";
+                errorMessage.value = error instanceof Error ? error.message : "Compositing failed";
+                resetAfterDone();
+                resolve(null);
+              });
             break;
           }
           case "error": {
@@ -135,6 +148,10 @@ export function useObjectSegmentation() {
             resetAfterDone();
             resolve(null);
             break;
+          }
+          default: {
+            const _exhaustive: never = msg;
+            console.error("[segmentation] Unhandled message type:", _exhaustive);
           }
         }
       }
@@ -171,11 +188,12 @@ function imageToPixelBuffer(
 
   const canvas = new OffscreenCanvas(width, height);
   const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Failed to get OffscreenCanvas 2d context");
+  if (!ctx) return { buffer: new ArrayBuffer(0), width: 0, height: 0 };
   ctx.drawImage(img, 0, 0, width, height);
 
   const imageData = ctx.getImageData(0, 0, width, height);
-  return { buffer: imageData.data.buffer as ArrayBuffer, width, height };
+  // eslint-disable-next-line unicorn/prefer-spread -- ArrayBuffer.slice, not Array.slice
+  return { buffer: imageData.data.buffer.slice(0), width, height };
 }
 
 async function compositeMasks(
@@ -253,9 +271,16 @@ async function compositeSingleMask(
   });
   const url = URL.createObjectURL(blob);
 
-  return new Promise<ProcessedSegment>((resolve) => {
+  return new Promise<ProcessedSegment>((resolve, reject) => {
     const result = new Image();
-    result.onload = () => resolve({ image: result, bbox, maskWidth, maskHeight });
+    result.addEventListener("load", () => {
+      URL.revokeObjectURL(url);
+      resolve({ image: result, bbox, maskWidth, maskHeight });
+    });
+    result.addEventListener("error", () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Failed to load segmented image from blob URL"));
+    });
     result.src = url;
   });
 }

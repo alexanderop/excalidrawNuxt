@@ -73,13 +73,16 @@ export function useCropInteraction(options: UseCropInteractionOptions): UseCropI
   function exitCropMode(confirm: boolean): void {
     if (!croppingElementId.value) return;
 
-    if (confirm) {
-      onInteractionEnd();
-    }
     if (!confirm) {
       onInteractionDiscard();
+      croppingElementId.value = null;
+      interaction = { type: "idle" };
+      markStaticDirty();
+      markInteractiveDirty();
+      return;
     }
 
+    onInteractionEnd();
     croppingElementId.value = null;
     interaction = { type: "idle" };
     markStaticDirty();
