@@ -6,7 +6,7 @@ import {
   isPointInElement,
   shouldTestInside,
 } from "@excalidraw/element";
-import type { ElementsMap, ExcalidrawElement } from "../elements/types";
+import type { ElementsMap, ExcalidrawElement, ExcalidrawFreeDrawElement } from "../elements/types";
 import { isFreeDrawElement, isLinearElement } from "../elements/types";
 import { lineSegment, pointFrom, distanceToLineSegment } from "../../shared/math";
 import type { GlobalPoint, LineSegment } from "../../shared/math";
@@ -77,7 +77,7 @@ function testLinearElement(
 
 function testFreeDrawElement(
   pathSegment: LineSegment<GlobalPoint>,
-  element: ExcalidrawElement & { points: readonly { 0: number; 1: number }[] },
+  element: ExcalidrawFreeDrawElement,
   zoom: number,
 ): boolean {
   const tolerance = getHitThreshold(element, zoom);

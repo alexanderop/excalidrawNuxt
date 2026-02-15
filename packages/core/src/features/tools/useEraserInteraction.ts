@@ -30,7 +30,6 @@ interface UseEraserInteractionOptions {
   markInteractiveDirty: () => void;
 
   onInteractionStart: () => void;
-  onInteractionEnd: () => void;
   recordAction: (fn: () => void) => void;
 }
 
@@ -69,53 +68,32 @@ export function useEraserInteraction(
   let startScreenY = 0;
   let activePointerId = -1;
 
+  // ── Helpers ──────────────────────────────────────────────────────────
+
   function getVisibleCandidates(): readonly ExcalidrawElement[] {
     return elements.value.filter((el) => !el.isDeleted && !el.locked);
   }
 
-  function addBoundText(el: ExcalidrawElement, ids: Set<string>): void {
+  function applyBoundText(el: ExcalidrawElement, ids: Set<string>, op: "add" | "delete"): void {
     const boundText = getBoundTextElement(el, elementMap);
-    if (boundText) ids.add(boundText.id);
+    if (boundText) ids[op](boundText.id);
   }
 
-  function removeBoundText(el: ExcalidrawElement, ids: Set<string>): void {
-    const boundText = getBoundTextElement(el, elementMap);
-    if (boundText) ids.delete(boundText.id);
-  }
-
-  function expandForGroupsAndBindings(elementId: string, ids: Set<string>): void {
+  function applyGroupsAndBindings(elementId: string, ids: Set<string>, op: "add" | "delete"): void {
     const el = elements.value.find((e) => e.id === elementId);
     if (!el) return;
 
     const outermostGroupId = el.groupIds.at(-1);
     if (outermostGroupId) {
       for (const member of getElementsInGroup(elementMap, outermostGroupId)) {
-        ids.add(member.id);
-        addBoundText(member, ids);
+        ids[op](member.id);
+        applyBoundText(member, ids, op);
       }
     }
 
-    addBoundText(el, ids);
+    applyBoundText(el, ids, op);
     if (el.type === "text" && "containerId" in el && el.containerId) {
-      ids.add(el.containerId);
-    }
-  }
-
-  function contractForGroupsAndBindings(elementId: string, ids: Set<string>): void {
-    const el = elements.value.find((e) => e.id === elementId);
-    if (!el) return;
-
-    const outermostGroupId = el.groupIds.at(-1);
-    if (outermostGroupId) {
-      for (const member of getElementsInGroup(elementMap, outermostGroupId)) {
-        ids.delete(member.id);
-        removeBoundText(member, ids);
-      }
-    }
-
-    removeBoundText(el, ids);
-    if (el.type === "text" && "containerId" in el && el.containerId) {
-      ids.delete(el.containerId);
+      ids[op](el.containerId);
     }
   }
 
@@ -126,7 +104,7 @@ export function useEraserInteraction(
     for (const el of candidates) {
       if (restore && ids.has(el.id)) {
         if (eraserTest(pathSegment, el, elementMap, zoom.value)) {
-          contractForGroupsAndBindings(el.id, ids);
+          applyGroupsAndBindings(el.id, ids, "delete");
           ids.delete(el.id);
         }
         continue;
@@ -134,7 +112,7 @@ export function useEraserInteraction(
 
       if (!restore && !ids.has(el.id) && eraserTest(pathSegment, el, elementMap, zoom.value)) {
         ids.add(el.id);
-        expandForGroupsAndBindings(el.id, ids);
+        applyGroupsAndBindings(el.id, ids, "add");
       }
     }
 
@@ -148,7 +126,7 @@ export function useEraserInteraction(
     if (!hitElement) return [];
 
     const ids = new Set<string>([hitElement.id]);
-    expandForGroupsAndBindings(hitElement.id, ids);
+    applyGroupsAndBindings(hitElement.id, ids, "add");
     return elements.value.filter((el) => ids.has(el.id));
   }
 

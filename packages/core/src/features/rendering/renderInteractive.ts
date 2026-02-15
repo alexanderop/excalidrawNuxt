@@ -310,19 +310,18 @@ function renderEraserTrail(
   ctx: CanvasRenderingContext2D,
   trailPoints: readonly GlobalPoint[],
   zoom: number,
-  isDark: boolean,
+  theme: Theme,
 ): void {
   if (trailPoints.length < 2) return;
   ctx.save();
-  ctx.strokeStyle = isDark ? "rgba(255, 255, 255, 0.25)" : "rgba(0, 0, 0, 0.25)";
+  ctx.strokeStyle = theme === "dark" ? "rgba(255, 255, 255, 0.25)" : "rgba(0, 0, 0, 0.25)";
   ctx.lineWidth = 5 / zoom;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
   ctx.beginPath();
-  const [first, ...rest] = trailPoints;
-  ctx.moveTo(first![0], first![1]);
-  for (const pt of rest) {
-    ctx.lineTo(pt[0], pt[1]);
+  ctx.moveTo(trailPoints[0]![0], trailPoints[0]![1]);
+  for (let i = 1; i < trailPoints.length; i++) {
+    ctx.lineTo(trailPoints[i]![0], trailPoints[i]![1]);
   }
   ctx.stroke();
   ctx.restore();
@@ -335,12 +334,12 @@ function renderPendingErasure(
   zoom: number,
 ): void {
   if (pendingIds.size === 0) return;
+  const pad = 2 / zoom;
   ctx.save();
   ctx.fillStyle = "rgba(255, 107, 237, 0.15)";
   for (const el of allElements) {
     if (!pendingIds.has(el.id) || el.isDeleted) continue;
     const [x1, y1, x2, y2] = getElementBounds(el);
-    const pad = 2 / zoom;
     ctx.fillRect(x1 - pad, y1 - pad, x2 - x1 + pad * 2, y2 - y1 + pad * 2);
   }
   ctx.restore();
@@ -392,6 +391,6 @@ export function renderInteractiveScene(options: InteractiveSceneOptions): void {
 
   if (eraserState) {
     renderPendingErasure(ctx, elements, eraserState.pendingIds, zoom);
-    renderEraserTrail(ctx, eraserState.trailPoints, zoom, theme === "dark");
+    renderEraserTrail(ctx, eraserState.trailPoints, zoom, theme);
   }
 }

@@ -359,7 +359,7 @@ const { pendingErasureIds, eraserTrailPoints, cancelEraserIfActive } = useEraser
   isPanning,
   elementMap,
   onDelete(elementsToDelete) {
-    // 4-step deletion lifecycle: unbind → soft delete → cleanup groups → clear selection
+    // Unbind bindings and delete bound text before soft-deleting
     for (const el of elementsToDelete) {
       if (isArrowElement(el)) {
         unbindArrow(el, elements.value);
@@ -368,13 +368,7 @@ const { pendingErasureIds, eraserTrailPoints, cancelEraserIfActive } = useEraser
       if ((el.boundElements ?? []).length > 0) {
         unbindAllArrowsFromShape(el, elements.value);
       }
-    }
-    if (elementMap) {
-      for (const el of elementsToDelete) {
-        if (!isArrowElement(el)) {
-          deleteBoundTextForContainer(el, elementMap);
-        }
-      }
+      deleteBoundTextForContainer(el, elementMap);
     }
     for (const el of elementsToDelete) {
       mutateElement(el, { isDeleted: true });
@@ -384,7 +378,6 @@ const { pendingErasureIds, eraserTrailPoints, cancelEraserIfActive } = useEraser
     clearSelection();
   },
   onInteractionStart: history.saveCheckpoint,
-  onInteractionEnd: history.commitCheckpoint,
   recordAction: history.recordAction,
 });
 
