@@ -18,12 +18,12 @@ Run lint, typecheck, and all tests automatically on every pull request.
 - [x] Type check passes (`nuxi typecheck`)
 - [x] All 3 vitest projects pass (core unit, app unit, browser)
 - [x] Playwright Chromium is installed for browser tests
-- [x] Bun dependencies are cached for fast repeat runs
+- [x] pnpm dependencies are cached for fast repeat runs
 - [ ] PR status checks block merge on failure (requires GitHub branch protection settings)
 
 ## Context
 
-The project has **no CI** today. Pre-commit hooks run lint + typecheck locally, but nothing enforces checks on PRs. The repo is a Bun monorepo with `@drawvue/core` (must build before tests) and a Nuxt 4 app.
+The project has **no CI** today. Pre-commit hooks run lint + typecheck locally, but nothing enforces checks on PRs. The repo is a pnpm monorepo with `@drawvue/core` (must build before tests) and a Nuxt 4 app.
 
 **Key constraint:** The `lint` script uses `--fix` flags, which is wrong for CI. The workflow must run linters in check-only mode.
 
@@ -63,39 +63,39 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: pnpm/action-setup@v4
         with:
-          bun-version: "1.3.x"
+          # pnpm version auto-detected from packageManager field
 
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Build core library
-        run: bun run core:build
+        run: pnpm run core:build
 
       - name: Format check
-        run: bun run fmt:check
+        run: pnpm run fmt:check
 
       - name: Lint
-        run: bun run lint:ci
+        run: pnpm run lint:ci
 
       - name: Typecheck
-        run: bun run typecheck
+        run: pnpm run typecheck
 
       - name: Install Playwright Chromium
-        run: bunx playwright install chromium --with-deps
+        run: pnpm exec playwright install chromium --with-deps
 
       - name: Run tests
-        run: bun run test
+        run: pnpm run test
 ```
 
 **Step ordering rationale:**
 
-1. `bun install` triggers `postinstall` → `nuxt prepare` (generates `.nuxt/` types needed for typecheck)
+1. `pnpm install` triggers `postinstall` → `nuxt prepare` (generates `.nuxt/` types needed for typecheck)
 2. `core:build` must run before tests (app imports `@drawvue/core`)
 3. Format + lint + typecheck run before tests (fast-fail on cheap checks)
 4. Playwright install before tests (browser tests need Chromium)
-5. `bun run test` runs all 3 vitest projects with `--bail=1`
+5. `pnpm run test` runs all 3 vitest projects with `--bail=1`
 
 **Concurrency:** `cancel-in-progress: true` cancels stale runs when new commits are pushed to the same PR.
 

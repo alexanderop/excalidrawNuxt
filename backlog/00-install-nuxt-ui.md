@@ -10,8 +10,8 @@ Install Nuxt UI 4 and wire it into the Nuxt config.
 
 ## Tasks
 
-- `bun add @nuxt/ui`
-- `bun remove @tailwindcss/vite`
+- `pnpm add @nuxt/ui`
+- `pnpm remove @tailwindcss/vite`
 - Remove `import tailwindcss from '@tailwindcss/vite'` and `tailwindcss()` from vite plugins in `nuxt.config.ts`
 - Add `'@nuxt/ui'` to `modules` in `nuxt.config.ts`
 - Add `@import "@nuxt/ui";` after `@import "tailwindcss"` in `app/assets/css/main.css`
@@ -20,6 +20,6 @@ Install Nuxt UI 4 and wire it into the Nuxt config.
 
 ## Acceptance Criteria
 
-- `bun dev` starts without errors
+- `pnpm dev` starts without errors
 - Existing UI renders correctly
 - `<UButton>` renders when placed in any component

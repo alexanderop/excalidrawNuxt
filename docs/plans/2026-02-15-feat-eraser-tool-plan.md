@@ -553,8 +553,8 @@ Could implement eraser as "select then delete" — eraser drag selects elements,
 - [x] Unit tests for eraserTest intersection logic (all element types)
 - [ ] Unit tests for useEraserInteraction composable
 - [ ] Browser tests for end-to-end eraser workflow
-- [x] Lint passes (`bun run lint`)
-- [x] Type-check passes (`bun typecheck`)
+- [x] Lint passes (`pnpm run lint`)
+- [x] Type-check passes (`pnpm typecheck`)
 
 ## Success Metrics
 

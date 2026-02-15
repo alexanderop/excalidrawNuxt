@@ -707,8 +707,8 @@ Moving rendering to a Web Worker via `OffscreenCanvas` would unblock the main th
 - [ ] All existing browser tests pass
 - [ ] New unit tests for: each renderer, registry, spatial index, bitmap cache, free-draw cache
 - [ ] Performance benchmarks added for: viewport culling, full scene render, hit test
-- [ ] No TypeScript errors (`bun typecheck`)
-- [ ] Linting passes (`bun lint`)
+- [ ] No TypeScript errors (`pnpm typecheck`)
+- [ ] Linting passes (`pnpm lint`)
 
 ## Success Metrics
 

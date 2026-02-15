@@ -68,7 +68,7 @@ Default port is 3000. If another service uses it, Nuxt will auto-increment. Chec
 The `@nuxtjs/tailwindcss` module still uses Tailwind v3. For Tailwind v4 (2025+), use the official Vite plugin directly:
 
 ```bash
-bun add tailwindcss @tailwindcss/vite
+pnpm add tailwindcss @tailwindcss/vite
 ```
 
 ```ts

@@ -15,14 +15,14 @@ Thank you to the Excalidraw team for building such a well-designed, open-source 
 - **TypeScript**
 - **RoughJS** + **perfect-freehand** for canvas shape rendering
 - **VueUse** for composables
-- **Bun** package manager
+- **pnpm** package manager
 
 ## Setup
 
 Install dependencies:
 
 ```bash
-bun install
+pnpm install
 ```
 
 ## Development
@@ -30,7 +30,7 @@ bun install
 Start the development server on `http://localhost:3000`:
 
 ```bash
-bun dev
+pnpm dev
 ```
 
 ## Production
@@ -38,28 +38,28 @@ bun dev
 Build for production:
 
 ```bash
-bun build
+pnpm build
 ```
 
 Preview the production build:
 
 ```bash
-bun preview
+pnpm preview
 ```
 
 ## Testing
 
 ```bash
-bun test            # Run all tests
-bun test:unit       # Unit tests only
-bun test:browser    # Browser tests only
+pnpm test            # Run all tests
+pnpm test:unit       # Unit tests only
+pnpm test:browser    # Browser tests only
 ```
 
 ## Linting & Type Checking
 
 ```bash
-bun lint            # Run oxlint then eslint
-bun typecheck       # Type-check with nuxi
+pnpm lint            # Run oxlint then eslint
+pnpm typecheck       # Type-check with nuxi
 ```
 
 ## License
