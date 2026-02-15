@@ -2,7 +2,11 @@ import { defineConfig } from "vitest/config";
 import { fileURLToPath } from "node:url";
 
 export default defineConfig({
+  optimizeDeps: {
+    exclude: ["@excalidraw/math", "@excalidraw/element"],
+  },
   resolve: {
+    conditions: ["development"],
     alias: {
       "~": fileURLToPath(new URL("app", import.meta.url)),
       "@excalidraw/math/ellipse": "@excalidraw/math",
