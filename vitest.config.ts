@@ -3,7 +3,11 @@ import { fileURLToPath } from "node:url";
 
 export default defineConfig({
   optimizeDeps: {
-    exclude: ["@excalidraw/math", "@excalidraw/element"],
+    esbuildOptions: {
+      alias: {
+        "@excalidraw/math/ellipse": "@excalidraw/math",
+      },
+    },
   },
   resolve: {
     alias: {

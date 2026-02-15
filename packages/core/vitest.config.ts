@@ -2,7 +2,11 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   optimizeDeps: {
-    exclude: ["@excalidraw/math", "@excalidraw/element"],
+    esbuildOptions: {
+      alias: {
+        "@excalidraw/math/ellipse": "@excalidraw/math",
+      },
+    },
   },
   test: {
     name: "core",
