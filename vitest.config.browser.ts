@@ -34,9 +34,24 @@ export default defineConfig({
   },
   resolve: {
     conditions: ["development"],
+    dedupe: ["vue", "@vue/runtime-core", "@vue/runtime-dom", "@vue/reactivity", "@vue/shared"],
     alias: {
       "~": fileURLToPath(new URL("app", import.meta.url)),
       "@excalidraw/math/ellipse": "@excalidraw/math",
+      // Force all @vue/shared imports to ESM build — prevents CJS/ESM split
+      // that causes duplicate EMPTY_OBJ between vitest-browser-vue and vue
+      "@vue/shared": fileURLToPath(
+        new URL("node_modules/@vue/shared/dist/shared.esm-bundler.js", import.meta.url),
+      ),
+      "@vue/runtime-core": fileURLToPath(
+        new URL("node_modules/@vue/runtime-core/dist/runtime-core.esm-bundler.js", import.meta.url),
+      ),
+      "@vue/runtime-dom": fileURLToPath(
+        new URL("node_modules/@vue/runtime-dom/dist/runtime-dom.esm-bundler.js", import.meta.url),
+      ),
+      "@vue/reactivity": fileURLToPath(
+        new URL("node_modules/@vue/reactivity/dist/reactivity.esm-bundler.js", import.meta.url),
+      ),
     },
   },
 });
