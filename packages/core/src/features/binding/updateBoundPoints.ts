@@ -144,6 +144,6 @@ function repositionBoundText(
   arrow: ExcalidrawArrowElement,
   elements: readonly ExcalidrawElement[],
 ): void {
-  const elementMap = arrayToMap(elements) as unknown as ElementsMap;
+  const elementMap = arrayToMap(elements) as ElementsMap;
   updateBoundTextOnArrow(arrow, elementMap);
 }

@@ -109,6 +109,18 @@ function buildMultiPointState(
   return { element: el, cursorPoint: cursor };
 }
 
+function buildEraserState(
+  eraserTrailPoints: ShallowRef<readonly GlobalPoint[]> | undefined,
+  pendingErasureIds: ShallowRef<ReadonlySet<string>> | undefined,
+): EraserRenderState | null {
+  if (!eraserTrailPoints?.value.length) return null;
+
+  return {
+    trailPoints: eraserTrailPoints.value,
+    pendingIds: pendingErasureIds?.value ?? new Set(),
+  };
+}
+
 /**
  * Orchestrates rendering across the three canvas layers: static, new-element, and interactive.
  *
@@ -213,13 +225,6 @@ export function useSceneRenderer(options: UseSceneRendererOptions): UseSceneRend
       ctx.scale(zoom.value, zoom.value);
       ctx.translate(scrollX.value, scrollY.value);
 
-      const eraserState: EraserRenderState | null = eraserTrailPoints?.value.length
-        ? {
-            trailPoints: eraserTrailPoints.value,
-            pendingIds: pendingErasureIds?.value ?? new Set(),
-          }
-        : null;
-
       renderInteractiveScene({
         ctx,
         selectedElements: selectedElements.value,
@@ -236,7 +241,7 @@ export function useSceneRenderer(options: UseSceneRendererOptions): UseSceneRend
         suggestedBindings: suggestedBindings?.value ?? null,
         selectedGroupIds: selectedGroupIds?.value,
         hoveredMidpoint: hoveredMidpoint?.value ?? null,
-        eraserState,
+        eraserState: buildEraserState(eraserTrailPoints, pendingErasureIds),
         croppingElementId: croppingElementId?.value ?? null,
       });
       ctx.restore();

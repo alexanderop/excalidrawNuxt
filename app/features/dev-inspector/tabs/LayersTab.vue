@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from "vue";
+import { useTestHook } from "../useTestHook";
 
-const h = (globalThis as unknown as Record<string, Record<string, unknown>>).__h;
+const h = useTestHook();
 
 const staticCanvasRef = computed(
   () => (h?.staticCanvasRef as { value: HTMLCanvasElement | null })?.value ?? null,

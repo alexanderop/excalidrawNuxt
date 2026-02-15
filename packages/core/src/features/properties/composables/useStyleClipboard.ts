@@ -39,6 +39,11 @@ function buildUpdatesForElement(
   return updates;
 }
 
+function elementProp(el: ExcalidrawElement, key: StyleKey): unknown {
+  // eslint-disable-next-line no-restricted-syntax -- ExcalidrawElement doesn't index by StyleKey; single crossing point
+  return (el as unknown as Record<string, unknown>)[key];
+}
+
 export interface UseStyleClipboardReturn {
   storedStyles: Ref<StyleSnapshot | null>;
   hasStoredStyles: ComputedRef<boolean>;
@@ -65,10 +70,10 @@ export function createStyleClipboard(
 
   function copyStyles(element: ExcalidrawElement): void {
     const snapshot: StyleSnapshot = {};
-    const record = element as unknown as Record<string, unknown>;
     for (const key of STYLE_KEYS) {
-      if (key in record && record[key] !== undefined) {
-        snapshot[key] = record[key];
+      const value = elementProp(element, key);
+      if (value !== undefined) {
+        snapshot[key] = value;
       }
     }
     storedStyles.value = snapshot;

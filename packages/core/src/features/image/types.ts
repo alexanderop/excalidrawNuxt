@@ -33,5 +33,6 @@ export function isInitializedImageElement(
  * requires going through `unknown` first.
  */
 export function toFileId(id: string): FileId {
+  // eslint-disable-next-line no-restricted-syntax -- branded type from @excalidraw/element has no structural overlap with string
   return id as unknown as FileId;
 }
