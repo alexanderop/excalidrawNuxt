@@ -13,6 +13,7 @@ export default defineConfig({
     include: ["src/**/*.unit.test.ts"],
     environment: "node",
     globals: true,
+    setupFiles: ["src/__test-utils__/setup-node.ts"],
   },
   resolve: {
     alias: {
