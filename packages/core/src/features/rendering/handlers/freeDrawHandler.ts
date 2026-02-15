@@ -1,9 +1,4 @@
-import type {
-  ExcalidrawElement,
-  ExcalidrawFreeDrawElement,
-  ExcalidrawLinearElement,
-  FileId,
-} from "../../elements/types";
+import type { ExcalidrawFreeDrawElement, FileId } from "../../elements/types";
 import type { ImageCacheEntry } from "../../image/types";
 import type { Theme } from "../../theme/types";
 import type { ShapeHandler } from "../../../shared/shapeHandlerRegistry";
@@ -14,25 +9,25 @@ import { getElementBounds } from "../../selection/bounds";
 import { renderFreeDrawElement } from "../renderFreeDraw";
 import { hitTestPolyline } from "./hitTestLinear";
 
-export const freeDrawHandler: ShapeHandler = {
+export const freeDrawHandler: ShapeHandler<ExcalidrawFreeDrawElement> = {
   type: "freedraw",
 
   render(
     ctx: CanvasRenderingContext2D,
     _rc: RoughCanvas,
-    element: ExcalidrawElement,
+    element: ExcalidrawFreeDrawElement,
     theme: Theme,
     _imageCache?: ReadonlyMap<FileId, ImageCacheEntry>,
     _zoom?: number,
   ): void {
-    renderFreeDrawElement(ctx, element as ExcalidrawFreeDrawElement, theme);
+    renderFreeDrawElement(ctx, element, theme);
   },
 
-  hitTest(point: GlobalPoint, element: ExcalidrawElement, threshold: number): boolean {
-    return hitTestPolyline(point, element as unknown as ExcalidrawLinearElement, threshold);
+  hitTest(point: GlobalPoint, element: ExcalidrawFreeDrawElement, threshold: number): boolean {
+    return hitTestPolyline(point, element, threshold);
   },
 
-  getBounds(element: ExcalidrawElement): Bounds {
+  getBounds(element: ExcalidrawFreeDrawElement): Bounds {
     return getElementBounds(element);
   },
 };

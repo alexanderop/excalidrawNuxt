@@ -50,7 +50,7 @@ export interface ShapeHandlerRegistry {
 }
 
 export function createShapeHandlerRegistry(): ShapeHandlerRegistry {
-  const handlers = new Map<SupportedElementType, ShapeHandler>();
+  const handlers = new Map<string, ShapeHandler>();
 
   function register(handler: ShapeHandler): void {
     handlers.set(handler.type, handler);
@@ -65,7 +65,11 @@ export function createShapeHandlerRegistry(): ShapeHandlerRegistry {
   }
 
   function getHandler(element: ExcalidrawElement): ShapeHandler {
-    return getHandlerByType(element.type as SupportedElementType);
+    const handler = handlers.get(element.type);
+    if (!handler) {
+      throw new Error(`No shape handler registered for element type: "${element.type}"`);
+    }
+    return handler;
   }
 
   function hasHandler(type: SupportedElementType): boolean {

@@ -22,6 +22,11 @@ export function renderSuggestedBinding(
   if (isArrowElement(element)) return;
   if (isTextElement(element)) return;
 
+  const handler = shapeRegistry.getHandler(element);
+  if (!isBindableHandler(handler)) {
+    return;
+  }
+
   const padding = BINDING_HIGHLIGHT_PADDING / zoom;
   const lineWidth = BINDING_HIGHLIGHT_LINE_WIDTH / zoom;
 
@@ -36,10 +41,6 @@ export function renderSuggestedBinding(
   ctx.translate(cx, cy);
   ctx.rotate(element.angle);
 
-  const handler = shapeRegistry.getHandler(element);
-  if (!isBindableHandler(handler)) {
-    throw new Error(`No bindable handler for type: ${element.type}`);
-  }
   handler.drawHighlight(ctx, element, padding);
 
   ctx.restore();

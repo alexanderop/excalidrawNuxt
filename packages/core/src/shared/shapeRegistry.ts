@@ -6,8 +6,9 @@ let _registry: ShapeHandlerRegistry | null = null;
 
 function getRegistry(): ShapeHandlerRegistry {
   if (!_registry) {
-    _registry = createShapeHandlerRegistry();
-    registerDefaultHandlers(_registry);
+    const registry = createShapeHandlerRegistry();
+    registerDefaultHandlers(registry);
+    _registry = registry;
   }
   return _registry;
 }

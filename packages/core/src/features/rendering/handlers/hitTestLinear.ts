@@ -1,7 +1,17 @@
-import type { ExcalidrawLinearElement } from "../../elements/types";
 import type { GlobalPoint, LocalPoint } from "../../../shared/math";
 import { pointFrom, distanceToLineSegment, lineSegment } from "../../../shared/math";
 import { curveCatmullRomToBezier, distanceToBezierCurves } from "../../../shared/curve";
+
+/**
+ * Minimal structural interface for polyline hit testing.
+ * Both ExcalidrawLinearElement and ExcalidrawFreeDrawElement satisfy this.
+ */
+interface PolylineElement {
+  readonly x: number;
+  readonly y: number;
+  readonly points: readonly LocalPoint[];
+  readonly roundness: null | { type: number; value?: number };
+}
 
 /**
  * Shared hit test for polyline/curve elements (arrow, line, freeDraw).
@@ -10,7 +20,7 @@ import { curveCatmullRomToBezier, distanceToBezierCurves } from "../../../shared
  */
 export function hitTestPolyline(
   point: GlobalPoint,
-  el: ExcalidrawLinearElement,
+  el: PolylineElement,
   threshold: number,
 ): boolean {
   if (el.roundness !== null) {

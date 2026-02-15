@@ -90,9 +90,12 @@ export const ellipseHandler: BindableShapeHandler = {
     const ry = element.height / 2;
     if (rx === 0 || ry === 0) return pointFrom<GlobalPoint>(cx, cy);
 
-    // Parametric: point on ellipse at angle = (rx*cos, ry*sin)
-    const angle = Math.atan2(dirY, dirX);
-    return pointFrom<GlobalPoint>(cx + rx * Math.cos(angle), cy + ry * Math.sin(angle));
+    // Handle zero direction vector
+    if (dirX === 0 && dirY === 0) return pointFrom<GlobalPoint>(cx, cy);
+
+    // Ray-ellipse intersection: find t such that (cx + dirX*t, cy + dirY*t) is on ellipse
+    const t = 1 / Math.sqrt((dirX * dirX) / (rx * rx) + (dirY * dirY) / (ry * ry));
+    return pointFrom<GlobalPoint>(cx + dirX * t, cy + dirY * t);
   },
 
   drawHighlight(ctx: CanvasRenderingContext2D, element: ExcalidrawElement, padding: number): void {
