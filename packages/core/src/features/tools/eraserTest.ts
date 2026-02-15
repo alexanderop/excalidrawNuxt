@@ -27,12 +27,20 @@ function lineSegmentsDistance(
   return Math.min(d1, d2, d3, d4);
 }
 
+function getHitThreshold(element: ExcalidrawElement, zoom: number): number {
+  if (isFreeDrawElement(element)) return Math.max(2.25, 5 / zoom);
+  if (isLinearElement(element))
+    return Math.max(element.strokeWidth, (element.strokeWidth * 2) / zoom);
+  return element.strokeWidth / 2;
+}
+
 function boundsOverlap(
   pathSegment: LineSegment<GlobalPoint>,
   element: ExcalidrawElement,
   elementsMap: ElementsMap,
+  zoom: number,
 ): boolean {
-  const threshold = isFreeDrawElement(element) ? 15 : element.strokeWidth / 2;
+  const threshold = getHitThreshold(element, zoom);
   const segmentBounds: Bounds = [
     Math.min(pathSegment[0][0], pathSegment[1][0]) - threshold,
     Math.min(pathSegment[0][1], pathSegment[1][1]) - threshold,
@@ -57,7 +65,7 @@ function testLinearElement(
   elementsMap: ElementsMap,
   zoom: number,
 ): boolean {
-  const tolerance = Math.max(element.strokeWidth, (element.strokeWidth * 2) / zoom);
+  const tolerance = getHitThreshold(element, zoom);
   const segments = getElementLineSegments(element, elementsMap);
   for (const seg of segments) {
     if (lineSegmentsDistance(seg as LineSegment<GlobalPoint>, pathSegment) <= tolerance) {
@@ -72,7 +80,7 @@ function testFreeDrawElement(
   element: ExcalidrawElement & { points: readonly { 0: number; 1: number }[] },
   zoom: number,
 ): boolean {
-  const tolerance = Math.max(2.25, 5 / zoom);
+  const tolerance = getHitThreshold(element, zoom);
   const pts = element.points.map((p) => pointFrom<GlobalPoint>(p[0] + element.x, p[1] + element.y));
   for (let i = 0; i < pts.length - 1; i++) {
     const a = pts[i];
@@ -101,7 +109,7 @@ export function eraserTest(
   zoom: number,
 ): boolean {
   if (element.isDeleted) return false;
-  if (!boundsOverlap(pathSegment, element, elementsMap)) return false;
+  if (!boundsOverlap(pathSegment, element, elementsMap, zoom)) return false;
 
   // Interior check for filled shapes
   if (shouldTestInside(element) && isPointInElement(pathSegment[1], element, elementsMap)) {
