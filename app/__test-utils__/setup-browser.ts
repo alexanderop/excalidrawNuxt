@@ -1,7 +1,7 @@
 import { expect, beforeAll } from "vitest";
 import { page } from "vitest/browser";
 import { config } from "vitest-browser-vue";
-import { defineComponent, h } from "vue";
+import { defineComponent, h, onUnmounted, watch } from "vue";
 import "~/assets/css/main.css";
 
 // Stub Nuxt UI components (UButton, UTooltip, etc.) that aren't available
@@ -14,12 +14,94 @@ const NuxtUiStub = defineComponent({
   },
 });
 
+// UModal stub — conditionally renders its #content slot based on `open` prop.
+// Listens for Escape on document (like real UModal) to emit update:open.
+const UModalStub = defineComponent({
+  props: { open: { type: Boolean, default: false } },
+  emits: ["update:open"],
+  setup(props, { slots, emit }) {
+    const onKeydown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && props.open) emit("update:open", false);
+    };
+    watch(
+      () => props.open,
+      (isOpen) => {
+        if (isOpen) document.addEventListener("keydown", onKeydown);
+        if (!isOpen) document.removeEventListener("keydown", onKeydown);
+      },
+      { immediate: true },
+    );
+    onUnmounted(() => document.removeEventListener("keydown", onKeydown));
+    return () =>
+      props.open
+        ? h(
+            "div",
+            { role: "dialog", style: "position:fixed;inset:0;z-index:9999" },
+            slots.content?.(),
+          )
+        : null;
+  },
+});
+
+// UCommandPalette stub — renders a search input and option list from groups.
+const UCommandPaletteStub = defineComponent({
+  props: {
+    groups: { type: Array, default: () => [] },
+    placeholder: { type: String, default: "" },
+    close: { type: Boolean, default: false },
+  },
+  emits: ["update:open"],
+  setup(props, { emit }) {
+    return () =>
+      h("div", { role: "listbox" }, [
+        h("input", {
+          type: "text",
+          placeholder: props.placeholder,
+          onInput: (e: Event) => {
+            const el = e.target as HTMLInputElement;
+            el.dataset.filter = el.value;
+          },
+        }),
+        ...(
+          props.groups as Array<{
+            id: string;
+            items: Array<{ id: string; label: string; onSelect?: () => void }>;
+          }>
+        ).flatMap((group) =>
+          group.items
+            .filter((item) => {
+              const input = document.querySelector<HTMLInputElement>(
+                `input[placeholder="${props.placeholder}"]`,
+              );
+              const filter = input?.dataset.filter ?? "";
+              return !filter || item.label.toLowerCase().includes(filter.toLowerCase());
+            })
+            .map((item) =>
+              h(
+                "div",
+                {
+                  role: "option",
+                  onClick: () => {
+                    item.onSelect?.();
+                    emit("update:open", false);
+                  },
+                },
+                item.label,
+              ),
+            ),
+        ),
+      ]);
+  },
+});
+
 config.global.stubs = {
   UButton: NuxtUiStub,
   UTooltip: NuxtUiStub,
   UPopover: NuxtUiStub,
   UContextMenu: NuxtUiStub,
   USlider: NuxtUiStub,
+  UModal: UModalStub,
+  UCommandPalette: UCommandPaletteStub,
 };
 
 // Desktop-sized viewport for all browser tests (screenshots are resolution-dependent)

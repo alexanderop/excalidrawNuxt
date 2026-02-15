@@ -194,9 +194,31 @@ useEventListener(document, "keydown", (e: KeyboardEvent) => {
   }
 
   if (e.code === "KeyV") {
-    e.preventDefault();
-    history.recordAction(handlePaste);
+    // Don't preventDefault — let the native paste event fire so image paste
+    // (useImageInteraction) can access clipboardData for screenshot/image pastes.
+    // Element paste is handled in the "paste" event listener below.
+    return;
   }
+
+  if (e.code === "KeyD") {
+    e.preventDefault();
+    history.recordAction(handleDuplicate);
+  }
+});
+
+// Element clipboard paste via native paste event.
+// This lets useImageInteraction handle image pastes (screenshots) first —
+// we only do element paste when no images are in the clipboard.
+useEventListener(document, "paste", (e: ClipboardEvent) => {
+  if (isTypingElement(activeEl.value)) return;
+
+  const hasImage = [...(e.clipboardData?.items ?? [])].some((item) =>
+    item.type.startsWith("image/"),
+  );
+  if (hasImage) return; // let useImageInteraction handle it
+
+  e.preventDefault();
+  history.recordAction(handlePaste);
 });
 
 // Panning (only needs canvasRef, panBy, zoomBy, activeTool — all available early)

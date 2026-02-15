@@ -7,13 +7,66 @@
   },
   "rules": {
     "typescript/no-explicit-any": "error",
-    "eslint/no-console": ["error", { "allow": ["warn", "error"] }]
+    "eslint/no-console": ["error", { "allow": ["warn", "error"] }],
+
+    "unicorn/error-message": "error",
+    "unicorn/throw-new-error": "error",
+    "unicorn/no-negation-in-equality-check": "error",
+    "unicorn/no-object-as-default-parameter": "error",
+    "unicorn/no-static-only-class": "error",
+    "unicorn/no-this-assignment": "error",
+
+    "unicorn/prefer-includes": "warn",
+    "unicorn/prefer-string-slice": "warn",
+    "unicorn/prefer-array-some": "warn",
+    "unicorn/prefer-array-flat-map": "warn",
+    "unicorn/prefer-array-find": "warn",
+    "unicorn/prefer-number-properties": "warn",
+    "unicorn/prefer-structured-clone": "warn",
+    "unicorn/prefer-keyboard-event-key": "warn",
+    "unicorn/prefer-set-has": "warn",
+    "unicorn/prefer-type-error": "warn",
+    "unicorn/prefer-regexp-test": "warn",
+    "unicorn/prefer-default-parameters": "warn",
+    "unicorn/prefer-logical-operator-over-ternary": "warn",
+    "unicorn/prefer-date-now": "warn",
+    "unicorn/prefer-math-trunc": "warn",
+    "unicorn/prefer-string-replace-all": "warn",
+    "unicorn/prefer-node-protocol": "warn",
+
+    "unicorn/consistent-function-scoping": "warn",
+    "unicorn/no-unnecessary-await": "warn",
+    "unicorn/no-useless-promise-resolve-reject": "warn",
+    "unicorn/no-anonymous-default-export": "warn",
+    "unicorn/no-zero-fractions": "warn",
+    "unicorn/no-unreadable-array-destructuring": "warn",
+    "unicorn/no-typeof-undefined": "warn",
+    "unicorn/no-useless-switch-case": "warn",
+    "unicorn/number-literal-case": "warn",
+    "unicorn/switch-case-braces": "warn",
+    "unicorn/require-number-to-fixed-digits-argument": "warn",
+    "unicorn/require-array-join-separator": "warn",
+
+    "unicorn/no-null": "off",
+    "unicorn/filename-case": "off",
+    "unicorn/no-array-callback-reference": "off",
+    "unicorn/no-await-expression-member": "off",
+    "unicorn/no-array-reduce": "off",
+    "unicorn/no-useless-undefined": "off",
+    "unicorn/prevent-abbreviations": "off",
+    "unicorn/no-nested-ternary": "off"
   },
   "overrides": [
     {
       "files": ["eslint-rules/**"],
       "rules": {
         "typescript/no-explicit-any": "off"
+      }
+    },
+    {
+      "files": ["packages/core/src/__test-utils__/deterministicSeed.ts"],
+      "rules": {
+        "unicorn/prefer-math-trunc": "off"
       }
     }
   ]

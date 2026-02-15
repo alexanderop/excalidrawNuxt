@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { DrawVue } from "@drawvue/core";
+import CommandPalette from "~/features/command-palette/CommandPalette.vue";
 import DrawingToolbar from "~/features/tools/components/DrawingToolbar.vue";
 import PropertiesPanel from "~/features/properties/components/PropertiesPanel.vue";
 import BottomBar from "~/features/canvas/components/BottomBar.vue";
@@ -35,5 +36,6 @@ import BottomBar from "~/features/canvas/components/BottomBar.vue";
         @redo="redo"
       />
     </template>
+    <CommandPalette />
   </DrawVue>
 </template>

@@ -1,10 +1,8 @@
 import { reseed as excalidrawReseed } from "@excalidraw/common";
 
 function mulberry32(seed: number): () => number {
-  // eslint-disable-next-line unicorn/prefer-math-trunc -- bitwise OR coerces to 32-bit signed integer (not truncation)
   let a = seed | 0;
   return () => {
-    // eslint-disable-next-line unicorn/prefer-math-trunc -- 32-bit integer overflow wrapping
     a = (a + 0x6d_2b_79_f5) | 0;
     let t = Math.imul(a ^ (a >>> 15), 1 | a);
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
