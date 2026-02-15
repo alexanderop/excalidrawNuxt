@@ -48,6 +48,7 @@
   "devDependencies": {
     "@types/tinycolor2": "^1.4.6",
     "@vitejs/plugin-vue": "^6.0.4",
+    "@vitest/browser": "^4.0.0",
     "@vitest/browser-playwright": "^4.0.0",
     "@vitest/coverage-v8": "^4.0.0",
     "@vitest/eslint-plugin": "^1.6.6",
