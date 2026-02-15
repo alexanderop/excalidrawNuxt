@@ -25,6 +25,7 @@ const tools: Array<{
   { type: "code", label: "Code", shortcutNumber: 0, shortcutKey: "C" },
   { type: "line", label: "Line", shortcutNumber: 8, shortcutKey: "L" },
   { type: "image", label: "Image", shortcutNumber: 9, shortcutKey: "I" },
+  { type: "eraser", label: "Eraser", shortcutNumber: null, shortcutKey: "E" },
 ];
 </script>
 

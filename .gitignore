@@ -24,6 +24,9 @@ logs
 .env.*
 !.env.example
 
+# TypeScript build info
+*.tsbuildinfo
+
 # Test coverage
 coverage/
 
@@ -31,3 +34,9 @@ coverage/
 excalidraw/
 tldraw/
 .vitest-attachments/
+
+# Generated walkthrough/prototype HTML files
+walkthrough-*.html
+canvas-layers-inspector.html
+dev-inspector-redesign.html
+sidebar-redesign-prototype.html

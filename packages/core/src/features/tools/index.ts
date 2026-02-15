@@ -3,3 +3,5 @@ export type { UseToolStoreReturn } from "./useTool";
 export { useDrawingInteraction } from "./useDrawingInteraction";
 export { useFreeDrawInteraction } from "./useFreeDrawInteraction";
 export { useTextInteraction } from "./useTextInteraction";
+export { useEraserInteraction } from "./useEraserInteraction";
+export { eraserTest } from "./eraserTest";

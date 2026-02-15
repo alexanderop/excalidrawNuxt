@@ -13,6 +13,6 @@
 | Syntax highlighting | Shiki                                                     | Code element token highlighting (lazy-loaded)                |
 | Excalidraw types    | @excalidraw/element, @excalidraw/math, @excalidraw/common | Official type definitions, math primitives, shared utilities |
 | Testing             | Vitest (node + browser) + Playwright                      | Unit and browser integration tests                           |
-| Package manager     | Bun                                                       | Fast installs, scripts via `bun run`                         |
+| Package manager     | pnpm                                                      | Fast installs, mature monorepo support via `pnpm run`        |
 | Linting             | Oxlint + ESLint                                           | Dual linter: oxlint (fast) then ESLint                       |
 | Math                | shared/math.ts                                            | Point/vector utilities (re-exports from @excalidraw/math)    |

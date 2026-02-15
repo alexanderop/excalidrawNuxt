@@ -175,14 +175,14 @@ await page.canvas.grid.showOverlay(10000); // shows red grid lines for 10 second
 ## Running Screenshot Tests
 
 ```bash
-bun test:browser                           # run all browser tests
-bun test:browser -- {feature}.browser      # run specific test file
+pnpm test:browser                           # run all browser tests
+pnpm test:browser -- {feature}.browser      # run specific test file
 ```
 
 On first run, baseline screenshots are created in `__screenshots__/`. On subsequent runs, new screenshots are compared against baselines. To update baselines after intentional visual changes:
 
 ```bash
-bun test:browser -- --update              # update all baselines
+pnpm test:browser -- --update              # update all baselines
 ```
 
 ## Example: Complete Test for a New Feature

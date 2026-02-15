@@ -63,7 +63,7 @@ The 300x150 size is the **default HTML canvas element size** — this means `use
 
 ## TODO: Verify the feature works manually
 
-Run `bun dev`, draw a rectangle, double-click it, type text, press Escape. Verify:
+Run `pnpm dev`, draw a rectangle, double-click it, type text, press Escape. Verify:
 
 - Text appears centered inside the shape
 - Text alignment is `center` (not left-aligned)

@@ -1888,7 +1888,7 @@ Lead:                               └──[useSelectionInteraction]
 3. **Lead unblocks** agents by messaging when dependencies are ready
 4. **Each agent** marks their task complete and lead assigns the next unblocked task
 5. **Lead integrates** all work into `useSelectionInteraction.ts` and `CanvasContainer.vue`
-6. **Lead runs** full test suite (`bun test`) to verify integration
+6. **Lead runs** full test suite (`pnpm test`) to verify integration
 
 ### 15.5 When NOT to Parallelize
 
@@ -1950,8 +1950,8 @@ Create:
 ### Step 6: Final Validation
 
 ```
-bun test          ← All unit + browser tests pass
-bun run lint      ← No lint errors
+pnpm test          ← All unit + browser tests pass
+pnpm run lint      ← No lint errors
 Manual smoke test ← Draw, select, move, resize, delete works visually
 ```
 

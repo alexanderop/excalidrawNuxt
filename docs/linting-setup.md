@@ -5,7 +5,7 @@ This project uses a dual-linter approach: Oxlint for speed, ESLint for comprehen
 ## Architecture
 
 ```
-bun run lint
+pnpm run lint
   └── run-s lint:*
         ├── lint:oxlint (fast, Rust-based, catches basics)
         └── lint:eslint (comprehensive Vue/TS/import rules)
@@ -135,4 +135,4 @@ The flat config in `eslint.config.ts` is organized into named sections:
 Configured via `simple-git-hooks` + `lint-staged`:
 
 - On commit, staged `*.{ts,vue}` files run through `oxlint --fix` then `eslint --fix --cache`
-- After linting, `bun run typecheck` runs (`nuxi typecheck`)
+- After linting, `pnpm run typecheck` runs (`nuxi typecheck`)

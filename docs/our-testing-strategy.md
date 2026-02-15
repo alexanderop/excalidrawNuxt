@@ -75,9 +75,9 @@ vitest.config.ts              <-- workspace root, lists projects
 ```
 
 ```
-bun test              # Runs both projects (--bail=1)
-bun test:unit         # Unit tests only
-bun test:browser      # Browser tests only
+pnpm test              # Runs both projects (--bail=1)
+pnpm test:unit         # Unit tests only
+pnpm test:browser      # Browser tests only
 ```
 
 ### Unit config

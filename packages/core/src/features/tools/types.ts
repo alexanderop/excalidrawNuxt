@@ -10,4 +10,5 @@ export {
   isCodeTool,
   isImageTool,
   isFreeDrawTool,
+  isEraserTool,
 } from "../../shared/toolTypes";

@@ -5,27 +5,27 @@ DrawVue is a collaborative drawing app built as a monorepo: a reusable Vue drawi
 ## Commands
 
 ```
-bun dev           # Start Nuxt dev server
-bun build         # Production build
-bun preview       # Preview production build
-bun lint          # Run oxlint then eslint (run-s lint:*)
-bun typecheck     # Type-check with nuxi
-bun test          # Run all tests (vitest run --bail=1)
-bun test:unit     # Unit tests only (vitest --project unit)
-bun test:browser  # Browser tests only (vitest --project browser)
-bun core:build    # Build @drawvue/core library (unbuild)
-bun core:dev      # Dev mode for @drawvue/core (unbuild --stub)
+pnpm dev           # Start Nuxt dev server
+pnpm build         # Production build
+pnpm preview       # Preview production build
+pnpm lint          # Run oxlint then eslint (run-s lint:*)
+pnpm typecheck     # Type-check with nuxi
+pnpm test          # Run all tests (vitest run --bail=1)
+pnpm test:unit     # Unit tests only (vitest --project unit)
+pnpm test:browser  # Browser tests only (vitest --project browser)
+pnpm core:build    # Build @drawvue/core library (unbuild)
+pnpm core:dev      # Dev mode for @drawvue/core (unbuild --stub)
 ```
 
 ## Stack
 
-- **Monorepo** with Bun workspaces (`"workspaces": ["packages/*"]`)
+- **Monorepo** with pnpm workspaces (`pnpm-workspace.yaml`)
 - **`@drawvue/core`** — framework-agnostic Vue drawing library (unbuild, peer dep on Vue 3.5+)
 - **Nuxt 4** (Vue 3.5+), SSR disabled, **auto-imports disabled** (`imports: { autoImport: false }` — all imports must be explicit)
 - Tailwind CSS v4 (via `@tailwindcss/vite`, not the Nuxt module)
 - TypeScript, RoughJS + perfect-freehand (canvas shape rendering)
 - VueUse (`@vueuse/core`), Shiki (code highlighting)
-- Bun package manager
+- pnpm package manager
 
 ## Colors
 

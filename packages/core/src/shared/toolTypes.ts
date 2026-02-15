@@ -9,6 +9,7 @@ export type ToolType =
   | "code"
   | "image"
   | "freedraw"
+  | "eraser"
   | DrawingToolType;
 
 export function isDrawingTool(tool: ToolType): tool is DrawingToolType {
@@ -43,4 +44,8 @@ export function isImageTool(tool: ToolType): tool is "image" {
 
 export function isFreeDrawTool(tool: ToolType): tool is "freedraw" {
   return tool === "freedraw";
+}
+
+export function isEraserTool(tool: ToolType): tool is "eraser" {
+  return tool === "eraser";
 }
