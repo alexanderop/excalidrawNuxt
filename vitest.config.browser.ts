@@ -2,11 +2,26 @@ import { defineConfig } from "vitest/config";
 import vue from "@vitejs/plugin-vue";
 import tailwindcss from "@tailwindcss/vite";
 import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
+import path from "node:path";
 import { playwright } from "@vitest/browser-playwright";
 import { canvasDrag } from "./app/__test-utils__/commands/canvasDrag";
 import { canvasClick } from "./app/__test-utils__/commands/canvasClick";
 import { canvasDblClick } from "./app/__test-utils__/commands/canvasDblClick";
 import { showGridOverlay } from "./app/__test-utils__/commands/showGridOverlay";
+
+// Resolve @vue/* sub-packages from vue's own location, not from project root.
+// Bun isolated installs don't hoist transitive deps, so @vue/shared etc.
+// may only be resolvable from within vue's node_modules scope.
+const rootRequire = createRequire(path.resolve(process.cwd(), "package.json"));
+const vueDir = path.dirname(rootRequire.resolve("vue/package.json"));
+const vueRequire = createRequire(path.join(vueDir, "package.json"));
+
+function resolveVueEsm(pkg: string): string {
+  const pkgJson = vueRequire.resolve(`${pkg}/package.json`);
+  const name = pkg.split("/")[1]!;
+  return path.join(path.dirname(pkgJson), "dist", `${name}.esm-bundler.js`);
+}
 
 export default defineConfig({
   plugins: [vue(), tailwindcss()],
@@ -38,20 +53,13 @@ export default defineConfig({
     alias: {
       "~": fileURLToPath(new URL("app", import.meta.url)),
       "@excalidraw/math/ellipse": "@excalidraw/math",
-      // Force all @vue/shared imports to ESM build — prevents CJS/ESM split
-      // that causes duplicate EMPTY_OBJ between vitest-browser-vue and vue
-      "@vue/shared": fileURLToPath(
-        new URL("node_modules/@vue/shared/dist/shared.esm-bundler.js", import.meta.url),
-      ),
-      "@vue/runtime-core": fileURLToPath(
-        new URL("node_modules/@vue/runtime-core/dist/runtime-core.esm-bundler.js", import.meta.url),
-      ),
-      "@vue/runtime-dom": fileURLToPath(
-        new URL("node_modules/@vue/runtime-dom/dist/runtime-dom.esm-bundler.js", import.meta.url),
-      ),
-      "@vue/reactivity": fileURLToPath(
-        new URL("node_modules/@vue/reactivity/dist/reactivity.esm-bundler.js", import.meta.url),
-      ),
+      // Force all @vue/* imports to ESM build — prevents CJS/ESM split
+      // that causes duplicate EMPTY_OBJ between vitest-browser-vue and vue.
+      // Uses require.resolve for cross-platform node_modules resolution.
+      "@vue/shared": resolveVueEsm("@vue/shared"),
+      "@vue/runtime-core": resolveVueEsm("@vue/runtime-core"),
+      "@vue/runtime-dom": resolveVueEsm("@vue/runtime-dom"),
+      "@vue/reactivity": resolveVueEsm("@vue/reactivity"),
     },
   },
 });
