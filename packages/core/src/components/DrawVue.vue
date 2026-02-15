@@ -192,7 +192,7 @@ useEventListener(document, "keydown", (e: KeyboardEvent) => {
 });
 
 // Panning (only needs canvasRef, panBy, zoomBy, activeTool — all available early)
-const { cursorClass, spaceHeld, isPanning } = usePanning({
+const { panningCursor, spaceHeld, isPanning } = usePanning({
   canvasRef: interactiveCanvasRef,
   panBy,
   zoomBy,
@@ -650,15 +650,15 @@ function handlePropertyChange(): void {
 
 const CROSSHAIR_TOOLS = new Set<ToolType>(["text", "code", "image", "freedraw"]);
 
-const combinedCursorClass = computed(() => {
-  if (cursorClass.value !== "cursor-default") return cursorClass.value;
-  if (multiElement.value) return "cursor-crosshair";
-  if (editingLinearElement.value) return "cursor-pointer";
-  if (CROSSHAIR_TOOLS.has(activeTool.value)) return "cursor-crosshair";
+const combinedCursor = computed(() => {
+  if (panningCursor.value !== "default") return panningCursor.value;
+  if (multiElement.value) return "crosshair";
+  if (editingLinearElement.value) return "pointer";
+  if (CROSSHAIR_TOOLS.has(activeTool.value)) return "crosshair";
   if (activeTool.value === "selection" && cursorStyle.value !== "default") {
-    return `cursor-${cursorStyle.value}`;
+    return cursorStyle.value;
   }
-  return "cursor-default";
+  return "default";
 });
 
 defineExpose({
@@ -686,7 +686,7 @@ defineExpose({
     ref="container"
     data-testid="canvas-container"
     class="drawvue-container"
-    :class="combinedCursorClass"
+    :style="{ cursor: combinedCursor }"
   >
     <canvas ref="staticCanvas" class="drawvue-canvas drawvue-canvas--static" />
     <canvas ref="newElementCanvas" class="drawvue-canvas drawvue-canvas--new-element" />

@@ -66,34 +66,34 @@ describe("usePanning", () => {
     handlers.clear();
   });
 
-  describe("cursorClass", () => {
-    it("defaults to cursor-default for selection tool", () => {
+  describe("panningCursor", () => {
+    it("defaults to default for selection tool", () => {
       const setup = createPanningSetup();
       using panning = withSetup(() => usePanning(setup));
       eventMap = createEventHandlerMap(handlers);
 
-      expect(panning.cursorClass.value).toBe("cursor-default");
+      expect(panning.panningCursor.value).toBe("default");
     });
 
-    it("returns cursor-crosshair for drawing tools", () => {
+    it("returns crosshair for drawing tools", () => {
       const setup = createPanningSetup();
       setup.activeTool.value = "rectangle";
       using panning = withSetup(() => usePanning(setup));
       eventMap = createEventHandlerMap(handlers);
 
-      expect(panning.cursorClass.value).toBe("cursor-crosshair");
+      expect(panning.panningCursor.value).toBe("crosshair");
     });
 
-    it("returns cursor-grab for hand tool", () => {
+    it("returns grab for hand tool", () => {
       const setup = createPanningSetup();
       setup.activeTool.value = "hand";
       using panning = withSetup(() => usePanning(setup));
       eventMap = createEventHandlerMap(handlers);
 
-      expect(panning.cursorClass.value).toBe("cursor-grab");
+      expect(panning.panningCursor.value).toBe("grab");
     });
 
-    it("returns cursor-grab when space is held", () => {
+    it("returns grab when space is held", () => {
       const setup = createPanningSetup();
       using panning = withSetup(() => usePanning(setup));
       eventMap = createEventHandlerMap(handlers);
@@ -101,10 +101,10 @@ describe("usePanning", () => {
       eventMap.fire("keydown", { key: " ", preventDefault: vi.fn() });
 
       expect(panning.spaceHeld.value).toBe(true);
-      expect(panning.cursorClass.value).toBe("cursor-grab");
+      expect(panning.panningCursor.value).toBe("grab");
     });
 
-    it("returns cursor-grabbing when panning", () => {
+    it("returns grabbing when panning", () => {
       const setup = createPanningSetup();
       using panning = withSetup(() => usePanning(setup));
       eventMap = createEventHandlerMap(handlers);
@@ -113,7 +113,7 @@ describe("usePanning", () => {
       eventMap.fire("pointerdown", { clientX: 100, clientY: 100, pointerId: 1 });
 
       expect(panning.isPanning.value).toBe(true);
-      expect(panning.cursorClass.value).toBe("cursor-grabbing");
+      expect(panning.panningCursor.value).toBe("grabbing");
     });
   });
 
