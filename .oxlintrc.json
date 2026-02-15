@@ -1,5 +1,6 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "ignorePatterns": ["vue-flow/**", "excalidraw/**"],
   "categories": {
     "correctness": "error",
     "suspicious": "warn"

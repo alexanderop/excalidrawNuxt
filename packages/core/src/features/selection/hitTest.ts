@@ -1,17 +1,7 @@
 import type { ExcalidrawElement } from "../elements/types";
-import { isLinearElement, isFreeDrawElement } from "../elements/types";
-import {
-  pointFrom,
-  pointRotateRads,
-  lineSegment,
-  distanceToLineSegment,
-  polygonFromPoints,
-  polygonIncludesPoint,
-  pointOnPolygon,
-} from "../../shared/math";
-import type { GlobalPoint, LocalPoint, Radians } from "../../shared/math";
-import { curveCatmullRomToBezier, distanceToBezierCurves } from "../../shared/curve";
+import type { GlobalPoint } from "../../shared/math";
 import { getElementBounds } from "./bounds";
+import { shapeRegistry } from "../../shared/shapeRegistry";
 
 export function getHitThreshold(element: ExcalidrawElement, zoom: number): number {
   return Math.max(element.strokeWidth / 2 + 0.1, 10 / zoom);
@@ -33,30 +23,9 @@ export function hitTest(point: GlobalPoint, element: ExcalidrawElement, zoom: nu
     return false;
   }
 
-  // Phase 2: precise shape test
-  return hitTestShape(point, element, threshold);
-}
-
-function hitTestShape(point: GlobalPoint, element: ExcalidrawElement, threshold: number): boolean {
-  if (isFreeDrawElement(element) || isLinearElement(element)) {
-    return hitTestPolyline(point, element, threshold);
-  }
-  switch (element.type) {
-    case "rectangle":
-    case "text":
-    case "image": {
-      return hitTestRectangle(point, element, threshold);
-    }
-    case "ellipse": {
-      return hitTestEllipse(point, element, threshold);
-    }
-    case "diamond": {
-      return hitTestDiamond(point, element, threshold);
-    }
-    default: {
-      return false;
-    }
-  }
+  // Phase 2: precise shape test via handler
+  const handler = shapeRegistry.getHandler(element);
+  return handler.hitTest(point, element, threshold);
 }
 
 export function getElementAtPosition(
@@ -74,76 +43,4 @@ export function getElementAtPosition(
     if (hitTest(scenePoint, el, zoom)) return el;
   }
   return null;
-}
-
-function hitTestRectangle(point: GlobalPoint, el: ExcalidrawElement, threshold: number): boolean {
-  const cx = el.x + el.width / 2;
-  const cy = el.y + el.height / 2;
-  const rotated = pointRotateRads(point, pointFrom<GlobalPoint>(cx, cy), -el.angle as Radians);
-
-  return (
-    rotated[0] >= el.x - threshold &&
-    rotated[0] <= el.x + el.width + threshold &&
-    rotated[1] >= el.y - threshold &&
-    rotated[1] <= el.y + el.height + threshold
-  );
-}
-
-function hitTestEllipse(point: GlobalPoint, el: ExcalidrawElement, threshold: number): boolean {
-  const cx = el.x + el.width / 2;
-  const cy = el.y + el.height / 2;
-  const rotated = pointRotateRads(point, pointFrom<GlobalPoint>(cx, cy), -el.angle as Radians);
-
-  const rx = el.width / 2;
-  const ry = el.height / 2;
-  const dx = rotated[0] - cx;
-  const dy = rotated[1] - cy;
-
-  const outerRx = rx + threshold;
-  const outerRy = ry + threshold;
-  return (dx * dx) / (outerRx * outerRx) + (dy * dy) / (outerRy * outerRy) <= 1;
-}
-
-function hitTestDiamond(point: GlobalPoint, el: ExcalidrawElement, threshold: number): boolean {
-  const cx = el.x + el.width / 2;
-  const cy = el.y + el.height / 2;
-  const rotated = pointRotateRads(point, pointFrom<GlobalPoint>(cx, cy), -el.angle as Radians);
-
-  const vertices: GlobalPoint[] = [
-    pointFrom<GlobalPoint>(cx, el.y),
-    pointFrom<GlobalPoint>(el.x + el.width, cy),
-    pointFrom<GlobalPoint>(cx, el.y + el.height),
-    pointFrom<GlobalPoint>(el.x, cy),
-  ];
-
-  return isPointInPolygon(rotated, vertices, threshold);
-}
-
-function isPointInPolygon(point: GlobalPoint, vertices: GlobalPoint[], threshold: number): boolean {
-  const poly = polygonFromPoints<GlobalPoint>(vertices);
-  if (polygonIncludesPoint(point, poly)) return true;
-  return pointOnPolygon(point, poly, threshold);
-}
-
-function hitTestPolyline(
-  point: GlobalPoint,
-  el: ExcalidrawElement & { points: readonly { 0: number; 1: number }[] },
-  threshold: number,
-): boolean {
-  // For curved elements, use Bezier distance in local coordinates
-  if ("roundness" in el && el.roundness !== null) {
-    const localPoint = pointFrom<LocalPoint>(point[0] - el.x, point[1] - el.y);
-    const localPts = el.points.map((p) => pointFrom<LocalPoint>(p[0], p[1]));
-    const curves = curveCatmullRomToBezier(localPts);
-    return distanceToBezierCurves(curves, localPoint) <= threshold;
-  }
-
-  const pts = el.points.map((p) => pointFrom<GlobalPoint>(p[0] + el.x, p[1] + el.y));
-  for (let i = 0; i < pts.length - 1; i++) {
-    const a = pts[i];
-    const b = pts[i + 1];
-    if (!a || !b) continue;
-    if (distanceToLineSegment(point, lineSegment(a, b)) <= threshold) return true;
-  }
-  return false;
 }

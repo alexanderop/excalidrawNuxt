@@ -6,6 +6,8 @@ import {
   BINDING_HIGHLIGHT_LINE_WIDTH,
   BINDING_HIGHLIGHT_PADDING,
 } from "./constants";
+import { shapeRegistry } from "../../shared/shapeRegistry";
+import { isBindableHandler } from "../../shared/shapeHandlerRegistry";
 
 /**
  * Draw a highlight outline around a bindable shape to indicate
@@ -34,47 +36,11 @@ export function renderSuggestedBinding(
   ctx.translate(cx, cy);
   ctx.rotate(element.angle);
 
-  drawBindingShape(ctx, element, padding);
+  const handler = shapeRegistry.getHandler(element);
+  if (!isBindableHandler(handler)) {
+    throw new Error(`No bindable handler for type: ${element.type}`);
+  }
+  handler.drawHighlight(ctx, element, padding);
 
   ctx.restore();
-}
-
-function drawBindingShape(
-  ctx: CanvasRenderingContext2D,
-  element: ExcalidrawElement,
-  padding: number,
-): void {
-  if (element.type === "rectangle") {
-    ctx.strokeRect(
-      -element.width / 2 - padding,
-      -element.height / 2 - padding,
-      element.width + padding * 2,
-      element.height + padding * 2,
-    );
-    return;
-  }
-
-  if (element.type === "ellipse") {
-    const rx = element.width / 2 + padding;
-    const ry = element.height / 2 + padding;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
-    ctx.stroke();
-    return;
-  }
-
-  if (element.type === "diamond") {
-    const hw = element.width / 2 + padding;
-    const hh = element.height / 2 + padding;
-    ctx.beginPath();
-    ctx.moveTo(0, -hh);
-    ctx.lineTo(hw, 0);
-    ctx.lineTo(0, hh);
-    ctx.lineTo(-hw, 0);
-    ctx.closePath();
-    ctx.stroke();
-    return;
-  }
-
-  throw new Error(`Unhandled element type: ${(element as { type: string }).type}`);
 }
