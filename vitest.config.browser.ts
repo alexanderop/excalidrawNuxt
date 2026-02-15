@@ -26,6 +26,7 @@ export default defineConfig({
     setupFiles: ["app/__test-utils__/setup-browser.ts"],
   },
   resolve: {
+    conditions: ["development"],
     alias: {
       "~": fileURLToPath(new URL("app", import.meta.url)),
     },
