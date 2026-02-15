@@ -12,6 +12,7 @@ export default defineConfig({
   plugins: [vue(), tailwindcss()],
   optimizeDeps: {
     include: ["@excalidraw/common"],
+    exclude: ["@excalidraw/math", "@excalidraw/element"],
     esbuildOptions: {
       conditions: ["development"],
     },
