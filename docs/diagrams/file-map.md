@@ -1,6 +1,8 @@
 # File Map
 
-Complete file tree with every module in the project.
+> **STALE:** This diagram predates the monorepo extraction. Most features shown under `app/features/` now live in `packages/core/src/features/`. The `app/features/` directory contains only presentation-layer components (toolbars, panels, etc.). See CLAUDE.md for the current structure. This diagram needs a full rewrite.
+
+Complete file tree with every module in the project (pre-monorepo layout).
 
 ```mermaid
 graph LR

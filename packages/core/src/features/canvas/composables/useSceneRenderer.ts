@@ -69,6 +69,8 @@ interface UseSceneRendererOptions {
   // Eraser state — trail points and pending erasure IDs
   eraserTrailPoints?: ShallowRef<readonly GlobalPoint[]>;
   pendingErasureIds?: ShallowRef<ReadonlySet<string>>;
+  // Crop state
+  croppingElementId?: ShallowRef<string | null>;
   // Theme and image cache — injected from outside
   theme: Ref<Theme>;
   imageCache: ShallowRef<Map<FileId, ImageCacheEntry>>;
@@ -145,6 +147,7 @@ export function useSceneRenderer(options: UseSceneRendererOptions): UseSceneRend
     editingCodeElement,
     eraserTrailPoints,
     pendingErasureIds,
+    croppingElementId,
     theme,
     imageCache,
   } = options;
@@ -234,6 +237,7 @@ export function useSceneRenderer(options: UseSceneRendererOptions): UseSceneRend
         selectedGroupIds: selectedGroupIds?.value,
         hoveredMidpoint: hoveredMidpoint?.value ?? null,
         eraserState,
+        croppingElementId: croppingElementId?.value ?? null,
       });
       ctx.restore();
     },

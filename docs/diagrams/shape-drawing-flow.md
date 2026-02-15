@@ -82,7 +82,7 @@ sequenceDiagram
         participant User as User Input
         participant FD as useFreeDrawInteraction
         participant EL as createElement/mutateElement
-        participant CC as CanvasContainer
+        participant CC as DrawVue
 
         User->>FD: pointerdown (freedraw tool active)
         FD->>EL: createElement('freedraw', sceneX, sceneY, styleOverrides)

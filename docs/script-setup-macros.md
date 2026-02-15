@@ -122,7 +122,7 @@ defineExpose({
 });
 ```
 
-**Empty expose for browser tests:** In our codebase, `defineExpose({})` with an empty object is used on `CanvasContainer.vue` and `DrawingToolbar.vue`. This makes the component instance accessible to Vitest browser tests while exposing nothing useful — needed for test framework component mounting.
+**Empty expose for browser tests:** In our codebase, `defineExpose({})` with an empty object is used on `DrawVue.vue` and `DrawingToolbar.vue`. This makes the component instance accessible to Vitest browser tests while exposing nothing useful — needed for test framework component mounting.
 
 Parent access:
 
@@ -226,7 +226,7 @@ const canvasRef = useTemplateRef<HTMLCanvasElement>("interactiveCanvas");
 // In template: <canvas ref="interactiveCanvas" />
 ```
 
-**In our codebase:** `CanvasContainer.vue` uses `useTemplateRef` for all template refs:
+**In our codebase:** `DrawVue.vue` uses `useTemplateRef` for all template refs:
 
 ```ts
 const containerRef = useTemplateRef<HTMLDivElement>("container");

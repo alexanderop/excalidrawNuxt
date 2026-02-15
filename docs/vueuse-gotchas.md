@@ -84,7 +84,7 @@ await waitForPaint();
 const el = API.elements.at(-1);
 ```
 
-The `API` object provides programmatic access to app state via `globalThis.__h` (the test hook exposed by `CanvasContainer.vue`). This follows Excalidraw's `window.h` pattern.
+The `API` object provides programmatic access to app state via `globalThis.__h` (the test hook exposed by `DrawVueTestHarness.vue`). This follows Excalidraw's `window.h` pattern.
 
 ```ts
 // ❌ Fails: page.mouse coordinates don't map correctly into iframe

@@ -14,7 +14,7 @@ The `@excalidraw/excalidraw` package is NOT a dependency. Only `@excalidraw/comm
 
 ## Theme: CSS Filter Algorithm (Not Separate Palette)
 
-Dark mode is implemented natively. `resolveColor(color, theme)` passes through in light mode, and in dark mode applies `invert(93%) + hue-rotate(180deg)` — the same algorithm as CSS filters, but computed in JS for canvas use. The document root gets a `theme--dark` class toggled via `watchEffect` in `CanvasContainer.vue`.
+Dark mode is implemented natively. `resolveColor(color, theme)` passes through in light mode, and in dark mode applies `invert(93%) + hue-rotate(180deg)` — the same algorithm as CSS filters, but computed in JS for canvas use. The document root gets a `theme--dark` class toggled via `watchEffect` in `DrawVue.vue`.
 
 ## HiDPI Canvas Setup Pattern
 
@@ -340,7 +340,7 @@ const deleteSelected = whenSelectionActive(() => {
   fn();
 });
 
-// In CanvasContainer.vue
+// In DrawVue.vue
 useSelectionInteraction({
   // ...other options
   recordAction: history.recordAction,

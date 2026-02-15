@@ -276,19 +276,19 @@ if (type === "image") {
 
 ## Integration Points (Existing Files to Modify)
 
-| File                                             | Change                                                                         |
-| ------------------------------------------------ | ------------------------------------------------------------------------------ |
-| `features/elements/types.ts`                     | Add `ExcalidrawImageElement` to `SupportedElement`, re-export `isImageElement` |
-| `features/tools/types.ts`                        | Add `'image'` to `ToolType`, add `isImageTool()` guard                         |
-| `features/tools/useTool.ts`                      | Add keyboard shortcut (`9`)                                                    |
-| `features/tools/components/DrawingToolbar.vue`   | Add image tool button                                                          |
-| `features/tools/toolIcons.ts`                    | Add image icon SVG definition                                                  |
-| `features/rendering/renderElement.ts`            | Add `isImageElement` early check → `renderImageElement()`                      |
-| `features/rendering/shapeGenerator.ts`           | Add throw guard for `'image'` type                                             |
-| `features/selection/hitTest.ts`                  | Add `case 'image'` → rectangle hit test                                        |
-| `features/selection/resizeElement.ts`            | Default aspect-ratio-locked for images                                         |
-| `features/elements/createElement.ts`             | Add `if (type === 'image')` branch                                             |
-| `features/canvas/components/CanvasContainer.vue` | Wire `useImageInteraction`, pass imageCache to renderer                        |
+| File                                           | Change                                                                         |
+| ---------------------------------------------- | ------------------------------------------------------------------------------ |
+| `features/elements/types.ts`                   | Add `ExcalidrawImageElement` to `SupportedElement`, re-export `isImageElement` |
+| `features/tools/types.ts`                      | Add `'image'` to `ToolType`, add `isImageTool()` guard                         |
+| `features/tools/useTool.ts`                    | Add keyboard shortcut (`9`)                                                    |
+| `features/tools/components/DrawingToolbar.vue` | Add image tool button                                                          |
+| `features/tools/toolIcons.ts`                  | Add image icon SVG definition                                                  |
+| `features/rendering/renderElement.ts`          | Add `isImageElement` early check → `renderImageElement()`                      |
+| `features/rendering/shapeGenerator.ts`         | Add throw guard for `'image'` type                                             |
+| `features/selection/hitTest.ts`                | Add `case 'image'` → rectangle hit test                                        |
+| `features/selection/resizeElement.ts`          | Default aspect-ratio-locked for images                                         |
+| `features/elements/createElement.ts`           | Add `if (type === 'image')` branch                                             |
+| `components/DrawVue.vue`                       | Wire `useImageInteraction`, pass imageCache to renderer                        |
 
 ## New Files
 
@@ -351,7 +351,7 @@ if (type === "image") {
 5. **Tool registration** — `ToolType`, toolbar button, icon, keyboard shortcut
 6. **Interaction** — `useImageInteraction.ts` (file dialog, drop, paste)
 7. **Hit testing & resize** — selection integration
-8. **Wire into CanvasContainer** — final integration
+8. **Wire into DrawVue** — final integration
 9. **Tests** — unit + browser tests
 
 ---

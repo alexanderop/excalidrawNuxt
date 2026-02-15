@@ -107,7 +107,7 @@ elements selected → show properties toolbar
 | `newElementWith(el, updates)` | Committed changes (action performs, undo) | Immutable copy, bumps version    |
 | `mutateElement(el, updates)`  | Interactive/in-progress (drag, resize)    | In-place mutation, bumps version |
 
-We already have both in `app/features/elements/mutateElement.ts`.
+We already have both in `packages/core/src/features/elements/mutateElement.ts`.
 
 ---
 
@@ -115,7 +115,7 @@ We already have both in `app/features/elements/mutateElement.ts`.
 
 ### Design Decisions
 
-1. **Two new features**: `app/features/context-menu/` and `app/features/properties/`
+1. **Two new features**: `packages/core/src/features/context-menu/` and `packages/core/src/features/properties/` (core logic), with app-layer components in `app/features/`
 2. **Command pattern via composable**, not a class-based ActionManager — idiomatic Vue
 3. **Context menu** is a Teleported overlay positioned at pointer coords
 4. **Properties panel** is a horizontal toolbar below the drawing toolbar (or inline at top)
@@ -517,7 +517,7 @@ These are future candidates — not required for v1:
 - `ButtonIconSelect.vue` — generic icon button group
 - `OpacitySlider.vue` — range input with label
 - `ColorSwatch.vue` — clickable color preview button
-- Wire into `CanvasContainer.vue` (show when selection is non-empty)
+- Wire into `DrawVue.vue` (show when selection is non-empty)
 - Conditional sections for text/arrow elements
 
 ### Phase 3: Color Picker
@@ -536,7 +536,7 @@ These are future candidates — not required for v1:
 - `useContextMenu.ts` — open/close, position, item filtering
 - `ContextMenu.vue` — Teleported overlay
 - `contextMenuItems.ts` — element and canvas item definitions
-- Wire `contextmenu` event handler in `CanvasContainer.vue`
+- Wire `contextmenu` event handler in `DrawVue.vue`
 - Close on click-away, Escape, or scroll
 
 ### Phase 5: Copy/Paste Styles
@@ -565,7 +565,7 @@ These are future candidates — not required for v1:
 
 ```mermaid
 graph TD
-    CC[CanvasContainer.vue] --> PP[PropertiesPanel.vue]
+    CC[DrawVue.vue] --> PP[PropertiesPanel.vue]
     CC --> CM[ContextMenu.vue]
 
     PP --> CS1[ColorSwatch stroke]

@@ -25,6 +25,9 @@ export const elementMenuItems: readonly ContextMenuItemDef[] = [
   { actionId: "flip:vertical" },
   separator,
   { actionId: "image:remove-background" },
+  { actionId: "image:split-objects" },
+  { actionId: "image:crop" },
+  { actionId: "image:reset-crop" },
 ];
 
 export const canvasMenuItems: readonly ContextMenuItemDef[] = [

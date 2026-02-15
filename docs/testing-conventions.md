@@ -174,19 +174,19 @@ import { userEvent } from "vitest/browser";
 Use `render()` from `vitest-browser-vue` to mount components:
 
 ```ts
-const screen = render(CanvasContainer);
+const screen = render(DrawVueTestHarness);
 ```
 
 ### Test Hook (`globalThis.__h`)
 
-`CanvasContainer.vue` exposes a global `__h` object (Excalidraw's `window.h` pattern). This lets tests directly read and manipulate reactive state without DOM scraping.
+`DrawVueTestHarness.vue` exposes a global `__h` object (Excalidraw's `window.h` pattern). This lets tests directly read and manipulate reactive state without DOM scraping.
 
 **Type definition**: `app/__test-utils__/testHook.ts` defines the `TestHook` interface:
 
 ```ts
 import { getH } from "~/__test-utils__/testHook";
 
-const h = getH(); // throws if CanvasContainer not mounted
+const h = getH(); // throws if DrawVueTestHarness not mounted
 h.elements.value; // current elements array
 h.selectedIds.value; // selected element IDs
 h.activeTool.value; // current tool
@@ -293,7 +293,7 @@ await keyboard.withModifierKeys({ ctrlKey: true }, async () => {
 #### UI (`app/__test-utils__/browser/UI.ts`)
 
 ```ts
-const screen = render(CanvasContainer);
+const screen = render(DrawVueTestHarness);
 const ui = new UI(screen);
 
 await ui.clickTool("rectangle"); // keyboard shortcut
@@ -401,7 +401,7 @@ describe("visual rendering", () => {
   afterEach(() => restoreSeed());
 
   it("renders a shape", async () => {
-    render(CanvasContainer);
+    render(DrawVueTestHarness);
     await waitForCanvasReady();
     // ... draw shapes ...
     await expect(page.getByTestId("canvas-container")).toMatchScreenshot("shape-name");
@@ -443,7 +443,7 @@ Cell pixel size is resolved from the runtime canvas CSS dimensions (after `waitF
 ```ts
 import { UI } from "~/__test-utils__/browser";
 
-const screen = render(CanvasContainer);
+const screen = render(DrawVueTestHarness);
 const ui = new UI(screen);
 
 // Draw rectangle from cell [2,2] to cell [5,5]

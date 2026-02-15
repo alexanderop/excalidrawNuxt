@@ -26,7 +26,7 @@ flowchart LR
 
 ## Transform Formulas
 
-From `app/features/canvas/coords.ts`:
+From `packages/core/src/features/canvas/coords.ts`:
 
 ```
 screenToScene(screenX, screenY, viewport):
@@ -67,7 +67,7 @@ flowchart TD
 
 ## Viewport Operations
 
-From `app/features/canvas/composables/useViewport.ts`:
+From `packages/core/src/features/canvas/composables/useViewport.ts`:
 
 | Operation                  | Formula                                                            | Description                                     |
 | -------------------------- | ------------------------------------------------------------------ | ----------------------------------------------- |

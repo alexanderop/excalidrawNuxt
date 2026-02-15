@@ -68,6 +68,12 @@ export function renderImageElement(
 
   const cached = element.fileId ? imageCache.get(element.fileId) : null;
   if (cached?.image instanceof HTMLImageElement) {
+    if (element.crop) {
+      const { x: sx, y: sy, width: sw, height: sh } = element.crop;
+      ctx.drawImage(cached.image, sx, sy, sw, sh, 0, 0, element.width, element.height);
+      ctx.restore();
+      return;
+    }
     ctx.drawImage(cached.image, 0, 0, element.width, element.height);
     ctx.restore();
     return;

@@ -230,7 +230,7 @@ const canvasRef = useTemplateRef<HTMLCanvasElement>("interactiveCanvas");
 // In template: <canvas ref="interactiveCanvas" />
 ```
 
-**In our codebase:** `CanvasContainer.vue` uses `useTemplateRef` for all 5 template refs (container, 3 canvases, text editor container).
+**In our codebase:** `DrawVue.vue` uses `useTemplateRef` for all 5 template refs (container, 3 canvases, text editor container).
 
 ### Naming Convention
 
@@ -309,7 +309,7 @@ When composable A needs to read data that composable B writes, but B requires fu
 **Approach 1: Pre-create shared refs in the parent (Controller Component)**
 
 ```ts
-// In CanvasContainer.vue — parent owns shared state:
+// In DrawVue.vue — parent owns shared state:
 const suggestedBindings = shallowRef<readonly ExcalidrawElement[]>([])
 const shared = { canvasRef, toScene, zoom, elements, suggestedBindings, ... }
 
@@ -333,7 +333,7 @@ const { markStaticDirty } = useSceneRenderer({ newElement, ... })
 dirty.bind({ markStaticDirty, ... })  // Stubs now forward to real fns
 ```
 
-The parent component (`CanvasContainer.vue`) is the **Controller Component** that owns all shared state and orchestrates 10+ composables via these two techniques.
+The parent component (`DrawVue.vue`) is the **Controller Component** that owns all shared state and orchestrates 10+ composables via these two techniques.
 
 <!--
 Source references:

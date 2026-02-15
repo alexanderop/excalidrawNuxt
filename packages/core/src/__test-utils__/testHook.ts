@@ -43,6 +43,9 @@ export interface TestHook {
 
   // Image cache
   imageCache: ImageCacheSlice;
+
+  // Crop
+  croppingElementId: ShallowRef<string | null>;
 }
 
 declare global {

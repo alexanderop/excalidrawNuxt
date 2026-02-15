@@ -27,25 +27,25 @@ This means ALL grid-based dblclick/click tests target wrong coordinates, causing
 
 ### 1. `createElement` override ordering (CRITICAL)
 
-**File**: `app/features/elements/createElement.ts`
+**File**: `packages/core/src/features/elements/createElement.ts`
 
 Text-specific defaults (`containerId: null`, `textAlign: 'left'`, etc.) were overwriting caller overrides. Fixed by adding `...overrides` at the end of the text branch so overrides like `containerId`, `textAlign: 'center'` are preserved.
 
 ### 2. `stopPropagation` on textarea keydown
 
-**File**: `app/features/tools/useTextInteraction.ts`
+**File**: `packages/core/src/features/tools/useTextInteraction.ts`
 
 Added `e.stopPropagation()` to the textarea's keydown handler so keyboard events (Escape, Backspace, etc.) don't bubble to document-level handlers like `useSelectionInteraction.handleKeyDown`.
 
 ### 3. Focus restoration after textarea removal
 
-**File**: `app/features/tools/useTextInteraction.ts`
+**File**: `packages/core/src/features/tools/useTextInteraction.ts`
 
 Added `canvasRef.value?.focus()` after `textarea.remove()` in `submitAndClose` so keyboard events (Delete, arrow keys) work after closing the text editor.
 
 ### 4. Tool guard on dblclick handler
 
-**File**: `app/features/tools/useTextInteraction.ts`
+**File**: `packages/core/src/features/tools/useTextInteraction.ts`
 
 Added `if (activeTool.value !== 'selection' && activeTool.value !== 'text') return` to prevent text creation when using other tools (rectangle, arrow, etc.).
 
@@ -59,7 +59,7 @@ The `CanvasGrid` needs to use the actual canvas CSS dimensions instead of hardco
 
 The 300x150 size is the **default HTML canvas element size** — this means `useElementSize(containerRef)` is returning 0 or the container isn't sized properly, causing the canvas to fall back to its intrinsic 300x150.
 
-**Likely fix**: The `setup-browser.ts` styles `body > div` but the render might create additional wrapper divs. Need to ensure the CanvasContainer's parent fills the viewport.
+**Likely fix**: The `setup-browser.ts` styles `body > div` but the render might create additional wrapper divs. Need to ensure DrawVue's parent container fills the viewport.
 
 ## TODO: Verify the feature works manually
 
@@ -74,16 +74,16 @@ Run `pnpm dev`, draw a rectangle, double-click it, type text, press Escape. Veri
 
 ## Files Modified
 
-| File                                                            | Change                                                          |
-| --------------------------------------------------------------- | --------------------------------------------------------------- |
-| `app/features/elements/createElement.ts`                        | `...overrides` at end of text branch                            |
-| `app/features/tools/useTextInteraction.ts`                      | Tool guard, stopPropagation, focus restore, debug logs (REMOVE) |
-| `app/features/tools/boundText.browser.test.ts`                  | Debug log (REMOVE)                                              |
-| `app/features/binding/boundText.ts`                             | Bound text lifecycle functions (done)                           |
-| `app/features/binding/index.ts`                                 | Exports (done)                                                  |
-| `app/features/selection/hitTest.ts`                             | Skip bound text in hit testing (done)                           |
-| `app/features/selection/composables/useSelectionInteraction.ts` | Cascading updates + keydown guard (done)                        |
-| `app/features/canvas/components/CanvasContainer.vue`            | Wired new options (done)                                        |
+| File                                                                          | Change                                                          |
+| ----------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| `packages/core/src/features/elements/createElement.ts`                        | `...overrides` at end of text branch                            |
+| `packages/core/src/features/tools/useTextInteraction.ts`                      | Tool guard, stopPropagation, focus restore, debug logs (REMOVE) |
+| `packages/core/src/features/tools/boundText.browser.test.ts`                  | Debug log (REMOVE)                                              |
+| `packages/core/src/features/binding/boundText.ts`                             | Bound text lifecycle functions (done)                           |
+| `packages/core/src/features/binding/index.ts`                                 | Exports (done)                                                  |
+| `packages/core/src/features/selection/hitTest.ts`                             | Skip bound text in hit testing (done)                           |
+| `packages/core/src/features/selection/composables/useSelectionInteraction.ts` | Cascading updates + keydown guard (done)                        |
+| `packages/core/src/components/DrawVue.vue`                                    | Wired new options (done)                                        |
 
 ## Debug Logs — DONE (Removed)
 

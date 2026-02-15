@@ -16,6 +16,7 @@ import { useEraserInteraction } from "../features/tools/useEraserInteraction";
 import { useTextInteraction } from "../features/tools/useTextInteraction";
 import { useCodeInteraction } from "../features/code/useCodeInteraction";
 import { useImageInteraction } from "../features/image/useImageInteraction";
+import { useCropInteraction } from "../features/image/useCropInteraction";
 import { useSelection } from "../features/selection/composables/useSelection";
 import { useSelectionInteraction } from "../features/selection/composables/useSelectionInteraction";
 import { getElementAtPosition } from "../features/selection/hitTest";
@@ -309,8 +310,18 @@ useImageInteraction({
   onInteractionEnd: history.commitCheckpoint,
 });
 
+// Crop interaction
+const { croppingElementId, enterCropMode, exitCropMode } = useCropInteraction({
+  ...shared,
+  imageCache: ctx.imageCache,
+  onInteractionStart: history.saveCheckpoint,
+  onInteractionEnd: history.commitCheckpoint,
+  onInteractionDiscard: history.discardCheckpoint,
+});
+
 // Finalize in-progress operations when user switches tools
 onBeforeToolChange(() => {
+  if (croppingElementId.value) exitCropMode(true);
   if (multiElement.value) finalizeMultiPoint();
   if (editingLinearElement.value) exitLinearEditor();
   if (editingTextElement.value) submitTextEditor();
@@ -395,7 +406,11 @@ const { selectionBox, cursorStyle, hoveredMidpoint } = useSelectionInteraction({
   isSelected,
   setTool,
   editingLinearElement,
+  croppingElementId,
   onDoubleClickLinear: enterLinearEditor,
+  onDoubleClickImage(el) {
+    enterCropMode(el.id);
+  },
   expandSelectionForGroups,
   onGroupAction: groupSelection,
   onUngroupAction: ungroupSelection,
@@ -432,6 +447,7 @@ const { markStaticDirty, markNewElementDirty, markInteractiveDirty } = useSceneR
   editingCodeElement,
   eraserTrailPoints,
   pendingErasureIds,
+  croppingElementId,
   theme,
   imageCache: ctx.imageCache.cache,
 });
@@ -648,10 +664,11 @@ register([
   },
 ]);
 
-// Expose selection/history/dirty to the context so app-layer composables can use them
-ctx.selection.value = { selectedElements, select };
+// Expose selection/history/dirty/crop to the context so app-layer composables can use them
+ctx.selection.value = { selectedElements, select, replaceSelection };
 ctx.history.value = { recordAction: history.recordAction };
 ctx.dirty.value = { markStaticDirty: dirty.markStaticDirty };
+ctx.crop.value = { croppingElementId, enterCropMode, exitCropMode };
 
 // Test hook — expose reactive state for browser tests (Excalidraw's window.h pattern).
 // Always available (SSR disabled, zero overhead — just window property assignments).
@@ -685,6 +702,7 @@ ctx.dirty.value = { markStaticDirty: dirty.markStaticDirty };
   pendingErasureIds,
   eraserTrailPoints,
   imageCache: ctx.imageCache,
+  croppingElementId,
   staticCanvasRef,
   newElementCanvasRef,
   interactiveCanvasRef,

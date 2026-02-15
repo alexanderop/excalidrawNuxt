@@ -27,10 +27,10 @@ Key design decisions from Excalidraw:
 
 ### 1. `groupIds` on `ExcalidrawElementBase` — `DONE`
 
-`GroupId` and `groupIds` come from the official `@excalidraw/element/types` package. Re-exported in `app/features/elements/types.ts`. Re-exported again as convenience in `app/features/groups/types.ts`.
+`GroupId` and `groupIds` come from the official `@excalidraw/element/types` package. Re-exported in `packages/core/src/features/elements/types.ts`. Re-exported again as convenience in `packages/core/src/features/groups/types.ts`.
 
 ```typescript
-// app/features/elements/types.ts
+// packages/core/src/features/elements/types.ts
 export type { GroupId } from "@excalidraw/element/types";
 // groupIds: readonly GroupId[] — already on _ExcalidrawElementBase
 ```
@@ -38,7 +38,7 @@ export type { GroupId } from "@excalidraw/element/types";
 ### 2. `createElement` defaults — `DONE`
 
 ```typescript
-// app/features/elements/createElement.ts
+// packages/core/src/features/elements/createElement.ts
 const base = {
   // ... existing fields ...
   groupIds: [] as readonly string[], // DONE — default to no groups
@@ -48,7 +48,7 @@ const base = {
 
 ### 3. Group-related app state — `DONE`
 
-Implemented in `useGroups` composable (`app/features/groups/composables/useGroups.ts`):
+Implemented in `useGroups` composable (`packages/core/src/features/groups/composables/useGroups.ts`):
 
 ```typescript
 // Actual implementation uses ReadonlySet<GroupId> not Record<GroupId, boolean>
@@ -56,12 +56,12 @@ selectedGroupIds: ShallowRef<ReadonlySet<GroupId>>;
 // Note: editingGroupId is NOT yet implemented (deferred — no nested group editing)
 ```
 
-## New Feature: `app/features/groups/`
+## New Feature: `packages/core/src/features/groups/`
 
 ### Directory Structure — `DONE`
 
 ```
-app/features/groups/
+packages/core/src/features/groups/
 ├── types.ts                  # GroupId re-export from elements/types
 ├── index.ts                  # Barrel exports (not in original spec)
 ├── groupUtils.ts             # Pure functions + re-exports from @excalidraw/element

@@ -1,6 +1,6 @@
 # Initialization Sequence
 
-How `CanvasContainer.vue` boots: composable call order, the deferred dirty-flag pattern, and what runs in `setup()` vs `onMounted()`.
+How `DrawVue.vue` (`packages/core/src/components/DrawVue.vue`) boots: composable call order, the deferred dirty-flag pattern, and what runs in `setup()` vs `onMounted()`.
 
 ## The Circular Dependency Problem
 
@@ -32,7 +32,7 @@ dirty.bind({ markStaticDirty, markInteractiveDirty, markNewElementDirty })
 
 ```mermaid
 sequenceDiagram
-    participant Component as CanvasContainer setup()
+    participant Component as DrawVue setup()
     participant Theme as useTheme
     participant Viewport as useViewport
     participant Elements as useElements

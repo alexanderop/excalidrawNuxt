@@ -190,7 +190,7 @@ interface UsePanningOptions {
 export function usePanning(options: UsePanningOptions): UsePanningReturn { ... }
 ```
 
-In `CanvasContainer.vue`, shared deps are spread into multiple composables:
+In `DrawVue.vue`, shared deps are spread into multiple composables:
 
 ```ts
 const shared = { canvasRef, toScene, zoom, elements, suggestedBindings, markStaticDirty, markInteractiveDirty }
@@ -227,14 +227,14 @@ export function createDirtyFlags(): DirtyFlags {
   }
 }
 
-// In CanvasContainer.vue:
+// In DrawVue.vue:
 const dirty = createDirtyFlags()
 // ...pass dirty.markStaticDirty to composables created before renderer...
 const { markStaticDirty } = useSceneRenderer(...)
 dirty.bind({ markStaticDirty, ... })  // Late-bind real fns
 ```
 
-**Where:** `createDirtyFlags` in `app/features/canvas/composables/`.
+**Where:** `createDirtyFlags` in `packages/core/src/features/canvas/composables/`.
 
 ### 16. Event Hook Pattern
 
@@ -248,21 +248,21 @@ onBeforeToolChange(() => {
 });
 ```
 
-**Where:** `useToolStore.onBeforeToolChange` — subscribed in `CanvasContainer.vue` to finalize multi-point, linear editor, and text editing before tool switch.
+**Where:** `useToolStore.onBeforeToolChange` — subscribed in `DrawVue.vue` to finalize multi-point, linear editor, and text editing before tool switch.
 
 ---
 
 ## Mapping to Our Codebase
 
-| Pattern              | Where we use it                                                                                  |
-| -------------------- | ------------------------------------------------------------------------------------------------ |
-| Data Store           | `useElements`, `useSelection`, `useViewport`, `useGroups`                                        |
-| Thin Composable      | Pure math in `app/shared/math.ts`, coord transforms in `canvas/coords.ts`, composables wrap them |
-| Humble Component     | `DrawingToolbar.vue`                                                                             |
-| Controller Component | `CanvasContainer.vue` (orchestrates 10+ composables)                                             |
-| Strategy Pattern     | Not currently used (rendering is via pure canvas functions)                                      |
-| Extract Composable   | Every `use*.ts` in `features/*/composables/` and `features/*/`                                   |
-| Options Object       | All composables: `useRenderer`, `usePanning`, `useDrawingInteraction`, etc.                      |
-| Global Singleton     | `useToolStore`, `useTheme`, `useShikiHighlighter` (via `createGlobalState`)                      |
-| Deferred Binding     | `createDirtyFlags` in canvas composables                                                         |
-| Event Hook           | `onBeforeToolChange` in `useToolStore`                                                           |
+| Pattern              | Where we use it                                                                              |
+| -------------------- | -------------------------------------------------------------------------------------------- |
+| Data Store           | `useElements`, `useSelection`, `useViewport`, `useGroups`                                    |
+| Thin Composable      | Pure math in `shared/math.ts`, coord transforms in `canvas/coords.ts`, composables wrap them |
+| Humble Component     | `DrawingToolbar.vue`                                                                         |
+| Controller Component | `DrawVue.vue` (orchestrates 10+ composables)                                                 |
+| Strategy Pattern     | Not currently used (rendering is via pure canvas functions)                                  |
+| Extract Composable   | Every `use*.ts` in `features/*/composables/` and `features/*/`                               |
+| Options Object       | All composables: `useRenderer`, `usePanning`, `useDrawingInteraction`, etc.                  |
+| Global Singleton     | `useToolStore`, `useTheme`, `useShikiHighlighter` (via `createGlobalState`)                  |
+| Deferred Binding     | `createDirtyFlags` in canvas composables                                                     |
+| Event Hook           | `onBeforeToolChange` in `useToolStore`                                                       |

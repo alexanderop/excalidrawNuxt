@@ -31,7 +31,11 @@ type FlipActionId = "flip:horizontal" | "flip:vertical";
 
 type HistoryActionId = "history:undo" | "history:redo";
 
-type ImageActionId = "image:remove-background";
+type ImageActionId =
+  | "image:remove-background"
+  | "image:split-objects"
+  | "image:crop"
+  | "image:reset-crop";
 
 export type ActionId =
   | ToolActionId
