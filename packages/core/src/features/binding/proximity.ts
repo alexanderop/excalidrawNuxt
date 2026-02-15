@@ -1,20 +1,27 @@
-import {
-  pointFrom,
-  pointRotateRads,
-  lineSegment,
-  distanceToLineSegment,
-  ellipse,
-  ellipseDistanceFromPoint,
-} from "../../shared/math";
+import { pointFrom, pointRotateRads } from "../../shared/math";
 import type { GlobalPoint, Radians } from "../../shared/math";
 import type { ExcalidrawElement } from "../elements/types";
 import { isBindableElement } from "./types";
 import type { BindableElement, BindingMode } from "./types";
 import { BASE_BINDING_GAP, maxBindingDistance } from "./constants";
+import { shapeRegistry } from "../../shared/shapeRegistry";
+import { isBindableHandler } from "../../shared/shapeHandlerRegistry";
 
 interface BindingCandidate {
   element: BindableElement;
   fixedPoint: readonly [number, number];
+}
+
+/**
+ * Unrotate a scene point around the element's center so that all
+ * subsequent geometry operates in axis-aligned (local) space.
+ */
+function unrotateAroundCenter(point: GlobalPoint, element: BindableElement): GlobalPoint {
+  if (element.angle === 0) return point;
+
+  const cx = element.x + element.width / 2;
+  const cy = element.y + element.height / 2;
+  return pointRotateRads(point, pointFrom<GlobalPoint>(cx, cy), -element.angle as Radians);
 }
 
 /**
@@ -59,133 +66,22 @@ export function getHoveredElementForBinding(
  * Handles rotation by unrotating the point around the shape center.
  */
 export function distanceToShapeEdge(point: GlobalPoint, element: BindableElement): number {
-  const cx = element.x + element.width / 2;
-  const cy = element.y + element.height / 2;
-  const unrotated =
-    element.angle === 0
-      ? point
-      : pointRotateRads(point, pointFrom<GlobalPoint>(cx, cy), -element.angle as Radians);
-
-  if (element.type === "rectangle") {
-    return distanceToRectangleEdge(unrotated, element);
+  const unrotated = unrotateAroundCenter(point, element);
+  const handler = shapeRegistry.getHandler(element);
+  if (!isBindableHandler(handler)) {
+    throw new Error(`No bindable handler for type: ${element.type}`);
   }
-  if (element.type === "ellipse") {
-    return distanceToEllipseEdge(unrotated, element);
-  }
-  if (element.type === "diamond") {
-    return distanceToDiamondEdge(unrotated, element);
-  }
-
-  throw new Error(`Unhandled element type: ${(element as { type: string }).type}`);
-}
-
-function distanceToRectangleEdge(point: GlobalPoint, el: BindableElement): number {
-  const { x, y, width, height } = el;
-  const edges: [GlobalPoint, GlobalPoint][] = [
-    [pointFrom<GlobalPoint>(x, y), pointFrom<GlobalPoint>(x + width, y)],
-    [pointFrom<GlobalPoint>(x + width, y), pointFrom<GlobalPoint>(x + width, y + height)],
-    [pointFrom<GlobalPoint>(x + width, y + height), pointFrom<GlobalPoint>(x, y + height)],
-    [pointFrom<GlobalPoint>(x, y + height), pointFrom<GlobalPoint>(x, y)],
-  ];
-  let minDist = Infinity;
-  for (const [a, b] of edges) {
-    const d = distanceToLineSegment(point, lineSegment(a, b));
-    if (d < minDist) minDist = d;
-  }
-  return minDist;
-}
-
-function distanceToEllipseEdge(point: GlobalPoint, el: BindableElement): number {
-  const cx = el.x + el.width / 2;
-  const cy = el.y + el.height / 2;
-  const rx = el.width / 2;
-  const ry = el.height / 2;
-
-  if (rx === 0 || ry === 0) return Math.hypot(point[0] - cx, point[1] - cy);
-
-  const e = ellipse(pointFrom<GlobalPoint>(cx, cy), rx, ry);
-  return ellipseDistanceFromPoint(point, e);
-}
-
-function distanceToDiamondEdge(point: GlobalPoint, el: BindableElement): number {
-  const cx = el.x + el.width / 2;
-  const cy = el.y + el.height / 2;
-  const vertices: GlobalPoint[] = [
-    pointFrom<GlobalPoint>(cx, el.y),
-    pointFrom<GlobalPoint>(el.x + el.width, cy),
-    pointFrom<GlobalPoint>(cx, el.y + el.height),
-    pointFrom<GlobalPoint>(el.x, cy),
-  ];
-  let minDist = Infinity;
-  for (let i = 0; i < 4; i++) {
-    const a = vertices[i];
-    const b = vertices[(i + 1) % 4];
-    if (!a || !b) continue;
-    const d = distanceToLineSegment(point, lineSegment(a, b));
-    if (d < minDist) minDist = d;
-  }
-  return minDist;
+  return handler.distanceToEdge(element, unrotated);
 }
 
 /**
  * Check whether a scene point is inside a shape (accounting for rotation).
  */
 export function isPointInsideShape(point: GlobalPoint, element: BindableElement): boolean {
-  const cx = element.x + element.width / 2;
-  const cy = element.y + element.height / 2;
-  const unrotated =
-    element.angle === 0
-      ? point
-      : pointRotateRads(point, pointFrom<GlobalPoint>(cx, cy), -element.angle as Radians);
-
-  if (element.type === "rectangle") {
-    return isPointInsideRectangle(unrotated, element);
-  }
-  if (element.type === "ellipse") {
-    return isPointInsideEllipse(unrotated, element, cx, cy);
-  }
-  if (element.type === "diamond") {
-    return isPointInsideDiamond(unrotated, element, cx, cy);
-  }
-
-  return false;
-}
-
-function isPointInsideRectangle(point: GlobalPoint, el: BindableElement): boolean {
-  return (
-    point[0] >= el.x &&
-    point[0] <= el.x + el.width &&
-    point[1] >= el.y &&
-    point[1] <= el.y + el.height
-  );
-}
-
-function isPointInsideEllipse(
-  point: GlobalPoint,
-  el: BindableElement,
-  cx: number,
-  cy: number,
-): boolean {
-  const rx = el.width / 2;
-  const ry = el.height / 2;
-  if (rx === 0 || ry === 0) return false;
-  const dx = (point[0] - cx) / rx;
-  const dy = (point[1] - cy) / ry;
-  return dx * dx + dy * dy <= 1;
-}
-
-function isPointInsideDiamond(
-  point: GlobalPoint,
-  el: BindableElement,
-  cx: number,
-  cy: number,
-): boolean {
-  const hw = el.width / 2;
-  const hh = el.height / 2;
-  if (hw === 0 || hh === 0) return false;
-  const dx = Math.abs(point[0] - cx) / hw;
-  const dy = Math.abs(point[1] - cy) / hh;
-  return dx + dy <= 1;
+  const unrotated = unrotateAroundCenter(point, element);
+  const handler = shapeRegistry.getHandler(element);
+  if (!isBindableHandler(handler)) return false;
+  return handler.isPointInside(element, unrotated);
 }
 
 /**
@@ -195,12 +91,7 @@ export function computeFixedPoint(
   point: GlobalPoint,
   element: BindableElement,
 ): readonly [number, number] {
-  const cx = element.x + element.width / 2;
-  const cy = element.y + element.height / 2;
-  const unrotated =
-    element.angle === 0
-      ? point
-      : pointRotateRads(point, pointFrom<GlobalPoint>(cx, cy), -element.angle as Radians);
+  const unrotated = unrotateAroundCenter(point, element);
 
   const w = element.width || 1;
   const h = element.height || 1;
@@ -285,115 +176,9 @@ function projectOntoShapeEdge(
   dirY: number,
   element: BindableElement,
 ): GlobalPoint {
-  if (element.type === "rectangle") {
-    return projectOntoRectEdge(cx, cy, dirX, dirY, element);
+  const handler = shapeRegistry.getHandler(element);
+  if (!isBindableHandler(handler)) {
+    throw new Error(`No bindable handler for type: ${element.type}`);
   }
-  if (element.type === "ellipse") {
-    return projectOntoEllipseEdge(cx, cy, dirX, dirY, element);
-  }
-  if (element.type === "diamond") {
-    return projectOntoDiamondEdge(cx, cy, dirX, dirY, element);
-  }
-
-  throw new Error(`Unhandled element type: ${(element as { type: string }).type}`);
-}
-
-function projectOntoRectEdge(
-  cx: number,
-  cy: number,
-  dirX: number,
-  dirY: number,
-  el: BindableElement,
-): GlobalPoint {
-  const hw = el.width / 2;
-  const hh = el.height / 2;
-
-  // Find the intersection of ray from center with rect edges
-  let t = Infinity;
-  if (dirX !== 0) {
-    const tx = (dirX > 0 ? hw : -hw) / dirX;
-    if (tx > 0) t = Math.min(t, tx);
-  }
-  if (dirY !== 0) {
-    const ty = (dirY > 0 ? hh : -hh) / dirY;
-    if (ty > 0) t = Math.min(t, ty);
-  }
-
-  if (!Number.isFinite(t)) return pointFrom<GlobalPoint>(cx, cy);
-
-  return pointFrom<GlobalPoint>(cx + dirX * t, cy + dirY * t);
-}
-
-function projectOntoEllipseEdge(
-  cx: number,
-  cy: number,
-  dirX: number,
-  dirY: number,
-  el: BindableElement,
-): GlobalPoint {
-  const rx = el.width / 2;
-  const ry = el.height / 2;
-  if (rx === 0 || ry === 0) return pointFrom<GlobalPoint>(cx, cy);
-
-  // Parametric: point on ellipse at angle = (rx*cos, ry*sin)
-  const angle = Math.atan2(dirY, dirX);
-  return pointFrom<GlobalPoint>(cx + rx * Math.cos(angle), cy + ry * Math.sin(angle));
-}
-
-function projectOntoDiamondEdge(
-  cx: number,
-  cy: number,
-  dirX: number,
-  dirY: number,
-  el: BindableElement,
-): GlobalPoint {
-  const hw = el.width / 2;
-  const hh = el.height / 2;
-
-  // Diamond vertices relative to center: top(0,-hh), right(hw,0), bottom(0,hh), left(-hw,0)
-  const vertices: GlobalPoint[] = [
-    pointFrom<GlobalPoint>(0, -hh),
-    pointFrom<GlobalPoint>(hw, 0),
-    pointFrom<GlobalPoint>(0, hh),
-    pointFrom<GlobalPoint>(-hw, 0),
-  ];
-
-  let closestT = Infinity;
-  for (let i = 0; i < 4; i++) {
-    const a = vertices[i];
-    const b = vertices[(i + 1) % 4];
-    if (!a || !b) continue;
-    // Ray-segment intersection
-    const t = raySegmentIntersection(dirX, dirY, a, b);
-    if (t !== null && t > 0 && t < closestT) {
-      closestT = t;
-    }
-  }
-
-  if (!Number.isFinite(closestT)) return pointFrom<GlobalPoint>(cx, cy);
-
-  return pointFrom<GlobalPoint>(cx + dirX * closestT, cy + dirY * closestT);
-}
-
-/**
- * Intersect ray (origin=0, dir) with segment (a, b).
- * Returns parameter t along ray, or null if no intersection.
- */
-function raySegmentIntersection(
-  dirX: number,
-  dirY: number,
-  a: GlobalPoint,
-  b: GlobalPoint,
-): number | null {
-  const edgeX = b[0] - a[0];
-  const edgeY = b[1] - a[1];
-  const denom = dirX * edgeY - dirY * edgeX;
-
-  if (Math.abs(denom) < 1e-10) return null;
-
-  const t = (a[0] * edgeY - a[1] * edgeX) / denom;
-  const u = (a[0] * dirY - a[1] * dirX) / denom;
-
-  if (u >= 0 && u <= 1 && t > 0) return t;
-  return null;
+  return handler.projectOntoEdge(element, cx, cy, dirX, dirY);
 }

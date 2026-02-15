@@ -1,21 +1,10 @@
 import type { RoughCanvas } from "roughjs/bin/canvas";
-import type { ExcalidrawElement, ExcalidrawTextElement, FileId } from "../elements/types";
-import {
-  isArrowElement,
-  isLinearElement,
-  isTextElement,
-  isFreeDrawElement,
-  isImageElement,
-} from "../elements/types";
+import type { ExcalidrawElement, FileId } from "../elements/types";
+import { isLinearElement, isFreeDrawElement } from "../elements/types";
 import type { Theme } from "../theme/types";
-import { resolveColor } from "../theme/colors";
 import { isCodeElement, renderCodeElement } from "../code";
-import { renderImageElement } from "../image";
 import type { ImageCacheEntry } from "../image";
-import { generateShape } from "./shapeGenerator";
-import { renderArrowheads } from "./arrowhead";
-import { getFontString, getLineHeightInPx } from "./textMeasurement";
-import { renderFreeDrawElement } from "./renderFreeDraw";
+import { shapeRegistry } from "../../shared/shapeRegistry";
 
 function isZeroSizeShape(element: ExcalidrawElement): boolean {
   return (
@@ -43,31 +32,6 @@ export function applyElementTransform(
   ctx.globalAlpha = element.opacity / 100;
 }
 
-function renderSpecialElement(
-  ctx: CanvasRenderingContext2D,
-  element: ExcalidrawElement,
-  theme: Theme,
-  imageCache?: ReadonlyMap<FileId, ImageCacheEntry>,
-): boolean {
-  if (isImageElement(element)) {
-    renderImageElement(ctx, element, imageCache ?? new Map());
-    return true;
-  }
-  if (isCodeElement(element)) {
-    renderCodeElement(ctx, element, theme);
-    return true;
-  }
-  if (isFreeDrawElement(element)) {
-    renderFreeDrawElement(ctx, element, theme);
-    return true;
-  }
-  if (isTextElement(element)) {
-    if (element.text) renderTextElement(ctx, element, theme);
-    return true;
-  }
-  return false;
-}
-
 export function renderElement(
   ctx: CanvasRenderingContext2D,
   rc: RoughCanvas,
@@ -77,64 +41,13 @@ export function renderElement(
   zoom = 1,
 ): void {
   if (element.isDeleted) return;
-  if (renderSpecialElement(ctx, element, theme, imageCache)) return;
+  if (isCodeElement(element)) {
+    renderCodeElement(ctx, element, theme);
+    return;
+  }
   if (isLinearElement(element) && element.points.length < 2) return;
   if (isZeroSizeShape(element)) return;
 
-  renderRoughShape(ctx, rc, element, theme, zoom);
-}
-
-function renderRoughShape(
-  ctx: CanvasRenderingContext2D,
-  rc: RoughCanvas,
-  element: ExcalidrawElement,
-  theme: Theme,
-  zoom = 1,
-): void {
-  ctx.save();
-  applyElementTransform(ctx, element);
-
-  const drawable = generateShape(element, theme, zoom);
-  rc.draw(drawable);
-
-  if (isArrowElement(element)) {
-    renderArrowheads(ctx, element, theme);
-  }
-
-  ctx.restore();
-}
-
-function renderTextElement(
-  ctx: CanvasRenderingContext2D,
-  element: ExcalidrawTextElement,
-  theme: Theme,
-): void {
-  ctx.save();
-  applyElementTransform(ctx, element);
-
-  ctx.font = getFontString(element.fontSize, element.fontFamily);
-  ctx.fillStyle = resolveColor(element.strokeColor, theme);
-  ctx.textAlign = element.textAlign as CanvasTextAlign;
-  ctx.textBaseline = "top";
-
-  const lineHeightPx = getLineHeightInPx(element.fontSize, element.lineHeight);
-  const lines = element.text.split("\n");
-
-  let horizontalOffset = 0;
-  switch (element.textAlign) {
-    case "center": {
-      horizontalOffset = element.width / 2;
-      break;
-    }
-    case "right": {
-      horizontalOffset = element.width;
-      break;
-    }
-  }
-
-  for (const [i, line] of lines.entries()) {
-    ctx.fillText(line, horizontalOffset, i * lineHeightPx);
-  }
-
-  ctx.restore();
+  const handler = shapeRegistry.getHandler(element);
+  handler.render(ctx, rc, element, theme, imageCache, zoom);
 }
