@@ -12,6 +12,7 @@ import { mutateElement } from "../features/elements/mutateElement";
 import { isDrawingTool, isFreeDrawTool, isTextTool } from "../features/tools/types";
 import { useDrawingInteraction } from "../features/tools/useDrawingInteraction";
 import { useFreeDrawInteraction } from "../features/tools/useFreeDrawInteraction";
+import { useEraserInteraction } from "../features/tools/useEraserInteraction";
 import { useTextInteraction } from "../features/tools/useTextInteraction";
 import { useCodeInteraction } from "../features/code/useCodeInteraction";
 import { useImageInteraction } from "../features/image/useImageInteraction";
@@ -20,7 +21,11 @@ import { useSelectionInteraction } from "../features/selection/composables/useSe
 import { getElementAtPosition } from "../features/selection/hitTest";
 import { useMultiPointCreation } from "../features/linear-editor/useMultiPointCreation";
 import { useLinearEditor } from "../features/linear-editor/useLinearEditor";
-import { updateBoundTextAfterContainerChange } from "../features/binding/boundText";
+import {
+  updateBoundTextAfterContainerChange,
+  deleteBoundTextForContainer,
+} from "../features/binding/boundText";
+import { unbindArrow, unbindAllArrowsFromShape } from "../features/binding/bindUnbind";
 import { useGroups } from "../features/groups/composables/useGroups";
 import { cleanupAfterDelete } from "../features/groups/groupUtils";
 import { useContextMenu } from "../features/context-menu/composables/useContextMenu";
@@ -31,6 +36,7 @@ import { KEY_TO_TOOL } from "../features/tools/useTool";
 import { isTypingElement } from "../shared/isTypingElement";
 import type { ActionDefinition } from "../shared/useActionRegistry";
 import type { ExcalidrawElement } from "../features/elements/types";
+import { isArrowElement } from "../features/elements/types";
 import type { ToolType } from "../features/tools/types";
 
 // ── DrawVue context (provide/inject for multi-instance support) ─────
@@ -310,6 +316,7 @@ onBeforeToolChange(() => {
   if (editingTextElement.value) submitTextEditor();
   if (editingCodeElement.value) submitCodeEditor();
   finalizeFreeDrawIfActive();
+  cancelEraserIfActive();
 });
 
 const { newElement } = useDrawingInteraction({
@@ -342,6 +349,43 @@ const { newFreeDrawElement, finalizeFreeDrawIfActive } = useFreeDrawInteraction(
     dirty.markInteractiveDirty();
   },
   markNewElementDirty: dirty.markNewElementDirty,
+});
+
+// Eraser interaction
+const { pendingErasureIds, eraserTrailPoints, cancelEraserIfActive } = useEraserInteraction({
+  ...shared,
+  activeTool,
+  spaceHeld,
+  isPanning,
+  elementMap,
+  onDelete(elementsToDelete) {
+    // 4-step deletion lifecycle: unbind → soft delete → cleanup groups → clear selection
+    for (const el of elementsToDelete) {
+      if (isArrowElement(el)) {
+        unbindArrow(el, elements.value);
+        continue;
+      }
+      if ((el.boundElements ?? []).length > 0) {
+        unbindAllArrowsFromShape(el, elements.value);
+      }
+    }
+    if (elementMap) {
+      for (const el of elementsToDelete) {
+        if (!isArrowElement(el)) {
+          deleteBoundTextForContainer(el, elementMap);
+        }
+      }
+    }
+    for (const el of elementsToDelete) {
+      mutateElement(el, { isDeleted: true });
+    }
+    const deletedIds = new Set(elementsToDelete.map((el) => el.id));
+    cleanupAfterDelete(elements.value, deletedIds);
+    clearSelection();
+  },
+  onInteractionStart: history.saveCheckpoint,
+  onInteractionEnd: history.commitCheckpoint,
+  recordAction: history.recordAction,
 });
 
 const { selectionBox, cursorStyle, hoveredMidpoint } = useSelectionInteraction({
@@ -393,6 +437,8 @@ const { markStaticDirty, markNewElementDirty, markInteractiveDirty } = useSceneR
   selectedGroupIds,
   editingTextElement,
   editingCodeElement,
+  eraserTrailPoints,
+  pendingErasureIds,
   theme,
   imageCache: ctx.imageCache.cache,
 });
@@ -453,6 +499,7 @@ const TOOL_DEFS: { type: ToolType; icon: string; kbd: string }[] = [
   { type: "code", icon: "i-lucide-code", kbd: "C" },
   { type: "line", icon: "i-lucide-minus", kbd: "L" },
   { type: "image", icon: "i-lucide-image", kbd: "I" },
+  { type: "eraser", icon: "i-lucide-eraser", kbd: "E" },
 ];
 
 register([
@@ -637,6 +684,8 @@ register([
   markStaticDirty,
   markInteractiveDirty,
   history,
+  pendingErasureIds,
+  eraserTrailPoints,
   imageCache: ctx.imageCache,
   staticCanvasRef,
   newElementCanvasRef,
@@ -648,7 +697,7 @@ function handlePropertyChange(): void {
   dirty.markStaticDirty();
 }
 
-const CROSSHAIR_TOOLS = new Set<ToolType>(["text", "code", "image", "freedraw"]);
+const CROSSHAIR_TOOLS = new Set<ToolType>(["text", "code", "image", "freedraw", "eraser"]);
 
 const combinedCursor = computed(() => {
   if (panningCursor.value !== "default") return panningCursor.value;

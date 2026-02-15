@@ -286,9 +286,15 @@ function renderLinearEditorOverlays(
   }
 }
 
+export interface EraserRenderState {
+  trailPoints: readonly GlobalPoint[];
+  pendingIds: ReadonlySet<string>;
+}
+
 export interface InteractiveSceneOptions {
   ctx: CanvasRenderingContext2D;
   selectedElements: readonly ExcalidrawElement[];
+  elements: readonly ExcalidrawElement[];
   zoom: number;
   selectionBox: Box | null;
   theme: Theme;
@@ -297,12 +303,54 @@ export interface InteractiveSceneOptions {
   suggestedBindings?: readonly ExcalidrawElement[] | null;
   selectedGroupIds?: ReadonlySet<string>;
   hoveredMidpoint?: { elementId: string; segmentIndex: number } | null;
+  eraserState?: EraserRenderState | null;
+}
+
+function renderEraserTrail(
+  ctx: CanvasRenderingContext2D,
+  trailPoints: readonly GlobalPoint[],
+  zoom: number,
+  isDark: boolean,
+): void {
+  if (trailPoints.length < 2) return;
+  ctx.save();
+  ctx.strokeStyle = isDark ? "rgba(255, 255, 255, 0.25)" : "rgba(0, 0, 0, 0.25)";
+  ctx.lineWidth = 5 / zoom;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.beginPath();
+  const [first, ...rest] = trailPoints;
+  ctx.moveTo(first![0], first![1]);
+  for (const pt of rest) {
+    ctx.lineTo(pt[0], pt[1]);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+function renderPendingErasure(
+  ctx: CanvasRenderingContext2D,
+  allElements: readonly ExcalidrawElement[],
+  pendingIds: ReadonlySet<string>,
+  zoom: number,
+): void {
+  if (pendingIds.size === 0) return;
+  ctx.save();
+  ctx.fillStyle = "rgba(255, 107, 237, 0.15)";
+  for (const el of allElements) {
+    if (!pendingIds.has(el.id) || el.isDeleted) continue;
+    const [x1, y1, x2, y2] = getElementBounds(el);
+    const pad = 2 / zoom;
+    ctx.fillRect(x1 - pad, y1 - pad, x2 - x1 + pad * 2, y2 - y1 + pad * 2);
+  }
+  ctx.restore();
 }
 
 export function renderInteractiveScene(options: InteractiveSceneOptions): void {
   const {
     ctx,
     selectedElements,
+    elements,
     zoom,
     selectionBox,
     theme,
@@ -311,6 +359,7 @@ export function renderInteractiveScene(options: InteractiveSceneOptions): void {
     suggestedBindings,
     selectedGroupIds,
     hoveredMidpoint,
+    eraserState,
   } = options;
 
   if (suggestedBindings) {
@@ -339,5 +388,10 @@ export function renderInteractiveScene(options: InteractiveSceneOptions): void {
 
   if (multiPointState) {
     renderRubberBand(ctx, multiPointState.element, multiPointState.cursorPoint, zoom, theme);
+  }
+
+  if (eraserState) {
+    renderPendingErasure(ctx, elements, eraserState.pendingIds, zoom);
+    renderEraserTrail(ctx, eraserState.trailPoints, zoom, theme === "dark");
   }
 }

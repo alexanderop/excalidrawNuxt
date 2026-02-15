@@ -11,6 +11,7 @@ import { renderInteractiveScene } from "../../rendering/renderInteractive";
 import type {
   LinearEditorRenderState,
   MultiPointRenderState,
+  EraserRenderState,
 } from "../../rendering/renderInteractive";
 import type {
   ExcalidrawElement,
@@ -65,6 +66,9 @@ interface UseSceneRendererOptions {
   editingTextElement?: ShallowRef<ExcalidrawTextElement | null>;
   // Code editing — hide element being edited (editor overlay replaces canvas-drawn code)
   editingCodeElement?: ShallowRef<CodeElement | null>;
+  // Eraser state — trail points and pending erasure IDs
+  eraserTrailPoints?: ShallowRef<readonly GlobalPoint[]>;
+  pendingErasureIds?: ShallowRef<ReadonlySet<string>>;
   // Theme and image cache — injected from outside
   theme: Ref<Theme>;
   imageCache: ShallowRef<Map<FileId, ImageCacheEntry>>;
@@ -139,6 +143,8 @@ export function useSceneRenderer(options: UseSceneRendererOptions): UseSceneRend
     selectedGroupIds,
     editingTextElement,
     editingCodeElement,
+    eraserTrailPoints,
+    pendingErasureIds,
     theme,
     imageCache,
   } = options;
@@ -204,9 +210,17 @@ export function useSceneRenderer(options: UseSceneRendererOptions): UseSceneRend
       ctx.scale(zoom.value, zoom.value);
       ctx.translate(scrollX.value, scrollY.value);
 
+      const eraserState: EraserRenderState | null = eraserTrailPoints?.value.length
+        ? {
+            trailPoints: eraserTrailPoints.value,
+            pendingIds: pendingErasureIds?.value ?? new Set(),
+          }
+        : null;
+
       renderInteractiveScene({
         ctx,
         selectedElements: selectedElements.value,
+        elements: elements.value,
         zoom: zoom.value,
         selectionBox: selectionBox.value,
         theme: theme.value,
@@ -219,6 +233,7 @@ export function useSceneRenderer(options: UseSceneRendererOptions): UseSceneRend
         suggestedBindings: suggestedBindings?.value ?? null,
         selectedGroupIds: selectedGroupIds?.value,
         hoveredMidpoint: hoveredMidpoint?.value ?? null,
+        eraserState,
       });
       ctx.restore();
     },
