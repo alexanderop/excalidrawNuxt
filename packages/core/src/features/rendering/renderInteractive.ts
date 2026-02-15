@@ -218,6 +218,42 @@ function renderMidpointHandles(
   ctx.restore();
 }
 
+function shouldSkipElement(
+  el: ExcalidrawElement,
+  linearEditorState: LinearEditorRenderState | null | undefined,
+  selectedGroupIds: ReadonlySet<string> | undefined,
+): boolean {
+  if (linearEditorState && el.id === linearEditorState.element.id) return true;
+  return isElementInSelectedGroup(el, selectedGroupIds);
+}
+
+function renderElementMidpoints(
+  ctx: CanvasRenderingContext2D,
+  el: ExcalidrawElement,
+  zoom: number,
+  theme: Theme,
+  hoveredMidpoint: { elementId: string; segmentIndex: number } | null | undefined,
+): void {
+  if (!isLinearElement(el)) return;
+  if (el.points.length !== 2) return;
+  const hoveredIdx = hoveredMidpoint?.elementId === el.id ? hoveredMidpoint.segmentIndex : null;
+  renderMidpointHandles(ctx, el, zoom, theme, hoveredIdx);
+}
+
+function renderSelectedGroupBorders(
+  ctx: CanvasRenderingContext2D,
+  selectedElements: readonly ExcalidrawElement[],
+  zoom: number,
+  selectedGroupIds: ReadonlySet<string> | undefined,
+  theme: Theme,
+): void {
+  if (!selectedGroupIds || selectedGroupIds.size === 0) return;
+  for (const groupId of selectedGroupIds) {
+    const groupElements = selectedElements.filter((el) => el.groupIds.includes(groupId));
+    renderGroupSelectionBorder(ctx, groupElements, zoom, theme);
+  }
+}
+
 function renderSelectedElements(
   ctx: CanvasRenderingContext2D,
   selectedElements: readonly ExcalidrawElement[],
@@ -228,23 +264,13 @@ function renderSelectedElements(
   hoveredMidpoint?: { elementId: string; segmentIndex: number } | null,
 ): void {
   for (const el of selectedElements) {
-    if (linearEditorState && el.id === linearEditorState.element.id) continue;
-    if (isElementInSelectedGroup(el, selectedGroupIds)) continue;
+    if (shouldSkipElement(el, linearEditorState, selectedGroupIds)) continue;
     renderSelectionBorder(ctx, el, zoom, theme);
     renderTransformHandles(ctx, getTransformHandles(el, zoom), zoom, theme);
-
-    // Render midpoint handles for selected 2-point linear elements
-    if (isLinearElement(el) && el.points.length === 2) {
-      const hoveredIdx = hoveredMidpoint?.elementId === el.id ? hoveredMidpoint.segmentIndex : null;
-      renderMidpointHandles(ctx, el, zoom, theme, hoveredIdx);
-    }
+    renderElementMidpoints(ctx, el, zoom, theme, hoveredMidpoint);
   }
 
-  if (!selectedGroupIds || selectedGroupIds.size === 0) return;
-  for (const groupId of selectedGroupIds) {
-    const groupElements = selectedElements.filter((el) => el.groupIds.includes(groupId));
-    renderGroupSelectionBorder(ctx, groupElements, zoom, theme);
-  }
+  renderSelectedGroupBorders(ctx, selectedElements, zoom, selectedGroupIds, theme);
 }
 
 function renderLinearEditorOverlays(

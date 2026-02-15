@@ -29,40 +29,34 @@ import { getSizeFromPoints } from "../linear-editor/pointHandles";
  * 3. Builds non-uniform grid and runs A*
  * 4. Validates/cleans the path and updates arrow points
  */
-export function routeElbowArrow(
+/** Collect obstacle AABBs (non-arrow, non-deleted, non-bound elements). */
+function collectObstacleAABBs(
   arrow: ExcalidrawArrowElement,
   elements: readonly ExcalidrawElement[],
-): void {
-  if (arrow.points.length < 2) return;
-
-  const startPt = pointFrom<GlobalPoint>(arrow.x, arrow.y);
-  const lastLocal = arrow.points.at(-1)!;
-  const endPt = pointFrom<GlobalPoint>(arrow.x + lastLocal[0], arrow.y + lastLocal[1]);
-
-  // Collect bound shapes (excluded from obstacles)
+): Bounds[] {
   const boundIds = new Set<string>();
   if (arrow.startBinding) boundIds.add(arrow.startBinding.elementId);
   if (arrow.endBinding) boundIds.add(arrow.endBinding.elementId);
 
-  // Determine headings
-  const startHeading = getStartHeading(arrow, startPt, endPt, elements);
-  const endHeading = getEndHeading(arrow, startPt, endPt, elements);
-
-  // Collect obstacle AABBs (non-arrow, non-deleted, non-bound elements)
-  const obstacleAABBs: Bounds[] = [];
+  const aabbs: Bounds[] = [];
   for (const el of elements) {
     if (el.isDeleted) continue;
     if (el.id === arrow.id) continue;
     if (boundIds.has(el.id)) continue;
     if (isLinearElement(el)) continue;
-    obstacleAABBs.push(getElementBounds(el));
+    aabbs.push(getElementBounds(el));
   }
+  return aabbs;
+}
 
-  // Pad start/end to give room for the first/last orthogonal segment
-  const paddedStart = applyHeadingPadding(startPt, startHeading);
-  const paddedEnd = applyHeadingPadding(endPt, endHeading);
-
-  // Common AABB for grid bounds
+/** Run A* on the padded endpoints with the given obstacles. */
+function runAstar(
+  paddedStart: GlobalPoint,
+  paddedEnd: GlobalPoint,
+  startHeading: Heading,
+  endHeading: Heading,
+  obstacleAABBs: Bounds[],
+): GlobalPoint[] | null {
   const allAABBs: Bounds[] = [
     ...obstacleAABBs,
     [
@@ -74,7 +68,6 @@ export function routeElbowArrow(
   ];
   const common = commonAABB(allAABBs);
 
-  // Build grid and run A*
   const grid = calculateGrid(
     obstacleAABBs,
     paddedStart,
@@ -83,35 +76,40 @@ export function routeElbowArrow(
     endHeading,
     common,
   );
-
   const startNode = pointToGridNode(paddedStart, grid);
   const endNode = pointToGridNode(paddedEnd, grid);
 
-  if (!startNode || !endNode) {
-    // Fallback: keep as straight 2-point arrow
-    return;
-  }
+  if (!startNode || !endNode) return null;
 
-  const rawPath = astar(startNode, endNode, grid, startHeading, endHeading, obstacleAABBs);
+  return astar(startNode, endNode, grid, startHeading, endHeading, obstacleAABBs);
+}
 
-  if (!rawPath || rawPath.length < 2) {
-    // A* found no path — keep as straight
-    return;
-  }
+export function routeElbowArrow(
+  arrow: ExcalidrawArrowElement,
+  elements: readonly ExcalidrawElement[],
+): void {
+  if (arrow.points.length < 2) return;
 
-  // Prepend the actual start and append the actual end (unpadded)
+  const startPt = pointFrom<GlobalPoint>(arrow.x, arrow.y);
+  const lastLocal = arrow.points.at(-1)!;
+  const endPt = pointFrom<GlobalPoint>(arrow.x + lastLocal[0], arrow.y + lastLocal[1]);
+
+  const startHeading = getStartHeading(arrow, startPt, endPt, elements);
+  const endHeading = getEndHeading(arrow, startPt, endPt, elements);
+  const obstacleAABBs = collectObstacleAABBs(arrow, elements);
+
+  const paddedStart = applyHeadingPadding(startPt, startHeading);
+  const paddedEnd = applyHeadingPadding(endPt, endHeading);
+
+  const rawPath = runAstar(paddedStart, paddedEnd, startHeading, endHeading, obstacleAABBs);
+  if (!rawPath || rawPath.length < 2) return;
+
   const fullPath = [startPt, ...rawPath, endPt];
-
-  // Clean up: remove short segments and extract corners
   const cleaned = removeShortSegments(fullPath);
   const corners = getCornerPoints(cleaned);
-
   if (corners.length < 2) return;
 
-  // Convert to local points (relative to arrow.x, arrow.y)
   const localPoints = corners.map((p) => pointFrom<LocalPoint>(p[0] - arrow.x, p[1] - arrow.y));
-
-  // Update arrow
   const dims = getSizeFromPoints(localPoints);
   mutateElement(arrow, {
     points: localPoints,

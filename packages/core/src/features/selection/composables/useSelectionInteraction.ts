@@ -227,19 +227,20 @@ export function useSelectionInteraction(
     return activeTool.value !== "selection" || !!editingLinearElement?.value;
   }
 
-  function handlePointerDown(e: PointerEvent): void {
-    if (spaceHeld.value || isPanning.value) return;
-    if (isSelectionBlocked()) return;
-    if (e.button !== 0) return;
+  function shouldIgnorePointerDown(e: PointerEvent): boolean {
+    return spaceHeld.value || isPanning.value || isSelectionBlocked() || e.button !== 0;
+  }
 
-    const scenePoint = toScene(e.offsetX, e.offsetY);
+  function tryStartInteraction(scenePoint: GlobalPoint, e: PointerEvent): boolean {
+    return (
+      tryStartRotation(scenePoint, e) ||
+      tryStartResize(scenePoint, e) ||
+      tryStartMidpointDrag(scenePoint, e) ||
+      tryStartDrag(scenePoint, e)
+    );
+  }
 
-    if (tryStartRotation(scenePoint, e)) return;
-    if (tryStartResize(scenePoint, e)) return;
-    if (tryStartMidpointDrag(scenePoint, e)) return;
-    if (tryStartDrag(scenePoint, e)) return;
-
-    // Clicked empty space → start box selecting
+  function startBoxSelection(scenePoint: GlobalPoint, e: PointerEvent): void {
     if (!e.shiftKey) {
       clearSelection();
     }
@@ -249,6 +250,16 @@ export function useSelectionInteraction(
     };
     canvasRef.value?.setPointerCapture(e.pointerId);
     markInteractiveDirty();
+  }
+
+  function handlePointerDown(e: PointerEvent): void {
+    if (shouldIgnorePointerDown(e)) return;
+
+    const scenePoint = toScene(e.offsetX, e.offsetY);
+
+    if (tryStartInteraction(scenePoint, e)) return;
+
+    startBoxSelection(scenePoint, e);
   }
 
   function updateBoundElementsForSelected(): void {
@@ -268,6 +279,75 @@ export function useSelectionInteraction(
     markInteractiveDirty();
   }
 
+  function getSingleSelected(): ExcalidrawElement | null {
+    const selected = selectedElements();
+    if (selected.length !== 1) return null;
+    return selected[0] ?? null;
+  }
+
+  function handleDragging(scenePoint: GlobalPoint, state: DragState): void {
+    continueDrag(scenePoint, state, selectedElements());
+    updateBoundElementsForSelected();
+    markSceneDirty();
+  }
+
+  function handleResizing(
+    scenePoint: GlobalPoint,
+    resizeState: ResizeState,
+    shiftKey: boolean,
+  ): void {
+    const el = getSingleSelected();
+    if (!el) return;
+    resizeElement(scenePoint, resizeState, el, shiftKey);
+    updateBoundElementsForSelected();
+    markSceneDirty();
+  }
+
+  function handleRotating(scenePoint: GlobalPoint, shiftKey: boolean): void {
+    const el = getSingleSelected();
+    if (!el) return;
+    rotateElement(scenePoint, el, shiftKey);
+    updateBoundElementsForSelected();
+    markSceneDirty();
+  }
+
+  function handleMidpointDragging(
+    scenePoint: GlobalPoint,
+    state: InteractionState & { type: "midpointDragging" },
+  ): void {
+    const dx = scenePoint[0] - state.lastScene[0];
+    const dy = scenePoint[1] - state.lastScene[1];
+    state.lastScene = scenePoint;
+
+    const el = state.element;
+    const result = movePoint(el.x, el.y, el.points, state.pointIndex, dx, dy);
+    const dims = getSizeFromPoints(result.points);
+    mutateElement(el, {
+      x: result.x,
+      y: result.y,
+      points: result.points,
+      width: dims.width,
+      height: dims.height,
+    });
+
+    // Re-snap bound endpoints so arrow stays connected to shapes
+    if (isArrowElement(el)) {
+      updateArrowBindings(el, elements.value);
+    }
+
+    markSceneDirty();
+  }
+
+  function handleBoxSelecting(
+    scenePoint: GlobalPoint,
+    state: InteractionState & { type: "boxSelecting" },
+  ): void {
+    const box = normalizeBox(state.startPoint, scenePoint);
+    selectionBox.value = box;
+    selectElementsInBox(box);
+    markInteractiveDirty();
+  }
+
   function handlePointerMove(e: PointerEvent): void {
     const scenePoint = toScene(e.offsetX, e.offsetY);
 
@@ -277,65 +357,28 @@ export function useSelectionInteraction(
     }
 
     if (interaction.type === "dragging") {
-      continueDrag(scenePoint, interaction.dragState, selectedElements());
-      updateBoundElementsForSelected();
-      markSceneDirty();
+      handleDragging(scenePoint, interaction.dragState);
       return;
     }
 
     if (interaction.type === "resizing") {
-      const selected = selectedElements();
-      if (selected.length !== 1) return;
-      const el = selected[0];
-      if (!el) return;
-      resizeElement(scenePoint, interaction.resizeState, el, e.shiftKey);
-      updateBoundElementsForSelected();
-      markSceneDirty();
+      handleResizing(scenePoint, interaction.resizeState, e.shiftKey);
       return;
     }
 
     if (interaction.type === "rotating") {
-      const selected = selectedElements();
-      if (selected.length !== 1) return;
-      const el = selected[0];
-      if (!el) return;
-      rotateElement(scenePoint, el, e.shiftKey);
-      updateBoundElementsForSelected();
-      markSceneDirty();
+      handleRotating(scenePoint, e.shiftKey);
       return;
     }
 
     if (interaction.type === "midpointDragging") {
-      const dx = scenePoint[0] - interaction.lastScene[0];
-      const dy = scenePoint[1] - interaction.lastScene[1];
-      interaction.lastScene = scenePoint;
-
-      const el = interaction.element;
-      const result = movePoint(el.x, el.y, el.points, interaction.pointIndex, dx, dy);
-      const dims = getSizeFromPoints(result.points);
-      mutateElement(el, {
-        x: result.x,
-        y: result.y,
-        points: result.points,
-        width: dims.width,
-        height: dims.height,
-      });
-
-      // Re-snap bound endpoints so arrow stays connected to shapes
-      if (isArrowElement(el)) {
-        updateArrowBindings(el, elements.value);
-      }
-
-      markSceneDirty();
+      handleMidpointDragging(scenePoint, interaction);
       return;
     }
 
-    // interaction.type === 'boxSelecting'
-    if (interaction.type !== "boxSelecting") return;
-    const box = normalizeBox(interaction.startPoint, scenePoint);
-    selectionBox.value = box;
-    selectElementsInBox(box);
-    markInteractiveDirty();
+    if (interaction.type === "boxSelecting") {
+      handleBoxSelecting(scenePoint, interaction);
+    }
   }
 
   /**
@@ -388,31 +431,56 @@ export function useSelectionInteraction(
     }
   }
 
-  function updateCursor(scenePoint: GlobalPoint): void {
-    if (activeTool.value !== "selection") return;
-
-    const selected = selectedElements();
-
-    // Check transform handles
+  function getCursorForTransformHandle(
+    scenePoint: GlobalPoint,
+    selected: readonly ExcalidrawElement[],
+  ): string | null {
     for (const el of selected) {
       const handleType = getTransformHandleAtPosition(scenePoint, el, zoom.value);
-      if (handleType) {
-        hoveredMidpoint.value = null;
-        cursorStyle.value = getResizeCursor(handleType);
-        return;
-      }
+      if (handleType) return getResizeCursor(handleType);
     }
+    return null;
+  }
 
-    // Check midpoint handles on selected 2-point linear elements
+  function getCursorForMidpoint(
+    scenePoint: GlobalPoint,
+    selected: readonly ExcalidrawElement[],
+  ): string | null {
     for (const el of selected) {
       if (!isLinearElement(el) || el.points.length !== 2) continue;
       const midIdx = hitTestMidpoints(scenePoint, el, zoom.value);
       if (midIdx >= 0) {
         hoveredMidpoint.value = { elementId: el.id, segmentIndex: midIdx };
-        cursorStyle.value = "pointer";
         markInteractiveDirty();
-        return;
+        return "pointer";
       }
+    }
+    return null;
+  }
+
+  function isHoveringSelected(
+    scenePoint: GlobalPoint,
+    selected: readonly ExcalidrawElement[],
+  ): boolean {
+    return selected.some((el) => hitTest(scenePoint, el, zoom.value));
+  }
+
+  function updateCursor(scenePoint: GlobalPoint): void {
+    if (activeTool.value !== "selection") return;
+
+    const selected = selectedElements();
+
+    const transformCursor = getCursorForTransformHandle(scenePoint, selected);
+    if (transformCursor) {
+      hoveredMidpoint.value = null;
+      cursorStyle.value = transformCursor;
+      return;
+    }
+
+    const midpointCursor = getCursorForMidpoint(scenePoint, selected);
+    if (midpointCursor) {
+      cursorStyle.value = midpointCursor;
+      return;
     }
 
     if (hoveredMidpoint.value) {
@@ -420,15 +488,7 @@ export function useSelectionInteraction(
       markInteractiveDirty();
     }
 
-    // Check selected element hover → move cursor
-    for (const el of selected) {
-      if (hitTest(scenePoint, el, zoom.value)) {
-        cursorStyle.value = "move";
-        return;
-      }
-    }
-
-    cursorStyle.value = "default";
+    cursorStyle.value = isHoveringSelected(scenePoint, selected) ? "move" : "default";
   }
 
   function selectElementsInBox(box: Box): void {

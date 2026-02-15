@@ -53,80 +53,118 @@ function estimateSegmentCount(
   startHeading: Heading,
   endHeading: Heading,
 ): number {
-  if (endHeading === HEADING_RIGHT) {
-    if (startHeading === HEADING_RIGHT) {
-      if (start.pos[0] >= end.pos[0]) return 4;
-      if (start.pos[1] === end.pos[1]) return 0;
-      return 2;
-    }
-    if (startHeading === HEADING_UP) {
-      if (start.pos[1] > end.pos[1] && start.pos[0] < end.pos[0]) return 1;
-      return 3;
-    }
-    if (startHeading === HEADING_DOWN) {
-      if (start.pos[1] < end.pos[1] && start.pos[0] < end.pos[0]) return 1;
-      return 3;
-    }
-    // HEADING_LEFT
-    if (start.pos[1] === end.pos[1]) return 4;
+  if (endHeading === HEADING_RIGHT) return estimateForEndRight(start, end, startHeading);
+  if (endHeading === HEADING_LEFT) return estimateForEndLeft(start, end, startHeading);
+  if (endHeading === HEADING_UP) return estimateForEndUp(start, end, startHeading);
+  return estimateForEndDown(start, end, startHeading);
+}
+
+/**
+ * When start and end headings align on the same axis (same or opposite direction),
+ * estimate bends based on whether the start has "passed" the end or is aligned.
+ *
+ * - sameDir: start heading === end heading
+ * - primaryCoord: the axis of travel (x for horizontal, y for vertical)
+ * - secondaryCoord: the perpendicular axis
+ * - pastThreshold: whether start has passed end on the primary axis (needs U-turn)
+ */
+function estimateSameAxis(
+  startPos: GlobalPoint,
+  endPos: GlobalPoint,
+  sameDir: boolean,
+  primaryIdx: 0 | 1,
+  secondaryIdx: 0 | 1,
+  pastCheck: (start: number, end: number) => boolean,
+): number {
+  if (sameDir) {
+    if (pastCheck(startPos[primaryIdx], endPos[primaryIdx])) return 4;
+    if (startPos[secondaryIdx] === endPos[secondaryIdx]) return 0;
     return 2;
   }
+  // Opposite direction
+  if (startPos[secondaryIdx] === endPos[secondaryIdx]) return 4;
+  return 2;
+}
 
-  if (endHeading === HEADING_LEFT) {
-    if (startHeading === HEADING_RIGHT) {
-      if (start.pos[1] === end.pos[1]) return 4;
-      return 2;
-    }
-    if (startHeading === HEADING_UP) {
-      if (start.pos[1] > end.pos[1] && start.pos[0] > end.pos[0]) return 1;
-      return 3;
-    }
-    if (startHeading === HEADING_DOWN) {
-      if (start.pos[1] < end.pos[1] && start.pos[0] > end.pos[0]) return 1;
-      return 3;
-    }
-    // HEADING_LEFT
-    if (start.pos[0] <= end.pos[0]) return 4;
-    if (start.pos[1] === end.pos[1]) return 0;
-    return 2;
-  }
+/**
+ * When start heading is perpendicular to end heading,
+ * check if the path can make a single 90-degree turn.
+ */
+function estimatePerpendicular(
+  startPos: GlobalPoint,
+  endPos: GlobalPoint,
+  favorableCheck: (start: GlobalPoint, end: GlobalPoint) => boolean,
+): number {
+  if (favorableCheck(startPos, endPos)) return 1;
+  return 3;
+}
 
-  if (endHeading === HEADING_UP) {
-    if (startHeading === HEADING_RIGHT) {
-      if (start.pos[1] > end.pos[1] && start.pos[0] < end.pos[0]) return 1;
-      return 3;
-    }
-    if (startHeading === HEADING_UP) {
-      if (start.pos[1] >= end.pos[1]) return 4;
-      if (start.pos[0] === end.pos[0]) return 0;
-      return 2;
-    }
-    if (startHeading === HEADING_DOWN) {
-      if (start.pos[0] === end.pos[0]) return 4;
-      return 2;
-    }
-    // HEADING_LEFT
-    if (start.pos[1] > end.pos[1] && start.pos[0] > end.pos[0]) return 1;
-    return 3;
-  }
-
-  // endHeading === HEADING_DOWN
-  if (startHeading === HEADING_RIGHT) {
-    if (start.pos[1] < end.pos[1] && start.pos[0] < end.pos[0]) return 1;
-    return 3;
+function estimateForEndRight(start: Node, end: Node, startHeading: Heading): number {
+  if (startHeading === HEADING_RIGHT || startHeading === HEADING_LEFT) {
+    return estimateSameAxis(
+      start.pos,
+      end.pos,
+      startHeading === HEADING_RIGHT,
+      0,
+      1,
+      (s, e) => s >= e,
+    );
   }
   if (startHeading === HEADING_UP) {
-    if (start.pos[0] === end.pos[0]) return 4;
-    return 2;
+    return estimatePerpendicular(start.pos, end.pos, (s, e) => s[1] > e[1] && s[0] < e[0]);
   }
-  if (startHeading === HEADING_DOWN) {
-    if (start.pos[1] <= end.pos[1]) return 4;
-    if (start.pos[0] === end.pos[0]) return 0;
-    return 2;
+  return estimatePerpendicular(start.pos, end.pos, (s, e) => s[1] < e[1] && s[0] < e[0]);
+}
+
+function estimateForEndLeft(start: Node, end: Node, startHeading: Heading): number {
+  if (startHeading === HEADING_RIGHT || startHeading === HEADING_LEFT) {
+    return estimateSameAxis(
+      start.pos,
+      end.pos,
+      startHeading === HEADING_LEFT,
+      0,
+      1,
+      (s, e) => s <= e,
+    );
   }
-  // HEADING_LEFT
-  if (start.pos[1] < end.pos[1] && start.pos[0] > end.pos[0]) return 1;
-  return 3;
+  if (startHeading === HEADING_UP) {
+    return estimatePerpendicular(start.pos, end.pos, (s, e) => s[1] > e[1] && s[0] > e[0]);
+  }
+  return estimatePerpendicular(start.pos, end.pos, (s, e) => s[1] < e[1] && s[0] > e[0]);
+}
+
+function estimateForEndUp(start: Node, end: Node, startHeading: Heading): number {
+  if (startHeading === HEADING_UP || startHeading === HEADING_DOWN) {
+    return estimateSameAxis(
+      start.pos,
+      end.pos,
+      startHeading === HEADING_UP,
+      1,
+      0,
+      (s, e) => s >= e,
+    );
+  }
+  if (startHeading === HEADING_RIGHT) {
+    return estimatePerpendicular(start.pos, end.pos, (s, e) => s[1] > e[1] && s[0] < e[0]);
+  }
+  return estimatePerpendicular(start.pos, end.pos, (s, e) => s[1] > e[1] && s[0] > e[0]);
+}
+
+function estimateForEndDown(start: Node, end: Node, startHeading: Heading): number {
+  if (startHeading === HEADING_UP || startHeading === HEADING_DOWN) {
+    return estimateSameAxis(
+      start.pos,
+      end.pos,
+      startHeading === HEADING_DOWN,
+      1,
+      0,
+      (s, e) => s <= e,
+    );
+  }
+  if (startHeading === HEADING_RIGHT) {
+    return estimatePerpendicular(start.pos, end.pos, (s, e) => s[1] < e[1] && s[0] < e[0]);
+  }
+  return estimatePerpendicular(start.pos, end.pos, (s, e) => s[1] < e[1] && s[0] > e[0]);
 }
 
 // ---------------------------------------------------------------------------
@@ -249,6 +287,88 @@ function pathTo(start: Node, node: Node): Node[] {
  *
  * Returns array of nodes forming the path, or null if no path found.
  */
+/** Check if moving to this neighbor constitutes backtracking. */
+function isReverseRoute(
+  neighborHeading: Heading,
+  previousDirection: Heading,
+  neighbor: Node,
+  start: Node,
+  end: Node,
+  startHeading: Heading,
+  endHeading: Heading,
+): boolean {
+  const reverseHeading = flipHeading(previousDirection);
+  if (compareHeading(reverseHeading, neighborHeading)) return true;
+  if (
+    gridAddressesEqual(start.addr, neighbor.addr) &&
+    compareHeading(neighborHeading, startHeading)
+  )
+    return true;
+  if (gridAddressesEqual(end.addr, neighbor.addr) && compareHeading(neighborHeading, endHeading))
+    return true;
+  return false;
+}
+
+/** Process a single neighbor in the A* loop. */
+function processNeighbor(
+  current: Node,
+  neighbor: Node,
+  neighborIdx: 0 | 1 | 2 | 3,
+  start: Node,
+  end: Node,
+  startHeading: Heading,
+  endHeading: Heading,
+  bendMultiplier: number,
+  aabbs: readonly Bounds[],
+  open: BinaryHeap,
+): void {
+  // Midpoint collision test
+  const neighborHalfPoint = pointScaleFromOrigin(neighbor.pos, current.pos, 0.5) as GlobalPoint;
+  if (aabbs.some((aabb) => pointInsideBounds(neighborHalfPoint, aabb))) return;
+
+  // Direction checks
+  const neighborHeading = neighborIndexToHeading(neighborIdx);
+  const previousDirection = current.parent
+    ? vectorToHeading(vectorFromPoint(current.pos, current.parent.pos))
+    : startHeading;
+
+  if (
+    isReverseRoute(
+      neighborHeading,
+      previousDirection,
+      neighbor,
+      start,
+      end,
+      startHeading,
+      endHeading,
+    )
+  )
+    return;
+
+  // Cost calculation
+  const directionChange = !compareHeading(previousDirection, neighborHeading);
+  const gScore =
+    current.g +
+    mDist(neighbor.pos, current.pos) +
+    (directionChange ? Math.pow(bendMultiplier, 3) : 0);
+
+  const beenVisited = neighbor.visited;
+  if (beenVisited && gScore >= neighbor.g) return;
+
+  const estBendCount = estimateSegmentCount(neighbor, end, neighborHeading, endHeading);
+  neighbor.visited = true;
+  neighbor.parent = current;
+  neighbor.h = mDist(end.pos, neighbor.pos) + estBendCount * Math.pow(bendMultiplier, 2);
+  neighbor.g = gScore;
+  neighbor.f = neighbor.g + neighbor.h;
+
+  if (beenVisited) {
+    open.rescoreElement(neighbor);
+    return;
+  }
+  open.push(neighbor);
+}
+
 export function astar(
   start: Node,
   end: Node,
@@ -267,7 +387,6 @@ export function astar(
 
     if (!current || current.closed) continue;
 
-    // End case
     if (current === end) {
       return pathTo(start, current).map((n) => n.pos);
     }
@@ -279,54 +398,18 @@ export function astar(
     for (let i = 0; i < 4; i++) {
       const neighbor = neighbors[i];
       if (!neighbor || neighbor.closed) continue;
-
-      // Midpoint collision test
-      const neighborHalfPoint = pointScaleFromOrigin(neighbor.pos, current.pos, 0.5) as GlobalPoint;
-      if (aabbs.some((aabb) => pointInsideBounds(neighborHalfPoint, aabb))) {
-        continue;
-      }
-
-      // Direction checks
-      const neighborHeading = neighborIndexToHeading(i as 0 | 1 | 2 | 3);
-      const previousDirection = current.parent
-        ? vectorToHeading(vectorFromPoint(current.pos, current.parent.pos))
-        : startHeading;
-
-      // No backtracking
-      const reverseHeading = flipHeading(previousDirection);
-      const neighborIsReverseRoute =
-        compareHeading(reverseHeading, neighborHeading) ||
-        (gridAddressesEqual(start.addr, neighbor.addr) &&
-          compareHeading(neighborHeading, startHeading)) ||
-        (gridAddressesEqual(end.addr, neighbor.addr) &&
-          compareHeading(neighborHeading, endHeading));
-      if (neighborIsReverseRoute) continue;
-
-      // Cost calculation
-      const directionChange = !compareHeading(previousDirection, neighborHeading);
-      const gScore =
-        current.g +
-        mDist(neighbor.pos, current.pos) +
-        (directionChange ? Math.pow(bendMultiplier, 3) : 0);
-
-      const beenVisited = neighbor.visited;
-
-      if (!beenVisited || gScore < neighbor.g) {
-        const estBendCount = estimateSegmentCount(neighbor, end, neighborHeading, endHeading);
-
-        neighbor.visited = true;
-        neighbor.parent = current;
-        neighbor.h = mDist(end.pos, neighbor.pos) + estBendCount * Math.pow(bendMultiplier, 2);
-        neighbor.g = gScore;
-        neighbor.f = neighbor.g + neighbor.h;
-
-        if (beenVisited) {
-          open.rescoreElement(neighbor);
-        }
-        if (!beenVisited) {
-          open.push(neighbor);
-        }
-      }
+      processNeighbor(
+        current,
+        neighbor,
+        i as 0 | 1 | 2 | 3,
+        start,
+        end,
+        startHeading,
+        endHeading,
+        bendMultiplier,
+        aabbs,
+        open,
+      );
     }
   }
 

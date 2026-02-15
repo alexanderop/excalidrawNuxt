@@ -11,6 +11,50 @@ import { renderElement } from "./renderElement";
 
 const CANVAS_BG = "#ffffff";
 
+function collectArrowIds(elements: readonly ExcalidrawElement[]): Set<string> {
+  const arrowIds = new Set<string>();
+  for (const el of elements) {
+    if (isArrowElement(el)) arrowIds.add(el.id);
+  }
+  return arrowIds;
+}
+
+function isOutsideViewport(
+  element: ExcalidrawElement,
+  viewMinX: number,
+  viewMinY: number,
+  viewMaxX: number,
+  viewMaxY: number,
+): boolean {
+  const [x1, y1, x2, y2] = getElementBounds(element);
+  return x2 < viewMinX || x1 > viewMaxX || y2 < viewMinY || y1 > viewMaxY;
+}
+
+function isArrowBoundText(element: ExcalidrawElement, arrowIds: Set<string>): boolean {
+  return (
+    isTextElement(element) &&
+    !!element.containerId &&
+    arrowIds.has(element.containerId) &&
+    !!element.text
+  );
+}
+
+function renderArrowTextBackground(
+  ctx: CanvasRenderingContext2D,
+  element: ExcalidrawElement,
+  theme: Theme,
+): void {
+  ctx.save();
+  ctx.fillStyle = resolveColor(CANVAS_BG, theme);
+  ctx.fillRect(
+    element.x - BOUND_TEXT_PADDING,
+    element.y - BOUND_TEXT_PADDING,
+    element.width + BOUND_TEXT_PADDING * 2,
+    element.height + BOUND_TEXT_PADDING * 2,
+  );
+  ctx.restore();
+}
+
 export function renderScene(
   ctx: CanvasRenderingContext2D,
   rc: RoughCanvas,
@@ -32,33 +76,13 @@ export function renderScene(
   const viewMaxX = viewMinX + w / zoom;
   const viewMaxY = viewMinY + h / zoom;
 
-  // Build a set of container IDs that are arrows, so we know which text
-  // elements need a background rect to cut through the arrow line behind them.
-  const arrowIds = new Set<string>();
-  for (const el of elements) {
-    if (isArrowElement(el)) arrowIds.add(el.id);
-  }
+  const arrowIds = collectArrowIds(elements);
 
   for (const element of elements) {
-    const [x1, y1, x2, y2] = getElementBounds(element);
-    if (x2 < viewMinX || x1 > viewMaxX || y2 < viewMinY || y1 > viewMaxY) continue;
+    if (isOutsideViewport(element, viewMinX, viewMinY, viewMaxX, viewMaxY)) continue;
 
-    // Arrow-bound text: fill a background rect to cut the arrow line behind the label
-    if (
-      isTextElement(element) &&
-      element.containerId &&
-      arrowIds.has(element.containerId) &&
-      element.text
-    ) {
-      ctx.save();
-      ctx.fillStyle = resolveColor(CANVAS_BG, theme);
-      ctx.fillRect(
-        element.x - BOUND_TEXT_PADDING,
-        element.y - BOUND_TEXT_PADDING,
-        element.width + BOUND_TEXT_PADDING * 2,
-        element.height + BOUND_TEXT_PADDING * 2,
-      );
-      ctx.restore();
+    if (isArrowBoundText(element, arrowIds)) {
+      renderArrowTextBackground(ctx, element, theme);
     }
 
     renderElement(ctx, rc, element, theme, imageCache, zoom);

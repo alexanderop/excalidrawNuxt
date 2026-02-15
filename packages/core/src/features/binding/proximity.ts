@@ -138,39 +138,54 @@ export function isPointInsideShape(point: GlobalPoint, element: BindableElement)
       ? point
       : pointRotateRads(point, pointFrom<GlobalPoint>(cx, cy), -element.angle as Radians);
 
-  const px = unrotated[0];
-  const py = unrotated[1];
-
   if (element.type === "rectangle") {
-    return (
-      px >= element.x &&
-      px <= element.x + element.width &&
-      py >= element.y &&
-      py <= element.y + element.height
-    );
+    return isPointInsideRectangle(unrotated, element);
   }
-
   if (element.type === "ellipse") {
-    const rx = element.width / 2;
-    const ry = element.height / 2;
-    if (rx === 0 || ry === 0) return false;
-    const dx = (px - cx) / rx;
-    const dy = (py - cy) / ry;
-    return dx * dx + dy * dy <= 1;
+    return isPointInsideEllipse(unrotated, element, cx, cy);
   }
-
   if (element.type === "diamond") {
-    // Diamond: check if the point is inside the rhombus
-    // using the sum of normalized distances from center
-    const hw = element.width / 2;
-    const hh = element.height / 2;
-    if (hw === 0 || hh === 0) return false;
-    const dx = Math.abs(px - cx) / hw;
-    const dy = Math.abs(py - cy) / hh;
-    return dx + dy <= 1;
+    return isPointInsideDiamond(unrotated, element, cx, cy);
   }
 
   return false;
+}
+
+function isPointInsideRectangle(point: GlobalPoint, el: BindableElement): boolean {
+  return (
+    point[0] >= el.x &&
+    point[0] <= el.x + el.width &&
+    point[1] >= el.y &&
+    point[1] <= el.y + el.height
+  );
+}
+
+function isPointInsideEllipse(
+  point: GlobalPoint,
+  el: BindableElement,
+  cx: number,
+  cy: number,
+): boolean {
+  const rx = el.width / 2;
+  const ry = el.height / 2;
+  if (rx === 0 || ry === 0) return false;
+  const dx = (point[0] - cx) / rx;
+  const dy = (point[1] - cy) / ry;
+  return dx * dx + dy * dy <= 1;
+}
+
+function isPointInsideDiamond(
+  point: GlobalPoint,
+  el: BindableElement,
+  cx: number,
+  cy: number,
+): boolean {
+  const hw = el.width / 2;
+  const hh = el.height / 2;
+  if (hw === 0 || hh === 0) return false;
+  const dx = Math.abs(point[0] - cx) / hw;
+  const dy = Math.abs(point[1] - cy) / hh;
+  return dx + dy <= 1;
 }
 
 /**

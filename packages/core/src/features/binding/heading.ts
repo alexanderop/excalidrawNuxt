@@ -89,6 +89,46 @@ const getCenterForBounds = (bounds: Readonly<Bounds>): GlobalPoint =>
   pointFrom<GlobalPoint>((bounds[0] + bounds[2]) / 2, (bounds[1] + bounds[3]) / 2);
 
 /**
+ * Compute a shrunk diamond vertex: rotate, scale from center, return.
+ */
+const diamondVertex = (
+  rawPoint: GlobalPoint,
+  midPoint: GlobalPoint,
+  angle: Radians,
+  shrink: number,
+): GlobalPoint =>
+  pointFromVector(
+    vectorScale(vectorFromPoint(pointRotateRads(rawPoint, midPoint, angle), midPoint), shrink),
+    midPoint,
+  );
+
+/**
+ * Test if a point falls inside a diamond corner zone defined by a vertex
+ * and its two adjacent vertices. Uses cross-product half-plane tests.
+ */
+const isInCornerZone = (
+  point: Readonly<GlobalPoint>,
+  vertex: GlobalPoint,
+  cwNeighbor: GlobalPoint,
+  ccwNeighbor: GlobalPoint,
+): boolean =>
+  vectorCross(vectorFromPoint(point, vertex), vectorFromPoint(vertex, cwNeighbor)) <= 0 &&
+  vectorCross(vectorFromPoint(point, vertex), vectorFromPoint(vertex, ccwNeighbor)) > 0;
+
+/**
+ * Test if a point falls inside a diamond side zone defined by two
+ * adjacent vertices, relative to the center. Uses cross-product tests.
+ */
+const isInSideZone = (
+  point: Readonly<GlobalPoint>,
+  midPoint: GlobalPoint,
+  cwVertex: GlobalPoint,
+  ccwVertex: GlobalPoint,
+): boolean =>
+  vectorCross(vectorFromPoint(point, midPoint), vectorFromPoint(cwVertex, midPoint)) <= 0 &&
+  vectorCross(vectorFromPoint(point, midPoint), vectorFromPoint(ccwVertex, midPoint)) > 0;
+
+/**
  * Heading for a diamond element uses cross-product tests against the
  * diamond vertices (top, right, bottom, left) to determine which
  * quadrant the point is in.
@@ -100,117 +140,99 @@ const headingForPointFromDiamondElement = (
 ): Heading => {
   const midPoint = getCenterForBounds(aabb);
   const SHRINK = 0.95;
-
   const angle = element.angle as Radians;
-  const top = pointFromVector(
-    vectorScale(
-      vectorFromPoint(
-        pointRotateRads(
-          pointFrom<GlobalPoint>(element.x + element.width / 2, element.y),
-          midPoint,
-          angle,
-        ),
-        midPoint,
-      ),
-      SHRINK,
-    ),
+
+  const top = diamondVertex(
+    pointFrom<GlobalPoint>(element.x + element.width / 2, element.y),
     midPoint,
+    angle,
+    SHRINK,
   );
-  const right = pointFromVector(
-    vectorScale(
-      vectorFromPoint(
-        pointRotateRads(
-          pointFrom<GlobalPoint>(element.x + element.width, element.y + element.height / 2),
-          midPoint,
-          angle,
-        ),
-        midPoint,
-      ),
-      SHRINK,
-    ),
+  const right = diamondVertex(
+    pointFrom<GlobalPoint>(element.x + element.width, element.y + element.height / 2),
     midPoint,
+    angle,
+    SHRINK,
   );
-  const bottom = pointFromVector(
-    vectorScale(
-      vectorFromPoint(
-        pointRotateRads(
-          pointFrom<GlobalPoint>(element.x + element.width / 2, element.y + element.height),
-          midPoint,
-          angle,
-        ),
-        midPoint,
-      ),
-      SHRINK,
-    ),
+  const bottom = diamondVertex(
+    pointFrom<GlobalPoint>(element.x + element.width / 2, element.y + element.height),
     midPoint,
+    angle,
+    SHRINK,
   );
-  const left = pointFromVector(
-    vectorScale(
-      vectorFromPoint(
-        pointRotateRads(
-          pointFrom<GlobalPoint>(element.x, element.y + element.height / 2),
-          midPoint,
-          angle,
-        ),
-        midPoint,
-      ),
-      SHRINK,
-    ),
+  const left = diamondVertex(
+    pointFrom<GlobalPoint>(element.x, element.y + element.height / 2),
     midPoint,
+    angle,
+    SHRINK,
   );
 
-  // Corners
-  if (
-    vectorCross(vectorFromPoint(point, top), vectorFromPoint(top, right)) <= 0 &&
-    vectorCross(vectorFromPoint(point, top), vectorFromPoint(top, left)) > 0
-  ) {
-    return headingForPoint(top, midPoint);
-  }
-  if (
-    vectorCross(vectorFromPoint(point, right), vectorFromPoint(right, bottom)) <= 0 &&
-    vectorCross(vectorFromPoint(point, right), vectorFromPoint(right, top)) > 0
-  ) {
-    return headingForPoint(right, midPoint);
-  }
-  if (
-    vectorCross(vectorFromPoint(point, bottom), vectorFromPoint(bottom, left)) <= 0 &&
-    vectorCross(vectorFromPoint(point, bottom), vectorFromPoint(bottom, right)) > 0
-  ) {
-    return headingForPoint(bottom, midPoint);
-  }
-  if (
-    vectorCross(vectorFromPoint(point, left), vectorFromPoint(left, top)) <= 0 &&
-    vectorCross(vectorFromPoint(point, left), vectorFromPoint(left, bottom)) > 0
-  ) {
-    return headingForPoint(left, midPoint);
-  }
+  const cornerMatch = findDiamondCorner(point, midPoint, top, right, bottom, left);
+  if (cornerMatch) return cornerMatch;
 
-  // Sides
-  if (
-    vectorCross(vectorFromPoint(point, midPoint), vectorFromPoint(top, midPoint)) <= 0 &&
-    vectorCross(vectorFromPoint(point, midPoint), vectorFromPoint(right, midPoint)) > 0
-  ) {
-    const p = element.width > element.height ? top : right;
-    return headingForPoint(p, midPoint);
-  }
-  if (
-    vectorCross(vectorFromPoint(point, midPoint), vectorFromPoint(right, midPoint)) <= 0 &&
-    vectorCross(vectorFromPoint(point, midPoint), vectorFromPoint(bottom, midPoint)) > 0
-  ) {
-    const p = element.width > element.height ? bottom : right;
-    return headingForPoint(p, midPoint);
-  }
-  if (
-    vectorCross(vectorFromPoint(point, midPoint), vectorFromPoint(bottom, midPoint)) <= 0 &&
-    vectorCross(vectorFromPoint(point, midPoint), vectorFromPoint(left, midPoint)) > 0
-  ) {
-    const p = element.width > element.height ? bottom : left;
-    return headingForPoint(p, midPoint);
-  }
-
-  const p = element.width > element.height ? top : left;
-  return headingForPoint(p, midPoint);
+  return findDiamondSide(point, midPoint, element, top, right, bottom, left);
 };
+
+/**
+ * Check each corner zone of the diamond and return the heading if the
+ * point falls in one. Returns null if no corner matches.
+ */
+function findDiamondCorner(
+  point: Readonly<GlobalPoint>,
+  midPoint: GlobalPoint,
+  top: GlobalPoint,
+  right: GlobalPoint,
+  bottom: GlobalPoint,
+  left: GlobalPoint,
+): Heading | null {
+  // Each corner: [vertex, clockwise neighbor, counter-clockwise neighbor]
+  const corners: [GlobalPoint, GlobalPoint, GlobalPoint][] = [
+    [top, right, left],
+    [right, bottom, top],
+    [bottom, left, right],
+    [left, top, bottom],
+  ];
+
+  for (const [vertex, cw, ccw] of corners) {
+    if (isInCornerZone(point, vertex, cw, ccw)) {
+      return headingForPoint(vertex, midPoint);
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Determine heading from one of the four side zones of the diamond.
+ * The wider dimension wins: width > height favors top/bottom, else left/right.
+ */
+function findDiamondSide(
+  point: Readonly<GlobalPoint>,
+  midPoint: GlobalPoint,
+  element: Readonly<{ width: number; height: number }>,
+  top: GlobalPoint,
+  right: GlobalPoint,
+  bottom: GlobalPoint,
+  left: GlobalPoint,
+): Heading {
+  const isWide = element.width > element.height;
+
+  // Each side: [clockwise vertex, counter-clockwise vertex, wide pick, narrow pick]
+  const sides: [GlobalPoint, GlobalPoint, GlobalPoint, GlobalPoint][] = [
+    [top, right, top, right],
+    [right, bottom, bottom, right],
+    [bottom, left, bottom, left],
+  ];
+
+  for (const [cw, ccw, wide, narrow] of sides) {
+    if (isInSideZone(point, midPoint, cw, ccw)) {
+      return headingForPoint(isWide ? wide : narrow, midPoint);
+    }
+  }
+
+  // Fallback: last side zone (left-to-top)
+  return headingForPoint(isWide ? top : left, midPoint);
+}
 
 /**
  * Determine which edge a point exits/enters from relative to an element.

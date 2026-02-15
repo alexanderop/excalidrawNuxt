@@ -70,35 +70,37 @@ function elementToRoughOptions(element: ExcalidrawElement, theme: Theme): Option
   return options;
 }
 
-function generateDrawable(element: ExcalidrawElement, theme: Theme): Drawable {
-  if (element.type === "text") {
-    throw new Error("Text elements should not use RoughJS shape generation");
+const NON_ROUGH_TYPES = new Set(["text", "image"]);
+
+function assertNotNonRoughType(element: ExcalidrawElement): void {
+  if (NON_ROUGH_TYPES.has(element.type)) {
+    throw new Error(`${element.type} elements should not use RoughJS shape generation`);
   }
   if (isCodeElement(element)) {
     throw new Error("Code elements should not use RoughJS shape generation");
   }
-  if (element.type === "image") {
-    throw new Error("Image elements should not use RoughJS shape generation");
+}
+
+function generateLinearDrawable(element: ExcalidrawElement, options: Options): Drawable {
+  const { points, roundness } = element as ExcalidrawElement & {
+    points: readonly [number, number][];
+    roundness: number | null;
+  };
+
+  if (element.type === "arrow" && isElbowArrow(element)) {
+    const svgPath = generateElbowArrowShape(points as readonly LocalPoint[], ELBOW_CORNER_RADIUS);
+    return generator.path(svgPath, options);
   }
 
+  const pts = points.map((p) => [p[0], p[1]] satisfies [number, number]);
+  if (roundness !== null) {
+    return generator.curve(pts, options);
+  }
+  return generator.linearPath(pts, options);
+}
+
+function generateSimpleShapeDrawable(element: ExcalidrawElement, options: Options): Drawable {
   const { width, height } = element;
-  const options = elementToRoughOptions(element, theme);
-
-  if (element.type === "arrow" || element.type === "line") {
-    const { points, roundness } = element;
-
-    // Elbow arrows use SVG path with quadratic Bezier curves at corners
-    if (element.type === "arrow" && isElbowArrow(element)) {
-      const svgPath = generateElbowArrowShape(points as readonly LocalPoint[], ELBOW_CORNER_RADIUS);
-      return generator.path(svgPath, options);
-    }
-
-    const pts = points.map((p) => [p[0], p[1]] satisfies [number, number]);
-    if (roundness !== null) {
-      return generator.curve(pts, options);
-    }
-    return generator.linearPath(pts, options);
-  }
 
   if (element.type === "rectangle") {
     return generator.rectangle(0, 0, width, height, options);
@@ -121,6 +123,18 @@ function generateDrawable(element: ExcalidrawElement, theme: Theme): Drawable {
   }
 
   throw new Error(`Unhandled element type: ${(element as { type: string }).type}`);
+}
+
+function generateDrawable(element: ExcalidrawElement, theme: Theme): Drawable {
+  assertNotNonRoughType(element);
+
+  const options = elementToRoughOptions(element, theme);
+
+  if (element.type === "arrow" || element.type === "line") {
+    return generateLinearDrawable(element, options);
+  }
+
+  return generateSimpleShapeDrawable(element, options);
 }
 
 export function pruneShapeCache(elements: readonly ExcalidrawElement[]): void {

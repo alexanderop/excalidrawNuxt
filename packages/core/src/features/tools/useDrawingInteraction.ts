@@ -67,6 +67,7 @@ export function useDrawingInteraction(
     markStaticDirty,
     markInteractiveDirty,
     multiElement,
+    startMultiPoint,
     elements,
     zoom,
     suggestedBindings,
@@ -242,6 +243,72 @@ export function useDrawingInteraction(
     return el.width > 1 || el.height > 1;
   }
 
+  function finalizeElement(): void {
+    options.onInteractionEnd?.();
+    setTool("selection");
+    newElement.value = null;
+    markNewElementDirty();
+    markStaticDirty();
+  }
+
+  function finalizeElbowArrow(
+    el: ExcalidrawArrowElement,
+    bindingMode: BindingMode | undefined,
+  ): void {
+    tryBindArrowEndpoints(el, bindingMode);
+    routeElbowArrow(el, elements.value);
+    finalizeElement();
+  }
+
+  function finalizeDraggedArrow(
+    el: ExcalidrawArrowElement,
+    bindingMode: BindingMode | undefined,
+  ): void {
+    tryBindArrowEndpoints(el, bindingMode);
+    finalizeElement();
+  }
+
+  function tryEnterMultiPoint(
+    el: ExcalidrawLinearElement,
+    bindingMode: BindingMode | undefined,
+  ): boolean {
+    if (isArrowElement(el)) {
+      tryBindArrowStart(el, bindingMode);
+    }
+
+    if (!startMultiPoint) return false;
+
+    startMultiPoint(el);
+    suggestedBindings.value = [];
+    newElement.value = null;
+    markNewElementDirty();
+    markStaticDirty();
+    return true;
+  }
+
+  function handleLinearPointerUp(
+    el: ExcalidrawLinearElement,
+    bindingMode: BindingMode | undefined,
+  ): void {
+    if (isArrowElement(el) && isElbowArrow(el)) {
+      finalizeElbowArrow(el, bindingMode);
+      return;
+    }
+
+    if (isArrowElement(el) && hasDragged) {
+      finalizeDraggedArrow(el, bindingMode);
+      return;
+    }
+
+    if (tryEnterMultiPoint(el, bindingMode)) return;
+
+    // Fallback: no startMultiPoint provided — bind both endpoints and finalize
+    if (isArrowElement(el)) {
+      tryBindArrowEndpoints(el, bindingMode);
+    }
+    finalizeElement();
+  }
+
   useEventListener(canvasRef, "pointerup", (e: PointerEvent) => {
     const el = newElement.value;
     if (!el) return;
@@ -249,75 +316,24 @@ export function useDrawingInteraction(
     canvasRef.value?.releasePointerCapture(e.pointerId);
 
     if (!isElementValid(el)) {
-      // Invalid element — discard
-      options.onInteractionEnd?.();
-      setTool("selection");
-      newElement.value = null;
-      markNewElementDirty();
-      markStaticDirty();
+      finalizeElement();
       return;
     }
 
     onElementCreated(el);
 
-    // Determine binding mode from Alt key
     const bindingMode: BindingMode | undefined = altKeyAtStart ? "inside" : undefined;
 
-    // Linear tools: enter multi-point mode or handle elbow auto-finalize
     if (isLinearElement(el)) {
-      // Elbow arrows finalize immediately — no multi-point
-      if (isArrowElement(el) && isElbowArrow(el)) {
-        tryBindArrowEndpoints(el, bindingMode);
-        routeElbowArrow(el, elements.value);
-        options.onInteractionEnd?.();
-        setTool("selection");
-        newElement.value = null;
-        markNewElementDirty();
-        markStaticDirty();
-        return;
-      }
-
-      // Arrows created via click-and-drag finalize immediately (no multi-point)
-      if (isArrowElement(el) && hasDragged) {
-        tryBindArrowEndpoints(el, bindingMode);
-        options.onInteractionEnd?.();
-        setTool("selection");
-        newElement.value = null;
-        markNewElementDirty();
-        markStaticDirty();
-        return;
-      }
-
-      // Single-click linear: bind start only, then enter multi-point mode
-      if (isArrowElement(el)) {
-        tryBindArrowStart(el, bindingMode);
-      }
-
-      if (options.startMultiPoint) {
-        options.startMultiPoint(el);
-        suggestedBindings.value = [];
-        newElement.value = null;
-        markNewElementDirty();
-        markStaticDirty();
-        return;
-      }
-
-      // Fallback: no startMultiPoint provided — bind both endpoints and finalize
-      if (isArrowElement(el)) {
-        tryBindArrowEndpoints(el, bindingMode);
-      }
+      handleLinearPointerUp(el, bindingMode);
+      return;
     }
 
-    // Non-linear elements or fallback: finalize immediately
     if (isArrowElement(el)) {
       tryBindArrowEndpoints(el, bindingMode);
     }
 
-    options.onInteractionEnd?.();
-    setTool("selection");
-    newElement.value = null;
-    markNewElementDirty();
-    markStaticDirty();
+    finalizeElement();
   });
 
   return { newElement };

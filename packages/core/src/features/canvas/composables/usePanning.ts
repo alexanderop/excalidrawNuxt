@@ -14,7 +14,7 @@ interface UsePanningOptions {
 }
 
 interface UsePanningReturn {
-  cursorClass: ComputedRef<string>;
+  panningCursor: ComputedRef<string>;
   spaceHeld: Ref<boolean>;
   isPanning: Ref<boolean>;
 }
@@ -30,11 +30,11 @@ export function usePanning({
   let lastPointerX = 0;
   let lastPointerY = 0;
 
-  const cursorClass = computed<string>(() => {
-    if (isPanning.value) return "cursor-grabbing";
-    if (spaceHeld.value || activeTool.value === "hand") return "cursor-grab";
-    if (isDrawingTool(activeTool.value)) return "cursor-crosshair";
-    return "cursor-default";
+  const panningCursor = computed<string>(() => {
+    if (isPanning.value) return "grabbing";
+    if (spaceHeld.value || activeTool.value === "hand") return "grab";
+    if (isDrawingTool(activeTool.value)) return "crosshair";
+    return "default";
   });
 
   // Wheel: zoom (ctrl/meta + wheel) or pan (plain wheel)
@@ -101,5 +101,5 @@ export function usePanning({
     canvasRef.value?.releasePointerCapture(e.pointerId);
   });
 
-  return { cursorClass, spaceHeld, isPanning };
+  return { panningCursor, spaceHeld, isPanning };
 }

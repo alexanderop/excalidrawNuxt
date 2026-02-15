@@ -14,13 +14,13 @@ import {
  * - Curved arrows (roundness !== null): evaluate Bezier at 50% arc length
  */
 export function getArrowMidpoint(arrow: ExcalidrawArrowElement): GlobalPoint {
-  const { points } = arrow;
+  const { points, x, y, roundness } = arrow;
 
   if (points.length < 2) {
-    return pointFrom<GlobalPoint>(arrow.x, arrow.y);
+    return pointFrom<GlobalPoint>(x, y);
   }
 
-  if (arrow.roundness !== null) {
+  if (roundness !== null) {
     return getCurvedArrowMidpoint(arrow);
   }
 
@@ -32,7 +32,7 @@ export function getArrowMidpoint(arrow: ExcalidrawArrowElement): GlobalPoint {
  * Walks segments and finds the point at 50% of total path length.
  */
 function getStraightArrowMidpoint(arrow: ExcalidrawArrowElement): GlobalPoint {
-  const { points } = arrow;
+  const { points, x, y } = arrow;
 
   // Calculate total path length
   let totalLength = 0;
@@ -53,14 +53,14 @@ function getStraightArrowMidpoint(arrow: ExcalidrawArrowElement): GlobalPoint {
       const t = segLen === 0 ? 0 : remaining / segLen;
       const localX = prev[0] + (curr[0] - prev[0]) * t;
       const localY = prev[1] + (curr[1] - prev[1]) * t;
-      return pointFrom<GlobalPoint>(arrow.x + localX, arrow.y + localY);
+      return pointFrom<GlobalPoint>(x + localX, y + localY);
     }
     accumulated += segLen;
   }
 
   // Fallback: last point
   const last = points.at(-1)!;
-  return pointFrom<GlobalPoint>(arrow.x + last[0], arrow.y + last[1]);
+  return pointFrom<GlobalPoint>(x + last[0], y + last[1]);
 }
 
 /**
@@ -68,10 +68,10 @@ function getStraightArrowMidpoint(arrow: ExcalidrawArrowElement): GlobalPoint {
  * Converts to Catmull-Rom Bezier curves and finds the point at 50% arc length.
  */
 function getCurvedArrowMidpoint(arrow: ExcalidrawArrowElement): GlobalPoint {
-  const { points } = arrow;
+  const { points, x, y } = arrow;
 
   // Convert local points to GlobalPoint for the curve math
-  const globalPoints = points.map((p) => pointFrom<GlobalPoint>(arrow.x + p[0], arrow.y + p[1]));
+  const globalPoints = points.map((p) => pointFrom<GlobalPoint>(x + p[0], y + p[1]));
 
   const curves = curveCatmullRomCubicApproxPoints<GlobalPoint>(globalPoints);
   if (!curves || curves.length === 0) {

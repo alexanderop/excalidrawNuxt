@@ -84,7 +84,7 @@ sequenceDiagram
     Groups-->>Component: selectedGroupIds, groupSelection, ungroupSelection, expandSelectionForGroups
 
     Component->>Panning: usePanning(canvasRef, panBy, zoomBy, activeTool)
-    Panning-->>Component: cursorClass, spaceHeld, isPanning
+    Panning-->>Component: panningCursor, spaceHeld, isPanning
 
     Component->>MultiPt: useMultiPointCreation(shared + dirty.mark*)
     Note over MultiPt: Receives noop dirty wrappers
