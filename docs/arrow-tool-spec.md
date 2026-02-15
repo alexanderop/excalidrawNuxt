@@ -47,7 +47,7 @@ sequenceDiagram
 
 #### 1a. Element Type
 
-**File: `app/features/elements/types.ts`**
+**File: `packages/core/src/features/elements/types.ts`**
 
 ```ts
 type ArrowheadType = "arrow" | "triangle" | "none";
@@ -70,7 +70,7 @@ Add `'arrow'` to `ExcalidrawElementType` union and `ExcalidrawElement` union.
 
 #### 1b. Tool Registration
 
-**File: `app/features/tools/types.ts`**
+**File: `packages/core/src/features/tools/types.ts`**
 
 ```ts
 type LinearToolType = "arrow" | "line"; // future: line tool shares this
@@ -79,17 +79,17 @@ type DrawingToolType = "rectangle" | "ellipse" | "diamond" | LinearToolType;
 
 Add `isLinearTool()` type guard to distinguish arrow/line from box-based tools.
 
-**File: `app/features/tools/useTool.ts`**
+**File: `packages/core/src/features/tools/useTool.ts`**
 
 - Add keyboard shortcut: `a` → arrow, `5` → arrow (number row).
 
-**File: `app/features/tools/components/toolIcons.ts`**
+**File: `app/features/tools/components/toolIcons.ts`** (app-layer presentation)
 
 - Add arrow SVG icon (diagonal line with arrowhead).
 
 #### 1c. Drawing Interaction
 
-**File: `app/features/tools/useDrawingInteraction.ts`**
+**File: `packages/core/src/features/tools/useDrawingInteraction.ts`**
 
 The current interaction assumes box-based drawing (origin + width/height). Arrows need point-based drawing. Two approaches:
 
@@ -111,7 +111,7 @@ function snapAngle(dx: number, dy: number): Point {
 
 #### 1d. Rendering
 
-**File: `app/features/rendering/shapeGenerator.ts`**
+**File: `packages/core/src/features/rendering/shapeGenerator.ts`**
 
 Add arrow case to `generateDrawable()`:
 
@@ -122,7 +122,7 @@ if (element.type === "arrow") {
 }
 ```
 
-**File: `app/features/rendering/renderElement.ts`**
+**File: `packages/core/src/features/rendering/renderElement.ts`**
 
 After drawing the roughjs shaft, render the arrowhead with native Canvas 2D:
 
@@ -134,7 +134,7 @@ if (element.type === "arrow") {
 }
 ```
 
-**New file: `app/features/rendering/arrowhead.ts`**
+**New file: `packages/core/src/features/rendering/arrowhead.ts`**
 
 ```ts
 function renderArrowheads(ctx: CanvasRenderingContext2D, element: ExcalidrawArrowElement): void {
@@ -211,7 +211,7 @@ function drawArrowhead(
 
 #### 1e. Hit Testing
 
-**File: `app/features/selection/hitTest.ts`**
+**File: `packages/core/src/features/selection/hitTest.ts`**
 
 Add `hitTestArrow()` — reuses the existing `distanceToSegment()` helper:
 
@@ -231,7 +231,7 @@ No rotation unrotation needed — arrows don't use the `angle` property (rotatio
 
 #### 1f. Bounds
 
-**File: `app/features/selection/bounds.ts`**
+**File: `packages/core/src/features/selection/bounds.ts`**
 
 Add arrow-specific bounds that derive from points:
 
@@ -252,7 +252,7 @@ For Phase 1, arrows get:
 - **Selection border** — render a dashed bounding box around the arrow's AABB.
 - **No 8-handle resize** — arrows should show **endpoint handles** instead (see Phase 2).
 
-**File: `app/features/selection/transformHandles.ts`**
+**File: `packages/core/src/features/selection/transformHandles.ts`**
 
 Add an early return for arrows — skip the 8-direction handles in Phase 1:
 
@@ -262,7 +262,7 @@ if (element.type === "arrow") return {}; // Phase 2 adds endpoint handles
 
 #### 1h. createElement Update
 
-**File: `app/features/elements/createElement.ts`**
+**File: `packages/core/src/features/elements/createElement.ts`**
 
 Handle arrow type with default points and arrowhead:
 

@@ -4,6 +4,8 @@ import { useEventListener } from "@vueuse/core";
 import { useKeyboardShortcuts } from "../../../shared/useKeyboardShortcuts";
 import type { ExcalidrawElement, ExcalidrawLinearElement, ElementsMap } from "../../elements/types";
 import { isArrowElement, isLinearElement } from "../../elements/types";
+import type { ExcalidrawImageElement } from "../../image/types";
+import { isInitializedImageElement } from "../../image/types";
 import { mutateElement } from "../../elements/mutateElement";
 import type { Box, GlobalPoint } from "../../../shared/math";
 import type { ToolType } from "../../tools/types";
@@ -73,8 +75,12 @@ interface UseSelectionInteractionOptions {
   selectionBox?: ShallowRef<Box | null>;
   /** When set, selection interaction defers to the linear editor */
   editingLinearElement?: ShallowRef<ExcalidrawLinearElement | null>;
+  /** When set, selection interaction defers to the crop editor */
+  croppingElementId?: ShallowRef<string | null>;
   /** Called when user double-clicks a linear element (arrow or line) */
   onDoubleClickLinear?: (element: ExcalidrawLinearElement) => void;
+  /** Called when user double-clicks an initialized image element */
+  onDoubleClickImage?: (element: ExcalidrawImageElement) => void;
   expandSelectionForGroups?: () => void;
   onGroupAction?: () => void;
   onUngroupAction?: () => void;
@@ -113,7 +119,9 @@ export function useSelectionInteraction(
     markInteractiveDirty,
     setTool,
     editingLinearElement,
+    croppingElementId,
     onDoubleClickLinear,
+    onDoubleClickImage,
     elementMap,
     onContainerChanged,
     onInteractionStart,
@@ -224,7 +232,11 @@ export function useSelectionInteraction(
   }
 
   function isSelectionBlocked(): boolean {
-    return activeTool.value !== "selection" || !!editingLinearElement?.value;
+    return (
+      activeTool.value !== "selection" ||
+      !!editingLinearElement?.value ||
+      !!croppingElementId?.value
+    );
   }
 
   function shouldIgnorePointerDown(e: PointerEvent): boolean {
@@ -554,13 +566,21 @@ export function useSelectionInteraction(
 
   useEventListener(canvasRef, "dblclick", (e: MouseEvent) => {
     if (activeTool.value !== "selection") return;
-    if (!onDoubleClickLinear) return;
 
     const scenePoint = toScene(e.offsetX, e.offsetY);
     const hitElement = getElementAtPosition(scenePoint, elements.value, zoom.value);
-    if (!hitElement || !isLinearElement(hitElement)) return;
+    if (!hitElement) return;
 
-    onDoubleClickLinear(hitElement);
+    // Image crop: double-click an initialized image to enter crop mode
+    if (isInitializedImageElement(hitElement) && onDoubleClickImage) {
+      onDoubleClickImage(hitElement);
+      return;
+    }
+
+    // Linear editor: double-click a linear element to enter point editing
+    if (isLinearElement(hitElement) && onDoubleClickLinear) {
+      onDoubleClickLinear(hitElement);
+    }
   });
 
   function whenSelectionActive(fn: () => void): () => void {

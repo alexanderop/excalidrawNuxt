@@ -1,5 +1,6 @@
 import type { ExcalidrawElement, ExcalidrawLinearElement } from "../elements/types";
 import { isLinearElement } from "../elements/types";
+import { isImageElement } from "../image/types";
 import type { GlobalPoint } from "../../shared/math";
 import type { Theme } from "../theme/types";
 import { SELECTION_COLORS, SELECTION_LINE_WIDTH, SELECTION_PADDING } from "../selection/constants";
@@ -18,6 +19,7 @@ import {
   MIDPOINT_HIT_THRESHOLD,
   LINEAR_EDITOR_COLORS,
 } from "../linear-editor/constants";
+import { renderCropHandles } from "../image/renderCropHandles";
 
 export interface LinearEditorRenderState {
   element: ExcalidrawLinearElement;
@@ -222,8 +224,10 @@ function shouldSkipElement(
   el: ExcalidrawElement,
   linearEditorState: LinearEditorRenderState | null | undefined,
   selectedGroupIds: ReadonlySet<string> | undefined,
+  croppingElementId?: string | null,
 ): boolean {
   if (linearEditorState && el.id === linearEditorState.element.id) return true;
+  if (croppingElementId && el.id === croppingElementId) return true;
   return isElementInSelectedGroup(el, selectedGroupIds);
 }
 
@@ -262,9 +266,10 @@ function renderSelectedElements(
   selectedGroupIds: ReadonlySet<string> | undefined,
   theme: Theme,
   hoveredMidpoint?: { elementId: string; segmentIndex: number } | null,
+  croppingElementId?: string | null,
 ): void {
   for (const el of selectedElements) {
-    if (shouldSkipElement(el, linearEditorState, selectedGroupIds)) continue;
+    if (shouldSkipElement(el, linearEditorState, selectedGroupIds, croppingElementId)) continue;
     renderSelectionBorder(ctx, el, zoom, theme);
     renderTransformHandles(ctx, getTransformHandles(el, zoom), zoom, theme);
     renderElementMidpoints(ctx, el, zoom, theme, hoveredMidpoint);
@@ -304,6 +309,7 @@ export interface InteractiveSceneOptions {
   selectedGroupIds?: ReadonlySet<string>;
   hoveredMidpoint?: { elementId: string; segmentIndex: number } | null;
   eraserState?: EraserRenderState | null;
+  croppingElementId?: string | null;
 }
 
 function renderEraserTrail(
@@ -318,10 +324,14 @@ function renderEraserTrail(
   ctx.lineWidth = 5 / zoom;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
+  const first = trailPoints[0];
+  if (!first) return;
   ctx.beginPath();
-  ctx.moveTo(trailPoints[0]![0], trailPoints[0]![1]);
+  ctx.moveTo(first[0], first[1]);
   for (let i = 1; i < trailPoints.length; i++) {
-    ctx.lineTo(trailPoints[i]![0], trailPoints[i]![1]);
+    const pt = trailPoints[i];
+    if (!pt) continue;
+    ctx.lineTo(pt[0], pt[1]);
   }
   ctx.stroke();
   ctx.restore();
@@ -359,6 +369,7 @@ export function renderInteractiveScene(options: InteractiveSceneOptions): void {
     selectedGroupIds,
     hoveredMidpoint,
     eraserState,
+    croppingElementId,
   } = options;
 
   if (suggestedBindings) {
@@ -375,7 +386,17 @@ export function renderInteractiveScene(options: InteractiveSceneOptions): void {
     selectedGroupIds,
     theme,
     hoveredMidpoint,
+    croppingElementId,
   );
+
+  // Render crop handles for the element being cropped
+  if (croppingElementId) {
+    const croppingElement = elements.find((el) => el.id === croppingElementId) ?? null;
+    if (isImageElement(croppingElement)) {
+      renderSelectionBorder(ctx, croppingElement, zoom, theme);
+      renderCropHandles(ctx, croppingElement, zoom, theme);
+    }
+  }
 
   if (selectionBox) {
     renderSelectionBox(ctx, selectionBox, zoom, theme);

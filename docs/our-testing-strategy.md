@@ -587,7 +587,7 @@ describe("visual rendering", () => {
   afterEach(() => restoreSeed());
 
   it("renders shapes correctly", async () => {
-    render(CanvasContainer);
+    render(DrawVueTestHarness);
     await waitForCanvasReady();
     // ... draw shapes ...
     await expect(page.getByTestId("canvas-container")).toMatchScreenshot("shapes");
@@ -771,7 +771,7 @@ app/
       arrowToolReset.browser.test.ts      <-- browser
     canvas/
       coords.unit.test.ts                <-- unit
-      CanvasContainer.browser.test.ts     <-- browser
+      DrawVue.browser.test.ts              <-- browser
     rendering/
       renderElement.unit.test.ts          <-- unit
       rendering.browser.test.ts           <-- browser (screenshots)

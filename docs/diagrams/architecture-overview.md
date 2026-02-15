@@ -2,10 +2,12 @@
 
 Full dependency graph from Nuxt shell down to individual composables and features.
 
+> **Note:** After the monorepo extraction, `DrawVue.vue` (in `packages/core/src/components/`) is the main canvas component. It provides `DrawVueContext` via provide/inject. The Nuxt app consumes it via slots (`#toolbar`, `#bottom-bar`, `#properties`).
+
 ```mermaid
 graph TD
     A[Nuxt 4 SPA Shell] --> B[Vue 3 Pages]
-    B --> C[CanvasContainer.vue]
+    B --> C[DrawVue.vue - packages/core/src/components/]
     C --> D[Triple Canvas Stack]
     D --> E1[Static Canvas - grid + elements]
     D --> E2[NewElement Canvas - in-progress shape]

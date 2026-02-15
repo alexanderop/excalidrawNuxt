@@ -1,7 +1,12 @@
 import { generateId, randomInteger, randomVersionNonce } from "../../shared/random";
 import { pointFrom } from "../../shared/math";
 import type { LocalPoint, Radians } from "../../shared/math";
-import type { SupportedElementType, ElementTypeMap, MutableElement } from "./types";
+import type {
+  SupportedElementType,
+  ElementTypeMap,
+  MutableElement,
+  SupportedElement,
+} from "./types";
 import {
   DEFAULT_BG_COLOR,
   DEFAULT_FILL_STYLE,
@@ -15,12 +20,66 @@ import {
   DEFAULT_TEXT_ALIGN,
 } from "./constants";
 
+export function createElement(
+  type: "text",
+  x: number,
+  y: number,
+  overrides?: Partial<MutableElement>,
+): ElementTypeMap["text"];
+export function createElement(
+  type: "arrow",
+  x: number,
+  y: number,
+  overrides?: Partial<MutableElement>,
+): ElementTypeMap["arrow"];
+export function createElement(
+  type: "line",
+  x: number,
+  y: number,
+  overrides?: Partial<MutableElement>,
+): ElementTypeMap["line"];
+export function createElement(
+  type: "rectangle",
+  x: number,
+  y: number,
+  overrides?: Partial<MutableElement>,
+): ElementTypeMap["rectangle"];
+export function createElement(
+  type: "ellipse",
+  x: number,
+  y: number,
+  overrides?: Partial<MutableElement>,
+): ElementTypeMap["ellipse"];
+export function createElement(
+  type: "diamond",
+  x: number,
+  y: number,
+  overrides?: Partial<MutableElement>,
+): ElementTypeMap["diamond"];
+export function createElement(
+  type: "image",
+  x: number,
+  y: number,
+  overrides?: Partial<MutableElement>,
+): ElementTypeMap["image"];
+export function createElement(
+  type: "freedraw",
+  x: number,
+  y: number,
+  overrides?: Partial<MutableElement>,
+): ElementTypeMap["freedraw"];
 export function createElement<T extends SupportedElementType>(
   type: T,
   x: number,
   y: number,
+  overrides?: Partial<MutableElement>,
+): ElementTypeMap[T];
+export function createElement(
+  type: SupportedElementType,
+  x: number,
+  y: number,
   overrides: Partial<MutableElement> = {},
-): ElementTypeMap[T] {
+): SupportedElement {
   const base = {
     id: generateId(),
     x,
@@ -65,7 +124,7 @@ export function createElement<T extends SupportedElementType>(
       lineHeight: DEFAULT_LINE_HEIGHT as number & { _brand: "unitlessLineHeight" },
       autoResize: true,
       ...overrides,
-    } as unknown as ElementTypeMap[T];
+    } as SupportedElement;
   }
 
   if (type === "arrow") {
@@ -79,7 +138,7 @@ export function createElement<T extends SupportedElementType>(
       startBinding: null,
       endBinding: null,
       elbowed: false,
-    } as unknown as ElementTypeMap[T];
+    } as SupportedElement;
   }
 
   if (type === "line") {
@@ -93,11 +152,11 @@ export function createElement<T extends SupportedElementType>(
       startBinding: null,
       endBinding: null,
       polygon: false,
-    } as unknown as ElementTypeMap[T];
+    } as SupportedElement;
   }
 
   if (type === "rectangle" || type === "ellipse" || type === "diamond") {
-    return { ...base, type } as unknown as ElementTypeMap[T];
+    return { ...base, type } as SupportedElement;
   }
 
   if (type === "image") {
@@ -109,7 +168,7 @@ export function createElement<T extends SupportedElementType>(
       scale: [1, 1],
       crop: null,
       ...overrides,
-    } as unknown as ElementTypeMap[T];
+    } as SupportedElement;
   }
 
   if (type === "freedraw") {
@@ -121,7 +180,7 @@ export function createElement<T extends SupportedElementType>(
       simulatePressure: true,
       lastCommittedPoint: null,
       roundness: null,
-    } as unknown as ElementTypeMap[T];
+    } as SupportedElement;
   }
 
   throw new Error(`Unhandled element type: ${String(type)}`);

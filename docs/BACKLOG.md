@@ -109,7 +109,7 @@ Add visible zoom controls and a zoom level indicator so users can see and contro
 
 ---
 
-### TICKET-006: Eraser Tool
+### TICKET-006: Eraser Tool — DONE (PR #4)
 
 **Priority:** Critical
 **Tags:** `tools`
@@ -119,14 +119,14 @@ Implement an eraser tool that removes elements by clicking or dragging over them
 
 **Acceptance Criteria:**
 
-- [ ] Eraser tool selectable from toolbar and via keyboard shortcut (E)
-- [ ] Clicking on an element deletes it
-- [ ] Dragging across the canvas deletes all elements the eraser path intersects
-- [ ] Eraser cursor is visually distinct (eraser icon or crosshair)
-- [ ] Erasing grouped elements erases the entire group
+- [x] Eraser tool selectable from toolbar and via keyboard shortcut (E)
+- [x] Clicking on an element deletes it
+- [x] Dragging across the canvas deletes all elements the eraser path intersects
+- [x] Eraser cursor is visually distinct (eraser icon or crosshair)
+- [x] Erasing grouped elements erases the entire group
 - [ ] Eraser respects element locking (locked elements are not erased) — once locking is implemented
-- [ ] Erased elements can be undone via Ctrl+Z — once undo is implemented
-- [ ] Action registered in action registry
+- [x] Erased elements can be undone via Ctrl+Z
+- [x] Action registered in action registry
 
 ---
 

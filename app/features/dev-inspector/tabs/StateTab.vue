@@ -2,11 +2,12 @@
 import { computed, ref, nextTick } from "vue";
 import { useDrawVue, useTheme } from "@drawvue/core";
 import type { ExcalidrawElement } from "@drawvue/core";
+import { useTestHook } from "../useTestHook";
 
 const ctx = useDrawVue();
 const { theme } = useTheme();
 
-const h = (globalThis as unknown as Record<string, Record<string, unknown>>).__h;
+const h = useTestHook();
 
 const activeTool = computed(() => (h?.activeTool as { value: string })?.value ?? "selection");
 const scrollX = computed(() => (h?.scrollX as { value: number })?.value ?? 0);

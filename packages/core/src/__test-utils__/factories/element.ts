@@ -8,8 +8,8 @@ import type {
   ExcalidrawImageElement,
   ExcalidrawRectangleElement,
   ExcalidrawTextElement,
-  FileId,
 } from "../../features/elements/types";
+import { toFileId } from "../../features/image/types";
 
 const BASE_PROPS = {
   id: "test-id",
@@ -96,7 +96,7 @@ export function createTestImageElement(
   return {
     ...BASE_PROPS,
     type: "image" as const,
-    fileId: "test-file-id" as string as FileId,
+    fileId: toFileId("test-file-id"),
     scale: [1, 1] as readonly [number, number],
     status: "saved" as const,
     ...overrides,

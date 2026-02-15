@@ -5,3 +5,7 @@ export { useImageCache, createImageCache } from "./useImageCache";
 export type { UseImageCacheReturn } from "./useImageCache";
 export { useImageUpload } from "./useImageUpload";
 export { useImageInteraction } from "./useImageInteraction";
+export { cropElement, getUncroppedWidthAndHeight, getCropHandleAtPosition } from "./cropElement";
+export type { CropHandleType } from "./cropElement";
+export { renderCropHandles } from "./renderCropHandles";
+export { useCropInteraction } from "./useCropInteraction";

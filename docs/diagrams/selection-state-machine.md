@@ -2,7 +2,7 @@
 
 State machine for `useSelectionInteraction` -- governs how pointer and keyboard events transition between idle, dragging, resizing, and box-selecting states.
 
-**Source:** `app/features/selection/composables/useSelectionInteraction.ts`
+**Source:** `packages/core/src/features/selection/composables/useSelectionInteraction.ts`
 
 ## State Diagram
 
@@ -90,7 +90,7 @@ Updated on every `pointermove` while in **Idle** state (`updateCursor`):
 
 ## Transform Handle Types
 
-Defined in `app/features/selection/transformHandles.ts`:
+Defined in `packages/core/src/features/selection/transformHandles.ts`:
 
 - **Corner handles** (`nw`, `ne`, `sw`, `se`) -- always present (except arrows)
 - **Side handles** (`n`, `s`) -- only when element width > 5x handle size

@@ -69,6 +69,8 @@ interface UseSceneRendererOptions {
   // Eraser state — trail points and pending erasure IDs
   eraserTrailPoints?: ShallowRef<readonly GlobalPoint[]>;
   pendingErasureIds?: ShallowRef<ReadonlySet<string>>;
+  // Crop state
+  croppingElementId?: ShallowRef<string | null>;
   // Theme and image cache — injected from outside
   theme: Ref<Theme>;
   imageCache: ShallowRef<Map<FileId, ImageCacheEntry>>;
@@ -105,6 +107,18 @@ function buildMultiPointState(
   if (!el || !cursor) return null;
 
   return { element: el, cursorPoint: cursor };
+}
+
+function buildEraserState(
+  eraserTrailPoints: ShallowRef<readonly GlobalPoint[]> | undefined,
+  pendingErasureIds: ShallowRef<ReadonlySet<string>> | undefined,
+): EraserRenderState | null {
+  if (!eraserTrailPoints?.value.length) return null;
+
+  return {
+    trailPoints: eraserTrailPoints.value,
+    pendingIds: pendingErasureIds?.value ?? new Set(),
+  };
 }
 
 /**
@@ -145,6 +159,7 @@ export function useSceneRenderer(options: UseSceneRendererOptions): UseSceneRend
     editingCodeElement,
     eraserTrailPoints,
     pendingErasureIds,
+    croppingElementId,
     theme,
     imageCache,
   } = options;
@@ -210,13 +225,6 @@ export function useSceneRenderer(options: UseSceneRendererOptions): UseSceneRend
       ctx.scale(zoom.value, zoom.value);
       ctx.translate(scrollX.value, scrollY.value);
 
-      const eraserState: EraserRenderState | null = eraserTrailPoints?.value.length
-        ? {
-            trailPoints: eraserTrailPoints.value,
-            pendingIds: pendingErasureIds?.value ?? new Set(),
-          }
-        : null;
-
       renderInteractiveScene({
         ctx,
         selectedElements: selectedElements.value,
@@ -233,7 +241,8 @@ export function useSceneRenderer(options: UseSceneRendererOptions): UseSceneRend
         suggestedBindings: suggestedBindings?.value ?? null,
         selectedGroupIds: selectedGroupIds?.value,
         hoveredMidpoint: hoveredMidpoint?.value ?? null,
-        eraserState,
+        eraserState: buildEraserState(eraserTrailPoints, pendingErasureIds),
+        croppingElementId: croppingElementId?.value ?? null,
       });
       ctx.restore();
     },

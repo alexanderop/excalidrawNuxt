@@ -1,16 +1,21 @@
 # Testing Architecture
 
-Dual-project Vitest setup: node mode for unit tests, Playwright/Chromium for browser tests.
+Three-project Vitest setup: two app-level projects (unit + browser) and one core library project.
 
 ```mermaid
 graph TD
-    subgraph "vitest.config.ts"
+    subgraph "App: vitest.config.unit.ts + vitest.config.browser.ts"
         UP[Unit Project -- node mode]
         BP[Browser Project -- Playwright/Chromium]
     end
 
-    UP --> UT["*.unit.test.ts (co-located)"]
-    BP --> BT["*.browser.test.ts (co-located)"]
+    subgraph "Core: packages/core/vitest.config.ts"
+        CP[Core Unit Project -- node mode]
+    end
+
+    UP --> UT["*.unit.test.ts (co-located in app/)"]
+    BP --> BT["*.browser.test.ts (co-located in app/)"]
+    CP --> CT["*.unit.test.ts (co-located in packages/core/src/)"]
 
     subgraph "app/__test-utils__/"
         WS[withSetup.ts -- effectScope wrapper]
@@ -84,9 +89,10 @@ graph TD
 
 ## Naming Conventions
 
-- `app/shared/math.unit.test.ts` -- co-located unit test
-- `app/features/canvas/components/CanvasContainer.browser.test.ts` -- co-located browser test
-- `app/__test-utils__/` -- shared helpers and factories
+- `packages/core/src/features/elements/createElement.unit.test.ts` -- co-located core unit test
+- `app/features/tools/drawing.browser.test.ts` -- co-located browser test
+- `app/__test-utils__/` -- shared helpers and factories (browser tests)
+- `packages/core/src/__test-utils__/` -- shared helpers and factories (core unit tests)
 - `app/features/*/__screenshots__/` -- screenshot baselines for visual tests
 
 ## Key Decisions
@@ -113,7 +119,7 @@ graph TD
 | **canvas/coords**                       | `coords.unit.test.ts`                 | --                                                           |
 | **canvas/useViewport**                  | `useViewport.unit.test.ts`            | --                                                           |
 | **canvas/useAnimationController**       | `useAnimationController.unit.test.ts` | --                                                           |
-| **canvas/CanvasContainer**              | --                                    | `CanvasContainer.browser.test.ts`                            |
+| **canvas/DrawVue**                      | --                                    | `DrawVue.browser.test.ts`                                    |
 | **elements/createElement**              | `createElement.unit.test.ts`          | --                                                           |
 | **elements/mutateElement**              | `mutateElement.unit.test.ts`          | --                                                           |
 | **elements/useElements**                | `useElements.unit.test.ts`            | --                                                           |

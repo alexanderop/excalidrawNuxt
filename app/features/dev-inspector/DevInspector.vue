@@ -7,12 +7,13 @@ import ElementsTab from "./tabs/ElementsTab.vue";
 import StateTab from "./tabs/StateTab.vue";
 import ActionsTab from "./tabs/ActionsTab.vue";
 import LayersTab from "./tabs/LayersTab.vue";
+import { useTestHook } from "./useTestHook";
 
 const isOpen = ref(false);
 const activeTab = ref<"history" | "elements" | "layers" | "state" | "actions">("history");
 
 const ctx = useDrawVue();
-const h = (globalThis as unknown as Record<string, Record<string, unknown>>).__h;
+const h = useTestHook();
 
 const TABS = [
   { id: "history" as const, label: "History" },

@@ -92,6 +92,7 @@ export interface CommandPaletteSlice {
 export interface SelectionSlice {
   selectedElements: ComputedRef<readonly ExcalidrawElement[]>;
   select: (id: string) => void;
+  replaceSelection: (ids: Set<string>) => void;
 }
 
 export interface HistorySlice {
@@ -100,6 +101,12 @@ export interface HistorySlice {
 
 export interface DirtySlice {
   markStaticDirty: () => void;
+}
+
+export interface CropSlice {
+  croppingElementId: ShallowRef<string | null>;
+  enterCropMode: (elementId: string) => void;
+  exitCropMode: (confirm: boolean) => void;
 }
 
 // ── Context ─────────────────────────────────────────────────────────
@@ -116,6 +123,7 @@ export interface DrawVueContext {
   selection: ShallowRef<SelectionSlice | null>;
   history: ShallowRef<HistorySlice | null>;
   dirty: ShallowRef<DirtySlice | null>;
+  crop: ShallowRef<CropSlice | null>;
 }
 
 export const DRAWVUE_KEY: InjectionKey<DrawVueContext> = Symbol("drawvue");
@@ -145,6 +153,7 @@ export function createDrawVue(): DrawVueContext {
     selection: shallowRef(null),
     history: shallowRef(null),
     dirty: shallowRef(null),
+    crop: shallowRef(null),
   };
 }
 

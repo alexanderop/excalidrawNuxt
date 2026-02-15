@@ -154,4 +154,4 @@ Code elements are rectangles with `customData` containing `{ code: string, langu
 - `rendering/shapeGenerator.ts` — skips roughjs shape generation for code elements
 - `rendering/renderElement.ts` — calls `renderCodeElement()` for code elements
 - `tools/useTextInteraction.ts` — skips text interaction for code elements
-- `canvas/CanvasContainer.vue` — manages `editingCodeElement` state and code editor overlay
+- `components/DrawVue.vue` — manages `editingCodeElement` state and code editor overlay

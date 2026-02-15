@@ -2,6 +2,8 @@ import type { ShallowRef, ComputedRef, Ref } from "vue";
 import type { ExcalidrawElement, ElementsMap } from "../features/elements/types";
 import type { ToolType } from "../shared/toolTypes";
 import type { ImageCacheSlice } from "../context";
+import type { UseHistoryReturn } from "../features/history/useHistory";
+import type { GlobalPoint } from "../shared/math";
 
 export interface TestHook {
   // Elements
@@ -41,8 +43,23 @@ export interface TestHook {
   markStaticDirty: () => void;
   markInteractiveDirty: () => void;
 
+  // History
+  history: UseHistoryReturn;
+
+  // Eraser
+  pendingErasureIds: ShallowRef<ReadonlySet<string>>;
+  eraserTrailPoints: ShallowRef<readonly GlobalPoint[]>;
+
   // Image cache
   imageCache: ImageCacheSlice;
+
+  // Crop
+  croppingElementId: ShallowRef<string | null>;
+
+  // Canvas refs (for test inspection)
+  staticCanvasRef: Ref<HTMLCanvasElement | null>;
+  newElementCanvasRef: Ref<HTMLCanvasElement | null>;
+  interactiveCanvasRef: Ref<HTMLCanvasElement | null>;
 }
 
 declare global {

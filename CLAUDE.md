@@ -22,14 +22,17 @@ pnpm core:dev      # Dev mode for @drawvue/core (unbuild --stub)
 - **Monorepo** with pnpm workspaces (`pnpm-workspace.yaml`)
 - **`@drawvue/core`** — framework-agnostic Vue drawing library (unbuild, peer dep on Vue 3.5+)
 - **Nuxt 4** (Vue 3.5+), SSR disabled, **auto-imports disabled** (`imports: { autoImport: false }` — all imports must be explicit)
-- Tailwind CSS v4 (via `@tailwindcss/vite`, not the Nuxt module)
+- **@nuxt/ui** v4 — UI component framework (Nuxt module, provides Tailwind integration); `@tailwindcss/vite` used in browser test configs
 - TypeScript, RoughJS + perfect-freehand (canvas shape rendering)
+- `@excalidraw/math`, `@excalidraw/element`, `@excalidraw/common` — Excalidraw math and element utilities
 - VueUse (`@vueuse/core`), Shiki (code highlighting)
+- `@huggingface/transformers` — AI-powered background removal
+- tinycolor2 — Color manipulation
 - pnpm package manager
 
 ## Colors
 
-Defined in `app/assets/css/main.css` via `@theme`. Use these as Tailwind utilities:
+Defined in `packages/core/src/assets/theme.css` via `@theme` (imported into `app/assets/css/main.css` via `@import "@drawvue/core/theme.css"`). Use these as Tailwind utilities:
 
 - `base` — `rgb(33,39,55)` dark navy background
 - `foreground` — `rgb(234,237,243)` light gray text
@@ -50,13 +53,14 @@ packages/core/              # @drawvue/core — reusable drawing library
 │   ├── components/         # DrawVue.vue (main canvas component with slots)
 │   ├── context.ts          # DrawVueContext provide/inject system
 │   ├── index.ts            # Public API exports
-│   ├── features/           # All 16 domain feature modules:
+│   ├── features/           # All 17 domain feature modules:
 │   │   ├── binding/        #   Text binding to shapes
 │   │   ├── canvas/         #   Canvas layers, viewport, rendering orchestration
 │   │   ├── clipboard/      #   Element clipboard
 │   │   ├── code/           #   Code element rendering & Shiki integration
 │   │   ├── command-palette/ #  Command palette logic
 │   │   ├── context-menu/   #   Context menu items & composables
+│   │   ├── elbow/          #   Elbow arrow routing (A* pathfinding)
 │   │   ├── elements/       #   Element creation, mutation, types
 │   │   ├── groups/         #   Grouping utilities & composables
 │   │   ├── history/        #   Undo/redo system
@@ -67,7 +71,7 @@ packages/core/              # @drawvue/core — reusable drawing library
 │   │   ├── selection/      #   Selection, hit testing, transforms
 │   │   ├── theme/          #   Theme management (dark/light)
 │   │   └── tools/          #   Tool interactions (draw, text, etc.)
-│   ├── shared/             # Action registry, keyboard shortcuts, math, random
+│   ├── shared/             # Action registry, keyboard shortcuts, math, curve math, shape handler/shape registries, tool types
 │   ├── utils/              # tryCatch
 │   ├── assets/             # theme.css
 │   └── __test-utils__/     # Unit test helpers (factories, mocks, matchers, withSetup, withDrawVue)
@@ -77,11 +81,23 @@ packages/core/              # @drawvue/core — reusable drawing library
 └── tsconfig.json
 
 app/                        # Nuxt consumer app (UI layer only)
-├── features/               # Presentation components only:
+├── features/               # Presentation components & browser tests:
 │   ├── canvas/components/  #   BottomBar.vue (zoom/undo/redo)
-│   ├── tools/components/   #   DrawingToolbar.vue, toolIcons.ts
+│   ├── clipboard/          #   Clipboard UI & tests
+│   ├── code/               #   Code element UI & tests
+│   ├── command-palette/    #   CommandPalette.vue
+│   ├── context-menu/       #   Context menu UI
+│   ├── dev-inspector/      #   Dev inspector overlay
+│   ├── history/            #   History UI & tests
+│   ├── image/              #   Image UI & tests
+│   ├── linear-editor/      #   Linear editor UI & tests
 │   ├── properties/components/ # PropertiesPanel.vue, ColorSwatch, ArrowheadPicker, etc.
-│   └── command-palette/    #   CommandPalette.vue
+│   ├── rendering/          #   Rendering UI & tests
+│   ├── selection/          #   Selection UI & tests
+│   ├── theme/              #   Theme toggle UI
+│   └── tools/components/   #   DrawingToolbar.vue, toolIcons.ts
+├── composables/            # useBackgroundRemoval.ts, useImageActions.ts
+├── workers/                # background-removal.worker.ts
 ├── pages/                  # index.vue (uses <DrawVue> with slots)
 ├── assets/css/             # main.css (Tailwind + theme)
 ├── __test-utils__/         # Browser test helpers (page objects, commands, Pointer, UI, etc.)
@@ -121,12 +137,15 @@ Within `packages/core/src/`, use relative imports between features.
 - `styleDefaults` — Default style properties
 - `styleClipboard` — Style copy/paste
 - `commandPalette` — Command palette state
+- `selection` — Selected elements and selection function
+- `history` — History recording (undo/redo actions)
+- `dirty` — Dirty flag management for re-rendering
 
 Consumers use `useDrawVue()` to access the context. The `DrawVue` component provides slots: `#toolbar`, `#bottom-bar`, `#properties`.
 
 ## Canvas Testing
 
-Browser tests (`*.browser.test.ts`) test canvas interactions via Vitest browser mode + Playwright. **Never use `page.mouse`** for canvas events — iframe coordinate mismatches cause silent failures. Use the custom commands (`canvasDrag`, `canvasClick`, `canvasDblClick`) which dispatch `PointerEvent`s directly inside the iframe via `frame.evaluate`. See `app/__test-utils__/commands/`. Browser tests also have high-level helpers in `app/__test-utils__/browser/` (`Pointer`, `Keyboard`, `UI`, `CanvasGrid`, etc.).
+Browser tests (`*.browser.test.ts`) test canvas interactions via Vitest browser mode + Playwright. **Never use `page.mouse`** for canvas events — iframe coordinate mismatches cause silent failures. Use the custom commands (`canvasDrag`, `canvasClick`, `canvasDblClick`, `showGridOverlay`) which dispatch `PointerEvent`s directly inside the iframe via `frame.evaluate`. See `app/__test-utils__/commands/`. Browser tests also have high-level helpers in `app/__test-utils__/browser/` (`Pointer`, `Keyboard`, `UI`, `CanvasGrid`, etc.).
 
 ## Testing Architecture
 
@@ -147,6 +166,10 @@ Consumers never call handlers directly — they reference actions by ID:
 - **Keyboard shortcuts** — bound via `kbds` on the action definition.
 
 To add a new operation: define an `ActionDefinition`, register it, and reference its ID in whichever trigger surfaces need it.
+
+## Shape Handler Registry
+
+Rendering uses a registry of per-shape handlers in `features/rendering/handlers/`. Each handler implements rendering logic for a specific element type (rectangle, ellipse, arrow, text, etc.). The shape registry in `shared/` maps element types to their handlers, making it easy to add new shape types without modifying the core rendering pipeline.
 
 ## Docs = Memory
 
@@ -174,6 +197,9 @@ To add a new operation: define an `ActionDefinition`, register it, and reference
 - `docs/diagrams/` - Mermaid diagrams (architecture, canvas, coordinate system, event flow, render pipeline, selection state machine, etc.)
 - `docs/reference/` - Architectural decisions, element types, technology stack
 - `docs/excalidraw-state-and-persistence.md` - How Excalidraw manages state, persistence, history/undo, and collaboration
+- `docs/architecture-review-pr4-eraser-tool.md` - Eraser tool architecture review
+- `docs/vue-library-best-practices.md` - Vue library best practices
+- `docs/plans/` - Implementation plans directory
 
 ### Gotchas & Pitfalls
 
@@ -208,4 +234,5 @@ To add a new operation: define an `ActionDefinition`, register it, and reference
 - `docs/arrow-parity-spec.md` - Arrow UX parity with Excalidraw
 - `docs/dark-mode-tech-spec.md` - Dark mode technical specification
 - `docs/bound-text-debug-notes.md` - Bound text feature implementation notes and gotchas
+- `docs/context-menu-properties-spec.md` - Context menu + properties spec
 - `docs/specs/` - Feature specs (arrow implementation plan, grouping feature)

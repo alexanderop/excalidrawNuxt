@@ -95,7 +95,7 @@ pie title Arrow Feature Coverage
 
 **Files:**
 
-- New: `app/shared/curve.ts`
+- New: `packages/core/src/shared/curve.ts`
 
 **Reference:** `arrow-tech-spec.md` Section 5 — Catmull-Rom Cubic Approximation
 
@@ -122,7 +122,7 @@ pie title Arrow Feature Coverage
 
 **Files:**
 
-- `app/features/rendering/shapeGenerator.ts` — branch on `roundness`
+- `packages/core/src/features/rendering/shapeGenerator.ts` — branch on `roundness`
 
 **Tasks:**
 
@@ -137,8 +137,8 @@ pie title Arrow Feature Coverage
 
 **Files:**
 
-- `app/features/selection/hitTest.ts` — add `hitTestCurvedArrow()`
-- `app/shared/curve.ts` — `distanceToBezier()` from 2.1
+- `packages/core/src/features/selection/hitTest.ts` — add `hitTestCurvedArrow()`
+- `packages/core/src/shared/curve.ts` — `distanceToBezier()` from 2.1
 
 **Reference:** `arrow-tech-spec.md` Section 10 — Ternary Search
 
@@ -155,7 +155,7 @@ pie title Arrow Feature Coverage
 
 **Files:**
 
-- `app/features/linear-editor/pointHandles.ts` — update `getMidpointPositions()`
+- `packages/core/src/features/linear-editor/pointHandles.ts` — update `getMidpointPositions()`
 
 **Tasks:**
 
@@ -174,7 +174,7 @@ pie title Arrow Feature Coverage
 
 **Files:**
 
-- `app/features/rendering/arrowhead.ts` — expand `drawArrowhead()`
+- `packages/core/src/features/rendering/arrowhead.ts` — expand `drawArrowhead()`
 
 **Reference:** `arrow-tech-spec.md` Section 6 — Arrowhead Geometry
 
@@ -228,7 +228,7 @@ actualSize = Math.min(arrowheadSize, lastSegmentLength * lengthMultiplier);
 
 **Files:**
 
-- `app/features/rendering/shapeGenerator.ts` — pass `strokeLineDash` to RoughJS
+- `packages/core/src/features/rendering/shapeGenerator.ts` — pass `strokeLineDash` to RoughJS
 
 **Reference:** `arrow-tech-spec.md` Section 5 — RoughJS Options
 
@@ -257,7 +257,7 @@ strokeWidth: strokeStyle === 'solid' ? sw : sw + 0.5
 
 **Files:**
 
-- `app/features/rendering/arrowhead.ts` — apply dash pattern to arrowhead strokes
+- `packages/core/src/features/rendering/arrowhead.ts` — apply dash pattern to arrowhead strokes
 
 **Tasks:**
 
@@ -277,8 +277,8 @@ strokeWidth: strokeStyle === 'solid' ? sw : sw + 0.5
 
 **Files:**
 
-- `app/features/binding/proximity.ts` — update `getPointFromFixedPoint()`
-- `app/features/binding/updateBoundPoints.ts` — respect mode in `updateArrowEndpoint()`
+- `packages/core/src/features/binding/proximity.ts` — update `getPointFromFixedPoint()`
+- `packages/core/src/features/binding/updateBoundPoints.ts` — respect mode in `updateArrowEndpoint()`
 
 **Reference:** `arrow-tech-spec.md` Section 4 — Binding Modes by Context
 
@@ -298,8 +298,8 @@ strokeWidth: strokeStyle === 'solid' ? sw : sw + 0.5
 
 **Files:**
 
-- `app/features/binding/proximity.ts` — update threshold in `getHoveredElementForBinding()`
-- `app/features/binding/constants.ts` — add zoom formula
+- `packages/core/src/features/binding/proximity.ts` — update threshold in `getHoveredElementForBinding()`
+- `packages/core/src/features/binding/constants.ts` — add zoom formula
 
 **Reference:** `arrow-tech-spec.md` Section 4 — Detection Thresholds
 
@@ -323,7 +323,7 @@ maxBindingDistance(zoom) {
 
 **Files:**
 
-- `app/features/binding/proximity.ts` — improve edge calculation
+- `packages/core/src/features/binding/proximity.ts` — improve edge calculation
 
 **Reference:** `arrow-tech-spec.md` Section 4 — Intersection Calculation
 
@@ -356,7 +356,7 @@ maxBindingDistance(zoom) {
 
 **Files:**
 
-- New: `app/features/binding/heading.ts`
+- New: `packages/core/src/features/binding/heading.ts`
 
 **Reference:** `arrow-tech-spec.md` Section 7 — Heading System
 
@@ -379,7 +379,7 @@ const HEADING_UP: Heading = [0, -1];
 
 **Files:**
 
-- New: `app/features/elbow/grid.ts`
+- New: `packages/core/src/features/elbow/grid.ts`
 
 **Reference:** `arrow-tech-spec.md` Section 7 — Grid System
 
@@ -393,7 +393,7 @@ const HEADING_UP: Heading = [0, -1];
 
 **Files:**
 
-- New: `app/features/elbow/astar.ts`
+- New: `packages/core/src/features/elbow/astar.ts`
 
 **Reference:** `arrow-tech-spec.md` Section 7 — A\* Cost Function
 
@@ -409,7 +409,7 @@ const HEADING_UP: Heading = [0, -1];
 
 **Files:**
 
-- `app/features/rendering/shapeGenerator.ts` — generate SVG path with quadratic corner curves
+- `packages/core/src/features/rendering/shapeGenerator.ts` — generate SVG path with quadratic corner curves
 
 **Reference:** `arrow-tech-spec.md` Section 5 — Elbow Arrow Shape
 
@@ -515,7 +515,7 @@ cornerRadius = Math.min(16, distToNext / 2, distToPrev / 2);
 **Files:**
 
 - `app/features/tools/components/DrawingToolbar.vue` — add subtype options
-- `app/features/tools/types.ts` — add `ArrowSubtype`
+- `packages/core/src/features/tools/types.ts` — add `ArrowSubtype`
 
 ```typescript
 type ArrowSubtype = "sharp" | "curved" | "elbow";

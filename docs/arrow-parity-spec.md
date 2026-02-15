@@ -324,7 +324,7 @@ BASE_PADDING = 40; // px — elbow arrow obstacle padding
 ### Existing (implemented)
 
 ```
-app/features/
+packages/core/src/features/
 ├── binding/
 │   ├── index.ts                        # Barrel exports
 │   ├── types.ts                        # BindableElement, BindingEndpoint, isBindableElement()
@@ -350,6 +350,16 @@ app/features/
 │   ├── useMultiPointCreation.unit.test.ts
 │   ├── linearEditor.browser.test.ts
 │   └── multiPoint.browser.test.ts
+├── elbow/                              # Elbow arrow routing — DONE
+│   ├── index.ts
+│   ├── types.ts
+│   ├── constants.ts
+│   ├── astar.ts                        # A* routing algorithm
+│   ├── grid.ts                         # Dynamic grid from AABBs
+│   ├── routeElbow.ts                   # Route orchestration
+│   ├── shape.ts                        # Elbow arrow shape generation
+│   ├── validation.ts                   # Orthogonality validation
+│   └── *.unit.test.ts
 └── groups/
     ├── index.ts
     ├── types.ts                        # GroupId re-export
@@ -362,15 +372,8 @@ app/features/
 ### Planned (not yet implemented)
 
 ```
-app/features/
-├── binding/
-│   ├── useFocusPoint.ts            # Focus point drag interaction (P2)
-│   └── renderFocusPoint.ts         # Focus point dot rendering (P2)
-├── elbow/                          # (NOT elbow-arrow/ — renamed)
-│   ├── grid.ts                     # Dynamic grid from AABBs (P3)
-│   ├── astar.ts                    # A* routing algorithm (P3)
-│   └── fixedSegments.ts           # User segment override logic (P3)
-└── tools/
-    └── components/
-        └── ArrowheadPicker.vue     # Arrowhead selection UI (P1)
+packages/core/src/features/
+└── binding/
+    ├── useFocusPoint.ts            # Focus point drag interaction (P2)
+    └── renderFocusPoint.ts         # Focus point dot rendering (P2)
 ```

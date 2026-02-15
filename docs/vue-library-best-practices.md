@@ -224,13 +224,13 @@ packages/
 // ✅ Good - tree-shakeable
 export { useCanvas } from "./composables/useCanvas";
 export { useSelection } from "./composables/useSelection";
-export { CanvasContainer } from "./components/CanvasContainer.vue";
+export { DrawVue } from "./components/DrawVue.vue";
 
 // ❌ Bad - not tree-shakeable
 export default {
   useCanvas,
   useSelection,
-  CanvasContainer,
+  DrawVue,
 };
 ```
 
@@ -260,7 +260,7 @@ When building a library with Vite, CSS gets extracted to separate files. Consume
 
 ```typescript
 // Consumer code
-import { CanvasContainer } from "@excalidraw-nuxt/core";
+import { DrawVue } from "@excalidraw-nuxt/core";
 import "@excalidraw-nuxt/core/dist/style.css";
 ```
 

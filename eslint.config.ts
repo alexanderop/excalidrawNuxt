@@ -105,6 +105,12 @@ export default defineConfigWithVueTs(
           message:
             "Use tryCatch() from @drawvue/core instead of try/catch. Returns Result<T> tuple: [error, null] | [null, data].",
         },
+        // No double assertions through unknown (unsafe type bypass)
+        {
+          selector: "TSAsExpression > TSAsExpression[typeAnnotation.type='TSUnknownKeyword']",
+          message:
+            "Avoid `as unknown as T`. Use type guards, generics, or fix the upstream type instead of double-asserting through unknown.",
+        },
         // No hardcoded route strings
         {
           selector:
@@ -162,6 +168,37 @@ export default defineConfigWithVueTs(
               from: "./app/pages",
             },
           ],
+        },
+      ],
+    },
+  },
+
+  // =============================================
+  // Test utilities: allow double assertions for mocks/stubs
+  // =============================================
+  {
+    name: "app/test-utils-relaxed",
+    files: ["packages/core/src/__test-utils__/**/*.ts"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        // Keep all other bans, but remove the TSAsExpression double-assertion ban
+        {
+          selector: "TSEnumDeclaration",
+          message: "Use literal unions or `as const` objects instead of enums.",
+        },
+        {
+          selector: "IfStatement > IfStatement.alternate",
+          message: "Avoid `else if`. Prefer early returns or ternary operators.",
+        },
+        {
+          selector: "IfStatement > :not(IfStatement).alternate",
+          message: "Avoid `else`. Prefer early returns or ternary operators.",
+        },
+        {
+          selector: "TryStatement",
+          message:
+            "Use tryCatch() from @drawvue/core instead of try/catch. Returns Result<T> tuple: [error, null] | [null, data].",
         },
       ],
     },

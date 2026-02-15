@@ -1,26 +1,74 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, watch, ref } from "vue";
+import { useEventListener, useTimeoutFn } from "@vueuse/core";
 import { useImageActions } from "~/composables/useImageActions";
 
-const { status, downloadProgress, isProcessing } = useImageActions();
+const ERROR_DISPLAY_MS = 4000;
+
+const {
+  status,
+  downloadProgress,
+  isAnythingProcessing,
+  segStatus,
+  segErrorMessage,
+  segProgress,
+  cancelSegmentation,
+} = useImageActions();
+
+const showError = ref(false);
+
+const { start: startErrorTimer, stop: stopErrorTimer } = useTimeoutFn(
+  () => {
+    showError.value = false;
+  },
+  ERROR_DISPLAY_MS,
+  { immediate: false },
+);
+
+// Show a temporary error toast when segmentation fails
+watch(segStatus, (val) => {
+  if (val !== "error") return;
+  stopErrorTimer();
+  showError.value = true;
+  startErrorTimer();
+});
 
 const statusLabel = computed(() => {
-  if (status.value === "downloading") return "Downloading AI model…";
-  if (status.value === "processing") return "Removing background…";
+  // Background removal phases
+  if (status.value === "downloading") return "Downloading AI model\u2026";
+  if (status.value === "processing") return "Removing background\u2026";
+
+  // Segmentation phases
+  if (segStatus.value === "downloading") return "Downloading AI model\u2026";
+  if (segStatus.value === "processing") return "Detecting objects\u2026";
+  if (segStatus.value === "compositing") return "Creating images\u2026";
+
   return "";
 });
 
 const progressPercent = computed(() => {
-  if (status.value !== "downloading") return null;
-  return downloadProgress.value.percent;
+  // Background removal download
+  if (status.value === "downloading") return downloadProgress.value.percent;
+  // Segmentation download
+  if (segStatus.value === "downloading") return segProgress.value.percent;
+  return null;
+});
+
+const showCancelHint = computed(() => segStatus.value === "processing");
+
+useEventListener("keydown", (e: KeyboardEvent) => {
+  if (e.key === "Escape" && showCancelHint.value) {
+    cancelSegmentation();
+  }
 });
 </script>
 
 <template>
   <Teleport to="body">
+    <!-- Processing overlay -->
     <Transition name="fade">
       <div
-        v-if="isProcessing"
+        v-if="isAnythingProcessing"
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
       >
         <div class="flex flex-col items-center gap-4 rounded-2xl bg-surface px-10 py-8 shadow-2xl">
@@ -48,7 +96,7 @@ const progressPercent = computed(() => {
             {{ statusLabel }}
           </p>
 
-          <!-- Progress bar (download phase only) -->
+          <!-- Progress bar (download + decoding phases) -->
           <template v-if="progressPercent !== null">
             <div class="h-1.5 w-48 overflow-hidden rounded-full bg-base">
               <div
@@ -58,7 +106,20 @@ const progressPercent = computed(() => {
             </div>
             <p class="text-xs text-foreground/60">{{ progressPercent }}%</p>
           </template>
+
+          <!-- Cancel hint -->
+          <p v-if="showCancelHint" class="text-xs text-foreground/40">Press Escape to cancel</p>
         </div>
+      </div>
+    </Transition>
+
+    <!-- Error toast -->
+    <Transition name="fade">
+      <div
+        v-if="showError"
+        class="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-xl bg-red-900/90 px-6 py-3 text-sm text-white shadow-lg"
+      >
+        {{ segErrorMessage || "Object segmentation failed." }}
       </div>
     </Transition>
   </Teleport>

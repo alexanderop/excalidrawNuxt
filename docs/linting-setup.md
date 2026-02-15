@@ -18,7 +18,7 @@ Oxlint runs 50-100x faster than ESLint. It handles correctness, suspicious patte
 - `.oxlintrc.json` - Oxlint configuration
 - `eslint.config.ts` - ESLint flat config (not `.eslintrc`)
 - `eslint-rules/` - Local ESLint plugin with custom rules (e.g. `no-callback-object-props`)
-- `app/utils/tryCatch.ts` - Required utility since native try/catch is banned
+- `packages/core/src/utils/tryCatch.ts` - Required utility since native try/catch is banned (exported from `@drawvue/core`)
 
 ## Gotchas
 
@@ -70,32 +70,21 @@ The `vue/multi-word-component-names` rule checks the **filename**, not `defineOp
 
 ## Cross-Feature Import Isolation
 
-Features in `app/features/` are independent modules. ESLint enforces that no feature imports from another feature via `import-x/no-restricted-paths` zones.
-
-**Current features with isolation zones:**
-
-- `code`, `context-menu`, `groups`, `linear-editor`, `properties`, `rendering`, `selection`, `tools`
-
-**Features on disk without isolation zones (not yet enforced):**
-
-- `binding`, `canvas`, `elements`, `theme`
-
-Each zone allows imports from its own directory **and from `theme`** (shared exception). Some features have additional exceptions:
+After the monorepo extraction, core domain features live in `packages/core/src/features/` (within the `@drawvue/core` library), while `app/features/` contains only presentation-layer components. ESLint enforces that app features cannot import from pages:
 
 ```typescript
-{ target: './app/features/groups', from: './app/features', except: ['./groups', './theme'] },
-{ target: './app/features/code', from: './app/features', except: ['./code', './theme', './elements', './selection', './tools'] },
-{ target: './app/features/rendering', from: './app/features', except: ['./rendering', './theme', './code'] },
-{ target: './app/features/tools', from: './app/features', except: ['./tools', './theme', './code'] },
+// eslint.config.ts — app/import-boundaries
+{
+  target: "./app/features",
+  from: "./app/pages",
+}
 ```
 
-**Adding a new feature:** Add a matching zone in `eslint.config.ts` under the "Cross-feature isolation" comment:
+Cross-feature isolation within the core package uses relative imports between features. The app layer imports exclusively from `@drawvue/core` (never internal paths).
 
-```typescript
-{ target: './app/features/<name>', from: './app/features', except: ['./<name>', './theme'] },
-```
+**Core features** (`packages/core/src/features/`): binding, canvas, clipboard, code, command-palette, context-menu, elbow, elements, groups, history, image, linear-editor, properties, rendering, selection, theme, tools
 
-Features can import from shared code (`app/shared/`, `app/utils/`, etc.) and from `app/features/theme/`, but never from each other. If two features need shared logic, extract it to `app/shared/` or `app/utils/`.
+**App features** (`app/features/`): canvas, clipboard, code, command-palette, dev-inspector, history, image, linear-editor, properties, rendering, selection, theme, tools
 
 ## Banned Patterns (enforced by lint)
 
@@ -104,7 +93,7 @@ Features can import from shared code (`app/shared/`, `app/utils/`, etc.) and fro
 | `as Type` assertions                | Type guards or proper typing (convention, not lint-enforced)  |
 | `enum` declarations                 | Literal unions or `as const` objects                          |
 | `else` / `else if`                  | Early returns                                                 |
-| Native `try/catch`                  | `tryCatch()` from `~/utils/tryCatch`                          |
+| Native `try/catch`                  | `tryCatch()` from `@drawvue/core`                             |
 | Nested ternaries                    | Functions with early returns                                  |
 | Hardcoded route strings             | Named routes                                                  |
 | Function props (`() => void`)       | `defineEmits`                                                 |
