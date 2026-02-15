@@ -14,6 +14,11 @@ export default defineConfig({
     environment: "node",
     globals: true,
     setupFiles: ["src/__test-utils__/setup-node.ts"],
+    server: {
+      deps: {
+        inline: [/@excalidraw\//],
+      },
+    },
   },
   resolve: {
     alias: {

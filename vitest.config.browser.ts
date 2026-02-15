@@ -15,6 +15,9 @@ export default defineConfig({
     exclude: ["@excalidraw/math", "@excalidraw/element"],
     esbuildOptions: {
       conditions: ["development"],
+      alias: {
+        "@excalidraw/math/ellipse": "@excalidraw/math",
+      },
     },
   },
   test: {
@@ -33,6 +36,7 @@ export default defineConfig({
     conditions: ["development"],
     alias: {
       "~": fileURLToPath(new URL("app", import.meta.url)),
+      "@excalidraw/math/ellipse": "@excalidraw/math",
     },
   },
 });
