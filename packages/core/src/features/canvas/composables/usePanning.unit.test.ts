@@ -27,6 +27,7 @@ const { handlers, mockUseEventListener, mockOnKeyStroke } = vi.hoisted(() => {
     const eventName = options?.eventName ?? "keydown";
     const keys = Array.isArray(key) ? key : [key];
     const wrappedHandler: EventHandler = (...args: unknown[]) => {
+      // Safe cast — mock controls the event shape, always { key: string }
       const e = args[0] as { key?: string };
       if (e.key && keys.includes(e.key)) handler(...args);
     };
@@ -51,6 +52,9 @@ function createPanningSetup() {
 describe("usePanning", () => {
   let eventMap: ReturnType<typeof createEventHandlerMap>;
 
+  // Minimal DOM stubs for node environment — usePanning references document, HTMLElement,
+  // and window which don't exist in Vitest's node runner. The Record<string, unknown> casts
+  // are necessary because globalThis is typed as typeof globalThis (no index signature).
   beforeAll(() => {
     if (globalThis.document === undefined) {
       (globalThis as Record<string, unknown>).document = {};

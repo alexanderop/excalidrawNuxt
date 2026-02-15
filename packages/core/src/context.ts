@@ -1,4 +1,4 @@
-import { provide, inject, type InjectionKey } from "vue";
+import { provide, inject, shallowRef, type InjectionKey } from "vue";
 import type { ShallowRef, Ref, ComputedRef } from "vue";
 import type { ExcalidrawElement, ElementsMap } from "./features/elements/types";
 import type { ToolType } from "./features/tools/types";
@@ -113,9 +113,9 @@ export interface DrawVueContext {
   styleDefaults: StyleDefaultsSlice;
   styleClipboard: StyleClipboardSlice;
   commandPalette: CommandPaletteSlice;
-  selection?: SelectionSlice;
-  history?: HistorySlice;
-  dirty?: DirtySlice;
+  selection: ShallowRef<SelectionSlice | null>;
+  history: ShallowRef<HistorySlice | null>;
+  dirty: ShallowRef<DirtySlice | null>;
 }
 
 export const DRAWVUE_KEY: InjectionKey<DrawVueContext> = Symbol("drawvue");
@@ -142,6 +142,9 @@ export function createDrawVue(): DrawVueContext {
     styleDefaults,
     styleClipboard,
     commandPalette,
+    selection: shallowRef(null),
+    history: shallowRef(null),
+    dirty: shallowRef(null),
   };
 }
 

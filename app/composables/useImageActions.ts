@@ -12,28 +12,25 @@ import { useBackgroundRemoval } from "./useBackgroundRemoval";
 const DUPLICATE_OFFSET_X = 20;
 
 export function useImageActions() {
-  const {
-    actionRegistry,
-    elements: elementsSlice,
-    imageCache,
-    selection,
-    history,
-    dirty,
-  } = useDrawVue();
+  const ctx = useDrawVue();
 
-  if (!selection || !history || !dirty) {
+  const selectionSlice = ctx.selection.value;
+  const historySlice = ctx.history.value;
+  const dirtySlice = ctx.dirty.value;
+
+  if (!selectionSlice || !historySlice || !dirtySlice) {
     throw new Error(
       "[useImageActions] Selection/history/dirty slices not found on DrawVueContext. " +
         "Ensure this composable is called from a component inside <DrawVue>.",
     );
   }
 
-  const { register } = actionRegistry;
-  const { getElementById, addElement } = elementsSlice;
-  const { getImage, addImage } = imageCache;
-  const { selectedElements, select } = selection;
-  const { recordAction } = history;
-  const { markStaticDirty } = dirty;
+  const { register } = ctx.actionRegistry;
+  const { getElementById, addElement } = ctx.elements;
+  const { getImage, addImage } = ctx.imageCache;
+  const { selectedElements, select } = selectionSlice;
+  const { recordAction } = historySlice;
+  const { markStaticDirty } = dirtySlice;
   const { status, downloadProgress, removeBackground } = useBackgroundRemoval();
 
   const isProcessing = computed(
