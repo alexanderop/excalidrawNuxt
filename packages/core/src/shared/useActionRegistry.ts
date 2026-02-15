@@ -31,6 +31,8 @@ type FlipActionId = "flip:horizontal" | "flip:vertical";
 
 type HistoryActionId = "history:undo" | "history:redo";
 
+type ImageActionId = "image:remove-background";
+
 export type ActionId =
   | ToolActionId
   | ActionActionId
@@ -39,7 +41,8 @@ export type ActionId =
   | StyleActionId
   | SettingsActionId
   | FlipActionId
-  | HistoryActionId;
+  | HistoryActionId
+  | ImageActionId;
 
 // ── Registry ────────────────────────────────────────────────────────
 

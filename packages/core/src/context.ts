@@ -89,6 +89,19 @@ export interface CommandPaletteSlice {
   execute: (id: ActionId) => void;
 }
 
+export interface SelectionSlice {
+  selectedElements: ComputedRef<readonly ExcalidrawElement[]>;
+  select: (id: string) => void;
+}
+
+export interface HistorySlice {
+  recordAction: (fn: () => void) => void;
+}
+
+export interface DirtySlice {
+  markStaticDirty: () => void;
+}
+
 // ── Context ─────────────────────────────────────────────────────────
 
 export interface DrawVueContext {
@@ -100,6 +113,9 @@ export interface DrawVueContext {
   styleDefaults: StyleDefaultsSlice;
   styleClipboard: StyleClipboardSlice;
   commandPalette: CommandPaletteSlice;
+  selection?: SelectionSlice;
+  history?: HistorySlice;
+  dirty?: DirtySlice;
 }
 
 export const DRAWVUE_KEY: InjectionKey<DrawVueContext> = Symbol("drawvue");

@@ -1,4 +1,5 @@
 export type { ImageCacheEntry } from "./types";
+export { toFileId } from "./types";
 export { renderImageElement } from "./renderImageElement";
 export { useImageCache, createImageCache } from "./useImageCache";
 export type { UseImageCacheReturn } from "./useImageCache";
