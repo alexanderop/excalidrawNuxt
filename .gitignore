@@ -33,6 +33,7 @@ coverage/
 # Reference source projects (git-ignored, not part of build)
 excalidraw/
 tldraw/
+vue-flow/
 .vitest-attachments/
 
 # Generated walkthrough/prototype HTML files

@@ -33,6 +33,7 @@
     "@excalidraw/common": "0.18.0-f0063e113",
     "@excalidraw/element": "0.18.0-f0063e113",
     "@excalidraw/math": "0.18.0-f0063e113",
+    "@huggingface/transformers": "3.8.1",
     "@nuxt/ui": "^4.4.0",
     "@vueuse/core": "^14.2.0",
     "nanoid": "^5.1.6",

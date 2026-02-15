@@ -648,6 +648,11 @@ register([
   },
 ]);
 
+// Expose selection/history/dirty to the context so app-layer composables can use them
+ctx.selection.value = { selectedElements, select };
+ctx.history.value = { recordAction: history.recordAction };
+ctx.dirty.value = { markStaticDirty: dirty.markStaticDirty };
+
 // Test hook — expose reactive state for browser tests (Excalidraw's window.h pattern).
 // Always available (SSR disabled, zero overhead — just window property assignments).
 (globalThis as unknown as Record<string, unknown>).__h = {

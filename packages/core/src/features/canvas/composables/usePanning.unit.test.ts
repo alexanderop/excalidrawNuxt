@@ -27,6 +27,7 @@ const { handlers, mockUseEventListener, mockOnKeyStroke } = vi.hoisted(() => {
     const eventName = options?.eventName ?? "keydown";
     const keys = Array.isArray(key) ? key : [key];
     const wrappedHandler: EventHandler = (...args: unknown[]) => {
+      // Safe cast — mock controls the event shape, always { key: string }
       const e = args[0] as { key?: string };
       if (e.key && keys.includes(e.key)) handler(...args);
     };
@@ -51,6 +52,9 @@ function createPanningSetup() {
 describe("usePanning", () => {
   let eventMap: ReturnType<typeof createEventHandlerMap>;
 
+  // Minimal DOM stubs for node environment — usePanning references document, HTMLElement,
+  // and window which don't exist in Vitest's node runner. The Record<string, unknown> casts
+  // are necessary because globalThis is typed as typeof globalThis (no index signature).
   beforeAll(() => {
     if (globalThis.document === undefined) {
       (globalThis as Record<string, unknown>).document = {};
@@ -58,6 +62,9 @@ describe("usePanning", () => {
     if (globalThis.HTMLElement === undefined) {
       // oxlint-disable-next-line unicorn/consistent-function-scoping -- minimal stub for node environment
       (globalThis as Record<string, unknown>).HTMLElement = function HTMLElement() {} as unknown;
+    }
+    if (globalThis.window === undefined) {
+      (globalThis as Record<string, unknown>).window = {};
     }
   });
 
@@ -145,6 +152,74 @@ describe("usePanning", () => {
       expect(setup.zoomBy).toHaveBeenCalled();
       expect(setup.panBy).not.toHaveBeenCalled();
     });
+
+    it("clamps zoom delta to MAX_ZOOM_STEP", () => {
+      const setup = createPanningSetup();
+      using _panning = withSetup(() => usePanning(setup));
+      eventMap = createEventHandlerMap(handlers);
+
+      eventMap.fire("wheel", {
+        deltaY: -500,
+        ctrlKey: true,
+        metaKey: false,
+        offsetX: 50,
+        offsetY: 60,
+      });
+
+      // MAX_ZOOM_STEP = 10, so clamped: sign(-500)*min(500,10) = -10, delta = 10*0.01 = 0.1
+      expect(setup.zoomBy).toHaveBeenCalledWith(0.1, expect.anything());
+    });
+
+    it("shift+wheel scrolls horizontally using deltaY", () => {
+      const setup = createPanningSetup();
+      using _panning = withSetup(() => usePanning(setup));
+      eventMap = createEventHandlerMap(handlers);
+
+      eventMap.fire("wheel", {
+        deltaX: 0,
+        deltaY: 50,
+        shiftKey: true,
+        ctrlKey: false,
+        metaKey: false,
+      });
+
+      expect(setup.panBy).toHaveBeenCalledWith(-50, 0);
+    });
+
+    it("shift+wheel falls back to deltaX when deltaY is 0 (macOS)", () => {
+      const setup = createPanningSetup();
+      using _panning = withSetup(() => usePanning(setup));
+      eventMap = createEventHandlerMap(handlers);
+
+      eventMap.fire("wheel", {
+        deltaX: 30,
+        deltaY: 0,
+        shiftKey: true,
+        ctrlKey: false,
+        metaKey: false,
+      });
+
+      expect(setup.panBy).toHaveBeenCalledWith(-30, 0);
+    });
+
+    it("wheel events are suppressed during active pan", () => {
+      const setup = createPanningSetup();
+      using _panning = withSetup(() => usePanning(setup));
+      eventMap = createEventHandlerMap(handlers);
+
+      // Start panning via space+pointerdown
+      eventMap.fire("keydown", { key: " ", preventDefault: vi.fn() });
+      eventMap.fire("pointerdown", { clientX: 100, clientY: 100, pointerId: 1 });
+
+      setup.panBy.mockClear();
+      setup.zoomBy.mockClear();
+
+      // Wheel during active pan should be ignored
+      eventMap.fire("wheel", { deltaX: 10, deltaY: 20, ctrlKey: false, metaKey: false });
+
+      expect(setup.panBy).not.toHaveBeenCalled();
+      expect(setup.zoomBy).not.toHaveBeenCalled();
+    });
   });
 
   describe("space key", () => {
@@ -193,8 +268,117 @@ describe("usePanning", () => {
       eventMap.fire("pointerdown", { clientX: 100, clientY: 100, pointerId: 1 });
       expect(panning.isPanning.value).toBe(true);
 
-      eventMap.fire("pointerup", { clientX: 120, clientY: 130, pointerId: 1 });
+      eventMap.fire("pointerup", { clientX: 120, clientY: 130, pointerId: 1, button: 0 });
       expect(panning.isPanning.value).toBe(false);
+    });
+
+    it("pointer up with wrong button does not stop panning", () => {
+      const setup = createPanningSetup();
+      using panning = withSetup(() => usePanning(setup));
+      eventMap = createEventHandlerMap(handlers);
+
+      eventMap.fire("keydown", { key: " ", preventDefault: vi.fn() });
+      eventMap.fire("pointerdown", { clientX: 100, clientY: 100, pointerId: 1, button: 0 });
+      expect(panning.isPanning.value).toBe(true);
+
+      // Release middle button — should not stop panning started by left button
+      eventMap.fire("pointerup", { clientX: 120, clientY: 130, pointerId: 1, button: 1 });
+      expect(panning.isPanning.value).toBe(true);
+    });
+  });
+
+  describe("middle mouse button panning", () => {
+    it("middle button press starts panning", () => {
+      const setup = createPanningSetup();
+      using panning = withSetup(() => usePanning(setup));
+      eventMap = createEventHandlerMap(handlers);
+
+      eventMap.fire("pointerdown", { clientX: 200, clientY: 200, pointerId: 1, button: 1 });
+
+      expect(panning.isPanning.value).toBe(true);
+    });
+
+    it("middle button drag calls panBy with correct deltas", () => {
+      const setup = createPanningSetup();
+      using _panning = withSetup(() => usePanning(setup));
+      eventMap = createEventHandlerMap(handlers);
+
+      eventMap.fire("pointerdown", { clientX: 200, clientY: 200, pointerId: 1, button: 1 });
+      eventMap.fire("pointermove", { clientX: 250, clientY: 220, pointerId: 1 });
+
+      expect(setup.panBy).toHaveBeenCalledWith(50, 20);
+    });
+
+    it("middle button release stops panning", () => {
+      const setup = createPanningSetup();
+      using panning = withSetup(() => usePanning(setup));
+      eventMap = createEventHandlerMap(handlers);
+
+      eventMap.fire("pointerdown", { clientX: 200, clientY: 200, pointerId: 1, button: 1 });
+      expect(panning.isPanning.value).toBe(true);
+
+      eventMap.fire("pointerup", { clientX: 250, clientY: 220, pointerId: 1, button: 1 });
+      expect(panning.isPanning.value).toBe(false);
+    });
+
+    it("middle button sets grabbing cursor immediately", () => {
+      const setup = createPanningSetup();
+      using panning = withSetup(() => usePanning(setup));
+      eventMap = createEventHandlerMap(handlers);
+
+      eventMap.fire("pointerdown", { clientX: 200, clientY: 200, pointerId: 1, button: 1 });
+
+      expect(panning.panningCursor.value).toBe("grabbing");
+    });
+
+    it("middle button works regardless of active tool", () => {
+      const setup = createPanningSetup();
+      setup.activeTool.value = "rectangle";
+      using panning = withSetup(() => usePanning(setup));
+      eventMap = createEventHandlerMap(handlers);
+
+      eventMap.fire("pointerdown", { clientX: 200, clientY: 200, pointerId: 1, button: 1 });
+
+      expect(panning.isPanning.value).toBe(true);
+    });
+
+    it("right-click does not start panning", () => {
+      const setup = createPanningSetup();
+      using panning = withSetup(() => usePanning(setup));
+      eventMap = createEventHandlerMap(handlers);
+
+      eventMap.fire("pointerdown", { clientX: 200, clientY: 200, pointerId: 1, button: 2 });
+
+      expect(panning.isPanning.value).toBe(false);
+    });
+  });
+
+  describe("window blur cleanup", () => {
+    it("blur event resets isPanning", () => {
+      const setup = createPanningSetup();
+      using panning = withSetup(() => usePanning(setup));
+      eventMap = createEventHandlerMap(handlers);
+
+      eventMap.fire("keydown", { key: " ", preventDefault: vi.fn() });
+      eventMap.fire("pointerdown", { clientX: 100, clientY: 100, pointerId: 1 });
+      expect(panning.isPanning.value).toBe(true);
+      expect(panning.spaceHeld.value).toBe(true);
+
+      eventMap.fire("blur", {});
+
+      expect(panning.isPanning.value).toBe(false);
+      expect(panning.spaceHeld.value).toBe(false);
+    });
+
+    it("blur event is no-op when not panning", () => {
+      const setup = createPanningSetup();
+      using panning = withSetup(() => usePanning(setup));
+      eventMap = createEventHandlerMap(handlers);
+
+      eventMap.fire("blur", {});
+
+      expect(panning.isPanning.value).toBe(false);
+      expect(panning.spaceHeld.value).toBe(false);
     });
   });
 });

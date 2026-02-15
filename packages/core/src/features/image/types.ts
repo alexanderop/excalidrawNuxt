@@ -26,6 +26,12 @@ export function isInitializedImageElement(
   return isImageElement(el) && el.fileId !== null;
 }
 
+/**
+ * Convert a plain string to a branded `FileId`.
+ * The double assertion (`as unknown as FileId`) is required because `FileId` is a branded
+ * type from Excalidraw — there's no structural overlap with `string`, so TypeScript
+ * requires going through `unknown` first.
+ */
 export function toFileId(id: string): FileId {
   return id as unknown as FileId;
 }

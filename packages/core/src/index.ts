@@ -5,7 +5,7 @@ export { DrawVue } from "./components";
 
 // Context (provide/inject for multi-instance support)
 export { createDrawVue, provideDrawVue, useDrawVue, DRAWVUE_KEY } from "./context";
-export type { DrawVueContext } from "./context";
+export type { DrawVueContext, SelectionSlice, HistorySlice, DirtySlice } from "./context";
 
 // Features
 export * from "./features/binding";

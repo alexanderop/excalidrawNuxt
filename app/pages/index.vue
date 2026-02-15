@@ -3,6 +3,7 @@ import { useTemplateRef } from "vue";
 import { DrawVue } from "@drawvue/core";
 import CommandPalette from "~/features/command-palette/CommandPalette.vue";
 import DevInspector from "~/features/dev-inspector/DevInspector.vue";
+import ImageActions from "~/features/image/ImageActions.vue";
 import DrawingToolbar from "~/features/tools/components/DrawingToolbar.vue";
 import PropertiesPanel from "~/features/properties/components/PropertiesPanel.vue";
 import BottomBar from "~/features/canvas/components/BottomBar.vue";
@@ -49,6 +50,7 @@ const drawvueRef = useTemplateRef<InstanceType<typeof DrawVue>>("drawvue");
       </template>
       <CommandPalette />
       <DevInspector />
+      <ImageActions />
     </DrawVue>
   </UContextMenu>
 </template>

@@ -142,7 +142,7 @@ describe("renderSuggestedBinding", () => {
     } as unknown as ExcalidrawElement;
 
     expect(() => renderSuggestedBinding(ctx, el, 1, "light")).toThrow(
-      "No shape handler registered for type:",
+      "No shape handler registered for element type:",
     );
   });
 });
