@@ -59,5 +59,8 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: pnpm exec playwright install-deps chromium
 
-      - name: Run tests
-        run: pnpm run test
+      - name: Run unit & core tests
+        run: pnpm exec vitest run --project unit --project core --bail=1
+
+      - name: Run browser tests with coverage
+        run: pnpm run test:coverage:browser -- --bail=1

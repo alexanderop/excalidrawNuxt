@@ -8,7 +8,7 @@ declare module "vitest/browser" {
       startY: number,
       endX: number,
       endY: number,
-      options?: { steps?: number },
+      options?: { steps?: number; button?: number },
     ) => Promise<void>;
   }
 }
@@ -22,6 +22,8 @@ declare module "vitest/browser" {
  *
  * Uses frame.evaluate to dispatch events inside the iframe, avoiding
  * page↔iframe coordinate translation issues that break page.mouse approaches.
+ *
+ * Pass `button: 1` for middle-mouse-button drags (pan tests).
  */
 export const canvasDrag: BrowserCommand<
   [
@@ -30,12 +32,13 @@ export const canvasDrag: BrowserCommand<
     startY: number,
     endX: number,
     endY: number,
-    options?: { steps?: number },
+    options?: { steps?: number; button?: number },
   ]
 > = async (ctx, selector, startX, startY, endX, endY, options) => {
   // @ts-expect-error -- vitest browser command context exposes frame() at runtime
   const frame = await ctx.frame();
   const steps = options?.steps ?? 5;
+  const button = options?.button ?? 0;
 
   interface DragParams {
     sel: string;
@@ -44,21 +47,26 @@ export const canvasDrag: BrowserCommand<
     ex: number;
     ey: number;
     s: number;
+    btn: number;
   }
 
   await frame.evaluate(
-    ({ sel, sx, sy, ex, ey, s }: DragParams) => {
+    ({ sel, sx, sy, ex, ey, s, btn }: DragParams) => {
       const el = document.querySelector(sel);
       if (!el) throw new Error(`Element "${sel}" not found`);
 
       const rect = el.getBoundingClientRect();
 
+      // Map button number to buttons bitmask: 0→1, 1→4, 2→2
+      const buttonsBitmaskMap: Record<number, number> = { 0: 1, 1: 4, 2: 2 };
+      const buttonsBitmask = buttonsBitmaskMap[btn] ?? 1;
+
       function fire(type: string, x: number, y: number): void {
         const evt = new PointerEvent(type, {
           clientX: rect.left + x,
           clientY: rect.top + y,
-          button: 0,
-          buttons: type === "pointerup" ? 0 : 1,
+          button: btn,
+          buttons: type === "pointerup" ? 0 : buttonsBitmask,
           bubbles: true,
           cancelable: true,
           pointerId: 1,
@@ -81,6 +89,6 @@ export const canvasDrag: BrowserCommand<
 
       fire("pointerup", ex, ey);
     },
-    { sel: selector, sx: startX, sy: startY, ex: endX, ey: endY, s: steps },
+    { sel: selector, sx: startX, sy: startY, ex: endX, ey: endY, s: steps, btn: button },
   );
 };

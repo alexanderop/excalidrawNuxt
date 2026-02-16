@@ -1,3 +1,4 @@
+/* v8 ignore start -- A* pathfinding algorithm; covered by core unit tests (astar.unit.test.ts) */
 /**
  * Modified A* pathfinding for elbow arrow routing.
  *

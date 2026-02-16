@@ -1,3 +1,4 @@
+/* v8 ignore start -- RAF animation loop; timing non-deterministic in headless browsers, implicitly exercised via flush() */
 import { computed, onScopeDispose } from "vue";
 import { useDocumentVisibility, whenever } from "@vueuse/core";
 

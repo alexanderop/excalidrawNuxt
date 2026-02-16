@@ -313,6 +313,9 @@ describe("usePersistence", () => {
         quotaExceeded: false,
       }));
 
+      // Suppress the ~180 console.warn lines from 60 save cycles
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
       using ctx = withDrawVue(() => usePersistence());
       await waitForRestore(ctx);
 
@@ -324,6 +327,7 @@ describe("usePersistence", () => {
       }
 
       expect(ctx.diagnostics.events.value.length).toBeLessThanOrEqual(50);
+      warnSpy.mockRestore();
     });
 
     it("clearStorage calls delScene and removes localStorage key", async () => {

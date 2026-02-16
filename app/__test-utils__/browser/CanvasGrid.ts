@@ -121,6 +121,34 @@ export class CanvasGrid {
     await commands.canvasDrag(CANVAS_SELECTOR, startPx.x, startPx.y, endPx.x, endPx.y, options);
   }
 
+  async rightClick(cell: Cell): Promise<void> {
+    const { x, y } = this.toPixels(cell);
+    await commands.canvasRightClick(CANVAS_SELECTOR, x, y);
+  }
+
+  async wheel(
+    cell: Cell,
+    options?: {
+      deltaX?: number;
+      deltaY?: number;
+      ctrlKey?: boolean;
+      shiftKey?: boolean;
+      metaKey?: boolean;
+    },
+  ): Promise<void> {
+    const { x, y } = this.toPixels(cell);
+    await commands.canvasWheel(CANVAS_SELECTOR, x, y, options);
+  }
+
+  async middleClickDrag(start: Cell, end: Cell, options?: { steps?: number }): Promise<void> {
+    const startPx = this.toPixels(start);
+    const endPx = this.toPixels(end);
+    await commands.canvasDrag(CANVAS_SELECTOR, startPx.x, startPx.y, endPx.x, endPx.y, {
+      ...options,
+      button: 1,
+    });
+  }
+
   async showOverlay(duration?: number): Promise<void> {
     await commands.showGridOverlay(CANVAS_SELECTOR, this.cols, this.rows, duration);
   }

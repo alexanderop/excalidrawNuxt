@@ -37,7 +37,6 @@ export {
   vector,
   vectorFromPoint,
   vectorCross,
-  vectorDot,
   vectorAdd,
   vectorSubtract,
   vectorScale,
@@ -57,9 +56,6 @@ export {
   degreesToRadians,
   radiansToDegrees,
   normalizeRadians,
-  radiansDifference,
-  radiansBetweenAngles,
-  cartesian2Polar,
   isRightAngleRads,
 } from "@excalidraw/math";
 
@@ -71,7 +67,6 @@ export type { Radians, Degrees } from "@excalidraw/math";
 export {
   lineSegment,
   isLineSegment,
-  lineSegmentRotate,
   segmentsIntersectAt,
   pointOnLineSegment,
   distanceToLineSegment,
@@ -115,11 +110,7 @@ export type { Ellipse } from "@excalidraw/math";
 // ---------------------------------------------------------------------------
 // Rectangles (3 functions + 1 type)
 // ---------------------------------------------------------------------------
-export {
-  rectangle,
-  rectangleIntersectLineSegment,
-  rectangleIntersectRectangle,
-} from "@excalidraw/math";
+export { rectangle } from "@excalidraw/math";
 
 export type { Rectangle } from "@excalidraw/math";
 
@@ -160,15 +151,7 @@ export type { InclusiveRange } from "@excalidraw/math";
 // ---------------------------------------------------------------------------
 // Utils (7 functions)
 // ---------------------------------------------------------------------------
-export {
-  PRECISION,
-  clamp,
-  round,
-  roundToStep,
-  average,
-  isFiniteNumber,
-  isCloseTo,
-} from "@excalidraw/math";
+export { PRECISION, clamp, round, average, isFiniteNumber, isCloseTo } from "@excalidraw/math";
 
 // ---------------------------------------------------------------------------
 // From @excalidraw/common

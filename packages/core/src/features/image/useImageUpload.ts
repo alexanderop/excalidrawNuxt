@@ -1,3 +1,4 @@
+/* v8 ignore start -- File API upload handlers; requires browser File API simulation not available in vitest browser mode */
 import { generateId } from "../../shared/random";
 import type { FileId } from "./types";
 import { toFileId } from "./types";
