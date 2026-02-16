@@ -82,9 +82,10 @@ export function serializeElements(
   }
 
   return tryCatchSync(() => {
-    const cloned: unknown = structuredClone(nonDeleted);
-    if (!Array.isArray(cloned)) throw new Error("Serialization produced non-array");
-    return cloned as ExcalidrawElement[];
+    const json = JSON.stringify(nonDeleted);
+    const parsed: unknown = JSON.parse(json);
+    if (!Array.isArray(parsed)) throw new Error("Serialization produced non-array");
+    return parsed as ExcalidrawElement[];
   });
 }
 
