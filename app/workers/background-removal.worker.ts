@@ -56,6 +56,7 @@ function post(message: WorkerOutgoingMessage, transfer?: Transferable[]): void {
     self.postMessage(message, transfer);
     return;
   }
+
   self.postMessage(message);
 }
 

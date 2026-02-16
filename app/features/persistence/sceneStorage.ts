@@ -6,6 +6,7 @@ import type {
   EmergencyBackup,
   PersistedScene,
   SceneStoreSchema,
+  StoreMetadata,
 } from "./types";
 import {
   CURRENT_SCHEMA_VERSION,
@@ -81,9 +82,9 @@ export function serializeElements(
   }
 
   return tryCatchSync(() => {
-    const parsed: unknown = JSON.parse(JSON.stringify(nonDeleted));
-    if (!Array.isArray(parsed)) throw new Error("Serialization produced non-array");
-    return parsed as ExcalidrawElement[];
+    const cloned: unknown = structuredClone(nonDeleted);
+    if (!Array.isArray(cloned)) throw new Error("Serialization produced non-array");
+    return cloned as ExcalidrawElement[];
   });
 }
 
@@ -260,4 +261,52 @@ export function emergencySaveToLocalStorage(elements: readonly ExcalidrawElement
     // localStorage quota exceeded — silently ignore, IndexedDB is the real safety net
     console.warn("[persistence] Emergency backup to localStorage failed:", error.message);
   }
+}
+
+// ---------------------------------------------------------------------------
+// Read store metadata (for dev inspector)
+// ---------------------------------------------------------------------------
+
+async function readSceneMetadata(
+  key: keyof SceneStoreSchema,
+): Promise<StoreMetadata["current"] | null> {
+  const [err, data] = await getScene(key);
+  if (err !== null || data === undefined || !isValidPersistedScene(data)) return null;
+  return {
+    schemaVersion: data.schemaVersion,
+    elementCount: data.elementCount,
+    savedAt: data.savedAt,
+    dataSize: new Blob([JSON.stringify(data)]).size,
+  };
+}
+
+function readEmergencyMetadata(): StoreMetadata["emergency"] | null {
+  const [lsErr, lsRaw] = tryCatchSync(() => localStorage.getItem(EMERGENCY_BACKUP_KEY));
+  if (lsErr !== null || lsRaw === null) return null;
+
+  const [parseErr, parsed] = tryCatchSync(() => JSON.parse(lsRaw) as unknown);
+  if (parseErr !== null || !isRecord(parsed)) return null;
+  if (typeof parsed.timestamp !== "number" || !Array.isArray(parsed.elements)) return null;
+
+  return {
+    timestamp: parsed.timestamp,
+    elementCount: (parsed.elements as unknown[]).length,
+    dataSize: new Blob([lsRaw]).size,
+  };
+}
+
+export async function readStoreMetadata(): Promise<StoreMetadata> {
+  const current = await readSceneMetadata("scene:current");
+  const backupBase = await readSceneMetadata("scene:backup");
+
+  const backup: StoreMetadata["backup"] = backupBase
+    ? {
+        schemaVersion: backupBase.schemaVersion,
+        elementCount: backupBase.elementCount,
+        savedAt: backupBase.savedAt,
+        deltaVsCurrent: current ? backupBase.elementCount - current.elementCount : 0,
+      }
+    : null;
+
+  return { current, backup, emergency: readEmergencyMetadata() };
 }

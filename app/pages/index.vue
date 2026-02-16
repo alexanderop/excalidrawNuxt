@@ -52,9 +52,10 @@ const isRestored = ref(false);
           />
         </template>
         <CommandPalette />
-        <DevInspector />
+        <PersistenceProvider @restored="isRestored = true">
+          <DevInspector />
+        </PersistenceProvider>
         <ImageActions />
-        <PersistenceProvider @restored="isRestored = true" />
       </DrawVue>
     </UContextMenu>
   </div>

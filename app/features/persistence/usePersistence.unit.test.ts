@@ -10,12 +10,14 @@ import type { SaveStatus } from "./types";
 
 vi.mock("./stores", () => ({
   probeIndexedDB: vi.fn(),
+  delScene: vi.fn().mockResolvedValue([null, undefined]),
 }));
 
 vi.mock("./sceneStorage", () => ({
   saveScene: vi.fn(),
   loadScene: vi.fn(),
   emergencySaveToLocalStorage: vi.fn(),
+  readStoreMetadata: vi.fn().mockResolvedValue({ current: null, backup: null, emergency: null }),
 }));
 
 // Capture debounce and event listener callbacks
@@ -42,8 +44,9 @@ vi.mock("@vueuse/core", async (importOriginal) => {
   };
 });
 
-const { probeIndexedDB } = await import("./stores");
+const { probeIndexedDB, delScene } = await import("./stores");
 const mockedProbe = vi.mocked(probeIndexedDB);
+const mockedDelScene = vi.mocked(delScene);
 const { saveScene, loadScene, emergencySaveToLocalStorage } = await import("./sceneStorage");
 const mockedSaveScene = vi.mocked(saveScene);
 const mockedLoadScene = vi.mocked(loadScene);
@@ -252,6 +255,95 @@ describe("usePersistence", () => {
       handler!();
 
       expect(mockedEmergencySave).toHaveBeenCalled();
+    });
+  });
+
+  describe("diagnostics", () => {
+    it("exposes lastSavedHash ref that updates after save", async () => {
+      setupDefaults();
+
+      using ctx = withDrawVue(() => usePersistence());
+      await waitForRestore(ctx);
+
+      const hashAfterRestore = ctx.diagnostics.lastSavedHash.value;
+      expect(hashAfterRestore).toBeGreaterThan(0);
+
+      ctx.drawVue.elements.addElement(createTestElement({ id: "hash-test" }));
+      await nextTick();
+      await triggerSave();
+
+      expect(ctx.diagnostics.lastSavedHash.value).toBe(123);
+      expect(ctx.diagnostics.lastSavedHash.value).not.toBe(hashAfterRestore);
+    });
+
+    it("exposes forwardVersionMode ref set during forward-version restore", async () => {
+      mockedProbe.mockResolvedValue(true);
+      mockedLoadScene.mockResolvedValue({
+        elements: [],
+        source: "indexeddb",
+        forwardVersion: true,
+      });
+
+      using ctx = withDrawVue(() => usePersistence());
+      await waitForRestore(ctx);
+
+      expect(ctx.diagnostics.forwardVersionMode.value).toBe(true);
+    });
+
+    it("exposes sceneHash computed that changes when elements change", async () => {
+      setupDefaults();
+
+      using ctx = withDrawVue(() => usePersistence());
+      await waitForRestore(ctx);
+
+      const initialHash = ctx.diagnostics.sceneHash.value;
+      ctx.drawVue.elements.addElement(createTestElement({ id: "scene-hash-test" }));
+      await nextTick();
+
+      expect(ctx.diagnostics.sceneHash.value).not.toBe(initialHash);
+    });
+
+    it("caps event log at 50 entries", async () => {
+      setupDefaults();
+      // Make save always succeed with a new hash to generate events
+      let hashCounter = 100;
+      mockedSaveScene.mockImplementation(async () => ({
+        success: true,
+        hash: hashCounter++,
+        quotaExceeded: false,
+      }));
+
+      using ctx = withDrawVue(() => usePersistence());
+      await waitForRestore(ctx);
+
+      // Trigger many save cycles to generate events
+      for (let i = 0; i < 60; i++) {
+        ctx.drawVue.elements.addElement(createTestElement({ id: `cap-${i}` }));
+        await nextTick();
+        await triggerSave();
+      }
+
+      expect(ctx.diagnostics.events.value.length).toBeLessThanOrEqual(50);
+    });
+
+    it("clearStorage calls delScene and removes localStorage key", async () => {
+      setupDefaults();
+      const removeItemMock = vi.fn();
+      vi.stubGlobal("localStorage", {
+        getItem: vi.fn(),
+        setItem: vi.fn(),
+        removeItem: removeItemMock,
+      });
+
+      using ctx = withDrawVue(() => usePersistence());
+      await waitForRestore(ctx);
+
+      await ctx.diagnostics.clearStorage();
+
+      expect(mockedDelScene).toHaveBeenCalledWith("scene:current");
+      expect(mockedDelScene).toHaveBeenCalledWith("scene:backup");
+      expect(removeItemMock).toHaveBeenCalledWith("drawvue-emergency-backup");
+      expect(ctx.diagnostics.lastSavedHash.value).toBe(0);
     });
   });
 });

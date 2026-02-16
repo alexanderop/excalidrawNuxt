@@ -1,5 +1,5 @@
 import type { ExcalidrawElement } from "@drawvue/core";
-import type { Ref, ShallowRef } from "vue";
+import type { ComputedRef, InjectionKey, Ref, ShallowRef } from "vue";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -63,6 +63,82 @@ export type EmergencyBackup = {
 export type SaveStatus = "idle" | "pending" | "saving" | "unavailable" | "error";
 
 // ---------------------------------------------------------------------------
+// Persistence event log
+// ---------------------------------------------------------------------------
+
+export type PersistenceEventType =
+  | "save"
+  | "save-skip"
+  | "backup"
+  | "debounce"
+  | "change"
+  | "restore"
+  | "probe"
+  | "error"
+  | "clear"
+  | "export";
+
+export type PersistenceEvent = {
+  id: number;
+  type: PersistenceEventType;
+  timestamp: number;
+  message: string;
+};
+
+// ---------------------------------------------------------------------------
+// Store metadata (for inspector display)
+// ---------------------------------------------------------------------------
+
+export type StoreMetadata = {
+  current: {
+    schemaVersion: number;
+    elementCount: number;
+    savedAt: number;
+    dataSize: number;
+  } | null;
+  backup: {
+    schemaVersion: number;
+    elementCount: number;
+    savedAt: number;
+    deltaVsCurrent: number;
+  } | null;
+  emergency: {
+    timestamp: number;
+    elementCount: number;
+    dataSize: number;
+  } | null;
+};
+
+// ---------------------------------------------------------------------------
+// Diagnostics (exposed from usePersistence for inspector)
+// ---------------------------------------------------------------------------
+
+export type PersistenceDiagnostics = {
+  lastSavedHash: Readonly<Ref<number>>;
+  sceneHash: Readonly<ComputedRef<number>>;
+  forwardVersionMode: Readonly<Ref<boolean>>;
+  hasPersistedStorage: Readonly<Ref<boolean>>;
+  events: Readonly<ShallowRef<readonly PersistenceEvent[]>>;
+  flushSave: () => void;
+  clearStorage: () => Promise<void>;
+  readStoreMetadata: () => Promise<StoreMetadata>;
+};
+
+// ---------------------------------------------------------------------------
+// Inspector context (provided by PersistenceProvider)
+// ---------------------------------------------------------------------------
+
+export type PersistenceInspectorContext = {
+  saveStatus: Readonly<Ref<SaveStatus>>;
+  isRestored: Readonly<Ref<boolean>>;
+  error: Readonly<ShallowRef<Error | null>>;
+  diagnostics: PersistenceDiagnostics;
+};
+
+export const PERSISTENCE_INSPECTOR_KEY: InjectionKey<PersistenceInspectorContext> =
+  Symbol("persistence-inspector");
+
+// ---------------------------------------------------------------------------
 // Composable return type
 // ---------------------------------------------------------------------------
 
@@ -70,4 +146,5 @@ export type UsePersistenceReturn = {
   isRestored: Readonly<Ref<boolean>>;
   saveStatus: Readonly<Ref<SaveStatus>>;
   error: Readonly<ShallowRef<Error | null>>;
+  diagnostics: PersistenceDiagnostics;
 };

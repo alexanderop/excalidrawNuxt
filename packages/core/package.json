@@ -12,7 +12,8 @@
     "build": "unbuild",
     "dev": "unbuild --stub",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@excalidraw/common": "0.18.0-f0063e113",
@@ -28,6 +29,7 @@
   "devDependencies": {
     "@types/tinycolor2": "^1.4.6",
     "@vitejs/plugin-vue": "^5.2.4",
+    "@vitest/coverage-v8": "^4.0.18",
     "typescript": "^5.9.3",
     "unbuild": "^3.5.0",
     "vitest": "^4.0.0",

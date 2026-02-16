@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { watch } from "vue";
+import { provide, watch } from "vue";
 import { usePersistence } from "./usePersistence";
+import { PERSISTENCE_INSPECTOR_KEY } from "./types";
 
 defineSlots<{ default?: () => unknown }>();
 const emit = defineEmits<{ restored: [] }>();
-const { isRestored } = usePersistence();
+const { isRestored, saveStatus, error, diagnostics } = usePersistence();
+
+provide(PERSISTENCE_INSPECTOR_KEY, { saveStatus, isRestored, error, diagnostics });
 
 watch(
   isRestored,

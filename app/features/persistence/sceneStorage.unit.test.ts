@@ -8,6 +8,7 @@ import {
   saveScene,
   loadScene,
   emergencySaveToLocalStorage,
+  readStoreMetadata,
 } from "./sceneStorage";
 import {
   CURRENT_SCHEMA_VERSION,
@@ -489,6 +490,93 @@ describe("sceneStorage", () => {
 
       // Should not throw
       expect(() => emergencySaveToLocalStorage([createTestElement()])).not.toThrow();
+
+      vi.unstubAllGlobals();
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // readStoreMetadata
+  // ---------------------------------------------------------------------------
+
+  describe("readStoreMetadata", () => {
+    it("returns null entries when no data exists", async () => {
+      getScene.mockResolvedValue([null, undefined] as Result<undefined>);
+
+      vi.stubGlobal("localStorage", {
+        getItem: vi.fn(() => null),
+        setItem: vi.fn(),
+        removeItem: vi.fn(),
+      });
+
+      const result = await readStoreMetadata();
+
+      expect(result.current).toBeNull();
+      expect(result.backup).toBeNull();
+      expect(result.emergency).toBeNull();
+
+      vi.unstubAllGlobals();
+    });
+
+    it("returns populated metadata when data exists", async () => {
+      const currentScene: PersistedScene = {
+        schemaVersion: 1,
+        elements: [createTestElement({ id: "a" }), createTestElement({ id: "b" })],
+        savedAt: 1_700_000_000_000,
+        elementCount: 2,
+      };
+      const backupScene: PersistedScene = {
+        schemaVersion: 1,
+        elements: [createTestElement({ id: "a" })],
+        savedAt: 1_699_999_990_000,
+        elementCount: 1,
+      };
+
+      getScene
+        .mockResolvedValueOnce([null, currentScene] as Result<PersistedScene>)
+        .mockResolvedValueOnce([null, backupScene] as Result<PersistedScene>);
+
+      vi.stubGlobal("localStorage", {
+        getItem: vi.fn(() => null),
+        setItem: vi.fn(),
+        removeItem: vi.fn(),
+      });
+
+      const result = await readStoreMetadata();
+
+      expect(result.current).not.toBeNull();
+      expect(result.current!.schemaVersion).toBe(1);
+      expect(result.current!.elementCount).toBe(2);
+      expect(result.current!.savedAt).toBe(1_700_000_000_000);
+      expect(result.current!.dataSize).toBeGreaterThan(0);
+
+      expect(result.backup).not.toBeNull();
+      expect(result.backup!.elementCount).toBe(1);
+      expect(result.backup!.deltaVsCurrent).toBe(-1);
+
+      vi.unstubAllGlobals();
+    });
+
+    it("reads emergency backup from localStorage", async () => {
+      getScene.mockResolvedValue([null, undefined] as Result<undefined>);
+
+      const emergencyData = JSON.stringify({
+        timestamp: 1_700_000_005_000,
+        elements: [createTestElement({ id: "emergency" })],
+      });
+
+      vi.stubGlobal("localStorage", {
+        getItem: vi.fn(() => emergencyData),
+        setItem: vi.fn(),
+        removeItem: vi.fn(),
+      });
+
+      const result = await readStoreMetadata();
+
+      expect(result.emergency).not.toBeNull();
+      expect(result.emergency!.timestamp).toBe(1_700_000_005_000);
+      expect(result.emergency!.elementCount).toBe(1);
+      expect(result.emergency!.dataSize).toBeGreaterThan(0);
 
       vi.unstubAllGlobals();
     });

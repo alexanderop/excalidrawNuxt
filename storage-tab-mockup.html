@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dev Inspector — Storage Tab Mockup</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+  :root {
+    --base: rgb(33, 39, 55);
+    --base-deep: rgb(24, 28, 40);
+    --foreground: rgb(234, 237, 243);
+    --accent: rgb(255, 107, 237);
+    --surface: rgb(52, 63, 96);
+    --subdued: rgb(138, 51, 123);
+    --edge: rgb(171, 75, 153);
+    --green: rgb(74, 222, 128);
+    --blue: rgb(96, 165, 250);
+    --amber: rgb(251, 191, 36);
+    --red: rgb(248, 113, 113);
+    --cyan: rgb(103, 232, 249);
+    --purple: rgb(192, 132, 252);
+    --orange: rgb(251, 146, 60);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: rgb(18, 20, 30);
+    color: var(--foreground);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 40px;
+  }
+
+  .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+  /* ── Panel shell ───────────────────────────────────────────── */
+
+  .inspector {
+    width: 380px;
+    height: 820px;
+    display: flex;
+    flex-direction: column;
+    background: rgba(33, 39, 55, 0.97);
+    border: 1px solid rgba(171, 75, 153, 0.3);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow:
+      0 0 0 1px rgba(0,0,0,0.3),
+      0 24px 80px rgba(0,0,0,0.5),
+      0 0 120px rgba(255,107,237,0.04);
+    backdrop-filter: blur(40px);
+    position: relative;
+  }
+
+  .inspector::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0.7;
+    z-index: 10;
+  }
+
+  /* ── Header ────────────────────────────────────────────────── */
+
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: var(--base-deep);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    flex-shrink: 0;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .header-icon {
+    width: 18px; height: 18px;
+    border-radius: 4px;
+    background: linear-gradient(135deg, var(--accent), var(--subdued));
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .header-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: rgba(234,237,243,0.6);
+  }
+
+  .close-btn {
+    width: 24px; height: 24px;
+    border-radius: 4px;
+    border: none; background: none;
+    color: rgba(234,237,243,0.4);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .close-btn:hover { background: var(--surface); color: var(--foreground); }
+
+  /* ── Tabs ───────────────────────────────────────────────────── */
+
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    background: var(--base-deep);
+    padding: 0 4px;
+    flex-shrink: 0;
+    overflow-x: auto;
+  }
+
+  .tab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 10px 6px;
+    font-size: 11px;
+    font-weight: 500;
+    color: rgba(234,237,243,0.4);
+    cursor: pointer;
+    position: relative;
+    transition: color 0.15s;
+    white-space: nowrap;
+    border: none;
+    background: none;
+  }
+  .tab:hover { color: rgba(234,237,243,0.6); }
+  .tab.active { color: var(--accent); }
+  .tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 8px; right: 8px;
+    height: 2px;
+    border-radius: 2px 2px 0 0;
+    background: var(--accent);
+  }
+
+  .tab-badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 0 6px;
+    line-height: 1.5;
+    border-radius: 99px;
+  }
+  .tab.active .tab-badge {
+    background: rgba(255,107,237,0.15);
+    color: var(--accent);
+  }
+  .tab:not(.active) .tab-badge {
+    background: var(--surface);
+    color: rgba(234,237,243,0.6);
+  }
+
+  /* ── Content area ──────────────────────────────────────────── */
+
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .content::-webkit-scrollbar { width: 4px; }
+  .content::-webkit-scrollbar-track { background: transparent; }
+  .content::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.08);
+    border-radius: 4px;
+  }
+
+  /* ── Status bar ────────────────────────────────────────────── */
+
+  .status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    background: var(--base-deep);
+    font-size: 10px;
+    color: rgba(234,237,243,0.4);
+    flex-shrink: 0;
+  }
+
+  .status-dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    margin-right: 6px;
+  }
+
+  /* ── Save Status Hero ──────────────────────────────────────── */
+
+  .save-hero {
+    padding: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    background: linear-gradient(180deg, rgba(24,28,40,0.6) 0%, transparent 100%);
+  }
+
+  .save-hero-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .save-status-ring {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .save-status-ring::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid;
+    animation: pulse-ring 2s ease-in-out infinite;
+  }
+
+  .save-status-ring.idle::before {
+    border-color: var(--green);
+    animation: none;
+    opacity: 0.4;
+  }
+
+  .save-status-ring.pending::before {
+    border-color: var(--amber);
+    border-top-color: transparent;
+    animation: spin 0.8s linear infinite;
+  }
+
+  .save-status-ring.saving::before {
+    border-color: var(--blue);
+    border-top-color: transparent;
+    border-right-color: transparent;
+    animation: spin 0.6s linear infinite;
+  }
+
+  .save-status-ring.error::before {
+    border-color: var(--red);
+    animation: pulse-ring 1s ease-in-out infinite;
+  }
+
+  .save-status-ring.unavailable::before {
+    border-color: rgba(234,237,243,0.15);
+    animation: none;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  @keyframes pulse-ring {
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.04); }
+  }
+
+  .save-status-inner {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+  }
+
+  .save-status-inner.idle {
+    background: var(--green);
+    box-shadow: 0 0 8px rgba(74,222,128,0.5);
+  }
+  .save-status-inner.pending {
+    background: var(--amber);
+    box-shadow: 0 0 8px rgba(251,191,36,0.5);
+  }
+  .save-status-inner.saving {
+    background: var(--blue);
+    box-shadow: 0 0 8px rgba(96,165,250,0.5);
+    animation: pulse-dot 0.6s ease-in-out infinite;
+  }
+  .save-status-inner.error {
+    background: var(--red);
+    box-shadow: 0 0 8px rgba(248,113,113,0.5);
+  }
+  .save-status-inner.unavailable {
+    background: rgba(234,237,243,0.2);
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .save-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .save-label {
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .save-label.idle { color: var(--green); }
+  .save-label.pending { color: var(--amber); }
+  .save-label.saving { color: var(--blue); }
+  .save-label.error { color: var(--red); }
+  .save-label.unavailable { color: rgba(234,237,243,0.3); }
+
+  .save-meta {
+    font-size: 10px;
+    color: rgba(234,237,243,0.35);
+    margin-top: 2px;
+  }
+
+  .save-hash-pill {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    font-size: 10px;
+    font-weight: 500;
+  }
+
+  .hash-synced {
+    color: var(--green);
+  }
+
+  .hash-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--green);
+  }
+
+  /* ── State Machine Viz ─────────────────────────────────────── */
+
+  .state-machine {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 10px 12px 8px;
+    overflow-x: auto;
+  }
+
+  .sm-node {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border: 1px solid;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+
+  .sm-node.idle-node {
+    border-color: rgba(74,222,128,0.25);
+    color: rgba(74,222,128,0.5);
+    background: rgba(74,222,128,0.05);
+  }
+  .sm-node.idle-node.active-state {
+    border-color: var(--green);
+    color: var(--green);
+    background: rgba(74,222,128,0.12);
+    box-shadow: 0 0 12px rgba(74,222,128,0.15);
+  }
+
+  .sm-node.pending-node {
+    border-color: rgba(251,191,36,0.25);
+    color: rgba(251,191,36,0.5);
+    background: rgba(251,191,36,0.05);
+  }
+  .sm-node.pending-node.active-state {
+    border-color: var(--amber);
+    color: var(--amber);
+    background: rgba(251,191,36,0.12);
+    box-shadow: 0 0 12px rgba(251,191,36,0.15);
+  }
+
+  .sm-node.saving-node {
+    border-color: rgba(96,165,250,0.25);
+    color: rgba(96,165,250,0.5);
+    background: rgba(96,165,250,0.05);
+  }
+
+  .sm-node.error-node {
+    border-color: rgba(248,113,113,0.25);
+    color: rgba(248,113,113,0.5);
+    background: rgba(248,113,113,0.05);
+  }
+
+  .sm-arrow {
+    width: 16px;
+    height: 1px;
+    background: rgba(255,255,255,0.1);
+    position: relative;
+    flex-shrink: 0;
+  }
+  .sm-arrow::after {
+    content: '';
+    position: absolute;
+    right: 0; top: -2px;
+    border: 2.5px solid transparent;
+    border-left-color: rgba(255,255,255,0.1);
+  }
+
+  .sm-arrow.lit {
+    background: rgba(255,255,255,0.25);
+  }
+  .sm-arrow.lit::after {
+    border-left-color: rgba(255,255,255,0.25);
+  }
+
+  /* ── Sections ──────────────────────────────────────────────── */
+
+  .section {
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 2px 6px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+    user-select: none;
+  }
+  .section-header:hover { background: rgba(255,255,255,0.03); }
+
+  .section-icon {
+    width: 22px; height: 22px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .section-label {
+    flex: 1;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: rgba(234,237,243,0.6);
+  }
+
+  .section-chevron {
+    color: rgba(234,237,243,0.3);
+    transition: transform 0.2s;
+  }
+  .section.open .section-chevron {
+    transform: rotate(90deg);
+  }
+
+  .section-body {
+    padding: 0 8px 8px 37px;
+  }
+
+  .kv-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 3px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.02);
+  }
+  .kv-row:last-child { border-bottom: none; }
+
+  .kv-key {
+    font-size: 11px;
+    color: rgba(234,237,243,0.4);
+  }
+
+  .kv-val {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 1px 4px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .kv-val:hover { background: var(--surface); }
+
+  /* ── IDB Store Cards ───────────────────────────────────────── */
+
+  .idb-card {
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 6px;
+    background: rgba(255,255,255,0.02);
+  }
+
+  .idb-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .idb-card-key {
+    font-size: 10px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .idb-card-badge {
+    font-size: 9px;
+    font-weight: 600;
+    padding: 1px 5px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .idb-card-body {
+    padding: 6px 8px;
+  }
+
+  .idb-field {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2px 0;
+  }
+
+  .idb-field-key {
+    font-size: 10px;
+    color: rgba(234,237,243,0.35);
+  }
+
+  .idb-field-val {
+    font-size: 10px;
+    font-weight: 500;
+  }
+
+  /* ── Quota Meter ───────────────────────────────────────────── */
+
+  .quota-bar-outer {
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.06);
+    overflow: hidden;
+    margin: 6px 0 4px;
+  }
+
+  .quota-bar-inner {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--green), var(--cyan));
+    transition: width 0.4s ease-out;
+    position: relative;
+  }
+
+  .quota-bar-inner::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    border-radius: 0 3px 3px 0;
+    background: rgba(255,255,255,0.3);
+    filter: blur(2px);
+  }
+
+  /* ── Event Log ─────────────────────────────────────────────── */
+
+  .event-log {
+    border-top: 1px solid rgba(255,255,255,0.04);
+    max-height: 180px;
+    overflow-y: auto;
+  }
+
+  .event-log-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px 4px;
+    position: sticky;
+    top: 0;
+    background: rgba(33,39,55,0.95);
+    backdrop-filter: blur(8px);
+    z-index: 1;
+  }
+
+  .event-log-title {
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(234,237,243,0.3);
+  }
+
+  .event-entry {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 4px 12px;
+    transition: background 0.1s;
+  }
+  .event-entry:hover { background: rgba(255,255,255,0.02); }
+
+  .event-time {
+    font-size: 9px;
+    color: rgba(234,237,243,0.25);
+    white-space: nowrap;
+    padding-top: 1px;
+    min-width: 36px;
+  }
+
+  .event-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 4px;
+  }
+
+  .event-msg {
+    font-size: 10px;
+    color: rgba(234,237,243,0.55);
+    line-height: 1.4;
+  }
+  .event-msg strong {
+    font-weight: 600;
+    color: rgba(234,237,243,0.75);
+  }
+
+  .event-entry.fresh {
+    animation: event-flash 0.6s ease-out;
+  }
+
+  @keyframes event-flash {
+    0% { background: rgba(255,107,237,0.08); }
+    100% { background: transparent; }
+  }
+
+  /* ── Action Buttons ────────────────────────────────────────── */
+
+  .actions-row {
+    display: flex;
+    gap: 4px;
+    padding: 8px 12px;
+    border-top: 1px solid rgba(255,255,255,0.04);
+    flex-shrink: 0;
+  }
+
+  .action-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 5px 0;
+    border-radius: 5px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: var(--surface);
+    color: rgba(234,237,243,0.6);
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .action-btn:hover {
+    border-color: var(--accent);
+    background: rgba(255,107,237,0.15);
+    color: var(--accent);
+  }
+  .action-btn.danger:hover {
+    border-color: var(--red);
+    background: rgba(248,113,113,0.15);
+    color: var(--red);
+  }
+
+  /* ── Emergency Backup Card ─────────────────────────────────── */
+
+  .emergency-card {
+    border: 1px dashed rgba(251,191,36,0.25);
+    border-radius: 6px;
+    padding: 8px 10px;
+    background: rgba(251,191,36,0.04);
+    margin-top: 4px;
+  }
+
+  .emergency-card-empty {
+    border: 1px dashed rgba(255,255,255,0.08);
+    border-radius: 6px;
+    padding: 8px 10px;
+    background: rgba(255,255,255,0.02);
+    margin-top: 4px;
+    text-align: center;
+  }
+
+  /* ── Utility ───────────────────────────────────────────────── */
+
+  .text-accent { color: var(--accent); }
+  .text-green { color: var(--green); }
+  .text-blue { color: var(--blue); }
+  .text-amber { color: var(--amber); }
+  .text-red { color: var(--red); }
+  .text-cyan { color: var(--cyan); }
+  .text-purple { color: var(--purple); }
+  .text-fg { color: var(--foreground); }
+  .text-fg-60 { color: rgba(234,237,243,0.6); }
+  .text-fg-40 { color: rgba(234,237,243,0.4); }
+  .text-fg-30 { color: rgba(234,237,243,0.3); }
+  .text-fg-20 { color: rgba(234,237,243,0.2); }
+
+  .bg-green-tint { background: rgba(74,222,128,0.12); }
+  .bg-blue-tint { background: rgba(96,165,250,0.12); }
+  .bg-amber-tint { background: rgba(251,191,36,0.12); }
+  .bg-red-tint { background: rgba(248,113,113,0.12); }
+  .bg-purple-tint { background: rgba(192,132,252,0.12); }
+  .bg-cyan-tint { background: rgba(103,232,249,0.12); }
+  .bg-accent-tint { background: rgba(255,107,237,0.12); }
+
+  svg { display: block; }
+
+  /* ── Annotations (design notes outside the panel) ──────────── */
+
+  .page-wrap {
+    display: flex;
+    gap: 48px;
+    align-items: flex-start;
+  }
+
+  .annotations {
+    width: 260px;
+    padding-top: 16px;
+  }
+
+  .anno-group {
+    margin-bottom: 28px;
+  }
+
+  .anno-title {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-bottom: 8px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .anno-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .anno-bullet {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: rgba(234,237,243,0.2);
+    margin-top: 5px;
+    flex-shrink: 0;
+  }
+
+  .anno-text {
+    font-size: 11px;
+    line-height: 1.5;
+    color: rgba(234,237,243,0.4);
+  }
+  .anno-text code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    background: rgba(255,255,255,0.06);
+    padding: 1px 4px;
+    border-radius: 3px;
+    color: rgba(234,237,243,0.6);
+  }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+<!-- ━━━━ Inspector Panel ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="inspector">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <div class="header-icon">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+          <path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/>
+        </svg>
+      </div>
+      <span class="header-title">Dev Inspector</span>
+    </div>
+    <button class="close-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab">History <span class="tab-badge mono">12</span></button>
+    <button class="tab">Elements <span class="tab-badge mono">8</span></button>
+    <button class="tab">Layers <span class="tab-badge mono">3</span></button>
+    <button class="tab">State</button>
+    <button class="tab">Actions</button>
+    <button class="tab active">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 7V4h16v3"/>
+        <path d="M9 20h6"/>
+        <path d="M12 4v16"/>
+      </svg>
+      Storage
+    </button>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- ─── Save Status Hero ─────────────────────────────────── -->
+    <div class="save-hero">
+      <div class="save-hero-row">
+        <div class="save-status-ring idle">
+          <div class="save-status-inner idle"></div>
+        </div>
+        <div class="save-info">
+          <div class="save-label idle mono">All Changes Saved</div>
+          <div class="save-meta mono">Last save 2s ago &middot; scene:current</div>
+        </div>
+        <div class="save-hash-pill mono hash-synced">
+          <span class="hash-dot"></span>
+          48291
+        </div>
+      </div>
+
+      <!-- State Machine mini-viz -->
+      <div class="state-machine">
+        <div class="sm-node idle-node active-state mono">idle</div>
+        <div class="sm-arrow lit"></div>
+        <div class="sm-node pending-node mono">pending</div>
+        <div class="sm-arrow"></div>
+        <div class="sm-node saving-node mono">saving</div>
+        <div class="sm-arrow"></div>
+        <div class="sm-node error-node mono">error</div>
+      </div>
+    </div>
+
+    <!-- ─── Version & Hash Section ───────────────────────────── -->
+    <div class="section open">
+      <div class="section-header">
+        <div class="section-icon bg-green-tint">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2">
+            <path d="M12 22c5.52 0 10-4.48 10-10S17.52 2 12 2 2 6.48 2 12s4.48 10 10 10z"/>
+            <path d="M9 12l2 2 4-4"/>
+          </svg>
+        </div>
+        <span class="section-label">Version & Hash</span>
+        <svg class="section-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <div class="section-body">
+        <div class="kv-row">
+          <span class="kv-key">sceneHash</span>
+          <span class="kv-val mono text-green">48291</span>
+        </div>
+        <div class="kv-row">
+          <span class="kv-key">lastSavedHash</span>
+          <span class="kv-val mono text-fg">48291</span>
+        </div>
+        <div class="kv-row">
+          <span class="kv-key">in-memory</span>
+          <span class="kv-val mono text-fg">8 elements</span>
+        </div>
+        <div class="kv-row">
+          <span class="kv-key">persisted</span>
+          <span class="kv-val mono text-fg">8 elements</span>
+        </div>
+        <div class="kv-row">
+          <span class="kv-key">schemaVersion</span>
+          <span class="kv-val mono text-fg-60">1</span>
+        </div>
+        <div class="kv-row">
+          <span class="kv-key">forwardMode</span>
+          <span class="kv-val mono" style="color: rgba(234,237,243,0.3); font-style: italic;">false</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── IndexedDB Stores Section ─────────────────────────── -->
+    <div class="section open">
+      <div class="section-header">
+        <div class="section-icon bg-purple-tint">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2">
+            <ellipse cx="12" cy="5" rx="9" ry="3"/>
+            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+          </svg>
+        </div>
+        <span class="section-label">IndexedDB Stores</span>
+        <svg class="section-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <div class="section-body">
+
+        <!-- scene:current card -->
+        <div class="idb-card">
+          <div class="idb-card-header">
+            <div class="idb-card-key mono">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><circle cx="12" cy="12" r="5" fill="var(--green)" opacity="0.3"/><circle cx="12" cy="12" r="2"/></svg>
+              <span class="text-green">scene:current</span>
+            </div>
+            <span class="idb-card-badge mono bg-green-tint text-green">active</span>
+          </div>
+          <div class="idb-card-body">
+            <div class="idb-field">
+              <span class="idb-field-key mono">schemaVersion</span>
+              <span class="idb-field-val mono text-fg">1</span>
+            </div>
+            <div class="idb-field">
+              <span class="idb-field-key mono">elementCount</span>
+              <span class="idb-field-val mono text-fg">8</span>
+            </div>
+            <div class="idb-field">
+              <span class="idb-field-key mono">savedAt</span>
+              <span class="idb-field-val mono text-fg-60">14:32:08.241</span>
+            </div>
+            <div class="idb-field">
+              <span class="idb-field-key mono">dataSize</span>
+              <span class="idb-field-val mono text-fg-40">~4.2 KB</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- scene:backup card -->
+        <div class="idb-card">
+          <div class="idb-card-header">
+            <div class="idb-card-key mono">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2.5"><circle cx="12" cy="12" r="5" fill="var(--amber)" opacity="0.2"/><circle cx="12" cy="12" r="2"/></svg>
+              <span class="text-amber">scene:backup</span>
+            </div>
+            <span class="idb-card-badge mono bg-amber-tint text-amber">rolling</span>
+          </div>
+          <div class="idb-card-body">
+            <div class="idb-field">
+              <span class="idb-field-key mono">schemaVersion</span>
+              <span class="idb-field-val mono text-fg">1</span>
+            </div>
+            <div class="idb-field">
+              <span class="idb-field-key mono">elementCount</span>
+              <span class="idb-field-val mono text-fg">7</span>
+            </div>
+            <div class="idb-field">
+              <span class="idb-field-key mono">savedAt</span>
+              <span class="idb-field-val mono text-fg-60">14:31:57.812</span>
+            </div>
+            <div class="idb-field">
+              <span class="idb-field-key mono">delta</span>
+              <span class="idb-field-val mono text-fg-40">-1 el vs current</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Emergency backup -->
+        <div class="emergency-card">
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2.5">
+              <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <span class="mono" style="font-size: 10px; font-weight: 600; color: var(--amber);">localStorage emergency</span>
+          </div>
+          <div class="idb-field">
+            <span class="idb-field-key mono">timestamp</span>
+            <span class="idb-field-val mono text-fg-60">14:30:22 (tab hidden)</span>
+          </div>
+          <div class="idb-field">
+            <span class="idb-field-key mono">elements</span>
+            <span class="idb-field-val mono text-fg-40">6 elements &middot; ~3.1 KB</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Storage Quota Section ────────────────────────────── -->
+    <div class="section open">
+      <div class="section-header">
+        <div class="section-icon bg-cyan-tint">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2">
+            <rect x="2" y="6" width="20" height="12" rx="2"/>
+            <path d="M6 12h.01M10 12h.01"/>
+          </svg>
+        </div>
+        <span class="section-label">Storage Quota</span>
+        <svg class="section-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <div class="section-body">
+        <div class="quota-bar-outer">
+          <div class="quota-bar-inner" style="width: 0.8%"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+          <span class="mono" style="font-size: 9px; color: rgba(234,237,243,0.35);">7.3 KB used</span>
+          <span class="mono" style="font-size: 9px; color: rgba(234,237,243,0.25);">897 MB available</span>
+        </div>
+        <div class="kv-row">
+          <span class="kv-key">persisted</span>
+          <span class="kv-val mono text-green" style="display: flex; align-items: center; gap: 4px;">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+            granted
+          </span>
+        </div>
+        <div class="kv-row">
+          <span class="kv-key">IDB available</span>
+          <span class="kv-val mono text-green" style="display: flex; align-items: center; gap: 4px;">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+            yes
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Event Log ────────────────────────────────────────── -->
+    <div class="event-log">
+      <div class="event-log-header">
+        <span class="event-log-title">Persistence Log</span>
+        <span class="mono" style="font-size: 9px; color: rgba(234,237,243,0.2);">6 events</span>
+      </div>
+
+      <div class="event-entry fresh">
+        <span class="event-time mono">2s</span>
+        <span class="event-dot" style="background: var(--green);"></span>
+        <span class="event-msg mono"><strong>Save</strong> completed &middot; hash 48291 &middot; 8 elements</span>
+      </div>
+
+      <div class="event-entry">
+        <span class="event-time mono">2s</span>
+        <span class="event-dot" style="background: var(--purple);"></span>
+        <span class="event-msg mono"><strong>Backup</strong> scene:current &rarr; scene:backup</span>
+      </div>
+
+      <div class="event-entry">
+        <span class="event-time mono">3s</span>
+        <span class="event-dot" style="background: var(--amber);"></span>
+        <span class="event-msg mono"><strong>Debounce</strong> fired &middot; version changed (47802 &rarr; 48291)</span>
+      </div>
+
+      <div class="event-entry">
+        <span class="event-time mono">3s</span>
+        <span class="event-dot" style="background: rgba(234,237,243,0.2);"></span>
+        <span class="event-msg mono"><strong>Change</strong> detected &middot; element added</span>
+      </div>
+
+      <div class="event-entry">
+        <span class="event-time mono">12s</span>
+        <span class="event-dot" style="background: var(--green);"></span>
+        <span class="event-msg mono"><strong>Save</strong> skipped &middot; hash unchanged (47802)</span>
+      </div>
+
+      <div class="event-entry">
+        <span class="event-time mono">1m</span>
+        <span class="event-dot" style="background: var(--blue);"></span>
+        <span class="event-msg mono"><strong>Restore</strong> from indexeddb &middot; 7 elements loaded</span>
+      </div>
+
+      <div class="event-entry">
+        <span class="event-time mono">1m</span>
+        <span class="event-dot" style="background: var(--cyan);"></span>
+        <span class="event-msg mono"><strong>Probe</strong> IndexedDB available &middot; persist() granted</span>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+
+  <!-- Action buttons -->
+  <div class="actions-row">
+    <button class="action-btn">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+      Force Save
+    </button>
+    <button class="action-btn">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+      Export
+    </button>
+    <button class="action-btn danger">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+      Clear
+    </button>
+  </div>
+
+  <!-- Status bar -->
+  <div class="status-bar mono">
+    <span style="display: flex; align-items: center;">
+      <span class="status-dot" style="background: var(--green); box-shadow: 0 0 6px rgba(74,222,128,0.4);"></span>
+      Live
+    </span>
+    <span>` to toggle</span>
+  </div>
+
+</div><!-- /inspector -->
+
+<!-- ━━━━ Annotations ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="annotations">
+
+  <div class="anno-group">
+    <div class="anno-title">Save Status Hero</div>
+    <div class="anno-item">
+      <span class="anno-bullet"></span>
+      <span class="anno-text">Animated ring cycles through <code>idle</code> <code>pending</code> <code>saving</code> states in real-time as user draws</span>
+    </div>
+    <div class="anno-item">
+      <span class="anno-bullet"></span>
+      <span class="anno-text">Hash pill shows current scene version &mdash; green when synced, amber when dirty</span>
+    </div>
+    <div class="anno-item">
+      <span class="anno-bullet"></span>
+      <span class="anno-text">State machine strip highlights the active transition path</span>
+    </div>
+  </div>
+
+  <div class="anno-group">
+    <div class="anno-title">IDB Store Cards</div>
+    <div class="anno-item">
+      <span class="anno-bullet"></span>
+      <span class="anno-text"><code>scene:current</code> and <code>scene:backup</code> shown as cards with metadata</span>
+    </div>
+    <div class="anno-item">
+      <span class="anno-bullet"></span>
+      <span class="anno-text">Delta between backup and current visible at a glance</span>
+    </div>
+    <div class="anno-item">
+      <span class="anno-bullet"></span>
+      <span class="anno-text">Emergency localStorage backup shown separately with dashed amber border</span>
+    </div>
+  </div>
+
+  <div class="anno-group">
+    <div class="anno-title">Storage Quota</div>
+    <div class="anno-item">
+      <span class="anno-bullet"></span>
+      <span class="anno-text">Mini meter from <code>navigator.storage.estimate()</code></span>
+    </div>
+    <div class="anno-item">
+      <span class="anno-bullet"></span>
+      <span class="anno-text">Shows whether persistent storage is granted (Safari eviction protection)</span>
+    </div>
+  </div>
+
+  <div class="anno-group">
+    <div class="anno-title">Event Log</div>
+    <div class="anno-item">
+      <span class="anno-bullet"></span>
+      <span class="anno-text">Rolling log of persistence events &mdash; makes debounce, hash-skipping, and backup behavior visible</span>
+    </div>
+    <div class="anno-item">
+      <span class="anno-bullet"></span>
+      <span class="anno-text">New entries flash pink on arrival</span>
+    </div>
+    <div class="anno-item">
+      <span class="anno-bullet"></span>
+      <span class="anno-text">Colored dots match event type: green=save, amber=debounce, purple=backup, blue=restore</span>
+    </div>
+  </div>
+
+  <div class="anno-group">
+    <div class="anno-title">Actions</div>
+    <div class="anno-item">
+      <span class="anno-bullet"></span>
+      <span class="anno-text"><strong>Force Save</strong> &mdash; bypass debounce, write immediately</span>
+    </div>
+    <div class="anno-item">
+      <span class="anno-bullet"></span>
+      <span class="anno-text"><strong>Export</strong> &mdash; download raw <code>scene:current</code> as JSON</span>
+    </div>
+    <div class="anno-item">
+      <span class="anno-bullet"></span>
+      <span class="anno-text"><strong>Clear</strong> &mdash; wipe IDB + localStorage (with confirm)</span>
+    </div>
+  </div>
+
+</div>
+
+</div><!-- /page-wrap -->
+</body>
+</html>

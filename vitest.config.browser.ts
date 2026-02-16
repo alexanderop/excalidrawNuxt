@@ -47,6 +47,14 @@ export default defineConfig({
     },
     globals: true,
     setupFiles: ["app/__test-utils__/setup-browser.ts"],
+    coverage: {
+      provider: "v8",
+      include: ["packages/core/src/**/*.ts", "app/**/*.{ts,vue}"],
+      exclude: ["**/*.test.ts", "**/__test-utils__/**", "**/types.ts"],
+      reporter: ["text", "html", "json-summary"],
+      reportsDirectory: "./coverage/browser",
+      reportOnFailure: true,
+    },
   },
   resolve: {
     conditions: ["development"],

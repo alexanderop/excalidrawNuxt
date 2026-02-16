@@ -25,6 +25,9 @@
     "test:browser": "vitest --project browser",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "test:coverage:unit": "vitest run --project unit --coverage",
+    "test:coverage:browser": "vitest run --project browser --coverage",
+    "test:coverage:core": "pnpm --filter @drawvue/core run test:coverage",
     "core:build": "pnpm --filter @drawvue/core run build",
     "core:dev": "pnpm --filter @drawvue/core run dev"
   },

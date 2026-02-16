@@ -14,6 +14,14 @@ export default defineConfig({
         inline: [/@excalidraw\//],
       },
     },
+    coverage: {
+      provider: "v8",
+      include: ["app/**/*.{ts,vue}"],
+      exclude: ["**/*.test.ts", "**/__test-utils__/**", "**/types.ts"],
+      reporter: ["text", "html", "json-summary"],
+      reportsDirectory: "./coverage/unit",
+      reportOnFailure: true,
+    },
   },
   resolve: {
     alias: {
