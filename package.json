@@ -36,6 +36,7 @@
     "@huggingface/transformers": "3.8.1",
     "@nuxt/ui": "^4.4.0",
     "@vueuse/core": "^14.2.0",
+    "idb-keyval": "^6.2.2",
     "nanoid": "^5.1.6",
     "nuxt": "^4.3.0",
     "perfect-freehand": "^1.2.3",

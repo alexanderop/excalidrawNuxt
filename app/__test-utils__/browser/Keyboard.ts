@@ -19,6 +19,26 @@ export class Keyboard {
     for (const key of keys.toReversed()) await userEvent.keyboard(key.up);
   }
 
+  /**
+   * Simulate Ctrl+V followed by a native paste event.
+   * The DrawVue keydown handler for KeyV intentionally lets the native paste
+   * event fire (so image paste can inspect clipboardData). In tests we must
+   * dispatch the ClipboardEvent ourselves because userEvent.keyboard does not
+   * trigger the browser's native paste flow.
+   */
+  async paste(): Promise<void> {
+    await userEvent.keyboard("{Control>}v{/Control}");
+    document.dispatchEvent(new ClipboardEvent("paste", { bubbles: true, cancelable: true }));
+  }
+
+  async copy(): Promise<void> {
+    await userEvent.keyboard("{Control>}c{/Control}");
+  }
+
+  async cut(): Promise<void> {
+    await userEvent.keyboard("{Control>}x{/Control}");
+  }
+
   async undo(): Promise<void> {
     await userEvent.keyboard("{Control>}z{/Control}");
   }
