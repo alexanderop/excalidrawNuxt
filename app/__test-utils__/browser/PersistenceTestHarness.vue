@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { DrawVue } from "@drawvue/core";
-import PersistenceProvider from "~/features/persistence/PersistenceProvider.vue";
+import { PersistenceProvider } from "~/features/persistence";
 import DrawingToolbar from "~/features/tools/components/DrawingToolbar.vue";
 import BottomBar from "~/features/canvas/components/BottomBar.vue";
 </script>

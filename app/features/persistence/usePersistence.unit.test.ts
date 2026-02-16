@@ -236,8 +236,6 @@ describe("usePersistence", () => {
       await nextTick();
       await triggerSave();
       expect(persistMock).toHaveBeenCalledTimes(1);
-
-      vi.unstubAllGlobals();
     });
   });
 

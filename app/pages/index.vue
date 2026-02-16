@@ -14,7 +14,7 @@ const isRestored = ref(false);
 </script>
 
 <template>
-  <div :style="{ pointerEvents: isRestored ? 'auto' : 'none' }">
+  <div class="h-full" :style="{ pointerEvents: isRestored ? 'auto' : 'none' }">
     <UContextMenu :items="drawvueRef?.contextMenuItems ?? []">
       <DrawVue ref="drawvue">
         <template #toolbar>

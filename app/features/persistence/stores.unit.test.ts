@@ -90,14 +90,10 @@ describe("probeIndexedDB", () => {
   });
 
   it("returns false when indexedDB is undefined", async () => {
-    const original = globalThis.indexedDB;
-    // @ts-expect-error -- deliberately removing indexedDB for test
-    delete globalThis.indexedDB;
+    vi.stubGlobal("indexedDB", undefined);
 
     const result = await probeIndexedDB();
     expect(result).toBe(false);
-
-    globalThis.indexedDB = original;
   });
 
   it("returns true when probe succeeds", async () => {

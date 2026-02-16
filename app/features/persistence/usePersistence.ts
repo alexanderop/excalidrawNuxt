@@ -1,6 +1,6 @@
 import { ref, shallowRef, watch, onScopeDispose } from "vue";
 import { useDebounceFn, useEventListener, useIntervalFn } from "@vueuse/core";
-import { useDrawVue, hashElementsVersion } from "@drawvue/core";
+import { useDrawVue, hashElementsVersion, getNonDeletedElements, tryCatch } from "@drawvue/core";
 import { probeIndexedDB } from "./stores";
 import { saveScene, loadScene, emergencySaveToLocalStorage } from "./sceneStorage";
 import type { SaveStatus, UsePersistenceReturn } from "./types";
@@ -34,7 +34,8 @@ export function usePersistence(): UsePersistenceReturn {
       return;
     }
 
-    const currentHash = hashElementsVersion(elements.elements.value);
+    const nonDeleted = getNonDeletedElements(elements.elements.value);
+    const currentHash = hashElementsVersion(nonDeleted);
     if (currentHash === lastSavedHash) {
       saveStatus.value = "idle";
       return;
@@ -97,7 +98,7 @@ export function usePersistence(): UsePersistenceReturn {
   // mutateElement() edits in place, so poll versionNonce hashes every 2s.
   useIntervalFn(() => {
     if (watchPaused || forwardVersionMode || !isRestored.value) return;
-    const currentHash = hashElementsVersion(elements.elements.value);
+    const currentHash = hashElementsVersion(getNonDeletedElements(elements.elements.value));
     if (currentHash !== lastSavedHash && saveStatus.value !== "saving") {
       requestSave();
     }
@@ -105,7 +106,13 @@ export function usePersistence(): UsePersistenceReturn {
 
   // ── Restore (runs immediately in setup, not onMounted) ──────────────
   void (async () => {
-    const available = await probeIndexedDB();
+    const [probeError, available] = await tryCatch(probeIndexedDB());
+    if (probeError) {
+      console.error("[persistence] IndexedDB probe failed:", probeError.message);
+      saveStatus.value = "unavailable";
+      isRestored.value = true;
+      return;
+    }
 
     if (!available) {
       saveStatus.value = "unavailable";
@@ -115,7 +122,15 @@ export function usePersistence(): UsePersistenceReturn {
 
     watchPaused = true;
 
-    const loaded = await loadScene();
+    const [loadError, loaded] = await tryCatch(loadScene());
+    if (loadError) {
+      console.error("[persistence] Failed to load scene:", loadError.message);
+      saveStatus.value = "error";
+      error.value = loadError;
+      isRestored.value = true;
+      watchPaused = false;
+      return;
+    }
 
     if (loaded.forwardVersion) {
       forwardVersionMode = true;
@@ -130,7 +145,7 @@ export function usePersistence(): UsePersistenceReturn {
       dirty.value?.markStaticDirty();
     }
 
-    lastSavedHash = hashElementsVersion(elements.elements.value);
+    lastSavedHash = hashElementsVersion(getNonDeletedElements(elements.elements.value));
     isRestored.value = true;
 
     watchPaused = false;
