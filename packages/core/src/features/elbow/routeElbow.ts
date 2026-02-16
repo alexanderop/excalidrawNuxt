@@ -1,3 +1,4 @@
+/* v8 ignore start -- Elbow routing orchestrator; covered by core unit tests (routeElbow.unit.test.ts) */
 /**
  * High-level orchestrator for elbow arrow A* routing.
  *

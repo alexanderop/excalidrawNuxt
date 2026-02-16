@@ -229,6 +229,30 @@ export class TestDrawVue {
     await this.grid.drag(start, end, opts);
   }
 
+  /** Right-click at a grid cell. */
+  async rightClick(cell: Cell): Promise<void> {
+    await this.grid.rightClick(cell);
+  }
+
+  /** Dispatch a wheel event at a grid cell. */
+  async wheel(
+    cell: Cell,
+    options?: {
+      deltaX?: number;
+      deltaY?: number;
+      ctrlKey?: boolean;
+      shiftKey?: boolean;
+      metaKey?: boolean;
+    },
+  ): Promise<void> {
+    await this.grid.wheel(cell, options);
+  }
+
+  /** Middle-click drag between two grid cells (for panning). */
+  async middleClickDrag(start: Cell, end: Cell): Promise<void> {
+    await this.grid.middleClickDrag(start, end);
+  }
+
   /** Press a key. */
   async keyPress(key: string): Promise<void> {
     await this.keyboard.press(key);

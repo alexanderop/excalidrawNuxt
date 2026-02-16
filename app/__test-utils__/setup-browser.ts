@@ -1,7 +1,7 @@
 import { expect, beforeAll } from "vitest";
 import { page } from "vitest/browser";
 import { config } from "vitest-browser-vue";
-import { defineComponent, h, onUnmounted, watch } from "vue";
+import { defineComponent, h, ref, onUnmounted, watch } from "vue";
 import "~/assets/css/main.css";
 
 // Stub Nuxt UI components (UButton, UTooltip, etc.) that aren't available
@@ -94,11 +94,50 @@ const UCommandPaletteStub = defineComponent({
   },
 });
 
+// UContextMenu stub — shows items on right-click (contextmenu event).
+// The real Nuxt UI UContextMenu intercepts contextmenu events on its trigger area
+// and displays a menu with the provided items. This stub replicates that behavior.
+const UContextMenuStub = defineComponent({
+  props: {
+    items: { type: Array, default: () => [] },
+  },
+  setup(props, { slots }) {
+    const isOpen = ref(false);
+
+    const handleContextMenu = (e: Event) => {
+      e.preventDefault();
+      isOpen.value = true;
+    };
+
+    return () =>
+      h("div", { onContextmenu: handleContextMenu, style: "height:100%;width:100%" }, [
+        slots.default?.(),
+        ...(isOpen.value
+          ? (props.items as Array<{ label?: string; type?: string; onSelect?: (e: Event) => void }>)
+              .filter((item) => item.type !== "separator" && item.label)
+              .map((item) =>
+                h(
+                  "div",
+                  {
+                    role: "menuitem",
+                    onClick: (e: Event) => {
+                      item.onSelect?.(e);
+                      isOpen.value = false;
+                    },
+                  },
+                  item.label,
+                ),
+              )
+          : []),
+      ]);
+  },
+});
+
 config.global.stubs = {
   UButton: NuxtUiStub,
   UTooltip: NuxtUiStub,
   UPopover: NuxtUiStub,
-  UContextMenu: NuxtUiStub,
+  UContextMenu: UContextMenuStub,
   USlider: NuxtUiStub,
   UModal: UModalStub,
   UCommandPalette: UCommandPaletteStub,
@@ -117,7 +156,7 @@ beforeAll(async () => {
 const style = document.createElement("style");
 style.textContent = [
   "html, body { height: 100%; width: 100%; margin: 0; padding: 0; overflow: hidden; }",
-  "body > div { height: 100%; width: 100%; }",
+  "body > div, body > div > div { height: 100%; width: 100%; }",
 ].join("\n");
 document.head.append(style);
 

@@ -192,7 +192,7 @@ async function compositeAlphaMask(
 
   return new Promise<HTMLImageElement>((resolve) => {
     const result = new Image();
-    result.onload = () => resolve(result);
+    result.addEventListener("load", () => resolve(result));
     result.src = url;
   });
 }

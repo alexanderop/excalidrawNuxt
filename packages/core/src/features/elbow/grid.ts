@@ -1,3 +1,4 @@
+/* v8 ignore start -- Grid generation for A* pathfinding; covered by core unit tests (grid.unit.test.ts) */
 /**
  * Non-uniform grid for A* pathfinding.
  *

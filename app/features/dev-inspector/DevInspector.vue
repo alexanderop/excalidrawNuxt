@@ -7,10 +7,13 @@ import ElementsTab from "./tabs/ElementsTab.vue";
 import StateTab from "./tabs/StateTab.vue";
 import ActionsTab from "./tabs/ActionsTab.vue";
 import LayersTab from "./tabs/LayersTab.vue";
+import StorageTab from "./tabs/StorageTab.vue";
 import { useTestHook } from "./useTestHook";
 
 const isOpen = ref(false);
-const activeTab = ref<"history" | "elements" | "layers" | "state" | "actions">("history");
+const activeTab = ref<"history" | "elements" | "layers" | "state" | "actions" | "storage">(
+  "history",
+);
 
 const ctx = useDrawVue();
 const h = useTestHook();
@@ -21,6 +24,7 @@ const TABS = [
   { id: "layers" as const, label: "Layers" },
   { id: "state" as const, label: "State" },
   { id: "actions" as const, label: "Actions" },
+  { id: "storage" as const, label: "Storage" },
 ];
 
 const activeEl = useActiveElement();
@@ -190,6 +194,8 @@ function handleSelect(id: string): void {
       <StateTab v-if="activeTab === 'state'" />
 
       <ActionsTab v-if="activeTab === 'actions'" :registry="ctx.actionRegistry" />
+
+      <StorageTab v-if="activeTab === 'storage'" />
     </div>
 
     <!-- Status bar -->

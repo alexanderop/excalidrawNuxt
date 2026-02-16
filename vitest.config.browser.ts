@@ -7,6 +7,8 @@ import { playwright } from "@vitest/browser-playwright";
 import { canvasDrag } from "./app/__test-utils__/commands/canvasDrag";
 import { canvasClick } from "./app/__test-utils__/commands/canvasClick";
 import { canvasDblClick } from "./app/__test-utils__/commands/canvasDblClick";
+import { canvasRightClick } from "./app/__test-utils__/commands/canvasRightClick";
+import { canvasWheel } from "./app/__test-utils__/commands/canvasWheel";
 import { showGridOverlay } from "./app/__test-utils__/commands/showGridOverlay";
 
 const require = createRequire(import.meta.url);
@@ -43,10 +45,28 @@ export default defineConfig({
       enabled: true,
       provider: playwright(),
       instances: [{ browser: "chromium" }],
-      commands: { canvasDrag, canvasClick, canvasDblClick, showGridOverlay },
+      commands: {
+        canvasDrag,
+        canvasClick,
+        canvasDblClick,
+        canvasRightClick,
+        canvasWheel,
+        showGridOverlay,
+      },
     },
     globals: true,
     setupFiles: ["app/__test-utils__/setup-browser.ts"],
+    coverage: {
+      provider: "v8",
+      include: ["packages/core/src/**/*.ts", "app/**/*.{ts,vue}"],
+      exclude: ["**/*.test.ts", "**/__test-utils__/**", "**/types.ts"],
+      reporter: ["text", "html", "json-summary"],
+      reportsDirectory: "./coverage/browser",
+      reportOnFailure: true,
+      thresholds: {
+        lines: 65,
+      },
+    },
   },
   resolve: {
     conditions: ["development"],

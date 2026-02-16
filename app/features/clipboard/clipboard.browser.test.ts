@@ -15,15 +15,9 @@ describe("clipboard (Cmd+C / Cmd+V)", () => {
     page.selection.expectSelected(rect.id);
     page.scene.expectElementCount(1);
 
-    // User presses Cmd+C to copy
-    await page.keyboard.withModifierKeys({ ctrlKey: true }, async () => {
-      await page.keyboard.press("c");
-    });
-
-    // User presses Cmd+V to paste
-    await page.keyboard.withModifierKeys({ ctrlKey: true }, async () => {
-      await page.keyboard.press("v");
-    });
+    // User presses Cmd+C to copy, Cmd+V to paste
+    await page.keyboard.copy();
+    await page.keyboard.paste();
     await waitForPaint();
 
     // A new element should appear (the paste)
@@ -57,12 +51,8 @@ describe("clipboard (Cmd+C / Cmd+V)", () => {
     page.selection.expectSelected(r1.id, r2.id);
 
     // User presses Cmd+C then Cmd+V
-    await page.keyboard.withModifierKeys({ ctrlKey: true }, async () => {
-      await page.keyboard.press("c");
-    });
-    await page.keyboard.withModifierKeys({ ctrlKey: true }, async () => {
-      await page.keyboard.press("v");
-    });
+    await page.keyboard.copy();
+    await page.keyboard.paste();
     await waitForPaint();
 
     // Should now have 4 elements (2 originals + 2 pasted)
@@ -82,9 +72,7 @@ describe("clipboard (Cmd+C / Cmd+V)", () => {
     page.scene.expectElementCount(1);
 
     // User presses Cmd+X to cut
-    await page.keyboard.withModifierKeys({ ctrlKey: true }, async () => {
-      await page.keyboard.press("x");
-    });
+    await page.keyboard.cut();
     await waitForPaint();
 
     // Original element should be removed (or marked deleted)
@@ -92,9 +80,7 @@ describe("clipboard (Cmd+C / Cmd+V)", () => {
     expect(visibleElements).toHaveLength(0);
 
     // User presses Cmd+V to paste
-    await page.keyboard.withModifierKeys({ ctrlKey: true }, async () => {
-      await page.keyboard.press("v");
-    });
+    await page.keyboard.paste();
     await waitForPaint();
 
     // Element should reappear
@@ -144,9 +130,7 @@ describe("clipboard (Cmd+C / Cmd+V)", () => {
     await waitForPaint();
 
     // User presses Cmd+V without having copied anything
-    await page.keyboard.withModifierKeys({ ctrlKey: true }, async () => {
-      await page.keyboard.press("v");
-    });
+    await page.keyboard.paste();
     await waitForPaint();
 
     // Nothing should change

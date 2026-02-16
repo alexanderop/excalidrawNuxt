@@ -221,6 +221,22 @@ useEventListener(document, "paste", (e: ClipboardEvent) => {
   history.recordAction(handlePaste);
 });
 
+// History keyboard shortcuts (Ctrl/Cmd+Z for undo, Ctrl/Cmd+Shift+Z for redo)
+useEventListener(document, "keydown", (e: KeyboardEvent) => {
+  if (isTypingElement(activeEl.value)) return;
+  if (!e.metaKey && !e.ctrlKey) return;
+  if (e.altKey) return;
+
+  if (e.code === "KeyZ") {
+    e.preventDefault();
+    if (e.shiftKey) {
+      history.redo();
+    } else {
+      history.undo();
+    }
+  }
+});
+
 // Panning (only needs canvasRef, panBy, zoomBy, activeTool — all available early)
 const { panningCursor, spaceHeld, isPanning } = usePanning({
   canvasRef: interactiveCanvasRef,

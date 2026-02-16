@@ -1,3 +1,4 @@
+/* v8 ignore start -- Elbow shape generation; covered by core unit tests (shape.unit.test.ts) */
 /**
  * Elbow arrow SVG path generation with rounded corners.
  *

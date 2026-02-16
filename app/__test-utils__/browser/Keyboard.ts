@@ -19,6 +19,22 @@ export class Keyboard {
     for (const key of keys.toReversed()) await userEvent.keyboard(key.up);
   }
 
+  async paste(): Promise<void> {
+    // The DrawVue Ctrl+V keydown handler is a no-op (it lets the native paste
+    // event do the work). So we skip the keyboard shortcut entirely and just
+    // dispatch a ClipboardEvent. This avoids double-paste in environments where
+    // the keyboard shortcut also triggers a native paste event (CI headless).
+    document.dispatchEvent(new ClipboardEvent("paste", { bubbles: true, cancelable: true }));
+  }
+
+  async copy(): Promise<void> {
+    await userEvent.keyboard("{Control>}c{/Control}");
+  }
+
+  async cut(): Promise<void> {
+    await userEvent.keyboard("{Control>}x{/Control}");
+  }
+
   async undo(): Promise<void> {
     await userEvent.keyboard("{Control>}z{/Control}");
   }

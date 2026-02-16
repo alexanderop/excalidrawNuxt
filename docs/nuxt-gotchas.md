@@ -96,3 +96,34 @@ Tailwind v4 uses CSS-first configuration — no `tailwind.config.js`:
 ```
 
 Colors become utilities automatically: `bg-base`, `text-accent`, etc.
+
+## DrawVue Container Height Chain
+
+The `<DrawVue>` component uses `height: 100%` + `overflow: hidden` on its container. If you wrap it in additional `<div>` elements, **every ancestor must also have `height: 100%`** or the container collapses to 0px and clips all content invisibly.
+
+**Symptoms:**
+
+- Canvas background renders (dark theme visible)
+- Toolbar is in DOM with correct `z-index`, `position: absolute`, and valid bounding rect
+- No console errors
+- UI elements invisible despite correct positioning
+
+**The trap:** Elements appear correctly positioned in DevTools but are clipped by `overflow: hidden` on a 0-height ancestor.
+
+```vue
+<!-- ❌ Breaks the height chain — DrawVue collapses to 0px -->
+<template>
+  <div :style="{ pointerEvents: isReady ? 'auto' : 'none' }">
+    <DrawVue>...</DrawVue>
+  </div>
+</template>
+
+<!-- ✅ Preserve the height chain with h-full -->
+<template>
+  <div class="h-full" :style="{ pointerEvents: isReady ? 'auto' : 'none' }">
+    <DrawVue>...</DrawVue>
+  </div>
+</template>
+```
+
+**Debug tip:** If DrawVue UI disappears after adding a wrapper, check `getComputedStyle(container).height` — if it's `0px`, a height chain break is the cause.

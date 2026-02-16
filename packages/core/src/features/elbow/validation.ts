@@ -1,3 +1,4 @@
+/* v8 ignore start -- Elbow validation utilities; covered by core unit tests (validation.unit.test.ts) */
 /**
  * Validation and post-processing utilities for elbow arrow points.
  *
