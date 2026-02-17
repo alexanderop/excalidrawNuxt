@@ -35,7 +35,13 @@ import { useHistory } from "../features/history/useHistory";
 import { useKeyboardShortcuts } from "../shared/useKeyboardShortcuts";
 import { KEY_TO_TOOL } from "../features/tools/useTool";
 import { isTypingElement } from "../shared/isTypingElement";
-import { isUrl, isImageUrl } from "../features/clipboard/urlUtils";
+import {
+  isUrl,
+  isImageUrl,
+  isYouTubeUrl,
+  extractYouTubeVideoId,
+} from "../features/clipboard/urlUtils";
+import { fetchYouTubeOEmbed, createYouTubePreviewImage } from "../features/clipboard/youtubeUtils";
 import { createElement } from "../features/elements/createElement";
 import { measureText, getFontString } from "../features/rendering/textMeasurement";
 import {
@@ -43,6 +49,9 @@ import {
   DEFAULT_FONT_FAMILY,
   DEFAULT_LINE_HEIGHT,
 } from "../features/elements/constants";
+import { toFileId } from "../features/image/types";
+import { generateId } from "../shared/random";
+import { DEFAULT_IMAGE_MAX_DIMENSION } from "../features/image/constants";
 import type { ActionDefinition } from "../shared/useActionRegistry";
 import type { ExcalidrawElement } from "../features/elements/types";
 import { isArrowElement } from "../features/elements/types";
@@ -230,6 +239,13 @@ useEventListener(document, "paste", (e: ClipboardEvent) => {
   if (text && isUrl(text)) {
     // Image URLs are handled by useImageInteraction
     if (isImageUrl(text)) return;
+
+    // YouTube URLs: create an image element with video thumbnail preview
+    if (isYouTubeUrl(text)) {
+      e.preventDefault();
+      createYouTubeLinkPreview(text);
+      return;
+    }
 
     // Non-image URL: create a text element with the URL as a clickable link
     e.preventDefault();
@@ -561,6 +577,61 @@ function createLinkElement(url: string): void {
   select(el.id);
   dirty.markStaticDirty();
   dirty.markInteractiveDirty();
+}
+
+async function createYouTubeLinkPreview(url: string): Promise<void> {
+  const videoId = extractYouTubeVideoId(url);
+  if (!videoId) {
+    // Fallback to plain link element
+    history.recordAction(() => createLinkElement(url));
+    return;
+  }
+
+  // Fetch title via oEmbed (best-effort — title may be null)
+  const oembed = await fetchYouTubeOEmbed(url);
+  const title = oembed?.title ?? null;
+
+  // Create composited preview image (thumbnail + play button + title)
+  const result = await createYouTubePreviewImage(videoId, title);
+  if (!result) {
+    // Fallback to plain link element if image creation fails
+    history.recordAction(() => createLinkElement(url));
+    return;
+  }
+
+  history.recordAction(() => {
+    const fileId = toFileId(generateId());
+    ctx.imageCache.addImage(fileId, result.image, "image/jpeg");
+
+    // Scale to fit within max dimension while preserving aspect ratio
+    const maxDim = DEFAULT_IMAGE_MAX_DIMENSION;
+    let fitW = result.width;
+    let fitH = result.height;
+    if (fitW > maxDim || fitH > maxDim) {
+      const ratio = fitW / fitH;
+      if (fitW >= fitH) {
+        fitW = maxDim;
+        fitH = maxDim / ratio;
+      } else {
+        fitH = maxDim;
+        fitW = maxDim * ratio;
+      }
+    }
+
+    const center = toScene(width.value / 2 / zoom.value, height.value / 2 / zoom.value);
+    const el = createElement("image", center[0] - fitW / 2, center[1] - fitH / 2, {
+      width: fitW,
+      height: fitH,
+      fileId,
+      status: "saved" as const,
+      link: url,
+    });
+
+    addElement(el);
+    select(el.id);
+    dirty.markStaticDirty();
+    dirty.markInteractiveDirty();
+  });
 }
 
 function handleDuplicate(): void {

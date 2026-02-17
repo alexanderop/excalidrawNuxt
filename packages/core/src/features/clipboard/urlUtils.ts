@@ -1,5 +1,7 @@
 import { tryCatchSync } from "../../utils/tryCatch";
 
+export { isYouTubeUrl, extractYouTubeVideoId } from "./youtubeUtils";
+
 const IMAGE_EXTENSION_RE = /\.(png|jpe?g|gif|webp|svg|bmp|ico|tiff?)(\?.*)?$/i;
 
 /**
