@@ -243,7 +243,10 @@ useEventListener(document, "paste", (e: ClipboardEvent) => {
     // YouTube URLs: create an image element with video thumbnail preview
     if (isYouTubeUrl(text)) {
       e.preventDefault();
-      createYouTubeLinkPreview(text);
+      createYouTubeLinkPreview(text).catch(() => {
+        // Fallback to plain link if anything goes wrong asynchronously
+        history.recordAction(() => createLinkElement(text));
+      });
       return;
     }
 
