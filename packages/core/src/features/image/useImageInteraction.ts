@@ -7,7 +7,13 @@ import type { GlobalPoint } from "../../shared/math";
 import type { ImageCacheSlice } from "../../context";
 import { createElement } from "../elements/createElement";
 import { useImageUpload } from "./useImageUpload";
-import { DEFAULT_IMAGE_MAX_DIMENSION, SUPPORTED_IMAGE_EXTENSIONS } from "./constants";
+import {
+  DEFAULT_IMAGE_MAX_DIMENSION,
+  SUPPORTED_IMAGE_EXTENSIONS,
+  SUPPORTED_IMAGE_TYPES,
+} from "./constants";
+import { isImageUrl } from "../clipboard/urlUtils";
+import { tryCatch } from "../../utils/tryCatch";
 
 interface UseImageInteractionOptions {
   canvasRef: Ref<HTMLCanvasElement | null>;
@@ -28,6 +34,42 @@ interface UseImageInteractionOptions {
 
 interface UseImageInteractionReturn {
   isOverDropZone: Ref<boolean>;
+}
+
+function extractImageFiles(items: DataTransferItemList): File[] {
+  const files: File[] = [];
+  for (const item of items) {
+    if (item.type.startsWith("image/")) {
+      const file = item.getAsFile();
+      if (file) files.push(file);
+    }
+  }
+  return files;
+}
+
+function isImageContentType(contentType: string): boolean {
+  return (
+    contentType.startsWith("image/") ||
+    (SUPPORTED_IMAGE_TYPES as readonly string[]).some((t) => contentType === t)
+  );
+}
+
+/**
+ * Fetch a remote image URL and return it as a File.
+ * Returns null when the fetch fails or the response is not an image.
+ */
+async function fetchImageAsFile(url: string): Promise<File | null> {
+  const [fetchError, res] = await tryCatch(fetch(url));
+  if (fetchError || !res.ok) return null;
+
+  const contentType = res.headers.get("content-type")?.split(";")[0]?.trim() ?? "";
+  if (!isImageContentType(contentType)) return null;
+
+  const [blobError, blob] = await tryCatch(res.blob());
+  if (blobError) return null;
+
+  const ext = contentType.split("/")[1] ?? "png";
+  return new File([blob], `pasted-image.${ext}`, { type: contentType });
 }
 
 function computeFitDimensions(
@@ -124,6 +166,14 @@ export function useImageInteraction(
     setTool("selection");
   });
 
+  async function handleImageUrlPaste(url: string): Promise<void> {
+    const file = await fetchImageAsFile(url);
+    if (file) {
+      const center = viewportCenter();
+      await createImageElements([file], center[0], center[1]);
+    }
+  }
+
   // --- B) Drop zone & C) Paste handler ---
   // Guards needed: composable may run in Node test environment where document is undefined
   if (typeof document !== "undefined") {
@@ -149,19 +199,21 @@ export function useImageInteraction(
       const items = e.clipboardData?.items;
       if (!items) return;
 
-      const imageFiles: File[] = [];
-      for (const item of items) {
-        if (item.type.startsWith("image/")) {
-          const file = item.getAsFile();
-          if (file) imageFiles.push(file);
-        }
+      // 1. Handle image files from clipboard (screenshots, copied images)
+      const imageFiles = extractImageFiles(items);
+      if (imageFiles.length > 0) {
+        e.preventDefault();
+        const center = viewportCenter();
+        await createImageElements(imageFiles, center[0], center[1]);
+        return;
       }
 
-      if (imageFiles.length === 0) return;
-      e.preventDefault();
-
-      const center = viewportCenter();
-      await createImageElements(imageFiles, center[0], center[1]);
+      // 2. Handle image URLs pasted as text
+      const text = e.clipboardData?.getData("text/plain")?.trim();
+      if (text && isImageUrl(text)) {
+        e.preventDefault();
+        await handleImageUrlPaste(text);
+      }
     });
   }
 
