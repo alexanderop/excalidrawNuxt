@@ -52,6 +52,7 @@ import {
 import { toFileId } from "../features/image/types";
 import { generateId } from "../shared/random";
 import { DEFAULT_IMAGE_MAX_DIMENSION } from "../features/image/constants";
+import { getElementBounds } from "../features/selection/bounds";
 import type { ActionDefinition } from "../shared/useActionRegistry";
 import type { ExcalidrawElement } from "../features/elements/types";
 import { isArrowElement } from "../features/elements/types";
@@ -74,7 +75,7 @@ const textEditorContainerRef = useTemplateRef<HTMLDivElement>("textEditorContain
 
 // Viewport & size
 const { width, height } = useElementSize(containerRef);
-const { scrollX, scrollY, zoom, zoomTo, zoomBy, panBy, toScene } = useViewport();
+const { scrollX, scrollY, zoom, zoomTo, zoomBy, panBy, toScene, toScreen } = useViewport();
 
 const {
   selectedIds,
@@ -467,7 +468,7 @@ const { pendingErasureIds, eraserTrailPoints, cancelEraserIfActive } = useEraser
   recordAction: history.recordAction,
 });
 
-const { selectionBox, cursorStyle, hoveredMidpoint } = useSelectionInteraction({
+const { selectionBox, cursorStyle, hoveredMidpoint, hoveredElement } = useSelectionInteraction({
   ...shared,
   activeTool,
   spaceHeld,
@@ -867,6 +868,29 @@ function handlePropertyChange(): void {
   dirty.markStaticDirty();
 }
 
+// ── Link badge (shown on elements with a `link` property) ───────────
+const LINK_BADGE_SIZE = 28;
+const LINK_BADGE_GAP = 8;
+
+const linkBadge = computed(() => {
+  // Show for hovered element with link, or single-selected element with link
+  const el = hoveredElement.value?.link
+    ? hoveredElement.value
+    : selectedElements.value.length === 1 && selectedElements.value[0]?.link
+      ? selectedElements.value[0]
+      : null;
+  if (!el) return null;
+
+  const [, y1, x2] = getElementBounds(el);
+  const screenPos = toScreen(x2, y1);
+
+  return {
+    url: el.link as string,
+    x: screenPos[0] + LINK_BADGE_GAP,
+    y: screenPos[1] - LINK_BADGE_SIZE - LINK_BADGE_GAP,
+  };
+});
+
 const CROSSHAIR_TOOLS = new Set<ToolType>(["text", "code", "image", "freedraw", "eraser"]);
 
 const combinedCursor = computed(() => {
@@ -916,6 +940,33 @@ defineExpose({
       @contextmenu="handleContextMenu"
     />
     <div ref="textEditorContainer" class="drawvue-text-editor" />
+
+    <!-- Link badge: opens element hyperlink in new tab -->
+    <a
+      v-if="linkBadge"
+      :href="linkBadge.url"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="drawvue-link-badge"
+      :style="{ left: linkBadge.x + 'px', top: linkBadge.y + 'px' }"
+      :title="linkBadge.url"
+      @pointerdown.stop
+    >
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+        <polyline points="15 3 21 3 21 9" />
+        <line x1="10" y1="14" x2="21" y2="3" />
+      </svg>
+    </a>
 
     <slot name="toolbar" :active-tool="activeTool" :set-tool="setTool" />
 
@@ -972,5 +1023,29 @@ defineExpose({
   inset: 0;
   z-index: 3;
   pointer-events: none;
+}
+
+.drawvue-link-badge {
+  position: absolute;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  color: #4a90d9;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.drawvue-link-badge:hover {
+  background: #4a90d9;
+  color: #ffffff;
 }
 </style>

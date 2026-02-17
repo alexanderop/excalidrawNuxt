@@ -52,6 +52,7 @@ interface UseSelectionInteractionReturn {
   selectionBox: ShallowRef<Box | null>;
   cursorStyle: ShallowRef<string>;
   hoveredMidpoint: ShallowRef<{ elementId: string; segmentIndex: number } | null>;
+  hoveredElement: ShallowRef<ExcalidrawElement | null>;
 }
 
 interface UseSelectionInteractionOptions {
@@ -138,6 +139,7 @@ export function useSelectionInteraction(
   const selectionBox = options.selectionBox ?? shallowRef<Box | null>(null);
   const cursorStyle = shallowRef("default");
   const hoveredMidpoint = shallowRef<{ elementId: string; segmentIndex: number } | null>(null);
+  const hoveredElement = shallowRef<ExcalidrawElement | null>(null);
 
   function tryStartMidpointDrag(scenePoint: GlobalPoint, e: PointerEvent): boolean {
     const selected = selectedElements();
@@ -266,6 +268,8 @@ export function useSelectionInteraction(
 
   function handlePointerDown(e: PointerEvent): void {
     if (shouldIgnorePointerDown(e)) return;
+
+    hoveredElement.value = null;
 
     const scenePoint = toScene(e.offsetX, e.offsetY);
 
@@ -478,9 +482,15 @@ export function useSelectionInteraction(
   }
 
   function updateCursor(scenePoint: GlobalPoint): void {
-    if (activeTool.value !== "selection") return;
+    if (activeTool.value !== "selection") {
+      hoveredElement.value = null;
+      return;
+    }
 
     const selected = selectedElements();
+
+    // Track hovered element for link badge
+    hoveredElement.value = getElementAtPosition(scenePoint, elements.value, zoom.value);
 
     const transformCursor = getCursorForTransformHandle(scenePoint, selected);
     if (transformCursor) {
@@ -627,6 +637,7 @@ export function useSelectionInteraction(
     selectionBox,
     cursorStyle,
     hoveredMidpoint,
+    hoveredElement,
   };
 }
 
