@@ -35,6 +35,14 @@ import { useHistory } from "../features/history/useHistory";
 import { useKeyboardShortcuts } from "../shared/useKeyboardShortcuts";
 import { KEY_TO_TOOL } from "../features/tools/useTool";
 import { isTypingElement } from "../shared/isTypingElement";
+import { isUrl, isImageUrl } from "../features/clipboard/urlUtils";
+import { createElement } from "../features/elements/createElement";
+import { measureText, getFontString } from "../features/rendering/textMeasurement";
+import {
+  DEFAULT_FONT_SIZE,
+  DEFAULT_FONT_FAMILY,
+  DEFAULT_LINE_HEIGHT,
+} from "../features/elements/constants";
 import type { ActionDefinition } from "../shared/useActionRegistry";
 import type { ExcalidrawElement } from "../features/elements/types";
 import { isArrowElement } from "../features/elements/types";
@@ -216,6 +224,18 @@ useEventListener(document, "paste", (e: ClipboardEvent) => {
     item.type.startsWith("image/"),
   );
   if (hasImage) return; // let useImageInteraction handle it
+
+  // Check for URL text in clipboard
+  const text = e.clipboardData?.getData("text/plain")?.trim();
+  if (text && isUrl(text)) {
+    // Image URLs are handled by useImageInteraction
+    if (isImageUrl(text)) return;
+
+    // Non-image URL: create a text element with the URL as a clickable link
+    e.preventDefault();
+    history.recordAction(() => createLinkElement(text));
+    return;
+  }
 
   e.preventDefault();
   history.recordAction(handlePaste);
@@ -522,6 +542,25 @@ function handlePaste(): void {
     markStaticDirty: dirty.markStaticDirty,
     markInteractiveDirty: dirty.markInteractiveDirty,
   });
+}
+
+function createLinkElement(url: string): void {
+  const center = toScene(width.value / 2 / zoom.value, height.value / 2 / zoom.value);
+  const font = getFontString(DEFAULT_FONT_SIZE, DEFAULT_FONT_FAMILY);
+  const { width: textWidth, height: textHeight } = measureText(url, font, DEFAULT_LINE_HEIGHT);
+
+  const el = createElement("text", center[0] - textWidth / 2, center[1] - textHeight / 2, {
+    text: url,
+    originalText: url,
+    width: textWidth,
+    height: textHeight,
+    link: url,
+  });
+
+  addElement(el);
+  select(el.id);
+  dirty.markStaticDirty();
+  dirty.markInteractiveDirty();
 }
 
 function handleDuplicate(): void {
