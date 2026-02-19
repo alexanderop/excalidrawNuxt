@@ -1,5 +1,9 @@
-export type { ImageCacheEntry } from "./types";
+export type { ImageCacheEntry, BinaryFileData, BinaryFiles } from "./types";
+export type { ImageMimeType } from "./constants";
 export { toFileId } from "./types";
+export { loadImage } from "./loadImage";
+export { imageToDataURL } from "./imageToDataURL";
+export { serializeFiles, restoreImageCache } from "./serializeFiles";
 export { renderImageElement } from "./renderImageElement";
 export { useImageCache, createImageCache } from "./useImageCache";
 export type { UseImageCacheReturn } from "./useImageCache";

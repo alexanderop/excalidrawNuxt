@@ -1,4 +1,4 @@
-import type { ExcalidrawElement } from "@drawvue/core";
+import type { ExcalidrawElement, BinaryFiles } from "@drawvue/core";
 import type { ComputedRef, InjectionKey, Ref, ShallowRef } from "vue";
 
 // ---------------------------------------------------------------------------
@@ -45,6 +45,10 @@ export type MigrationMap = {
 export type SceneStoreSchema = {
   "scene:current": PersistedScene;
   "scene:backup": PersistedScene;
+};
+
+export type FilesStoreSchema = {
+  "files:current": BinaryFiles;
 };
 
 // ---------------------------------------------------------------------------

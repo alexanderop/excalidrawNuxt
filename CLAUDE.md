@@ -4,17 +4,19 @@ DrawVue is a collaborative drawing app built as a monorepo: a reusable Vue drawi
 
 ## Commands
 
+**All commands must be run from the workspace root** (`/Users/alexanderopalic/Projects/Nuxt/excalidrawNuxt`). Running `pnpm lint` etc. from a subdirectory like `packages/core/` will fail with "Command not found" because the scripts live in the root `package.json`.
+
 ```
-pnpm dev           # Start Nuxt dev server
-pnpm build         # Production build
-pnpm preview       # Preview production build
-pnpm lint          # Run oxlint then eslint (run-s lint:*)
-pnpm typecheck     # Type-check with nuxi
-pnpm test          # Run all tests (vitest run --bail=1)
-pnpm test:unit     # Unit tests only (vitest --project unit)
-pnpm test:browser  # Browser tests only (vitest --project browser)
-pnpm core:build    # Build @drawvue/core library (unbuild)
-pnpm core:dev      # Dev mode for @drawvue/core (unbuild --stub)
+pnpm run lint          # Run oxlint then eslint (run-s lint:*)
+pnpm run typecheck     # Type-check with nuxi
+pnpm run test          # Run all tests (vitest run --bail=1)
+pnpm run test:unit     # Unit tests only (vitest --project unit)
+pnpm run test:browser  # Browser tests only (vitest --project browser)
+pnpm run dev           # Start Nuxt dev server
+pnpm run build         # Production build
+pnpm run preview       # Preview production build
+pnpm run core:build    # Build @drawvue/core library (unbuild)
+pnpm run core:dev      # Dev mode for @drawvue/core (unbuild --stub)
 ```
 
 ## Stack

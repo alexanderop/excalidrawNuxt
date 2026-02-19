@@ -10,3 +10,4 @@ export { waitForCanvasReady, waitForPaint } from "./waiters";
 export { CanvasPage } from "./pageObjects";
 export { TestDrawVue } from "./TestDrawVue";
 export type { LiveElement } from "./TestDrawVue";
+export { createTestImage, addTestImage } from "./image";

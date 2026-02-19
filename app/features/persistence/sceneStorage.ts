@@ -1,6 +1,6 @@
-import type { ExcalidrawElement, Result } from "@drawvue/core";
+import type { ExcalidrawElement, Result, BinaryFiles } from "@drawvue/core";
 import { getNonDeletedElements, hashElementsVersion, tryCatchSync } from "@drawvue/core";
-import { getScene, setScene, isQuotaExceeded } from "./stores";
+import { getScene, setScene, isQuotaExceeded, getFiles, setFiles, delFiles } from "./stores";
 import type {
   CurrentPersistedScene,
   EmergencyBackup,
@@ -295,6 +295,40 @@ function readEmergencyMetadata(): StoreMetadata["emergency"] | null {
     dataSize: new Blob([lsRaw]).size,
   };
 }
+
+// ---------------------------------------------------------------------------
+// File persistence — save / load / clear binary files
+// ---------------------------------------------------------------------------
+
+export async function saveFiles(files: BinaryFiles): Promise<boolean> {
+  if (Object.keys(files).length === 0) return true;
+
+  const [writeError] = await setFiles("files:current", files);
+  if (writeError) {
+    console.error("[persistence] Failed to save files:", writeError.message);
+    return false;
+  }
+  return true;
+}
+
+export async function loadFiles(): Promise<Result<BinaryFiles>> {
+  const [error, data] = await getFiles("files:current");
+  if (error) {
+    return [error, null];
+  }
+  return [null, data ?? ({} as BinaryFiles)];
+}
+
+export async function clearFiles(): Promise<void> {
+  const [error] = await delFiles("files:current");
+  if (error) {
+    console.error("[persistence] Failed to clear files:", error.message);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Read store metadata (for dev inspector)
+// ---------------------------------------------------------------------------
 
 export async function readStoreMetadata(): Promise<StoreMetadata> {
   const current = await readSceneMetadata("scene:current");

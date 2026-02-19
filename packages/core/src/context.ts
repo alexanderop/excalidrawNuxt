@@ -3,7 +3,8 @@ import type { ShallowRef, Ref, ComputedRef } from "vue";
 import type { ExcalidrawElement, ElementsMap } from "./features/elements/types";
 import type { ToolType } from "./features/tools/types";
 import type { ActionRegistry, ActionId } from "./shared/useActionRegistry";
-import type { FileId, ImageCacheEntry } from "./features/image/types";
+import type { FileId, ImageCacheEntry, ImageMimeType } from "./features/image/types";
+import type { Result } from "./utils/tryCatch";
 import type { FillStyle, StrokeStyle, TextAlign, Arrowhead } from "./features/elements/types";
 import type { ArrowSubtype, Roundness } from "./features/properties/types";
 import { createElements } from "./features/elements/useElements";
@@ -50,7 +51,8 @@ export interface ClipboardSlice {
 
 export interface ImageCacheSlice {
   cache: ShallowRef<Map<FileId, ImageCacheEntry>>;
-  addImage: (id: FileId, image: HTMLImageElement, mimeType: string) => void;
+  addImage: (id: FileId, entry: ImageCacheEntry) => void;
+  registerImage: (image: HTMLImageElement, mimeType: ImageMimeType) => Result<FileId>;
   getImage: (id: FileId) => HTMLImageElement | undefined;
   getEntry: (id: FileId) => ImageCacheEntry | undefined;
   hasImage: (id: FileId) => boolean;

@@ -1,6 +1,5 @@
 import { nextTick } from "vue";
-import { withDrawVue } from "@drawvue/core/test-utils";
-import { createTestElement } from "@drawvue/core/test-utils";
+import { withDrawVue, createTestElement } from "@drawvue/core/test-utils";
 import { usePersistence } from "./usePersistence";
 import type { SaveStatus } from "./types";
 
@@ -16,6 +15,9 @@ vi.mock("./stores", () => ({
 vi.mock("./sceneStorage", () => ({
   saveScene: vi.fn(),
   loadScene: vi.fn(),
+  saveFiles: vi.fn().mockResolvedValue(true),
+  loadFiles: vi.fn().mockResolvedValue([null, {}]),
+  clearFiles: vi.fn().mockResolvedValue(undefined),
   emergencySaveToLocalStorage: vi.fn(),
   readStoreMetadata: vi.fn().mockResolvedValue({ current: null, backup: null, emergency: null }),
 }));
@@ -47,9 +49,11 @@ vi.mock("@vueuse/core", async (importOriginal) => {
 const { probeIndexedDB, delScene } = await import("./stores");
 const mockedProbe = vi.mocked(probeIndexedDB);
 const mockedDelScene = vi.mocked(delScene);
-const { saveScene, loadScene, emergencySaveToLocalStorage } = await import("./sceneStorage");
+const { saveScene, loadScene, clearFiles, emergencySaveToLocalStorage } =
+  await import("./sceneStorage");
 const mockedSaveScene = vi.mocked(saveScene);
 const mockedLoadScene = vi.mocked(loadScene);
+const mockedClearFiles = vi.mocked(clearFiles);
 const mockedEmergencySave = vi.mocked(emergencySaveToLocalStorage);
 
 // ---------------------------------------------------------------------------
@@ -346,6 +350,7 @@ describe("usePersistence", () => {
 
       expect(mockedDelScene).toHaveBeenCalledWith("scene:current");
       expect(mockedDelScene).toHaveBeenCalledWith("scene:backup");
+      expect(mockedClearFiles).toHaveBeenCalled();
       expect(removeItemMock).toHaveBeenCalledWith("drawvue-emergency-backup");
       expect(ctx.diagnostics.lastSavedHash.value).toBe(0);
     });

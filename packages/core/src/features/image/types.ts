@@ -4,17 +4,30 @@ import type {
   InitializedExcalidrawImageElement,
   FileId,
 } from "@excalidraw/element/types";
+import type { ImageMimeType } from "./constants";
 
 export type {
   FileId,
   ExcalidrawImageElement,
   InitializedExcalidrawImageElement,
 } from "@excalidraw/element/types";
+export type { ImageMimeType } from "./constants";
 
 export interface ImageCacheEntry {
   image: HTMLImageElement;
-  mimeType: string;
+  mimeType: ImageMimeType;
+  dataURL: string;
+  created: number;
 }
+
+export interface BinaryFileData {
+  id: FileId;
+  dataURL: string;
+  mimeType: string;
+  created: number;
+}
+
+export type BinaryFiles = Record<FileId, BinaryFileData>;
 
 export function isImageElement(el: ExcalidrawElement | null): el is ExcalidrawImageElement {
   return el !== null && el.type === "image";

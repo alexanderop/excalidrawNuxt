@@ -12,5 +12,7 @@ export const MAX_IMAGE_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
 export const DEFAULT_IMAGE_MAX_DIMENSION = 400;
 
+export type ImageMimeType = (typeof SUPPORTED_IMAGE_TYPES)[number];
+
 export const IMAGE_PLACEHOLDER_COLOR = "#868e96";
 export const IMAGE_PLACEHOLDER_ICON_SIZE = 48;

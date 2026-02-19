@@ -1,46 +1,13 @@
-import { onTestFinished } from "vitest";
 import { commands, userEvent } from "vitest/browser";
-import { CanvasPage, API, waitForPaint } from "~/__test-utils__/browser";
-import { createElement } from "@drawvue/core";
-import type { FileId } from "@drawvue/core";
+import { CanvasPage, API, waitForPaint, addTestImage } from "~/__test-utils__/browser";
+import { createElement, toFileId } from "@drawvue/core";
 
 const SEL = '[data-testid="interactive-canvas"]';
-
-/** Create a solid-colored test image as an HTMLImageElement. */
-function createTestImage(width: number, height: number, color: string): Promise<HTMLImageElement> {
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Failed to get 2d context for test image");
-  ctx.fillStyle = color;
-  ctx.fillRect(0, 0, width, height);
-
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.addEventListener("load", () => resolve(img));
-    img.addEventListener("error", reject);
-    img.src = canvas.toDataURL("image/png");
-  });
-}
-
-/** Populate the image cache with a test image; auto-resets on test finish. */
-async function addTestImage(
-  fileId: FileId,
-  width: number,
-  height: number,
-  color: string,
-): Promise<void> {
-  const { addImage, $reset } = API.h.imageCache;
-  const img = await createTestImage(width, height, color);
-  addImage(fileId, img, "image/png");
-  onTestFinished(() => $reset());
-}
 
 /** Natural dimensions of the test image (twice the element size). */
 const NATURAL_W = 400;
 const NATURAL_H = 200;
-const FILE_ID = "crop-test-file" as FileId;
+const FILE_ID = toFileId("crop-test-file");
 
 /** Create an image element, add to scene, select it, and return it. */
 async function setupImageElement(page: Awaited<ReturnType<typeof CanvasPage.create>>) {

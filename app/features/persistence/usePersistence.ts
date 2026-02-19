@@ -1,10 +1,20 @@
 import { ref, shallowRef, computed, watch, onScopeDispose } from "vue";
 import { useDebounceFn, useEventListener, useIntervalFn } from "@vueuse/core";
-import { useDrawVue, hashElementsVersion, getNonDeletedElements, tryCatch } from "@drawvue/core";
+import {
+  useDrawVue,
+  hashElementsVersion,
+  getNonDeletedElements,
+  tryCatch,
+  serializeFiles,
+  restoreImageCache,
+} from "@drawvue/core";
 import { probeIndexedDB, delScene } from "./stores";
 import {
   saveScene,
   loadScene,
+  saveFiles,
+  loadFiles,
+  clearFiles,
   emergencySaveToLocalStorage,
   readStoreMetadata,
 } from "./sceneStorage";
@@ -17,7 +27,7 @@ import type {
 import { EMERGENCY_BACKUP_KEY } from "./types";
 
 export function usePersistence(): UsePersistenceReturn {
-  const { elements, dirty } = useDrawVue();
+  const { elements, dirty, imageCache } = useDrawVue();
 
   // ── Reactive state ──────────────────────────────────────────────────
   const isRestored = ref(false);
@@ -77,7 +87,10 @@ export function usePersistence(): UsePersistenceReturn {
     saveStatus.value = "saving";
     logEvent("debounce", `fired — version changed (${lastSavedHash.value} → ${currentHash})`);
 
-    const result = await saveScene(elements.elements.value);
+    const [result] = await Promise.all([
+      saveScene(elements.elements.value),
+      saveFiles(serializeFiles(imageCache.cache.value, elements.elements.value)),
+    ]);
 
     if (!result.success) {
       saveStatus.value = "error";
@@ -125,6 +138,7 @@ export function usePersistence(): UsePersistenceReturn {
   async function clearStorage(): Promise<void> {
     await delScene("scene:current");
     await delScene("scene:backup");
+    await clearFiles();
     localStorage.removeItem(EMERGENCY_BACKUP_KEY);
     lastSavedHash.value = 0;
     logEvent("clear", "all persisted data cleared (IDB + localStorage)");
@@ -140,6 +154,13 @@ export function usePersistence(): UsePersistenceReturn {
     },
   );
 
+  // ── Watch image cache for additions (new uploads, bg removal results) ──
+  watch(imageCache.cache, () => {
+    if (!watchPaused) {
+      requestSave();
+    }
+  });
+
   // ── Poll for in-place mutations (drag, resize, rotate, style) ──────
   // The watcher only fires when the ShallowRef array reference changes.
   // mutateElement() edits in place, so poll versionNonce hashes every 2s.
@@ -150,6 +171,24 @@ export function usePersistence(): UsePersistenceReturn {
       requestSave();
     }
   }, 2000);
+
+  // ── File restore helper ────────────────────────────────────────────
+  async function restoreFiles(): Promise<void> {
+    const [filesError, files] = await loadFiles();
+    if (filesError) {
+      logEvent("error", `Failed to load files: ${filesError.message}`);
+      return;
+    }
+
+    if (Object.keys(files).length === 0) return;
+
+    const [restoreError] = await tryCatch(restoreImageCache(files, imageCache.addImage));
+    if (restoreError) {
+      logEvent("error", `Failed to restore image cache: ${restoreError.message}`);
+      return;
+    }
+    logEvent("restore", `restored ${Object.keys(files).length} binary files`);
+  }
 
   // ── Restore (runs immediately in setup, not onMounted) ──────────────
   void (async () => {
@@ -192,8 +231,10 @@ export function usePersistence(): UsePersistenceReturn {
 
     if (loaded.elements.length > 0) {
       elements.replaceElements(loaded.elements);
-      dirty.value?.markStaticDirty();
     }
+
+    await restoreFiles();
+    dirty.value?.markStaticDirty();
 
     lastSavedHash.value = hashElementsVersion(getNonDeletedElements(elements.elements.value));
     isRestored.value = true;

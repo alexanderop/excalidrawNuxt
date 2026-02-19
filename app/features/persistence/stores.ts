@@ -1,8 +1,8 @@
 import { createStore, get as idbGet, set as idbSet, del as idbDel } from "idb-keyval";
-import type { FileId, Result } from "@drawvue/core";
+import type { Result } from "@drawvue/core";
 import { tryCatch } from "@drawvue/core";
 import { DB_NAME, STORE_NAME, FILES_DB_NAME, FILES_STORE_NAME } from "./types";
-import type { SceneStoreSchema } from "./types";
+import type { SceneStoreSchema, FilesStoreSchema } from "./types";
 
 // ---------------------------------------------------------------------------
 // Store instances
@@ -33,15 +33,24 @@ export function delScene<K extends keyof SceneStoreSchema & string>(key: K): Pro
 }
 
 // ---------------------------------------------------------------------------
-// Typed file store wrappers (Phase 2)
+// Typed file store wrappers
 // ---------------------------------------------------------------------------
 
-export function getFile(id: FileId): Promise<Result<Blob | undefined>> {
-  return tryCatch(idbGet<Blob>(id, filesStore));
+export function getFiles<K extends keyof FilesStoreSchema & string>(
+  key: K,
+): Promise<Result<FilesStoreSchema[K] | undefined>> {
+  return tryCatch(idbGet<FilesStoreSchema[K]>(key, filesStore));
 }
 
-export function setFile(id: FileId, blob: Blob): Promise<Result<void>> {
-  return tryCatch(idbSet(id, blob, filesStore));
+export function setFiles<K extends keyof FilesStoreSchema & string>(
+  key: K,
+  value: FilesStoreSchema[K],
+): Promise<Result<void>> {
+  return tryCatch(idbSet(key, value, filesStore));
+}
+
+export function delFiles<K extends keyof FilesStoreSchema & string>(key: K): Promise<Result<void>> {
+  return tryCatch(idbDel(key, filesStore));
 }
 
 // ---------------------------------------------------------------------------

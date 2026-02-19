@@ -4,8 +4,6 @@ import {
   isInitializedImageElement,
   isImageElement,
   createElement,
-  toFileId,
-  generateId,
   mutateElement,
   getUncroppedWidthAndHeight,
 } from "@drawvue/core";
@@ -33,7 +31,7 @@ export function useImageActions() {
 
   const { register } = ctx.actionRegistry;
   const { getElementById, addElement } = ctx.elements;
-  const { getImage, addImage } = ctx.imageCache;
+  const { getImage, registerImage } = ctx.imageCache;
   const { selectedElements, select, replaceSelection } = selectionSlice;
   const { recordAction } = historySlice;
   const { markStaticDirty } = dirtySlice;
@@ -147,8 +145,8 @@ export function useImageActions() {
     if (!isInitializedImageElement(currentEl)) return;
 
     recordAction(() => {
-      const newFileId = toFileId(generateId());
-      addImage(newFileId, resultImage, "image/png");
+      const [regError, newFileId] = registerImage(resultImage, "image/png");
+      if (regError) return;
 
       const newElement = createElement("image", currentEl.x + currentEl.width + GAP, currentEl.y, {
         width: currentEl.width,
@@ -194,8 +192,8 @@ export function useImageActions() {
       const newIds: string[] = [];
 
       for (const segment of segments) {
-        const newFileId = toFileId(generateId());
-        addImage(newFileId, segment.image, "image/png");
+        const [regError, newFileId] = registerImage(segment.image, "image/png");
+        if (regError) continue;
 
         const scaledW = segment.bbox.width * scaleRatio;
         const scaledH = segment.bbox.height * scaleRatio;

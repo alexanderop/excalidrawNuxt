@@ -49,8 +49,6 @@ import {
   DEFAULT_FONT_FAMILY,
   DEFAULT_LINE_HEIGHT,
 } from "../features/elements/constants";
-import { toFileId } from "../features/image/types";
-import { generateId } from "../shared/random";
 import { DEFAULT_IMAGE_MAX_DIMENSION } from "../features/image/constants";
 import { getElementBounds } from "../features/selection/bounds";
 import type { ActionDefinition } from "../shared/useActionRegistry";
@@ -601,8 +599,11 @@ async function createYouTubeLinkPreview(url: string): Promise<void> {
   }
 
   history.recordAction(() => {
-    const fileId = toFileId(generateId());
-    ctx.imageCache.addImage(fileId, result.image, "image/jpeg");
+    const [regError, fileId] = ctx.imageCache.registerImage(result.image, "image/jpeg");
+    if (regError) {
+      console.error("[DrawVue] Failed to register YouTube preview image:", regError.message);
+      return;
+    }
 
     // Scale to fit within max dimension while preserving aspect ratio
     const maxDim = DEFAULT_IMAGE_MAX_DIMENSION;
