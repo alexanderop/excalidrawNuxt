@@ -20,6 +20,9 @@ import {
   DEFAULT_TEXT_ALIGN,
 } from "./constants";
 
+/** Shape types that need no extra properties beyond the base. */
+const SIMPLE_SHAPE_TYPES = new Set(["rectangle", "ellipse", "diamond", "embeddable"]);
+
 export function createElement(
   type: "text",
   x: number,
@@ -68,6 +71,12 @@ export function createElement(
   y: number,
   overrides?: Partial<MutableElement>,
 ): ElementTypeMap["freedraw"];
+export function createElement(
+  type: "embeddable",
+  x: number,
+  y: number,
+  overrides?: Partial<MutableElement>,
+): ElementTypeMap["embeddable"];
 export function createElement<T extends SupportedElementType>(
   type: T,
   x: number,
@@ -155,7 +164,7 @@ export function createElement(
     } as SupportedElement;
   }
 
-  if (type === "rectangle" || type === "ellipse" || type === "diamond") {
+  if (SIMPLE_SHAPE_TYPES.has(type)) {
     return { ...base, type } as SupportedElement;
   }
 

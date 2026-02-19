@@ -5,6 +5,7 @@ import type {
   ExcalidrawDiamondElement,
   ExcalidrawElement,
   ExcalidrawEllipseElement,
+  ExcalidrawEmbeddableElement,
   ExcalidrawImageElement,
   ExcalidrawRectangleElement,
   ExcalidrawTextElement,
@@ -101,4 +102,15 @@ export function createTestImageElement(
     status: "saved" as const,
     ...overrides,
   } as ExcalidrawImageElement;
+}
+
+export function createTestEmbeddableElement(
+  overrides: Partial<Omit<ExcalidrawEmbeddableElement, "type">> = {},
+): ExcalidrawEmbeddableElement {
+  return {
+    ...BASE_PROPS,
+    type: "embeddable" as const,
+    link: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    ...overrides,
+  } as ExcalidrawEmbeddableElement;
 }

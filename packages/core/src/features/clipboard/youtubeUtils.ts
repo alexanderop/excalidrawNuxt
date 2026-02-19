@@ -67,10 +67,10 @@ export function getYouTubeThumbnailUrl(videoId: string): string {
   return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
 }
 
-interface YouTubeOEmbedResult {
+type YouTubeOEmbedResult = {
   title: string;
   thumbnailUrl: string;
-}
+};
 
 /**
  * Fetch video metadata via YouTube's oEmbed endpoint (no API key required).

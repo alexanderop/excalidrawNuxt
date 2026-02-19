@@ -6,6 +6,7 @@ export {
   createTestArrowElement,
   createTestTextElement,
   createTestImageElement,
+  createTestEmbeddableElement,
 } from "./factories/element";
 export { reseed, restoreSeed, deterministicId } from "./deterministicSeed";
 export { withSetup } from "./withSetup";

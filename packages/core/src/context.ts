@@ -7,6 +7,7 @@ import type { FileId, ImageCacheEntry, ImageMimeType } from "./features/image/ty
 import type { Result } from "./utils/tryCatch";
 import type { FillStyle, StrokeStyle, TextAlign, Arrowhead } from "./features/elements/types";
 import type { ArrowSubtype, Roundness } from "./features/properties/types";
+import type { GlobalPoint } from "./shared/math";
 import { createElements } from "./features/elements/useElements";
 import { createToolStore } from "./features/tools/useTool";
 import { createActionRegistry } from "./shared/useActionRegistry";
@@ -111,6 +112,22 @@ export interface CropSlice {
   exitCropMode: (confirm: boolean) => void;
 }
 
+export interface ViewportSlice {
+  scrollX: Ref<number>;
+  scrollY: Ref<number>;
+  zoom: Ref<number>;
+  toScreen: (sceneX: number, sceneY: number) => GlobalPoint;
+}
+
+export type EmbeddableState = {
+  elementId: string;
+  state: "hover" | "active";
+} | null;
+
+export interface EmbeddableSlice {
+  activeEmbeddable: ShallowRef<EmbeddableState>;
+}
+
 // ── Context ─────────────────────────────────────────────────────────
 
 export interface DrawVueContext {
@@ -126,6 +143,8 @@ export interface DrawVueContext {
   history: ShallowRef<HistorySlice | null>;
   dirty: ShallowRef<DirtySlice | null>;
   crop: ShallowRef<CropSlice | null>;
+  viewport: ShallowRef<ViewportSlice | null>;
+  embeddable: ShallowRef<EmbeddableSlice | null>;
 }
 
 export const DRAWVUE_KEY: InjectionKey<DrawVueContext> = Symbol("drawvue");
@@ -156,6 +175,8 @@ export function createDrawVue(): DrawVueContext {
     history: shallowRef(null),
     dirty: shallowRef(null),
     crop: shallowRef(null),
+    viewport: shallowRef(null),
+    embeddable: shallowRef(null),
   };
 }
 

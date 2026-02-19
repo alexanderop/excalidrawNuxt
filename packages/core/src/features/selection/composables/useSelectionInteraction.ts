@@ -1,4 +1,4 @@
-import { shallowRef } from "vue";
+import { shallowRef, triggerRef } from "vue";
 import type { Ref, ShallowRef } from "vue";
 import { useEventListener } from "@vueuse/core";
 import { useKeyboardShortcuts } from "../../../shared/useKeyboardShortcuts";
@@ -96,6 +96,18 @@ interface UseSelectionInteractionOptions {
   onInteractionEnd?: () => void;
   /** Wraps a mutation for history recording (undo/redo). Falls back to direct call if not provided. */
   recordAction?: (fn: () => void) => void;
+  /** Called on idle pointer-move to check embeddable hover. Returns cursor override or null. */
+  onEmbeddableHover?: (scenePoint: GlobalPoint, event: PointerEvent) => string | null;
+  /** Called on short-click pointer-up. Returns true if handled (skip drag finalization). */
+  onEmbeddableClick?: (
+    scenePoint: GlobalPoint,
+    event: PointerEvent,
+    clickDuration: number,
+  ) => boolean;
+  /** Called on Escape key (before clearSelection). */
+  onEscape?: () => void;
+  /** Called at the start of every pointer-down. */
+  onCanvasPointerDown?: () => void;
 }
 
 export function useSelectionInteraction(
@@ -132,9 +144,14 @@ export function useSelectionInteraction(
     onGroupAction,
     onUngroupAction,
     onDeleteCleanup,
+    onEmbeddableHover,
+    onEmbeddableClick,
+    onEscape,
+    onCanvasPointerDown,
   } = options;
 
   let interaction: InteractionState = { type: "idle" };
+  let pointerDownTimestamp = 0;
 
   const selectionBox = options.selectionBox ?? shallowRef<Box | null>(null);
   const cursorStyle = shallowRef("default");
@@ -269,6 +286,8 @@ export function useSelectionInteraction(
   function handlePointerDown(e: PointerEvent): void {
     if (shouldIgnorePointerDown(e)) return;
 
+    pointerDownTimestamp = Date.now();
+    onCanvasPointerDown?.();
     hoveredElement.value = null;
 
     const scenePoint = toScene(e.offsetX, e.offsetY);
@@ -293,6 +312,8 @@ export function useSelectionInteraction(
   function markSceneDirty(): void {
     markStaticDirty();
     markInteractiveDirty();
+    // Trigger ShallowRef so Vue overlays (e.g. EmbeddableOverlay) recompute positions
+    triggerRef(elements);
   }
 
   function getSingleSelected(): ExcalidrawElement | null {
@@ -368,7 +389,7 @@ export function useSelectionInteraction(
     const scenePoint = toScene(e.offsetX, e.offsetY);
 
     if (interaction.type === "idle") {
-      updateCursor(scenePoint);
+      updateCursor(scenePoint, e);
       return;
     }
 
@@ -417,6 +438,23 @@ export function useSelectionInteraction(
     }
   }
 
+  function tryActivateEmbeddable(e: PointerEvent): boolean {
+    if (!onEmbeddableClick) return false;
+    const clickDuration = Date.now() - pointerDownTimestamp;
+    const scenePoint = toScene(e.offsetX, e.offsetY);
+    return onEmbeddableClick(scenePoint, e, clickDuration);
+  }
+
+  function finalizeDrag(e: PointerEvent): void {
+    if (tryActivateEmbeddable(e)) {
+      onInteractionEnd?.();
+      return;
+    }
+    unbindDraggedArrows();
+    onInteractionEnd?.();
+    markSceneDirty();
+  }
+
   function handlePointerUp(e: PointerEvent): void {
     canvasRef.value?.releasePointerCapture(e.pointerId);
     const prevInteraction = interaction;
@@ -429,9 +467,7 @@ export function useSelectionInteraction(
     }
 
     if (prevInteraction.type === "dragging") {
-      unbindDraggedArrows();
-      onInteractionEnd?.();
-      markSceneDirty();
+      finalizeDrag(e);
       return;
     }
 
@@ -481,7 +517,7 @@ export function useSelectionInteraction(
     return selected.some((el) => hitTest(scenePoint, el, zoom.value));
   }
 
-  function updateCursor(scenePoint: GlobalPoint): void {
+  function updateCursor(scenePoint: GlobalPoint, event?: PointerEvent): void {
     if (activeTool.value !== "selection") {
       hoveredElement.value = null;
       return;
@@ -508,6 +544,15 @@ export function useSelectionInteraction(
     if (hoveredMidpoint.value) {
       hoveredMidpoint.value = null;
       markInteractiveDirty();
+    }
+
+    // Embeddable center-third hover detection
+    if (event && onEmbeddableHover) {
+      const embeddableCursor = onEmbeddableHover(scenePoint, event);
+      if (embeddableCursor) {
+        cursorStyle.value = embeddableCursor;
+        return;
+      }
     }
 
     cursorStyle.value = isHoveringSelected(scenePoint, selected) ? "move" : "default";
@@ -613,6 +658,7 @@ export function useSelectionInteraction(
     delete: deleteSelected,
     backspace: deleteSelected,
     escape: whenSelectionActive(() => {
+      onEscape?.();
       clearSelection();
       setTool("selection");
       markInteractiveDirty();

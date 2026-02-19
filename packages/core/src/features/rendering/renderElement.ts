@@ -41,6 +41,7 @@ export function renderElement(
   zoom = 1,
 ): void {
   if (element.isDeleted) return;
+  if (element.type === "embeddable") return; // iframe overlay handles rendering
   if (isCodeElement(element)) {
     renderCodeElement(ctx, element, theme);
     return;

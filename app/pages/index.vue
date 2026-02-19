@@ -4,6 +4,7 @@ import { DrawVue } from "@drawvue/core";
 import CommandPalette from "~/features/command-palette/CommandPalette.vue";
 import DevInspector from "~/features/dev-inspector/DevInspector.vue";
 import ImageActions from "~/features/image/ImageActions.vue";
+import EmbeddableOverlay from "~/features/embeddable/EmbeddableOverlay.vue";
 import PersistenceProvider from "~/features/persistence/PersistenceProvider.vue";
 import DrawingToolbar from "~/features/tools/components/DrawingToolbar.vue";
 import PropertiesPanel from "~/features/properties/components/PropertiesPanel.vue";
@@ -52,6 +53,7 @@ const isRestored = ref(false);
           />
         </template>
         <CommandPalette />
+        <EmbeddableOverlay />
         <PersistenceProvider @restored="isRestored = true">
           <DevInspector />
         </PersistenceProvider>

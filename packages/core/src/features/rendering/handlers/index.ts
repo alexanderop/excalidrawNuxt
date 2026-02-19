@@ -7,6 +7,7 @@ import { lineHandler } from "./lineHandler";
 import { textHandler } from "./textHandler";
 import { freeDrawHandler } from "./freeDrawHandler";
 import { imageHandler } from "./imageHandler";
+import { embeddableHandler } from "./embeddableHandler";
 
 export function registerDefaultHandlers(registry: ShapeHandlerRegistry): void {
   registry.register(rectangleHandler);
@@ -17,4 +18,5 @@ export function registerDefaultHandlers(registry: ShapeHandlerRegistry): void {
   registry.register(textHandler);
   registry.register(freeDrawHandler);
   registry.register(imageHandler);
+  registry.register(embeddableHandler);
 }

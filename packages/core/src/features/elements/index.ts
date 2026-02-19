@@ -23,6 +23,7 @@ export type {
   FixedPointBinding,
   PointBinding,
   BoundElement,
+  ExcalidrawEmbeddableElement,
   SupportedElement,
   SupportedBindableElement,
   ElementsMap,

@@ -38,6 +38,8 @@ export type {
   NonDeleted,
 } from "@excalidraw/element/types";
 
+// Our custom embeddable type is re-exported from below (not from @excalidraw/element)
+
 // ---------------------------------------------------------------------------
 // Official type guard re-exports (runtime functions)
 // ---------------------------------------------------------------------------
@@ -62,6 +64,7 @@ export {
 // Narrow unions for our supported subset
 // ---------------------------------------------------------------------------
 import type {
+  ExcalidrawElement,
   ExcalidrawRectangleElement,
   ExcalidrawEllipseElement,
   ExcalidrawDiamondElement,
@@ -72,6 +75,11 @@ import type {
   ExcalidrawFreeDrawElement,
 } from "@excalidraw/element/types";
 
+/** Embeddable element — stores a URL in `link` and renders as a live iframe overlay. */
+export type ExcalidrawEmbeddableElement = Omit<ExcalidrawElement, "type"> & {
+  readonly type: "embeddable";
+};
+
 /** The element types our app creates and renders. */
 export type SupportedElement =
   | ExcalidrawRectangleElement
@@ -81,7 +89,8 @@ export type SupportedElement =
   | ExcalidrawLineElement
   | ExcalidrawTextElement
   | ExcalidrawImageElement
-  | ExcalidrawFreeDrawElement;
+  | ExcalidrawFreeDrawElement
+  | ExcalidrawEmbeddableElement;
 
 /** The 3 shape types that arrows can bind to. */
 export type SupportedBindableElement =
@@ -121,6 +130,7 @@ export interface ElementTypeMap {
   text: ExcalidrawTextElement;
   image: ExcalidrawImageElement;
   freedraw: ExcalidrawFreeDrawElement;
+  embeddable: ExcalidrawEmbeddableElement;
 }
 
 /** Union of supported element type strings. */

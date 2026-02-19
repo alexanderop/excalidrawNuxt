@@ -11,6 +11,9 @@ export type {
   HistorySlice,
   DirtySlice,
   CropSlice,
+  ViewportSlice,
+  EmbeddableSlice,
+  EmbeddableState,
 } from "./context";
 
 // Features
@@ -31,6 +34,7 @@ export * from "./features/rendering";
 export * from "./features/selection";
 export * from "./features/theme";
 export * from "./features/tools";
+export * from "./features/embeddable";
 
 // Shared utilities
 export * from "./shared/math";

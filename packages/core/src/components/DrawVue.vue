@@ -35,13 +35,7 @@ import { useHistory } from "../features/history/useHistory";
 import { useKeyboardShortcuts } from "../shared/useKeyboardShortcuts";
 import { KEY_TO_TOOL } from "../features/tools/useTool";
 import { isTypingElement } from "../shared/isTypingElement";
-import {
-  isUrl,
-  isImageUrl,
-  isYouTubeUrl,
-  extractYouTubeVideoId,
-} from "../features/clipboard/urlUtils";
-import { fetchYouTubeOEmbed, createYouTubePreviewImage } from "../features/clipboard/youtubeUtils";
+import { isUrl, isImageUrl } from "../features/clipboard/urlUtils";
 import { createElement } from "../features/elements/createElement";
 import { measureText, getFontString } from "../features/rendering/textMeasurement";
 import {
@@ -49,12 +43,13 @@ import {
   DEFAULT_FONT_FAMILY,
   DEFAULT_LINE_HEIGHT,
 } from "../features/elements/constants";
-import { DEFAULT_IMAGE_MAX_DIMENSION } from "../features/image/constants";
+import { isEmbeddableUrl, getEmbedData } from "../features/embeddable/providerRegistry";
 import { getElementBounds } from "../features/selection/bounds";
 import type { ActionDefinition } from "../shared/useActionRegistry";
-import type { ExcalidrawElement } from "../features/elements/types";
-import { isArrowElement } from "../features/elements/types";
+import type { ExcalidrawElement, ExcalidrawEmbeddableElement } from "../features/elements/types";
+import { isArrowElement, isEmbeddableElement } from "../features/elements/types";
 import type { ToolType } from "../features/tools/types";
+import type { EmbeddableState } from "../context";
 
 // ── DrawVue context (provide/inject for multi-instance support) ─────
 const ctx = provideDrawVue();
@@ -239,10 +234,10 @@ useEventListener(document, "paste", (e: ClipboardEvent) => {
     // Image URLs are handled by useImageInteraction
     if (isImageUrl(text)) return;
 
-    // YouTube URLs: create an image element with video thumbnail preview
-    if (isYouTubeUrl(text)) {
+    // Embeddable URLs (YouTube, Vimeo, etc.): create an embeddable element
+    if (isEmbeddableUrl(text)) {
       e.preventDefault();
-      createYouTubeLinkPreview(text);
+      history.recordAction(() => createEmbeddableElement(text));
       return;
     }
 
@@ -279,6 +274,26 @@ const { panningCursor, spaceHeld, isPanning } = usePanning({
   zoomBy,
   activeTool,
 });
+
+// ── Embeddable interaction ───────────────────────────────────────────
+function isInEmbeddableCenterThird(
+  sceneX: number,
+  sceneY: number,
+  el: ExcalidrawEmbeddableElement,
+): boolean {
+  return (
+    sceneX >= el.x + el.width / 3 &&
+    sceneX <= el.x + (2 * el.width) / 3 &&
+    sceneY >= el.y + el.height / 3 &&
+    sceneY <= el.y + (2 * el.height) / 3
+  );
+}
+
+const activeEmbeddable = shallowRef<EmbeddableState>(null);
+
+function deactivateEmbeddable(): void {
+  activeEmbeddable.value = null;
+}
 
 // Theme (stays global)
 const { theme, toggleTheme } = useTheme();
@@ -395,6 +410,7 @@ const { croppingElementId, enterCropMode, exitCropMode } = useCropInteraction({
 
 // Finalize in-progress operations when user switches tools
 onBeforeToolChange(() => {
+  deactivateEmbeddable();
   if (croppingElementId.value) exitCropMode(true);
   if (multiElement.value) finalizeMultiPoint();
   if (editingLinearElement.value) exitLinearEditor();
@@ -494,6 +510,34 @@ const { selectionBox, cursorStyle, hoveredMidpoint, hoveredElement } = useSelect
   onInteractionStart: history.saveCheckpoint,
   onInteractionEnd: history.commitCheckpoint,
   recordAction: history.recordAction,
+  onEmbeddableHover(scenePoint, event) {
+    if (event.altKey || event.shiftKey || event.metaKey || event.ctrlKey) {
+      if (activeEmbeddable.value?.state === "hover") activeEmbeddable.value = null;
+      return null;
+    }
+    const hit = getElementAtPosition(scenePoint, elements.value, zoom.value);
+    if (
+      hit &&
+      isEmbeddableElement(hit) &&
+      isInEmbeddableCenterThird(scenePoint[0], scenePoint[1], hit)
+    ) {
+      activeEmbeddable.value = { elementId: hit.id, state: "hover" };
+      return "pointer";
+    }
+    if (activeEmbeddable.value?.state === "hover") activeEmbeddable.value = null;
+    return null;
+  },
+  onEmbeddableClick(scenePoint, event, clickDuration) {
+    if (clickDuration >= 300) return false;
+    const hit = getElementAtPosition(scenePoint, elements.value, zoom.value);
+    if (!hit || !isEmbeddableElement(hit)) return false;
+    if (!isInEmbeddableCenterThird(scenePoint[0], scenePoint[1], hit)) return false;
+    if (event.altKey || event.shiftKey || event.metaKey || event.ctrlKey) return false;
+    activeEmbeddable.value = { elementId: hit.id, state: "active" };
+    return true;
+  },
+  onEscape: deactivateEmbeddable,
+  onCanvasPointerDown: deactivateEmbeddable,
 });
 
 // Combine newElement from shape drawing and freedraw into one ref for the renderer
@@ -578,62 +622,25 @@ function createLinkElement(url: string): void {
   dirty.markInteractiveDirty();
 }
 
-async function createYouTubeLinkPreview(url: string): Promise<void> {
-  const videoId = extractYouTubeVideoId(url);
-  if (!videoId) {
-    // Fallback to plain link element
-    history.recordAction(() => createLinkElement(url));
+function createEmbeddableElement(url: string): void {
+  const embedData = getEmbedData(url);
+  if (!embedData) {
+    createLinkElement(url);
     return;
   }
 
-  // Fetch title via oEmbed (best-effort — title may be null)
-  const oembed = await fetchYouTubeOEmbed(url);
-  const title = oembed?.title ?? null;
-
-  // Create composited preview image (thumbnail + play button + title)
-  const result = await createYouTubePreviewImage(videoId, title);
-  if (!result) {
-    // Fallback to plain link element if image creation fails
-    history.recordAction(() => createLinkElement(url));
-    return;
-  }
-
-  history.recordAction(() => {
-    const [regError, fileId] = ctx.imageCache.registerImage(result.image, "image/jpeg");
-    if (regError) {
-      console.error("[DrawVue] Failed to register YouTube preview image:", regError.message);
-      return;
-    }
-
-    // Scale to fit within max dimension while preserving aspect ratio
-    const maxDim = DEFAULT_IMAGE_MAX_DIMENSION;
-    let fitW = result.width;
-    let fitH = result.height;
-    if (fitW > maxDim || fitH > maxDim) {
-      const ratio = fitW / fitH;
-      if (fitW >= fitH) {
-        fitW = maxDim;
-        fitH = maxDim / ratio;
-      } else {
-        fitH = maxDim;
-        fitW = maxDim * ratio;
-      }
-    }
-
-    const center = toScene(width.value / 2 / zoom.value, height.value / 2 / zoom.value);
-    const el = createElement("image", center[0] - fitW / 2, center[1] - fitH / 2, {
-      width: fitW,
-      height: fitH,
-      fileId,
-      status: "saved" as const,
-      link: url,
-    });
-
-    addElement(el);
-    select(el.id);
-    dirty.markStaticDirty();
-    dirty.markInteractiveDirty();
+  const { w, h } = embedData.intrinsicSize;
+  const center = toScene(width.value / 2 / zoom.value, height.value / 2 / zoom.value);
+  const el = createElement("embeddable", center[0] - w / 2, center[1] - h / 2, {
+    width: w,
+    height: h,
+    link: url,
   });
+
+  addElement(el);
+  select(el.id);
+  dirty.markStaticDirty();
+  dirty.markInteractiveDirty();
 }
 
 function handleDuplicate(): void {
@@ -818,11 +825,13 @@ register([
   },
 ]);
 
-// Expose selection/history/dirty/crop to the context so app-layer composables can use them
+// Expose selection/history/dirty/crop/viewport/embeddable to the context so app-layer composables can use them
 ctx.selection.value = { selectedElements, select, replaceSelection };
 ctx.history.value = { recordAction: history.recordAction };
 ctx.dirty.value = { markStaticDirty: dirty.markStaticDirty };
 ctx.crop.value = { croppingElementId, enterCropMode, exitCropMode };
+ctx.viewport.value = { scrollX, scrollY, zoom, toScreen };
+ctx.embeddable.value = { activeEmbeddable };
 
 // Test hook — expose reactive state for browser tests (Excalidraw's window.h pattern).
 // Always available (SSR disabled, zero overhead — just window property assignments).
@@ -859,6 +868,7 @@ ctx.crop.value = { croppingElementId, enterCropMode, exitCropMode };
   eraserTrailPoints,
   imageCache: ctx.imageCache,
   croppingElementId,
+  activeEmbeddable,
   staticCanvasRef,
   newElementCanvasRef,
   interactiveCanvasRef,
@@ -875,18 +885,22 @@ const LINK_BADGE_GAP = 8;
 
 const linkBadge = computed(() => {
   // Show for hovered element with link, or single-selected element with link
-  const el = hoveredElement.value?.link
+  const hoveredLink = hoveredElement.value?.link;
+  const singleSelectedLink =
+    selectedElements.value.length === 1 ? selectedElements.value[0]?.link : null;
+  const el = hoveredLink
     ? hoveredElement.value
-    : selectedElements.value.length === 1 && selectedElements.value[0]?.link
+    : singleSelectedLink
       ? selectedElements.value[0]
       : null;
-  if (!el) return null;
+  const url = hoveredLink ?? singleSelectedLink;
+  if (!el || !url) return null;
 
   const [, y1, x2] = getElementBounds(el);
   const screenPos = toScreen(x2, y1);
 
   return {
-    url: el.link as string,
+    url,
     x: screenPos[0] + LINK_BADGE_GAP,
     y: screenPos[1] - LINK_BADGE_SIZE - LINK_BADGE_GAP,
   };
