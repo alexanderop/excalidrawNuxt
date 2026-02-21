@@ -15,8 +15,9 @@ import { useSelectionInteraction } from "./useSelectionInteraction";
 
 type EventHandler = (...args: unknown[]) => void;
 
+function noop() {}
+
 const { handlers, mockUseEventListener } = vi.hoisted(() => {
-  const noop = () => ({});
   // Stub `document` so useEventListener(document, ...) doesn't throw in node
   if (globalThis.document === undefined) {
     const stubElement = {

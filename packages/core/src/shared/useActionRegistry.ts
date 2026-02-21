@@ -37,6 +37,8 @@ type ImageActionId =
   | "image:crop"
   | "image:reset-crop";
 
+type LinkActionId = "link:edit";
+
 export type ActionId =
   | ToolActionId
   | ActionActionId
@@ -46,7 +48,8 @@ export type ActionId =
   | SettingsActionId
   | FlipActionId
   | HistoryActionId
-  | ImageActionId;
+  | ImageActionId
+  | LinkActionId;
 
 // ── Registry ────────────────────────────────────────────────────────
 

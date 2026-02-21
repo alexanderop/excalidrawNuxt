@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { isYouTubeUrl, extractYouTubeVideoId, fetchYouTubeOEmbed } from "./youtubeUtils";
 
 describe("isYouTubeUrl", () => {
@@ -47,11 +47,8 @@ describe("extractYouTubeVideoId", () => {
 });
 
 describe("fetchYouTubeOEmbed", () => {
-  beforeEach(() => {
-    vi.restoreAllMocks();
-  });
-
   it("returns title and thumbnail on success", async () => {
+    vi.restoreAllMocks();
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
@@ -72,6 +69,7 @@ describe("fetchYouTubeOEmbed", () => {
   });
 
   it("returns null when fetch throws", async () => {
+    vi.restoreAllMocks();
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network error")));
 
     const result = await fetchYouTubeOEmbed("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
@@ -79,6 +77,7 @@ describe("fetchYouTubeOEmbed", () => {
   });
 
   it("returns null when response is not ok", async () => {
+    vi.restoreAllMocks();
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
@@ -92,6 +91,7 @@ describe("fetchYouTubeOEmbed", () => {
   });
 
   it("falls back to hqdefault thumbnail when thumbnail_url is missing", async () => {
+    vi.restoreAllMocks();
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({

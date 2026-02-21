@@ -2,6 +2,7 @@
 import { ref, useTemplateRef } from "vue";
 import { DrawVue } from "@drawvue/core";
 import CommandPalette from "~/features/command-palette/CommandPalette.vue";
+import LinkEditor from "~/features/link/components/LinkEditor.vue";
 import DevInspector from "~/features/dev-inspector/DevInspector.vue";
 import ImageActions from "~/features/image/ImageActions.vue";
 import EmbeddableOverlay from "~/features/embeddable/EmbeddableOverlay.vue";
@@ -53,6 +54,7 @@ const isRestored = ref(false);
           />
         </template>
         <CommandPalette />
+        <LinkEditor />
         <EmbeddableOverlay />
         <PersistenceProvider @restored="isRestored = true">
           <DevInspector />

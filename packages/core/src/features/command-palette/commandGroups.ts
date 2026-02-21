@@ -28,7 +28,13 @@ export const COMMAND_GROUP_DEFS: CommandGroupDef[] = [
   {
     id: "actions",
     label: "Actions",
-    actionIds: ["action:delete", "action:select-all", "action:group", "action:ungroup"],
+    actionIds: [
+      "action:delete",
+      "action:select-all",
+      "action:group",
+      "action:ungroup",
+      "link:edit",
+    ],
   },
   {
     id: "layers",

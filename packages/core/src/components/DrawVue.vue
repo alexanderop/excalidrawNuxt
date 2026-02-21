@@ -825,13 +825,50 @@ register([
   },
 ]);
 
-// Expose selection/history/dirty/crop/viewport/embeddable to the context so app-layer composables can use them
+// ── Link editor ──────────────────────────────────────────────────────
+const editingLinkElementId = shallowRef<string | null>(null);
+
+function openLinkEditor(elementId: string): void {
+  editingLinkElementId.value = elementId;
+}
+
+function closeLinkEditor(): void {
+  editingLinkElementId.value = null;
+}
+
+register([
+  {
+    id: "link:edit",
+    label: "Edit Link",
+    icon: "i-lucide-link",
+    kbds: ["meta", "K"],
+    handler: () => {
+      if (selectedElements.value.length !== 1) return;
+      const first = selectedElements.value[0];
+      if (!first) return;
+      openLinkEditor(first.id);
+    },
+    enabled: () => selectedElements.value.length === 1,
+  },
+]);
+
+// Cmd+K keyboard shortcut for link editor
+useEventListener(document, "keydown", (e: KeyboardEvent) => {
+  if (isTypingElement(activeEl.value)) return;
+  if (!(e.metaKey || e.ctrlKey) || e.code !== "KeyK") return;
+  if (e.altKey || e.shiftKey) return;
+  e.preventDefault();
+  ctx.actionRegistry.execute("link:edit");
+});
+
+// Expose selection/history/dirty/crop/viewport/embeddable/link to the context so app-layer composables can use them
 ctx.selection.value = { selectedElements, select, replaceSelection };
 ctx.history.value = { recordAction: history.recordAction };
 ctx.dirty.value = { markStaticDirty: dirty.markStaticDirty };
 ctx.crop.value = { croppingElementId, enterCropMode, exitCropMode };
 ctx.viewport.value = { scrollX, scrollY, zoom, toScreen };
 ctx.embeddable.value = { activeEmbeddable };
+ctx.link.value = { editingLinkElementId, openLinkEditor, closeLinkEditor };
 
 // Test hook — expose reactive state for browser tests (Excalidraw's window.h pattern).
 // Always available (SSR disabled, zero overhead — just window property assignments).

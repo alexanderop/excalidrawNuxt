@@ -565,6 +565,37 @@ function onFontSizeChange(event: Event): void {
             </svg>
           </UButton>
         </UTooltip>
+        <UTooltip text="Edit Link" :content="{ side: 'bottom' }">
+          <UButton
+            variant="ghost"
+            color="neutral"
+            size="xs"
+            square
+            aria-label="Edit Link"
+            :aria-pressed="selectedElements.length === 1 && Boolean(selectedElements[0]?.link)"
+            :class="[
+              selectedElements.length === 1 && selectedElements[0]?.link
+                ? 'text-accent hover:bg-accent/20'
+                : 'text-foreground/70 hover:bg-subdued/20 hover:text-foreground',
+            ]"
+            :disabled="selectedElements.length !== 1"
+            @click="execute('link:edit')"
+          >
+            <svg
+              aria-hidden="true"
+              class="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+            </svg>
+          </UButton>
+        </UTooltip>
         <UTooltip text="Delete" :content="{ side: 'bottom' }">
           <UButton
             variant="ghost"

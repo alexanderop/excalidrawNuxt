@@ -1,11 +1,11 @@
 import { TestDrawVue, waitForPaint } from "~/__test-utils__/browser";
 
 describe("command palette", () => {
-  it("opens with Cmd+K", async () => {
+  it("opens with Cmd+/", async () => {
     const td = await TestDrawVue.create();
 
     await td.keyboard.withModifierKeys({ metaKey: true }, async () => {
-      await td.keyPress("k");
+      await td.keyPress("/");
     });
     await waitForPaint();
 
@@ -18,7 +18,7 @@ describe("command palette", () => {
 
     // Open
     await td.keyboard.withModifierKeys({ metaKey: true }, async () => {
-      await td.keyPress("k");
+      await td.keyPress("/");
     });
     await waitForPaint();
     await expect.element(td.screen.getByRole("dialog")).toBeVisible();
@@ -30,19 +30,19 @@ describe("command palette", () => {
     await expect.element(td.screen.getByRole("dialog")).not.toBeInTheDocument();
   });
 
-  it("toggles closed with Cmd+K when open", async () => {
+  it("toggles closed with Cmd+/ when open", async () => {
     const td = await TestDrawVue.create();
 
     // Open
     await td.keyboard.withModifierKeys({ metaKey: true }, async () => {
-      await td.keyPress("k");
+      await td.keyPress("/");
     });
     await waitForPaint();
     await expect.element(td.screen.getByRole("dialog")).toBeVisible();
 
     // Toggle closed
     await td.keyboard.withModifierKeys({ metaKey: true }, async () => {
-      await td.keyPress("k");
+      await td.keyPress("/");
     });
     await waitForPaint();
 
@@ -55,7 +55,7 @@ describe("command palette", () => {
 
     // Open palette
     await td.keyboard.withModifierKeys({ metaKey: true }, async () => {
-      await td.keyPress("k");
+      await td.keyPress("/");
     });
     await waitForPaint();
 

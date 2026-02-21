@@ -1,11 +1,7 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import { matchProvider, isEmbeddableUrl, getEmbedData, clearEmbedCache } from "./providerRegistry";
 
 describe("providerRegistry", () => {
-  beforeEach(() => {
-    clearEmbedCache();
-  });
-
   describe("matchProvider", () => {
     it("returns youtube provider for YouTube URLs", () => {
       const provider = matchProvider("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
@@ -36,22 +32,26 @@ describe("providerRegistry", () => {
 
   describe("getEmbedData", () => {
     it("returns embed data for a YouTube URL", () => {
+      clearEmbedCache();
       const data = getEmbedData("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
       expect(data).not.toBeNull();
       expect(data?.providerName).toBe("YouTube");
     });
 
     it("returns embed data for a Vimeo URL", () => {
+      clearEmbedCache();
       const data = getEmbedData("https://vimeo.com/123456789");
       expect(data).not.toBeNull();
       expect(data?.providerName).toBe("Vimeo");
     });
 
     it("returns null for unknown URLs", () => {
+      clearEmbedCache();
       expect(getEmbedData("https://www.google.com")).toBeNull();
     });
 
     it("returns the same reference on cache hit", () => {
+      clearEmbedCache();
       const url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
       const first = getEmbedData(url);
       const second = getEmbedData(url);
@@ -59,6 +59,7 @@ describe("providerRegistry", () => {
     });
 
     it("caches null results", () => {
+      clearEmbedCache();
       const url = "https://unknown.example.com";
       const first = getEmbedData(url);
       const second = getEmbedData(url);

@@ -13,7 +13,7 @@ const { isOpen, execute } = useCommandPalette();
 const { get, isEnabled } = useActionRegistry();
 
 useKeyboardShortcuts({
-  meta_k: {
+  "meta_/": {
     handler: () => {
       isOpen.value = !isOpen.value;
     },

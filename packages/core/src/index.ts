@@ -14,6 +14,7 @@ export type {
   ViewportSlice,
   EmbeddableSlice,
   EmbeddableState,
+  LinkSlice,
 } from "./context";
 
 // Features

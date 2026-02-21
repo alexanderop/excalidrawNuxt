@@ -119,6 +119,12 @@ export interface ViewportSlice {
   toScreen: (sceneX: number, sceneY: number) => GlobalPoint;
 }
 
+export interface LinkSlice {
+  editingLinkElementId: ShallowRef<string | null>;
+  openLinkEditor: (elementId: string) => void;
+  closeLinkEditor: () => void;
+}
+
 export type EmbeddableState = {
   elementId: string;
   state: "hover" | "active";
@@ -145,6 +151,7 @@ export interface DrawVueContext {
   crop: ShallowRef<CropSlice | null>;
   viewport: ShallowRef<ViewportSlice | null>;
   embeddable: ShallowRef<EmbeddableSlice | null>;
+  link: ShallowRef<LinkSlice | null>;
 }
 
 export const DRAWVUE_KEY: InjectionKey<DrawVueContext> = Symbol("drawvue");
@@ -177,6 +184,7 @@ export function createDrawVue(): DrawVueContext {
     crop: shallowRef(null),
     viewport: shallowRef(null),
     embeddable: shallowRef(null),
+    link: shallowRef(null),
   };
 }
 

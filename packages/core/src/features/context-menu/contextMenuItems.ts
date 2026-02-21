@@ -13,6 +13,8 @@ export const elementMenuItems: readonly ContextMenuItemDef[] = [
   { actionId: "action:duplicate" },
   { actionId: "action:delete" },
   separator,
+  { actionId: "link:edit" },
+  separator,
   { actionId: "layer:bring-to-front" },
   { actionId: "layer:bring-forward" },
   { actionId: "layer:send-backward" },
