@@ -51,4 +51,9 @@ export const COMMAND_GROUP_DEFS: CommandGroupDef[] = [
     label: "Settings",
     actionIds: ["settings:toggle-theme", "style:copy-styles", "style:paste-styles"],
   },
+  {
+    id: "export",
+    label: "Export",
+    actionIds: ["export:save-image"],
+  },
 ];

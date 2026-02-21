@@ -825,6 +825,39 @@ register([
   },
 ]);
 
+// ── Export dialog ────────────────────────────────────────────────────
+const isExportDialogOpen = shallowRef(false);
+ctx.export.value = {
+  isOpen: isExportDialogOpen,
+  open: () => {
+    isExportDialogOpen.value = true;
+  },
+  close: () => {
+    isExportDialogOpen.value = false;
+  },
+};
+
+register([
+  {
+    id: "export:save-image",
+    label: "Export Image",
+    icon: "i-lucide-download",
+    kbds: ["meta", "shift", "E"],
+    handler: () => {
+      isExportDialogOpen.value = true;
+    },
+  },
+]);
+
+// Cmd+Shift+E keyboard shortcut for export dialog
+useEventListener(document, "keydown", (e: KeyboardEvent) => {
+  if (isTypingElement(activeEl.value)) return;
+  if (!(e.metaKey || e.ctrlKey) || !e.shiftKey || e.code !== "KeyE") return;
+  if (e.altKey) return;
+  e.preventDefault();
+  ctx.actionRegistry.execute("export:save-image");
+});
+
 // ── Link editor ──────────────────────────────────────────────────────
 const editingLinkElementId = shallowRef<string | null>(null);
 

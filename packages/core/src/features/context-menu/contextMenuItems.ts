@@ -26,6 +26,8 @@ export const elementMenuItems: readonly ContextMenuItemDef[] = [
   { actionId: "flip:horizontal" },
   { actionId: "flip:vertical" },
   separator,
+  { actionId: "export:save-image" },
+  separator,
   { actionId: "image:remove-background" },
   { actionId: "image:split-objects" },
   { actionId: "image:crop" },
@@ -37,4 +39,6 @@ export const canvasMenuItems: readonly ContextMenuItemDef[] = [
   { actionId: "action:select-all" },
   separator,
   { actionId: "settings:toggle-grid" },
+  separator,
+  { actionId: "export:save-image" },
 ];

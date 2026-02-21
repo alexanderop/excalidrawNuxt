@@ -39,6 +39,8 @@ type ImageActionId =
 
 type LinkActionId = "link:edit";
 
+type ExportActionId = "export:save-image";
+
 export type ActionId =
   | ToolActionId
   | ActionActionId
@@ -49,7 +51,8 @@ export type ActionId =
   | FlipActionId
   | HistoryActionId
   | ImageActionId
-  | LinkActionId;
+  | LinkActionId
+  | ExportActionId;
 
 // ── Registry ────────────────────────────────────────────────────────
 

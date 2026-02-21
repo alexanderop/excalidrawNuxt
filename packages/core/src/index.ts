@@ -15,6 +15,7 @@ export type {
   EmbeddableSlice,
   EmbeddableState,
   LinkSlice,
+  ExportSlice,
 } from "./context";
 
 // Features
@@ -36,6 +37,7 @@ export * from "./features/selection";
 export * from "./features/theme";
 export * from "./features/tools";
 export * from "./features/embeddable";
+export * from "./features/export";
 
 // Shared utilities
 export * from "./shared/math";

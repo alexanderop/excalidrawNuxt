@@ -4,7 +4,7 @@
 
 ## Feature Inventory
 
-Seventeen feature modules under `packages/core/src/features/`:
+Eighteen feature modules under `packages/core/src/features/`:
 
 | Feature             | Directory          | Key Exports                                                                                                                                                                                                                                       | Purpose                                                                                                                                                                 |
 | ------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -25,6 +25,7 @@ Seventeen feature modules under `packages/core/src/features/`:
 | **Properties**      | `properties/`      | `useStyleDefaults`, `usePropertyActions`, `usePropertyVisibility`, `useStyleClipboard`, `propertyPredicates`, `palette`                                                                                                                           | Element style editing (colors, stroke, fill, opacity, fonts, arrowheads, arrow subtype), sticky defaults, copy/paste styles, property visibility rules                  |
 | **History**         | `history/`         | `useHistory`                                                                                                                                                                                                                                      | Snapshot-based undo/redo (Cmd+Z / Cmd+Shift+Z), checkpoint pairs for deferred interactions, max 100 entries                                                             |
 | **Theme**           | `theme/`           | `useTheme`, `resolveColor`, `applyDarkModeFilter`, `THEME`                                                                                                                                                                                        | Light/dark mode via localStorage, CSS invert+hue-rotate color transform, Alt+Shift+D toggle                                                                             |
+| **Export**          | `export/`          | `exportToCanvas`, `exportToBlob`, `getExportSize`, `useExportDialog`, `ExportOptions`, `ExportDimensions`                                                                                                                                         | Render elements to offscreen canvas, convert to PNG Blob, calculate export dimensions. Cmd+Shift+E opens dialog                                                         |
 
 ### App-Level Features
 
@@ -38,6 +39,7 @@ The `app/features/` directory contains **presentation-only** components and brow
 | **Command Palette** | `app/features/command-palette/`                                                  | `CommandPalette.vue`                                                                                             |
 | **Image**           | `app/features/image/`                                                            | `ImageActions.vue`, image browser test                                                                           |
 | **Dev Inspector**   | `app/features/dev-inspector/`                                                    | `DevInspector.vue` + tabs (Actions, Elements, History, Layers, State) — debug panel for inspecting runtime state |
+| **Export**          | `app/features/export/`                                                           | `ExportDialog.vue`, `useExportOptions`, `useExportPreview`, `downloadBlob`, `copyImageToClipboard`               |
 | **Other features**  | `app/features/{clipboard,code,history,linear-editor,rendering,selection,theme}/` | Browser tests only                                                                                               |
 
 ### App Workers
@@ -66,6 +68,7 @@ graph TD
     Canvas --> Image
     Canvas --> History
     Canvas --> CommandPalette[Command Palette]
+    Canvas --> Export
 
     History --> Elements
 
@@ -110,6 +113,12 @@ graph TD
     Groups --> Elements
 
     Pages --> CommandPalette
+    Pages --> Export
+
+    Export --> Elements
+    Export --> Rendering
+    Export --> Selection
+    Export --> Theme
 
     Elements --> shared
     Canvas --> shared
@@ -267,7 +276,7 @@ graph TD
 The `DrawVueContext` (provided via `provideDrawVue()`) contains these slices:
 
 | Slice            | Type                       | Creation                 | Notes                                        |
-| ---------------- | -------------------------- | ------------------------ | -------------------------------------------- | ------------------------------------------------ |
+| ---------------- | -------------------------- | ------------------------ | -------------------------------------------- | -------------------------------------------------- |
 | `elements`       | `ElementsSlice`            | `createElements()`       | Reactive element array                       |
 | `tool`           | `ToolSlice`                | `createToolStore()`      | Active tool + lifecycle hooks                |
 | `actionRegistry` | `ActionRegistry`           | `createActionRegistry()` | All registered actions                       |
@@ -276,9 +285,10 @@ The `DrawVueContext` (provided via `provideDrawVue()`) contains these slices:
 | `styleDefaults`  | `StyleDefaultsSlice`       | `createStyleDefaults()`  | 15 sticky style refs + `getStyleOverrides()` |
 | `styleClipboard` | `StyleClipboardSlice`      | `createStyleClipboard()` | Copy/paste styles                            |
 | `commandPalette` | `CommandPaletteSlice`      | `createCommandPalette()` | Command palette open/execute                 |
-| `selection`      | `ShallowRef<SelectionSlice | null>`                   | Deferred (`shallowRef(null)`)                | Set later by canvas setup (avoids circular deps) |
-| `history`        | `ShallowRef<HistorySlice   | null>`                   | Deferred (`shallowRef(null)`)                | Set later by canvas setup                        |
-| `dirty`          | `ShallowRef<DirtySlice     | null>`                   | Deferred (`shallowRef(null)`)                | Set later by canvas setup                        |
+| `selection`      | `ShallowRef<SelectionSlice | null>`                   | Deferred (`shallowRef(null)`)                | Set later by canvas setup (avoids circular deps)   |
+| `history`        | `ShallowRef<HistorySlice   | null>`                   | Deferred (`shallowRef(null)`)                | Set later by canvas setup                          |
+| `dirty`          | `ShallowRef<DirtySlice     | null>`                   | Deferred (`shallowRef(null)`)                | Set later by canvas setup                          |
+| `export`         | `ShallowRef<ExportSlice    | null>`                   | Deferred (`shallowRef(null)`)                | Set later by DrawVue.vue — isOpen, open(), close() |
 
 ## Action Registry IDs
 
@@ -294,7 +304,9 @@ All registered actions use typed IDs:
 | **Settings**  | `settings:toggle-theme`, `settings:toggle-grid`                                                                                                                                    |
 | **Flip**      | `flip:horizontal`, `flip:vertical`                                                                                                                                                 |
 | **History**   | `history:undo`, `history:redo`                                                                                                                                                     |
-| **Image**     | `image:remove-background`                                                                                                                                                          |
+| **Image**     | `image:remove-background`, `image:split-objects`, `image:crop`, `image:reset-crop`                                                                                                 |
+| **Link**      | `link:edit`                                                                                                                                                                        |
+| **Export**    | `export:save-image`                                                                                                                                                                |
 
 > **Note:** Update this map when new features, diagrams, or reference docs are added.
 

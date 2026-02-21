@@ -125,6 +125,12 @@ export interface LinkSlice {
   closeLinkEditor: () => void;
 }
 
+export interface ExportSlice {
+  isOpen: ShallowRef<boolean>;
+  open: () => void;
+  close: () => void;
+}
+
 export type EmbeddableState = {
   elementId: string;
   state: "hover" | "active";
@@ -152,6 +158,7 @@ export interface DrawVueContext {
   viewport: ShallowRef<ViewportSlice | null>;
   embeddable: ShallowRef<EmbeddableSlice | null>;
   link: ShallowRef<LinkSlice | null>;
+  export: ShallowRef<ExportSlice | null>;
 }
 
 export const DRAWVUE_KEY: InjectionKey<DrawVueContext> = Symbol("drawvue");
@@ -185,6 +192,7 @@ export function createDrawVue(): DrawVueContext {
     viewport: shallowRef(null),
     embeddable: shallowRef(null),
     link: shallowRef(null),
+    export: shallowRef(null),
   };
 }
 

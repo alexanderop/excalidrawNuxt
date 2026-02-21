@@ -1,5 +1,11 @@
 export { renderGrid, GRID_SPACING } from "./renderGrid";
 export {
+  CANVAS_BG,
+  collectArrowIds,
+  isArrowBoundText,
+  renderArrowTextBackground,
+} from "./renderUtils";
+export {
   generateShape,
   clearShapeCache,
   pruneShapeCache,

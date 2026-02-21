@@ -55,7 +55,7 @@ packages/core/              # @drawvue/core — reusable drawing library
 │   ├── components/         # DrawVue.vue (main canvas component with slots)
 │   ├── context.ts          # DrawVueContext provide/inject system
 │   ├── index.ts            # Public API exports
-│   ├── features/           # All 17 domain feature modules:
+│   ├── features/           # All 18 domain feature modules:
 │   │   ├── binding/        #   Text binding to shapes
 │   │   ├── canvas/         #   Canvas layers, viewport, rendering orchestration
 │   │   ├── clipboard/      #   Element clipboard
@@ -64,6 +64,7 @@ packages/core/              # @drawvue/core — reusable drawing library
 │   │   ├── context-menu/   #   Context menu items & composables
 │   │   ├── elbow/          #   Elbow arrow routing (A* pathfinding)
 │   │   ├── elements/       #   Element creation, mutation, types
+│   │   ├── export/         #   Export to canvas/PNG/clipboard
 │   │   ├── groups/         #   Grouping utilities & composables
 │   │   ├── history/        #   Undo/redo system
 │   │   ├── image/          #   Image cache & interaction
@@ -90,6 +91,7 @@ app/                        # Nuxt consumer app (UI layer only)
 │   ├── command-palette/    #   CommandPalette.vue
 │   ├── context-menu/       #   Context menu UI
 │   ├── dev-inspector/      #   Dev inspector overlay
+│   ├── export/             #   ExportDialog.vue, download & clipboard utils
 │   ├── history/            #   History UI & tests
 │   ├── image/              #   Image UI & tests
 │   ├── linear-editor/      #   Linear editor UI & tests
